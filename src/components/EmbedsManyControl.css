@@ -1,0 +1,14 @@
+
+.tab-container {
+    display: flex;
+}
+
+.tab-container-ctrl {
+    flex: 1 0 auto;
+}
+
+.tab-container-actions {
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+}
