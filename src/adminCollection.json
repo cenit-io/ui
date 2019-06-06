@@ -1,0 +1,460 @@
+{
+  "name": "admin",
+  "algorithms": [
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "authorize",
+      "tags": "[]",
+      "description": "",
+      "store_output": false,
+      "validate_output": false,
+      "language": "ruby",
+      "snippet": {
+        "_reference": true,
+        "namespace": "Admin",
+        "name": "authorize.rb"
+      },
+      "parameters": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "control",
+          "type": "",
+          "many": false,
+          "required": true,
+          "default": ""
+        },
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "params",
+          "type": "",
+          "many": false,
+          "required": true,
+          "default": ""
+        }
+      ],
+      "call_links": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "redirect_uris"
+        }
+      ]
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "authorization_callback",
+      "tags": "[]",
+      "description": "",
+      "store_output": false,
+      "validate_output": false,
+      "language": "ruby",
+      "snippet": {
+        "_reference": true,
+        "namespace": "Admin",
+        "name": "authorization_callback.rb"
+      },
+      "parameters": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "control",
+          "type": "",
+          "many": false,
+          "required": true,
+          "default": ""
+        },
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "params",
+          "type": "",
+          "many": false,
+          "required": true,
+          "default": ""
+        }
+      ],
+      "call_links": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "code_type"
+        }
+      ]
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "token",
+      "tags": "[]",
+      "description": "",
+      "store_output": false,
+      "validate_output": false,
+      "language": "ruby",
+      "snippet": {
+        "_reference": true,
+        "namespace": "Admin",
+        "name": "token.rb"
+      },
+      "parameters": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "control",
+          "type": "",
+          "many": false,
+          "required": true,
+          "default": ""
+        }
+      ],
+      "call_links": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "code_type"
+        }
+      ]
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "generate_code_token",
+      "tags": "[]",
+      "description": "",
+      "store_output": false,
+      "validate_output": false,
+      "language": "ruby",
+      "snippet": {
+        "_reference": true,
+        "namespace": "Admin",
+        "name": "generate_code_token.rb"
+      },
+      "parameters": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "code",
+          "type": "",
+          "many": false,
+          "required": true,
+          "default": ""
+        }
+      ],
+      "call_links": [
+
+      ]
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "active",
+      "tags": "[]",
+      "description": "",
+      "store_output": false,
+      "validate_output": false,
+      "language": "ruby",
+      "snippet": {
+        "_reference": true,
+        "namespace": "Admin",
+        "name": "active.rb"
+      },
+      "parameters": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "code",
+          "type": "",
+          "many": false,
+          "required": true,
+          "default": ""
+        }
+      ],
+      "call_links": [
+
+      ]
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "index",
+      "tags": "[]",
+      "description": "",
+      "store_output": false,
+      "validate_output": false,
+      "language": "ruby",
+      "snippet": {
+        "_reference": true,
+        "namespace": "Admin",
+        "name": "index.rb"
+      },
+      "parameters": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "control",
+          "type": "",
+          "many": false,
+          "required": true,
+          "default": ""
+        }
+      ],
+      "call_links": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "index_url"
+        }
+      ]
+    }
+  ],
+  "applications": [
+    {
+      "_primary": [
+        "namespace",
+        "name",
+        "_type"
+      ],
+      "namespace": "Admin",
+      "name": "App",
+      "actions": [
+        {
+          "_primary": [
+            "method",
+            "path"
+          ],
+          "method": "get",
+          "path": "/",
+          "algorithm": {
+            "_reference": true,
+            "namespace": "Admin",
+            "name": "index"
+          }
+        },
+        {
+          "_primary": [
+            "method",
+            "path"
+          ],
+          "method": "get",
+          "path": "/authorization/:id",
+          "algorithm": {
+            "_reference": true,
+            "namespace": "Admin",
+            "name": "authorization_callback"
+          }
+        },
+        {
+          "_primary": [
+            "method",
+            "path"
+          ],
+          "method": "get",
+          "path": "/authorize",
+          "algorithm": {
+            "_reference": true,
+            "namespace": "Admin",
+            "name": "authorize"
+          }
+        },
+        {
+          "_primary": [
+            "method",
+            "path"
+          ],
+          "method": "post",
+          "path": "/token",
+          "algorithm": {
+            "_reference": true,
+            "namespace": "Admin",
+            "name": "token"
+          }
+        }
+      ],
+      "application_parameters": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "code_type",
+          "type": "Data type",
+          "many": false
+        },
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "index_url",
+          "type": "string",
+          "many": false
+        }
+      ],
+      "configuration": {
+        "authentication_method": "Application ID",
+        "redirect_uris": [
+          "http://127.0.0.1:3001/oauth/callback",
+          "http://localhost:3000"
+        ],
+        "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaQAAAGkAQMAAABEgsN2AAAABlBMVEXJulTw8PCRXR6CAAAA0ElEQVR4nO3cuw3CMBAGYAgNHSPAJrAZGQ02IRtABwWPJueCyCiKwkv+rrT9Wdf+ucjVfUAdq8mQoiiKoqjCVDN9rti+dHY2X+mQoiiKoiiKoiiKonIqEuv8hVrGR+M6e/sijuxG75CiKIqiKIqiKIoqU6U5bJ09d+ozh43Eeh69Q4qiKIqiKIqiKIrKqT5z2FTrNrreYmEWYfbwvg4piqIoiqIoiqKowtW+ja5p9RphdtVV/iWmKIqiKIqiKIqi/k5t888r/kiHFEVRFPVp9QCsq5YF228REgAAAABJRU5ErkJggg==",
+        "index_url": "http://localhost:3000",
+        "code_type": {
+          "_reference": true,
+          "namespace": "Admin",
+          "name": "Code"
+        },
+        "_type": "Setup::Application::Config"
+      },
+      "_type": "Setup::Application"
+    }
+  ],
+  "snippets": [
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "authorize.rb",
+      "type": "ruby",
+      "code": " if (redirect_uri = params[:redirect_uri]) && redirect_uris.include?(redirect_uri)\r\n  app = control.app\r\n  auth = app.create_authorization!(\r\n    namespace: app.namespace,\r\n    scopes: 'openid profile email session_access multi_tenant create read update delete digest',\r\n    metadata: { redirect_uri: redirect_uri, state: params[:state] }\r\n  )\r\n  control.authorize(auth)\r\nelse\r\n  control.render json: { error: \"Invalid redirect_uri param: #{redirect_uri}\" }, status: :bad_request\r\nend"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "authorization_callback.rb",
+      "type": "ruby",
+      "code": "error = status = nil\r\nif (auth = Setup::Authorization.where(id: params[:id]).first)\r\n  token = auth.metadata['redirect_token']\r\n  if (token == params[:redirect_token])\r\n    if (redirect_uri = auth.metadata['redirect_uri'])\r\n      if auth.authorized?\r\n        code = code_type.create_from_json(metadata: { auth_id: auth.id.to_s })\r\n        redirect_uri = \"#{redirect_uri}?code=#{URI.encode(code.value)}\"\r\n        if (state = auth.metadata['state'])\r\n          redirect_uri = \"#{redirect_uri}&state=#{URI.encode(state)}\"\r\n        end\r\n        control.redirect_to redirect_uri\r\n      else\r\n        control.redirect_to redirect_uri + '?error=' + URI.encode('Not authorized')\r\n      end\r\n    else\r\n      error = 'Invalid authorization state'\r\n      status = :not_acceptable\r\n    end\r\n  else\r\n    error = 'Invalid access'\r\n    status = :not_acceptable\r\n  end\r\nelse\r\n  error = 'Authorization not found'\r\n  status = :not_found\r\nend\r\nif error\r\n  control.render json: { error: error}, status: status\r\nend"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "token.rb",
+      "type": "ruby",
+      "code": "value = control.action.body.read\r\nif (code = code_type.where(value: value).first)\r\n  auth = Setup::Authorization.where(id: code.metadata['auth_id']).first\r\n  code.destroy\r\nend\r\nif auth\r\n  control.render json: { \r\n    access_token: auth.access_token,\r\n    expiration_date: (auth.authorized_at || Time.now) + (auth.token_span || 0),\r\n    id_token: auth.id_token\r\n  }\r\n  auth.destroy\r\nelse\r\n  control.render json: { error: 'Invalid code' }, status: :unauthorized\r\nend"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "Code.json",
+      "type": "javascript",
+      "code": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"value\": {\n      \"type\": \"string\"\n    },\n    \"span\": {\n      \"type\": \"integer\",\n      \"minimum\": 1,\n      \"default\": 3600\n    },\n    \"metadata\": {\n      \"type\": \"object\",\n      \"default\": {\n      }\n    }\n  }\n}"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "generate_code_token.rb",
+      "type": "ruby",
+      "code": " code.value = code.id.to_s + '-' + Devise.friendly_token if code.value.blank?\r\ntrue\r\n        "
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "active.rb",
+      "type": "ruby",
+      "code": " (code.created_at + code.span) > Time.now"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "RefreshToken.json",
+      "type": "javascript",
+      "code": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"user_id\": {\n      \"type\": \"string\"\n    },\n    \"value\": {\n      \"type\": \"string\"\n    }\n  }\n}"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "index.rb",
+      "type": "ruby",
+      "code": "control.redirect_to index_url"
+    }
+  ],
+  "data_types": [
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "Code",
+      "title": "Code",
+      "_type": "Setup::JsonDataType",
+      "before_save_callbacks": [
+        {
+          "_reference": true,
+          "namespace": "Admin",
+          "name": "generate_code_token"
+        }
+      ],
+      "records_methods": [
+        {
+          "_reference": true,
+          "namespace": "Admin",
+          "name": "active"
+        }
+      ],
+      "data_type_methods": [
+
+      ],
+      "snippet": {
+        "_reference": true,
+        "namespace": "Admin",
+        "name": "Code.json"
+      },
+      "slug": "code",
+      "navigation_link": true
+    }
+  ]
+}
