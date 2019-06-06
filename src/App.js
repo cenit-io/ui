@@ -1,7 +1,9 @@
 import React from 'react';
+import AppBar from './layout/AppBar';
 import QueryString from 'querystring';
 import AuthorizationService from "./services/AuthorizationService";
 import {CircularProgress} from "@material-ui/core";
+import FormTest from "./components/FormTest";
 
 
 class App extends React.Component {
@@ -47,7 +49,10 @@ class App extends React.Component {
             <CircularProgress/>
         </div>;
 
-        return <div>Ok!</div>;
+        return <div>
+            <AppBar/>
+            <FormTest/>
+        </div>;
     }
 }
 
