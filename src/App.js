@@ -1,10 +1,12 @@
 import React from 'react';
-import ObjectControl from "./components/ObjectControl";
-import {Button} from "@material-ui/core";
+import QueryString from 'querystring';
+import AuthorizationService from "./services/AuthorizationService";
+import {CircularProgress} from "@material-ui/core";
 
-function App() {
 
-    const value = {
+class App extends React.Component {
+
+    value = {
         name: 'Mac',
         checked: true,
         ref_b: { "id": "5ceca28c6ecd7911b900000f" },
@@ -18,12 +20,35 @@ function App() {
         ]
     };
 
-    return (
-        <div>
-            <ObjectControl dataTypeId='5ce187236ecd791e40000017' value={value}/>
-            <Button onClick={() => console.log(JSON.stringify(value, null, 2))}>Submit</Button>
-        </div>
-    );
+    state = { authorizing: true };
+
+    componentDidMount() {
+        const params = QueryString.parse(window.location.search.slice(1, window.location.search.length));
+
+        let authorize;
+        if (params.code) {
+            authorize = AuthorizationService.getAccessWith(params);
+        } else {
+            authorize = AuthorizationService.getAccess();
+        }
+        authorize.then(access => access && this.setState({ authorizing: false }));
+    }
+
+    render() {
+        const { authorizing } = this.state;
+
+        if (authorizing) return <div style={{
+            width: '100%',
+            height: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+        }}>
+            <CircularProgress/>
+        </div>;
+
+        return <div>Ok!</div>;
+    }
 }
 
 export default App;

@@ -1,50 +1,5 @@
-import axios from "axios";
-
-const Config = {
-    cenitHost: 'http://127.0.0.1:3001',
-    timeoutSpan: 10000,
-    appIdentifier: '5ce182106ecd791bdb000011rHnmvs3zAc4SDRgiC3NVyynoH4cuGyD1YmsBm5VHAJpPv_ar6yNg9YT1SC3H',
-};
-
-const appGateway = axios.create({
-    baseURL: `${Config.cenitHost}/app/${Config.appIdentifier}`,
-    timeout: Config.timeoutSpan,
-});
-
-const ACCESS_KEY = 'access';
-
-const getAccessToken = () => {
-    return new Promise(
-        (resolve, reject) => {
-            let access;
-            try {
-                access = JSON.parse(localStorage.getItem(ACCESS_KEY));
-                let expirationDate = new Date(access.created_at + access.expires_in + Config.timeoutSpan);
-                if (expirationDate < new Date()) {
-                    access = null;
-                }
-            } catch (e) {
-                access = null;
-            }
-            if (access) {
-                resolve(access.access_token);
-            } else {
-                appGateway.get('/')
-                    .then(
-                        (response) => {
-                            localStorage.setItem(ACCESS_KEY, JSON.stringify(response.data));
-                            resolve(response.data.access_token);
-                        }
-                    )
-                    .catch(
-                        (error) => {
-                            reject(error);
-                        }
-                    )
-            }
-        }
-    );
-};
+import axios from 'axios';
+import AuthorizationService, {Config} from './AuthorizationService'
 
 const apiGateway = axios.create({
     baseURL: `${Config.cenitHost}/api/v3`,
@@ -76,7 +31,7 @@ export const ApiResource = function () {
     this.get = () => {
         return new Promise(
             (resolve, reject) => {
-                getAccessToken()
+                AuthorizationService.getAccessToken()
                     .then(
                         access_token => {
                             apiGateway.get(this.path, {
@@ -95,7 +50,7 @@ export const ApiResource = function () {
     this.post = (data) => {
         return new Promise(
             (resolve, reject) => {
-                getAccessToken()
+                AuthorizationService.getAccessToken()
                     .then(
                         access_token => {
                             apiGateway.post(this.path, data, {
