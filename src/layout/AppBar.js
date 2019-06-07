@@ -12,7 +12,7 @@ import {
 import MenuIcon from "@material-ui/icons/Menu";
 import AuthorizationService from "../services/AuthorizationService";
 
-const AdminAppBar = () => {
+const AdminAppBar = ({ onToggle }) => {
 
     const [idToken, seIdToken] = useState(null),
         [menuAnchor, setMenuAnchor] = useState(null);
@@ -38,7 +38,7 @@ const AdminAppBar = () => {
     return <div style={{ flexGrow: 1 }}>
         <AppBar position="static">
             <Toolbar>
-                <IconButton edge="start" color="inherit" aria-label="Menu">
+                <IconButton edge="start" color="inherit" aria-label="Menu" onClick={onToggle}>
                     <MenuIcon/>
                 </IconButton>
                 <Typography variant="h6" style={{ flexGrow: 1 }}>

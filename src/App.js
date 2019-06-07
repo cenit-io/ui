@@ -3,7 +3,7 @@ import AppBar from './layout/AppBar';
 import QueryString from 'querystring';
 import AuthorizationService from "./services/AuthorizationService";
 import {CircularProgress} from "@material-ui/core";
-import FormTest from "./components/FormTest";
+import Main from "./layout/Main";
 
 
 class App extends React.Component {
@@ -36,8 +36,10 @@ class App extends React.Component {
         authorize.then(access => access && this.setState({ authorizing: false }));
     }
 
+    switchNavigation = () => this.setState(prev => ({ docked: !prev.docked, mainLeft: 'unset' }));
+
     render() {
-        const { authorizing } = this.state;
+        const { authorizing, docked } = this.state;
 
         if (authorizing) return <div style={{
             width: '100%',
@@ -50,8 +52,8 @@ class App extends React.Component {
         </div>;
 
         return <div>
-            <AppBar/>
-            <FormTest/>
+            <AppBar onToggle={this.switchNavigation}/>
+            <Main docked={docked} onDrawerClose={this.switchNavigation}/>
         </div>;
     }
 }

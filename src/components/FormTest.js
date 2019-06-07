@@ -48,7 +48,7 @@ const FormTest = () => {
             {picker}
             {control}
         </div>
-        <pre style={{ width: '50%', height: '50vh', overflow: 'auto' }}>{json}</pre>
+        <pre style={{ width: '50%', overflow: 'auto' }}>{json}</pre>
     </div>;
 };
 
