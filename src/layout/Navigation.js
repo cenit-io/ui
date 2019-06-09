@@ -16,7 +16,7 @@ const Navigation = ({ docked }) => {
         position: docked ? 'static' : 'absolute',
         background: 'white',
         order: 0,
-        height: docked ? 'unset' : '100%'
+        height: '100%'
     }}
                 onMouseEnter={() => setOver(true)}
                 onMouseLeave={() => setOver(false)}>

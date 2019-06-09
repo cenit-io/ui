@@ -1,5 +1,14 @@
 import React from 'react';
-import {ClickAwayListener, LinearProgress, List, ListItem, ListItemText, TextField} from "@material-ui/core";
+import {
+    ClickAwayListener,
+    InputBase,
+    LinearProgress,
+    List,
+    ListItem,
+    ListItemText,
+    Paper,
+    TextField
+} from "@material-ui/core";
 import Random from "../util/Random";
 
 class RefPicker extends React.Component {
@@ -91,7 +100,7 @@ class RefPicker extends React.Component {
     render() {
 
         const { query, items, key, loading, itemsQuery } = this.state,
-            { label, text, disabled } = this.props;
+            { label, text, disabled, inputClasses } = this.props;
 
         let list;
         if (query !== null && items) {
@@ -113,27 +122,38 @@ class RefPicker extends React.Component {
             }
             list = (
                 <ClickAwayListener onClickAway={this.handleClickAway}>
-                    <div style={{ position: 'absolute', background: 'white', border: 'gray', zIndex: 1001 }}>
+                    <Paper style={{ position: 'absolute', background: 'white', border: 'gray', zIndex: 1001 }}>
                         <List component="nav">
                             {list}
                         </List>
-                    </div>
+                    </Paper>
                 </ClickAwayListener>
             );
         }
 
+        const inputProps = {
+            key: key,
+            inputProps: { ref: this.ref },
+            editable: String(query !== null),
+            onFocus: () => setTimeout(this.activate(true), 500),
+            onChange: this.handleChange,
+            label: label,
+            placeholder: label,
+            defaultValue: query !== null ? query : (text || ''),
+            onKeyDown: this.handleKeyDown,
+            disabled: disabled
+        };
+
+        let input;
+        if (inputClasses) {
+            input = <InputBase {...inputProps} classes={inputClasses}/>;
+        } else {
+            input = <TextField {...inputProps}/>;
+        }
+
         return (
             <div style={{ position: "relative" }}>
-                <TextField key={key}
-                           inputProps={{ ref: this.ref }}
-                           editable={String(query !== null)}
-                           onFocus={() => setTimeout(this.activate(true), 500)}
-                           onChange={this.handleChange}
-                           label={label}
-                           placeholder={label}
-                           defaultValue={query !== null ? query : (text || '')}
-                           onKeyDown={this.handleKeyDown}
-                           disabled={disabled}/>
+                {input}
                 {(loading || text === null) && <LinearProgress/>}
                 {list}
             </div>

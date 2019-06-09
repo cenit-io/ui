@@ -2,23 +2,17 @@ import React, {useState} from 'react';
 import ObjectControl from "./ObjectControl";
 import {DataType} from '../services/DataTypeService';
 import RefPicker from "./RefPicker";
+import RecordSelector from "./RecordSelector";
+
+const SetupDataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
 const FormTest = () => {
 
     const [json, setJSON] = useState('{}'),
-        [setupDataType, setSetupDataType] = useState(null),
         [data, setData] = useState({});
 
-    if (!setupDataType) {
-        DataType.find({ namespace: 'Setup', name: 'DataType' })
-            .then(dataType => setSetupDataType(dataType));
-    }
 
-    let picker, control;
-
-    if (setSetupDataType) {
-        picker = <RefPicker dataType={setupDataType} onPick={handelPick} text="Pick a Data Type"/>;
-    }
+    let control;
 
     if (data.dataType) {
         control = <div style={{
@@ -39,13 +33,13 @@ const FormTest = () => {
         setJSON(JSON.stringify(value, null, 2));
     }
 
-    function handelPick(item) {
+    function handleSelect(item) {
         setData({ dataType: item.record, title: item.title, value: {} });
     }
 
     return <div style={{ display: 'flex', padding: '10px' }}>
         <div style={{ display: 'flex', width: '50%', flexDirection: 'column', height: '90vh', overflow: 'auto' }}>
-            {picker}
+            <RecordSelector dataTypeSelector={SetupDataTypeSelector} onSelect={handleSelect}/>
             {control}
         </div>
         <pre style={{ width: '50%', overflow: 'auto' }}>{json}</pre>

@@ -114,6 +114,12 @@ export class DataType {
         ).filter(p => p)
     }
 
+    async titleProps() {
+        const props = await this.getProps(),
+            titlePropNames = await this.titlePropNames();
+        return props.filter(p => titlePropNames.indexOf(p.name) > -1);
+    }
+
     visibleProps() {
         return new Promise(
             (resolve, reject) => {
@@ -285,7 +291,7 @@ export class DataType {
         const limit = 5;
         query = (query || '').toString().trim();
         const params = { limit };
-        const queryProps = await this.queryProps();
+        const queryProps = await this.titleProps();
         const orQuery = queryProps.map(
             prop => ({ [prop.name]: { '$regex': '(?i)' + query } })
         );
@@ -301,10 +307,10 @@ export class DataType {
     }
 
     async titleViewPort() {
-        return `{${(await this.titleProps()).join(' ')}}`;
+        return `{${(await this.titleProps()).map(p => p.name).join(' ')}}`;
     }
 
-    async titleProps() {
+    async titlePropNames() {
         if (!this.__titleProps) {
             this.__titleProps = ['id', 'name', 'title'];
         }
@@ -321,7 +327,7 @@ export class DataType {
             let item = items[i];
             if (item.hasOwnProperty('id')) {
                 for (let prop of titleProps) {
-                    if (!item.hasOwnProperty(prop)) {
+                    if (!item.hasOwnProperty(prop.name)) {
                         missingProps[item.id] = [...(missingProps[item.id] || []), i];
                         break;
                     }

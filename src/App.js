@@ -36,8 +36,6 @@ class App extends React.Component {
         authorize.then(access => access && this.setState({ authorizing: false }));
     }
 
-    switchNavigation = () => this.setState(prev => ({ docked: !prev.docked, mainLeft: 'unset' }));
-
     render() {
         const { authorizing, docked } = this.state;
 
@@ -51,10 +49,7 @@ class App extends React.Component {
             <CircularProgress/>
         </div>;
 
-        return <div>
-            <AppBar onToggle={this.switchNavigation}/>
-            <Main docked={docked} onDrawerClose={this.switchNavigation}/>
-        </div>;
+        return <Main/>;
     }
 }
 
