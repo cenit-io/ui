@@ -33,8 +33,11 @@ export class DataType {
         return new Promise(
             (resolve, reject) => {
                 API.get('setup', 'data_type', {
-                    params: { ...criteria, limit: 1 },
-                    headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id}' }) }
+                    params: { limit: 1 },
+                    headers: {
+                        'X-Template-Options': JSON.stringify({ viewport: '{_id}' }),
+                        'X-Query-Selector': JSON.stringify(criteria)
+                    }
                 }).then(
                     response => {
                         const item = response['items'][0];

@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import API from "../services/ApiService";
 import RecordSelector from "./RecordSelector";
 
-const TenantTypeSelector = { namespace: null, name: 'Account' };
+const TenantTypeSelector = { namespace: '""', name: 'Account' };
 
 const TenantSelector = ({ inputClasses }) => {
     const [tenant, setTenant] = useState({ name: 'Loading...', fetchCurrentTenant: true });
