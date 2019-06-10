@@ -125,7 +125,9 @@ const AdminAppBar = ({ onToggle }) => {
                     <div className={classes.searchIcon}>
                         <SearchIcon/>
                     </div>
-                    <RecordSelector dataTypeSelector={DataTypeSelector} inputClasses={inputClasses}/>
+                    <RecordSelector dataTypeSelector={DataTypeSelector}
+                                    onSelect={dt => console.log('Data type selected', dt)}
+                                    inputClasses={inputClasses}/>
                 </div>
                 <div className={classes.grow}/>
                 <div className={classes.search}>
