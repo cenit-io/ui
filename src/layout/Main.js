@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import FormTest from "../components/FormTest";
-import {Drawer, Hidden, useMediaQuery} from "@material-ui/core";
+import {Drawer, useMediaQuery} from "@material-ui/core";
 import AppBar from './AppBar';
 import Navigation from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
@@ -24,9 +24,9 @@ const Main = () => {
             }}>
                 <FormTest/>
             </div>
-            <Hidden xsDown implementation='css'>
-                {navigation}
-            </Hidden>
+            {
+                xs || navigation
+            }
             {
                 xs &&
                 <Drawer open={docked} onClose={switchNavigation}>
