@@ -1,5 +1,5 @@
 import axios from 'axios';
-import AuthorizationService, {Config} from './AuthorizationService'
+import AuthorizationService, {Config} from './AuthorizationService';
 
 const apiGateway = axios.create({
     baseURL: `${Config.cenitHost}/api/v3`,
@@ -67,13 +67,28 @@ export const ApiResource = function () {
     };
 };
 
-const API = {
-    get: (...args) => (new ApiResource(...args)).get(),
+const ErrorCallbacks = [];
 
-    post: (...args) => {
-        const data = args.pop();
-        return (new ApiResource(...args)).post(data);
-    }
-};
+const API = {
+    get: async (...args) => {
+        try {
+            return await (new ApiResource(...args)).get()
+        } catch (e) {
+            ErrorCallbacks.forEach(callback => callback(e));
+        }
+    },
+
+    post: async (...args) => {
+        try {
+            const data = args.pop();
+            return await (new ApiResource(...args)).post(data);
+        } catch (e) {
+            ErrorCallbacks.forEach(callback => callback(e));
+        }
+    },
+
+    onError: callback => ErrorCallbacks.push(callback)
+}
+;
 
 export default API;

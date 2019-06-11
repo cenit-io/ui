@@ -24,7 +24,7 @@ const AuthorizationService = {
     authorize: () => {
         const state = Random.string();
         localStorage.setItem(state, window.location);
-        window.location.href = `${AuthorizeURL}&state=${state}`;
+        window.location = `${AuthorizeURL}&state=${state}`;
     },
 
     getAccess: async function () {

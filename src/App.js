@@ -4,7 +4,9 @@ import QueryString from 'querystring';
 import AuthorizationService from "./services/AuthorizationService";
 import {CircularProgress} from "@material-ui/core";
 import Main from "./layout/Main";
+import API from "./services/ApiService";
 
+API.onError(e => AuthorizationService.authorize());
 
 class App extends React.Component {
 
