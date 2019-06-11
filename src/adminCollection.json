@@ -345,6 +345,26 @@
         "namespace",
         "name"
       ],
+      "namespace": "Test",
+      "name": "A.json",
+      "type": "javascript",
+      "code": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\"\n    },\n    \"number\": {\n      \"type\": \"integer\"\n    },\n    \"checked\": {\n      \"type\": \"boolean\"\n    },\n    \"embedded_b\": {\n      \"$ref\": \"B\"\n    },\n    \"ref_b\": {\n      \"referenced\": true,\n      \"$ref\": \"B\"\n    },\n    \"many_ref_bs\": {\n      \"referenced\": true,\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"B\"\n      }\n    },\n    \"embedded_a\": {\n      \"$ref\": \"A\"\n    },\n    \"many_embedded_bs\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"B\"\n      }\n    }\n  }\n}"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Test",
+      "name": "B.json",
+      "type": "javascript",
+      "code": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\"\n    },\n    \"number\": {\n      \"type\": \"number\"\n    },\n    \"color\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"red\",\n        \"green\",\n        \"blue\"\n      ]\n    }\n  }\n}"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
       "namespace": "Admin",
       "name": "authorize.rb",
       "type": "ruby",
@@ -422,6 +442,60 @@
     }
   ],
   "data_types": [
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Test",
+      "name": "A",
+      "title": "A",
+      "_type": "Setup::JsonDataType",
+      "before_save_callbacks": [
+
+      ],
+      "records_methods": [
+
+      ],
+      "data_type_methods": [
+
+      ],
+      "snippet": {
+        "_reference": true,
+        "namespace": "Test",
+        "name": "A.json"
+      },
+      "slug": "a",
+      "navigation_link": true,
+      "trace_on_default": false
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Test",
+      "name": "B",
+      "title": "B",
+      "_type": "Setup::JsonDataType",
+      "before_save_callbacks": [
+
+      ],
+      "records_methods": [
+
+      ],
+      "data_type_methods": [
+
+      ],
+      "snippet": {
+        "_reference": true,
+        "namespace": "Test",
+        "name": "B.json"
+      },
+      "slug": "b",
+      "navigation_link": true,
+      "trace_on_default": false
+    },
     {
       "_primary": [
         "namespace",
