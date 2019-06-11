@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {DataType} from "../services/DataTypeService";
-import {LinearProgress} from "@material-ui/core";
+import {InputBase, LinearProgress} from "@material-ui/core";
 import RefPicker from "./RefPicker";
 
 const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputClasses, disabled }) => {
@@ -24,7 +24,7 @@ const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputCla
 
     fetchDataType.then(dt => setDataType(dt));
 
-    return <LinearProgress/>;
+    return <div><InputBase disabled/><LinearProgress/></div>;
 };
 
 export default RecordSelector;

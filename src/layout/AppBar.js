@@ -7,7 +7,7 @@ import {
     Menu,
     MenuItem,
     Toolbar,
-    Typography
+    Typography, useMediaQuery
 } from "@material-ui/core";
 import MenuIcon from "@material-ui/icons/Menu";
 import AuthorizationService from "../services/AuthorizationService";
@@ -16,6 +16,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import HomeIcon from '@material-ui/icons/Home';
 import {fade} from '@material-ui/core/styles/colorManipulator';
 import TenantSelector from "../components/TenantSelector";
+import useTheme from "@material-ui/core/styles/useTheme";
 
 const useStyles = makeStyles(theme => ({
     grow: {
@@ -90,7 +91,10 @@ const AdminAppBar = ({ onToggle }) => {
         inputClasses = {
             root: classes.inputRoot,
             input: classes.inputInput,
-        };
+        },
+
+        theme = useTheme(),
+        xs = !useMediaQuery(theme.breakpoints.down('xs'));
 
     function handleClick(e) {
         setMenuAnchor(e.currentTarget);
@@ -110,17 +114,35 @@ const AdminAppBar = ({ onToggle }) => {
         return <CircularProgress/>
     }
 
+    const avatar = xs && <React.Fragment>
+        <IconButton onClick={handleClick}>
+            <Avatar alt={idToken.name} src={idToken.picture}/>
+        </IconButton>
+        <Menu anchorEl={menuAnchor}
+              anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right"
+              }}
+              getContentAnchorEl={null}
+              keepMounted
+              open={Boolean(menuAnchor)}
+              onClose={handleClose}>
+            <MenuItem onClick={handleLogout}>Sign out</MenuItem>
+        </Menu>
+    </React.Fragment>;
+
     return <div style={{ flexGrow: 1 }}>
         <AppBar position="static">
             <Toolbar>
                 <IconButton edge="start" color="inherit" aria-label="Menu" onClick={onToggle}>
                     <MenuIcon/>
                 </IconButton>
-                <Hidden xsDown>
+                {
+                    xs &&
                     <Typography variant="h6">
                         Admin
                     </Typography>
-                </Hidden>
+                }
                 <div className={classes.search}>
                     <div className={classes.searchIcon}>
                         <SearchIcon/>
@@ -136,22 +158,7 @@ const AdminAppBar = ({ onToggle }) => {
                     </div>
                     <TenantSelector inputClasses={inputClasses}/>
                 </div>
-                <Hidden xsDown>
-                    <IconButton onClick={handleClick}>
-                        <Avatar alt={idToken.name} src={idToken.picture}/>
-                    </IconButton>
-                    <Menu anchorEl={menuAnchor}
-                          anchorOrigin={{
-                              vertical: "bottom",
-                              horizontal: "right"
-                          }}
-                          getContentAnchorEl={null}
-                          keepMounted
-                          open={Boolean(menuAnchor)}
-                          onClose={handleClose}>
-                        <MenuItem onClick={handleLogout}>Sign out</MenuItem>
-                    </Menu>
-                </Hidden>
+                {avatar}
             </Toolbar>
         </AppBar>
     </div>
