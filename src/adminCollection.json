@@ -238,6 +238,44 @@
           "name": "index_url"
         }
       ]
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "config",
+      "tags": "[]",
+      "description": "",
+      "store_output": false,
+      "validate_output": false,
+      "language": "ruby",
+      "snippet": {
+        "_reference": true,
+        "namespace": "Admin",
+        "name": "config.rb"
+      },
+      "parameters": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "control",
+          "type": "",
+          "many": false,
+          "required": true,
+          "default": ""
+        }
+      ],
+      "call_links": [
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "config_type"
+        }
+      ]
     }
   ],
   "applications": [
@@ -295,6 +333,19 @@
             "path"
           ],
           "method": "post",
+          "path": "/config",
+          "algorithm": {
+            "_reference": true,
+            "namespace": "Admin",
+            "name": "config"
+          }
+        },
+        {
+          "_primary": [
+            "method",
+            "path"
+          ],
+          "method": "post",
           "path": "/token",
           "algorithm": {
             "_reference": true,
@@ -309,6 +360,14 @@
             "name"
           ],
           "name": "code_type",
+          "type": "Data type",
+          "many": false
+        },
+        {
+          "_primary": [
+            "name"
+          ],
+          "name": "config_type",
           "type": "Data type",
           "many": false
         },
@@ -333,6 +392,11 @@
           "_reference": true,
           "namespace": "Admin",
           "name": "Code"
+        },
+        "config_type": {
+          "_reference": true,
+          "namespace": "Admin",
+          "name": "Config"
         },
         "_type": "Setup::Application::Config"
       },
@@ -439,6 +503,26 @@
       "name": "index.rb",
       "type": "ruby",
       "code": "control.redirect_to index_url"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "Config.json",
+      "type": "javascript",
+      "code": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"user_id\": {\n      \"type\": \"string\"\n    },\n    \"tenant_id\": {\n      \"type\": \"string\"\n    },\n    \"data\": {\n      \"type\": \"object\",\n      \"default\": {\n      }\n    }\n  }\n}"
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "config.rb",
+      "type": "ruby",
+      "code": "access_token = control.request_headers['Authorization'].to_s.split(' ')[1].to_s\r\nif (user_id = control.app.user_id_for(access_token))\r\n  user_id = user_id.to_s\r\n  data =\r\n    begin\r\n      JSON.parse(control.action.body.read)\r\n    rescue\r\n      {}\r\n    end\r\n  if data.is_a?(Hash)\r\n    if (tenant_id = data['tenant_id']).is_a?(String)\r\n      unless (config = config_type.where(user_id: user_id, tenant_id: tenant_id).first)\r\n        config = config_type.create_from(user_id: user_id, tenant_id: tenant_id)\r\n        end\r\n      config.data = config.data.merge(data)\r\n      if config.save\r\n        control.render json: config.data\r\n      else\r\n        control.render json: { error: config.errors.full_messages }, status: :unprocessable_entity\r\n      end\r\n    else\r\n      control.render json: { error: 'Invalid Tenant ID' }, status: :bad_request\r\n    end\r\n  else\r\n    control.render json: { error: 'Invalid payload' }, status: :bad_request\r\n  end\r\nelse\r\n  control.render json: { error: 'Invalid code' }, status: :unauthorized\r\nend"
     }
   ],
   "data_types": [
@@ -528,6 +612,32 @@
         "name": "Code.json"
       },
       "slug": "code",
+      "navigation_link": true
+    },
+    {
+      "_primary": [
+        "namespace",
+        "name"
+      ],
+      "namespace": "Admin",
+      "name": "Config",
+      "title": "Config",
+      "_type": "Setup::JsonDataType",
+      "before_save_callbacks": [
+
+      ],
+      "records_methods": [
+
+      ],
+      "data_type_methods": [
+
+      ],
+      "snippet": {
+        "_reference": true,
+        "namespace": "Admin",
+        "name": "Config.json"
+      },
+      "slug": "config",
       "navigation_link": true
     }
   ]

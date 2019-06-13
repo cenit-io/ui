@@ -90,6 +90,16 @@ const AuthorizationService = {
     logout: function () {
         localStorage.removeItem(ACCESS_KEY);
         window.location = LogoutURL;
+    },
+
+    config: async function (data = {}) {
+        const access = await this.getAccess(),
+
+            response = await appGateway.post('config', data, {
+                headers: { Authorization: `Bearer ${access.access_token}` }
+            });
+
+        return response.data;
     }
 };
 

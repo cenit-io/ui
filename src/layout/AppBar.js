@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {
     AppBar,
     Avatar,
-    CircularProgress, Hidden,
+    CircularProgress,
     IconButton, makeStyles,
     Menu,
     MenuItem,
@@ -82,7 +82,7 @@ const useStyles = makeStyles(theme => ({
 
 const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
-const AdminAppBar = ({ onToggle }) => {
+const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeSelectorDisabled }) => {
 
     const [idToken, seIdToken] = useState(null),
         [menuAnchor, setMenuAnchor] = useState(null),
@@ -148,15 +148,16 @@ const AdminAppBar = ({ onToggle }) => {
                         <SearchIcon/>
                     </div>
                     <RecordSelector dataTypeSelector={DataTypeSelector}
-                                    onSelect={dt => console.log('Data type selected', dt)}
-                                    inputClasses={inputClasses}/>
+                                    onSelect={onDataTypeSelected}
+                                    inputClasses={inputClasses}
+                                    disabled={dataTypeSelectorDisabled}/>
                 </div>
                 <div className={classes.grow}/>
                 <div className={classes.search}>
                     <div className={classes.searchIcon}>
                         <HomeIcon/>
                     </div>
-                    <TenantSelector inputClasses={inputClasses}/>
+                    <TenantSelector inputClasses={inputClasses} onSelect={onTenantSelected}/>
                 </div>
                 {avatar}
             </Toolbar>
