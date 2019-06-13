@@ -7,18 +7,23 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
 import {CircularProgress} from "@material-ui/core";
 
-const Navigation = ({ docked, config }) => {
+const Navigation = ({ docked, config, onItemSelected }) => {
 
-    const [over, setOver] = useState(false);
+    const [over, setOver] = useState(false),
+
+        select = item => () => onItemSelected(item);
 
     let nav;
 
     if (config) {
-        nav = (config.dataTypesIds || []).map(
-            (id, index) => <ListItem button key={id}>
-                <ListItemIcon>{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}</ListItemIcon>
-                {(over || docked) && <ListItemText primary={config.titles[index]}/>}
-            </ListItem>
+        nav = (config.dataTypes || []).map(
+            (record, index) => {
+                const title = config.titles[index];
+                return <ListItem button key={record.id} onClick={select({ record, title })}>
+                    <ListItemIcon>{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}</ListItemIcon>
+                    {(over || docked) && <ListItemText primary={title}/>}
+                </ListItem>;
+            }
         );
         nav = <List> {nav} </List>;
     } else {

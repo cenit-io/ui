@@ -10,13 +10,18 @@ import {DataType} from "../services/DataTypeService";
 const Main = () => {
     const [docked, setDocked] = useState(false),
         [config, setConfig] = useState(null),
+        [selectedItem, setSelectedItem] = useState(null),
 
-        navigation = <Navigation docked={docked} config={config}/>,
+        navigation = <Navigation docked={docked} config={config} onItemSelected={handleItemSelected}/>,
 
         theme = useTheme(),
         xs = useMediaQuery(theme.breakpoints.down('xs')),
 
         switchNavigation = () => setDocked(!docked);
+
+    function handleItemSelected(item) {
+        setSelectedItem(item);
+    }
 
     function configure(data) {
         if (!config || config.tenant_id !== data.tenant_id) {
@@ -66,7 +71,7 @@ const Main = () => {
                 order: 1,
                 border: 'solid 2px blue'
             }}>
-                <FormTest/>
+                <FormTest {...selectedItem}/>
             </div>
             {
                 xs || navigation
