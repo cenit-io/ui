@@ -5,6 +5,7 @@ import AppBar from './AppBar';
 import Navigation from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
 import AuthorizationService from "../services/AuthorizationService";
+import {DataType} from "../services/DataTypeService";
 
 const Main = () => {
     const [docked, setDocked] = useState(false),
@@ -18,9 +19,19 @@ const Main = () => {
         switchNavigation = () => setDocked(!docked);
 
     function configure(data) {
-        setConfig(null);
-        AuthorizationService.config(data)
-            .then(data => setConfig(data));
+        if (!config || config.tenant_id !== data.tenant_id) {
+            setConfig(null);
+        }
+        AuthorizationService.config({ tenant_id: data.tenant_id, dataTypesIds: data.dataTypesIds })
+            .then(data => {
+                const dataTypesIds = data.dataTypesIds || [];
+                Promise.all(
+                    dataTypesIds.map(id => DataType.getById(id))
+                ).then(dataTypes => {
+                    Promise.all(dataTypes.map(dataType => dataType.getTitle()))
+                        .then(titles => setConfig({ ...data, dataTypesIds, dataTypes, titles }));
+                });
+            });
     }
 
     function handleTenantSelected(tenant) {
@@ -30,11 +41,16 @@ const Main = () => {
     }
 
     function handleDataTypeSelected(dataType) {
-        const dataTypesIds = config.dataTypesIds || [], dataTypeId = dataType.record.id;
+        const dataTypesIds = config.dataTypesIds || [],
+            dataTypes = config.dataTypes || [],
+            titles = config.titles || [],
+            dataTypeId = dataType.record.id;
 
         if (dataTypesIds.indexOf(dataTypeId) === -1) {
             dataTypesIds.push(dataTypeId);
-            configure({ tenant_id: config.tenant_id, dataTypesIds })
+            dataTypes.push(dataType.record);
+            titles.push(dataType.title);
+            configure({ tenant_id: config.tenant_id, dataTypesIds, dataTypes, titles });
         }
     }
 

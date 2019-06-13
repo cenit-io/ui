@@ -17,7 +17,7 @@ const Navigation = ({ docked, config }) => {
         nav = (config.dataTypesIds || []).map(
             (id, index) => <ListItem button key={id}>
                 <ListItemIcon>{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}</ListItemIcon>
-                {(over || docked) && <ListItemText primary={id}/>}
+                {(over || docked) && <ListItemText primary={config.titles[index]}/>}
             </ListItem>
         );
         nav = <List> {nav} </List>;
