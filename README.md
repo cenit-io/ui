@@ -6,6 +6,9 @@ Fallow these instructions to configure a local instance of Cenit and connect it 
 
 ### Configuring the Backed
 
+First of all be sure the local repositories are upto date with the remotes.
+The develop branch of Cenit to support the Admin Backed is `admin-backed`.
+
 1. **Configure the Cenit listening port.** By default the Admin App runs listening the port `3000` therefore the local instance of Cenit should runs listening a different one.
 By default the App expect Cenit is listening the port `3001`, so launch Cenit listening the port `3001`.
 
