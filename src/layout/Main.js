@@ -1,14 +1,16 @@
 import React, {useState} from 'react';
 import FormTest from "../components/FormTest";
-import {Drawer, useMediaQuery} from "@material-ui/core";
+import {useMediaQuery} from "@material-ui/core";
 import AppBar from './AppBar';
 import Navigation from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
 import AuthorizationService from "../services/AuthorizationService";
 import {DataType} from "../services/DataTypeService";
+import Drawer from "../components/Drawer";
 
 const Main = () => {
     const [docked, setDocked] = useState(localStorage.getItem('docked') !== 'false'),
+        [idToken, setIdToken] = useState(null),
         [config, setConfig] = useState(null),
         [selectedItem, setSelectedItem] = useState(null),
 
@@ -65,11 +67,16 @@ const Main = () => {
         }
     }
 
+    if (!idToken) {
+        AuthorizationService.getIdToken().then(token => setIdToken(token));
+    }
+
     return <div>
         <AppBar onToggle={switchNavigation}
                 onTenantSelected={handleTenantSelected}
                 onDataTypeSelected={handleDataTypeSelected}
-                dataTypeSelectorDisabled={config === null}/>
+                dataTypeSelectorDisabled={config === null}
+                idToken={idToken}/>
         <div style={{ position: 'relative', display: 'flex' }}>
             <div style={{
                 flexGrow: 1,
@@ -83,9 +90,10 @@ const Main = () => {
             }
             {
                 xs &&
-                <Drawer open={docked} onClose={switchNavigation}>
-                    {navigation}
-                </Drawer>
+                <Drawer docked={docked}
+                        onClose={switchNavigation}
+                        idToken={idToken}
+                        navigation={navigation}/>
             }
         </div>
     </div>

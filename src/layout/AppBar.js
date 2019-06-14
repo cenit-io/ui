@@ -61,10 +61,9 @@ const useStyles = makeStyles(theme => ({
 
 const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
-const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeSelectorDisabled }) => {
+const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeSelectorDisabled, idToken }) => {
 
-    const [idToken, seIdToken] = useState(null),
-        [menuAnchor, setMenuAnchor] = useState(null),
+    const [menuAnchor, setMenuAnchor] = useState(null),
 
         classes = useStyles(),
         inputClasses = {
@@ -89,7 +88,6 @@ const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeS
     }
 
     if (!idToken) {
-        AuthorizationService.getIdToken().then(token => seIdToken(token));
         return <CircularProgress/>
     }
 
