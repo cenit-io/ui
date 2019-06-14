@@ -7,7 +7,7 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
 import {CircularProgress} from "@material-ui/core";
 
-const Navigation = ({ docked, config, onItemSelected }) => {
+const Navigation = ({ docked, xs, config, onItemSelected }) => {
 
     const [over, setOver] = useState(false),
 
@@ -39,11 +39,11 @@ const Navigation = ({ docked, config, onItemSelected }) => {
     }
 
     return <div style={{
-        border: 'solid 2px darkgreen',
         position: docked ? 'static' : 'absolute',
         background: 'white',
         order: 0,
-        height: '100%'
+        height: (docked && !xs) ? 'unset' : '100%',
+        boxShadow: '0 19px 38px rgba(0,0,0,0.30)'
     }}
                 onMouseEnter={() => setOver(true)}
                 onMouseLeave={() => setOver(false)}>

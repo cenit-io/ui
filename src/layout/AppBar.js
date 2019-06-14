@@ -22,15 +22,6 @@ const useStyles = makeStyles(theme => ({
     grow: {
         flexGrow: 1,
     },
-    menuButton: {
-        marginRight: theme.spacing(2),
-    },
-    title: {
-        display: 'none',
-        [theme.breakpoints.up('sm')]: {
-            display: 'block',
-        },
-    },
     search: {
         position: 'relative',
         borderRadius: theme.shape.borderRadius,
@@ -65,19 +56,7 @@ const useStyles = makeStyles(theme => ({
         [theme.breakpoints.up('md')]: {
             width: 200,
         },
-    },
-    sectionDesktop: {
-        display: 'none',
-        [theme.breakpoints.up('md')]: {
-            display: 'flex',
-        },
-    },
-    sectionMobile: {
-        display: 'flex',
-        [theme.breakpoints.up('md')]: {
-            display: 'none',
-        },
-    },
+    }
 }));
 
 const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };

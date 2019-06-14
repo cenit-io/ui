@@ -8,16 +8,22 @@ import AuthorizationService from "../services/AuthorizationService";
 import {DataType} from "../services/DataTypeService";
 
 const Main = () => {
-    const [docked, setDocked] = useState(false),
+    const [docked, setDocked] = useState(localStorage.getItem('docked') !== 'false'),
         [config, setConfig] = useState(null),
         [selectedItem, setSelectedItem] = useState(null),
-
-        navigation = <Navigation docked={docked} config={config} onItemSelected={handleItemSelected}/>,
 
         theme = useTheme(),
         xs = useMediaQuery(theme.breakpoints.down('xs')),
 
-        switchNavigation = () => setDocked(!docked);
+        navigation = <Navigation docked={docked}
+                                 xs={xs}
+                                 config={config}
+                                 onItemSelected={handleItemSelected}/>,
+
+        switchNavigation = () => {
+            localStorage.setItem('docked', String(!docked));
+            setDocked(!docked);
+        };
 
     function handleItemSelected(item) {
         setSelectedItem(item);
@@ -64,12 +70,11 @@ const Main = () => {
                 onTenantSelected={handleTenantSelected}
                 onDataTypeSelected={handleDataTypeSelected}
                 dataTypeSelectorDisabled={config === null}/>
-        <div style={{ position: 'relative', display: 'flex', border: 'solid 2px red' }}>
+        <div style={{ position: 'relative', display: 'flex' }}>
             <div style={{
                 flexGrow: 1,
                 marginLeft: (xs || docked) ? 'unset' : '95px',
-                order: 1,
-                border: 'solid 2px blue'
+                order: 1
             }}>
                 <FormTest {...selectedItem}/>
             </div>
