@@ -37,6 +37,9 @@ const Main = () => {
         };
 
     function handleItemSelected(item) {
+        if (xs) {
+            switchNavigation();
+        }
         setSelectedItem(item);
     }
 
