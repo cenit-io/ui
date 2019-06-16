@@ -4,6 +4,7 @@ export class DataType {
 
     static dataTypes = {};
     static promises = {};
+    static criteria = {};
 
     static getById(id) {
         let promise = DataType.promises[id];
@@ -29,28 +30,35 @@ export class DataType {
         return promise;
     }
 
-    static find(criteria) {
-        return new Promise(
-            (resolve, reject) => {
-                API.get('setup', 'data_type', {
-                    params: { limit: 1 },
-                    headers: {
-                        'X-Template-Options': JSON.stringify({ viewport: '{_id}' }),
-                        'X-Query-Selector': JSON.stringify(criteria)
-                    }
-                }).then(
-                    response => {
-                        const item = response['items'][0];
-                        if (item) {
-                            this.getById(item['id'])
-                                .then(dataType => resolve(dataType))
-                                .catch(error => reject(error));
-                        } else {
-                            reject('Data type ref ' + JSON.stringify(criteria) + ' not found');
-                        }
-                    })
-                    .catch(error => reject(error));
-            });
+    static async find(criteria) {
+        const key = Object.keys(criteria).sort()
+            .map(
+                key => `${key}(${JSON.stringify(criteria[key])})`
+            ).join();
+
+        let id = DataType.criteria[key];
+
+        if (id) {
+            return this.getById(id);
+        }
+
+        const response = await API.get('setup', 'data_type', {
+                params: { limit: 1 },
+                headers: {
+                    'X-Template-Options': JSON.stringify({ viewport: '{_id}' }),
+                    'X-Query-Selector': JSON.stringify(criteria)
+                }
+            }),
+
+            item = response['items'][0];
+
+        if (item) {
+            DataType.criteria[key] = item['id'];
+
+            return this.getById(item['id']);
+        }
+
+        return null;
     }
 
     async getSchema() {
