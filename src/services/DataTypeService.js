@@ -53,61 +53,26 @@ export class DataType {
             });
     }
 
-    getSchema() {
-        if (!this.schemaPromise) {
-            this.schemaPromise = new Promise(
-                (resolve, reject) => {
-                    if (this.schema) {
-                        resolve(this.schema);
-                    } else {
-                        API.get('setup', 'data_type', this.id, 'digest', 'schema')
-                            .then(
-                                schema => {
-                                    this.schema = schema;
-                                    resolve(schema);
-                                    this.schemaPromise = null;
-                                })
-                            .catch(
-                                error => reject(error)
-                            );
-                    }
-                }
-            );
+    async getSchema() {
+        if (!this.schema) {
+            this.schema = await API.get('setup', 'data_type', this.id, 'digest', 'schema');
         }
-        return this.schemaPromise;
+        return this.schema;
     }
 
-    getProps() {
-        if (!this.propsPromise) {
-            this.propsPromise = new Promise(
-                (resolve, reject) => {
-                    const handleError = error => reject(error);
-                    if (this.properties) {
-                        resolve(this.properties);
-                        this.propsPromise = null;
-                    } else {
-                        this.getSchema()
-                            .then(schema => {
-                                this.mergeSchema(schema['properties'] || {}).then(
-                                    propSchemas => {
-                                        Promise.all(
-                                            Object.keys(propSchemas).map(
-                                                property => this.propertyFrom(property, propSchemas[property])
-                                            )
-                                        ).then(properties => {
-                                            resolve(properties);
-                                            this.propsPromise = null;
-                                        })
-                                            .catch(handleError);
-                                    }
-                                ).catch(handleError);
-                            })
-                            .catch(handleError);
-                    }
-                }
+    async getProps() {
+        if (!this.properties) {
+            const schema = await this.getSchema();
+
+            this.propertiesSchema = this.propertiesSchema || await this.mergeSchema(schema['properties'] || {});
+
+            this.properties = await Promise.all(
+                Object.keys(this.propertiesSchema).map(
+                    property => this.propertyFrom(property, this.propertiesSchema[property])
+                )
             );
         }
-        return this.propsPromise;
+        return this.properties;
     }
 
     async queryProps() {
@@ -123,149 +88,86 @@ export class DataType {
         return props.filter(p => titlePropNames.indexOf(p.name) > -1);
     }
 
-    visibleProps() {
-        return new Promise(
-            (resolve, reject) => {
-                this.getProps()
-                    .then(
-                        props => {
-                            Promise.all(props.map(prop => prop.isVisible()))
-                                .then(
-                                    visibles => {
-                                        resolve(
-                                            visibles.map((v, index) => v ? props[index] : null)
-                                                .filter(p => p)
-                                        );
-                                    }
-                                )
-                                .catch(error => reject(error));
-                        }
-                    )
-                    .catch(error => reject(error));
-            }
-        );
+    async visibleProps() {
+        const props = await this.getProps();
+
+        return (await Promise.all(props.map(prop => prop.isVisible())))
+            .map((v, index) => v ? props[index] : null)
+            .filter(p => p);
     }
 
-    mergeSchema(schema) {
-        return new Promise(
-            (resolve, reject) => {
-                if (schema['extends'] || schema['$ref']) {
-                    API.post('setup', 'data_type', this.id, 'digest', 'schema', schema)
-                        .then(mergedSchema => resolve(mergedSchema))
-                        .catch(error => reject(error));
+    async mergeSchema(schema) {
+        if (schema['extends'] || schema['$ref']) {
+            return API.post('setup', 'data_type', this.id, 'digest', 'schema', schema);
+        }
+        return schema;
+    }
+
+    async getTitle() {
+        const schema = await this.getSchema();
+
+        let title = schema['title'];
+        if (title) {
+            return title.toString();
+        }
+
+        return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+    }
+
+    async getSchemaEntry(key) {
+        return (await this.getSchema())[key];
+    }
+
+    async propertyFrom(name, schema) {
+        let ref, mergedSchema, dataType;
+        // Checking referenced schema
+        if (
+            schema.constructor === Object && (
+            ((ref = schema['$ref']) && ref.constructor !== Array) || schema['type'] === 'array')
+        ) {
+            if (ref && ref.constructor !== Object) {
+                ref = ref.toString();
+            }
+            const nakedSchema = this.strip(schema);
+            const size = Object.keys(nakedSchema).length;
+            let items;
+            if (
+                (ref && (size === 1 || (size === 2 && nakedSchema.hasOwnProperty('referenced')))) ||
+                (nakedSchema['type'] === 'array' && (items = this.strip(nakedSchema['items'])) &&
+                    (size === 2 || (size === 3 && nakedSchema.hasOwnProperty('referenced'))) &&
+                    Object.keys(items).length === 1 && (ref = items['$ref']) && (ref.constructor === String || ref.constructor === Object))
+            ) {
+                if (ref.constructor === Object) {
+                    dataType = await DataType.find(ref);
                 } else {
-                    resolve(schema);
+                    dataType = (await DataType.find({ namespace: this.namespace, name: ref })) ||
+                        (await DataType.find({ name: ref }));
                 }
             }
-        );
-    }
-
-    getTitle() {
-        return new Promise(
-            (resolve, reject) => {
-                this.getSchema()
-                    .then(
-                        schema => {
-                            let title = schema['title'];
-                            if (title) {
-                                resolve(title.toString());
-                            } else {
-                                resolve(this.name.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()));
-                            }
-                        }
-                    )
-                    .catch(e => reject(e));
+        }
+        // Not referenced schema
+        if (!dataType) {
+            mergedSchema = await this.mergeSchema(schema);
+            let typeSchema;
+            if (mergedSchema['type'] === 'array' && mergedSchema.hasOwnProperty('items')) {
+                typeSchema = mergedSchema['items'];
+            } else {
+                typeSchema = mergedSchema;
             }
-        );
-    }
+            dataType = new DataType();
+            dataType._type = JSON_TYPE;
+            dataType.name = this.name + '::' + name;
+            dataType.schema = typeSchema;
+        }
 
-    getSchemaEntry(key) {
-        return new Promise(
-            (resolve, reject) => {
-                this.getSchema()
-                    .then(schema => resolve(schema[key]))
-                    .catch(e => reject(e));
-            }
-        );
-    }
+        mergedSchema = await dataType.mergeSchema(schema);
 
-    propertyFrom(name, schema) {
-        return new Promise(
-            (propResolve, propReject) => {
-                let ref, resolveDataType;
-                // Checking referenced schema
-                if (
-                    schema.constructor === Object && (
-                    ((ref = schema['$ref']) && ref.constructor !== Array) || schema['type'] === 'array')
-                ) {
-                    if (ref && ref.constructor !== Object) {
-                        ref = ref.toString();
-                    }
-                    const nakedSchema = this.strip(schema);
-                    const size = Object.keys(nakedSchema).length;
-                    let items;
-                    if (
-                        (ref && (size === 1 || (size === 2 && nakedSchema.hasOwnProperty('referenced')))) ||
-                        (nakedSchema['type'] === 'array' && (items = this.strip(nakedSchema['items'])) &&
-                            (size === 2 || (size === 3 && nakedSchema.hasOwnProperty('referenced'))) &&
-                            Object.keys(items).length === 1 && (ref = items['$ref']) && (ref.constructor === String || ref.constructor === Object))
-                    ) {
-                        if (ref.constructor === Object) {
-                            resolveDataType = DataType.find(ref);
-                        } else {
-                            resolveDataType = new Promise(
-                                (resolve, reject) => DataType.find({ namespace: this.namespace, name: ref })
-                                    .then(dataType => resolve(dataType))
-                                    .catch(
-                                        () => DataType.find({ name: ref })
-                                            .then(dataType => resolve(dataType))
-                                            .catch(() => reject('Data type ref ' + JSON.stringify(ref) + ' not found'))
-                                    )
-                            );
-                        }
-                    }
-                }
-                // Not referenced schema
-                if (!resolveDataType) {
-                    resolveDataType = new Promise(
-                        (resolve, reject) => {
-                            this.mergeSchema(schema)
-                                .then(
-                                    mergedSchema => {
-                                        let typeSchema;
-                                        if (mergedSchema['type'] === 'array' && mergedSchema.hasOwnProperty('items')) {
-                                            typeSchema = mergedSchema['items'];
-                                        } else {
-                                            typeSchema = mergedSchema;
-                                        }
-                                        let dataType = new DataType();
-                                        dataType._type = JSON_TYPE;
-                                        dataType.name = this.name + '::' + name;
-                                        dataType.schema = typeSchema;
-                                        resolve(dataType);
-                                    }
-                                )
-                                .catch(err => reject(err));
-                        }
-                    );
-                }
-                resolveDataType.then(
-                    dataType => {
-                        dataType.mergeSchema(schema)
-                            .then(
-                                mergedSchema => {
-                                    const prop = new Property();
-                                    prop.name = name;
-                                    prop.dataType = dataType;
-                                    prop.propertySchema = mergedSchema;
-                                    propResolve(prop);
-                                }
-                            )
-                            .catch(error => propReject(error));
-                    }
-                ).catch(error => propReject(error));
-            }
-        );
+        const prop = new Property();
+        prop.name = name;
+        prop.dataType = dataType;
+        prop.propertySchema = mergedSchema;
+
+        return prop;
     }
 
     strip(schema) {
@@ -373,95 +275,47 @@ export class DataType {
 
 export class Property {
 
-    getSchema = () => {
+    getSchema = async () => {
         if (this.propertySchema) {
-            return Promise.resolve(this.propertySchema);
+            return this.propertySchema;
         }
         return this.dataType.getSchema();
     };
 
-    getSchemaEntry = key => {
-        return new Promise(
-            (resolve, reject) => {
-                this.getSchema()
-                    .then(
-                        schema => {
-                            resolve(schema[key]);
-                        }
-                    )
-                    .catch(e => reject(e));
-            }
-        );
+    getSchemaEntry = async key => {
+        return (await this.getSchema())[key];
     };
 
-    isVisible = () => {
-        return new Promise(
-            (resolve, reject) => {
-                this.getSchema()
-                    .then(
-                        schema => resolve(
-                            (!schema.hasOwnProperty('visible') || schema['visible']) &&
-                            (!schema.hasOwnProperty('edi') || (schema['edi'].constructor === Object && !schema['edi']['discard']))
-                        )
-                    )
-                    .catch(error => reject(error));
-            }
-        );
+    isVisible = async () => {
+        const schema = await this.getSchema();
+
+        return (!schema.hasOwnProperty('visible') || schema['visible']) &&
+            (!schema.hasOwnProperty('edi') || (schema['edi'].constructor === Object && !schema['edi']['discard']));
     };
 
-    isSimple = () => {
-        return new Promise(
-            (resolve, reject) => {
-                this.getSchema()
-                    .then(
-                        schema => resolve(['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1)
-                    )
-                    .catch(error => reject(error));
-            }
-        );
+    isSimple = async () => {
+        const schema = await this.getSchema();
+
+        return ['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1;
     };
 
-    isReferenced() {
-        return new Promise(
-            (resolve, reject) => {
-                this.getSchema()
-                    .then(
-                        schema => resolve(schema['referenced'])
-                    )
-                    .catch(error => reject(error));
-            }
-        );
+    async isReferenced() {
+        return (await this.getSchema())['referenced'];
     }
 
-    isMany() {
-        return new Promise(
-            (resolve, reject) => {
-                this.getSchema()
-                    .then(
-                        schema => resolve(schema['type'] === 'array')
-                    )
-                    .catch(error => reject(error));
-            }
-        );
+    async isMany() {
+        return (await this.getSchema())['type'] === 'array';
     }
 
-    getTitle() {
-        return new Promise(
-            (resolve, reject) => {
-                this.getSchema()
-                    .then(
-                        schema => {
-                            let title = schema['title'];
-                            if (title) {
-                                resolve(title.toString());
-                            } else {
-                                resolve(this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()));
-                            }
-                        }
-                    )
-                    .catch(e => reject(e));
-            }
-        );
+    async getTitle() {
+        const schema = await this.getSchema();
+
+        let title = schema['title'];
+        if (title) {
+            return title.toString();
+        }
+
+        return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
     }
 }
 
