@@ -1,18 +1,27 @@
 import React, {useState} from 'react';
 import FormTest from "../components/FormTest";
-import {useMediaQuery} from "@material-ui/core";
+import {makeStyles, useMediaQuery} from "@material-ui/core";
 import AppBar from './AppBar';
 import Navigation from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
 import AuthorizationService from "../services/AuthorizationService";
 import {DataType} from "../services/DataTypeService";
 import Drawer from "../components/Drawer";
+import clsx from "clsx";
+
+const useStyles = makeStyles(theme => ({
+    contentMargin: {
+        marginLeft: theme.spacing(7) + 1
+    }
+}));
 
 const Main = () => {
     const [docked, setDocked] = useState(localStorage.getItem('docked') !== 'false'),
         [idToken, setIdToken] = useState(null),
         [config, setConfig] = useState(null),
         [selectedItem, setSelectedItem] = useState(null),
+
+        classes = useStyles(),
 
         theme = useTheme(),
         xs = useMediaQuery(theme.breakpoints.down('xs')),
@@ -78,11 +87,11 @@ const Main = () => {
                 dataTypeSelectorDisabled={config === null}
                 idToken={idToken}/>
         <div style={{ position: 'relative', display: 'flex' }}>
-            <div style={{
-                flexGrow: 1,
-                marginLeft: (xs || docked) ? 'unset' : '95px',
-                order: 1
-            }}>
+            <div className={clsx(!(xs || docked) && classes.contentMargin)}
+                 style={{
+                     flexGrow: 1,
+                     order: 1
+                 }}>
                 <FormTest {...selectedItem}/>
             </div>
             {

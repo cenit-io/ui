@@ -1,15 +1,36 @@
 import React, {useState} from 'react';
+import clsx from 'clsx';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
-import {CircularProgress} from "@material-ui/core";
+import {CircularProgress, makeStyles} from "@material-ui/core";
+
+const useStyles = makeStyles(theme => ({
+    navOpen: {
+        width: '240px',
+        transition: theme.transitions.create(['width'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+    },
+    navClose: {
+        transition: theme.transitions.create(['width'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+        }),
+        overflowX: 'hidden',
+        width: theme.spacing(7) + 1
+    }
+}));
 
 const Navigation = ({ docked, xs, config, onItemSelected }) => {
 
     const [over, setOver] = useState(false),
+
+        classes = useStyles(),
 
         select = item => () => onItemSelected(item);
 
@@ -21,11 +42,11 @@ const Navigation = ({ docked, xs, config, onItemSelected }) => {
                 const title = config.titles[index];
                 return <ListItem button key={record.id} onClick={select({ record, title })}>
                     <ListItemIcon>{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}</ListItemIcon>
-                    {(over || docked) && <ListItemText primary={title}/>}
+                    <ListItemText primary={title}/>
                 </ListItem>;
             }
         );
-        nav = <List> {nav} </List>;
+        nav = <List style={{ overflowX: 'hidden' }}> {nav} </List>;
     } else {
         nav = <div style={{
             width: '100%',
@@ -38,13 +59,16 @@ const Navigation = ({ docked, xs, config, onItemSelected }) => {
         </div>
     }
 
-    return <div style={{
-        position: docked ? 'static' : 'absolute',
-        background: 'white',
-        order: 0,
-        height: (docked && !xs) ? 'unset' : '100%',
-        boxShadow: '0 19px 38px rgba(0,0,0,0.30)'
-    }}
+    const open = docked || over;
+
+    return <div className={clsx(classes.drawer, { [classes.navOpen]: open, [classes.navClose]: !open })}
+                style={{
+                    position: docked ? 'static' : 'absolute',
+                    background: 'white',
+                    order: 0,
+                    height: (docked && !xs) ? 'unset' : '100%',
+                    boxShadow: '0 19px 38px rgba(0,0,0,0.30)'
+                }}
                 onMouseEnter={() => setOver(true)}
                 onMouseLeave={() => setOver(false)}>
         {nav}
