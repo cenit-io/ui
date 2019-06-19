@@ -27,6 +27,8 @@ and make sure to configure the backend app (**Admin | App**) as fallows.
     - Execute the **Regist** action for the app and assign it the slug `admin`. The values for the rest of the fields are not important
     but the default configuration of the React Admin App expect the slug of the backed app to be `admin`.
     
+    - **Trust** the backend app by executing the **Trust** action at **Administration -> Application IDs**.
+    
 5. **Check the OAuth 2 Scopes**. Go to **Security -> OAuth 2.0 Scopes** and check that the scope **Cenit | OAuth [Build-In]	| {{scope}}**
 is in the `cenit` origin and if not then **cross** it to the `cenit` origin.  
 
