@@ -5,7 +5,6 @@ import {
     CircularProgress,
     IconButton, makeStyles,
     Menu,
-    MenuItem,
     Toolbar,
     Typography, useMediaQuery
 } from "@material-ui/core";
@@ -17,6 +16,7 @@ import HomeIcon from '@material-ui/icons/Home';
 import {fade} from '@material-ui/core/styles/colorManipulator';
 import TenantSelector from "../components/TenantSelector";
 import useTheme from "@material-ui/core/styles/useTheme";
+import UserCard from "../components/UserCard";
 
 const useStyles = makeStyles(theme => ({
     grow: {
@@ -104,7 +104,7 @@ const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeS
               keepMounted
               open={Boolean(menuAnchor)}
               onClose={handleClose}>
-            <MenuItem onClick={handleLogout}>Sign out</MenuItem>
+            <UserCard idToken={idToken}/>
         </Menu>
     </React.Fragment>;
 
