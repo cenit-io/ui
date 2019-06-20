@@ -2,14 +2,13 @@ import React, {useState} from 'react';
 import {
     AppBar,
     Avatar,
-    CircularProgress,
+    CircularProgress, ClickAwayListener,
     IconButton, makeStyles,
-    Menu,
+    Paper,
     Toolbar,
     Typography, useMediaQuery
 } from "@material-ui/core";
 import MenuIcon from "@material-ui/icons/Menu";
-import AuthorizationService from "../services/AuthorizationService";
 import RecordSelector from "../components/RecordSelector";
 import SearchIcon from '@material-ui/icons/Search';
 import HomeIcon from '@material-ui/icons/Home';
@@ -63,7 +62,7 @@ const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
 const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeSelectorDisabled, idToken }) => {
 
-    const [menuAnchor, setMenuAnchor] = useState(null),
+    const [open, setOpen] = useState(false),
 
         classes = useStyles(),
         inputClasses = {
@@ -72,41 +71,47 @@ const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeS
         },
 
         theme = useTheme(),
-        xs = !useMediaQuery(theme.breakpoints.down('xs'));
+        smUp = useMediaQuery(theme.breakpoints.up('sm'));
 
     function handleClick(e) {
-        setMenuAnchor(e.currentTarget);
+        setOpen(e.currentTarget);
     }
 
     function handleClose() {
-        setMenuAnchor(null);
+        setOpen(null);
     }
 
-    function handleLogout() {
+    if (!smUp && open) {
         handleClose();
-        AuthorizationService.logout();
     }
 
     if (!idToken) {
         return <CircularProgress/>
     }
 
-    const avatar = xs && <React.Fragment>
+    let menu;
+
+    if (open) {
+        menu = <ClickAwayListener onClickAway={handleClose}>
+            <Paper style={{
+                position: 'absolute',
+                background: 'white',
+                border: 'gray',
+                zIndex: 1001,
+                right: 0,
+                width: 'max-content'
+            }}>
+                <UserCard idToken={idToken}/>
+            </Paper>
+        </ClickAwayListener>;
+    }
+
+    const avatar = smUp && <div style={{ position: 'relative' }}>
         <IconButton onClick={handleClick}>
             <Avatar alt={idToken.name} src={idToken.picture}/>
         </IconButton>
-        <Menu anchorEl={menuAnchor}
-              anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "right"
-              }}
-              getContentAnchorEl={null}
-              keepMounted
-              open={Boolean(menuAnchor)}
-              onClose={handleClose}>
-            <UserCard idToken={idToken}/>
-        </Menu>
-    </React.Fragment>;
+        {menu}
+    </div>;
 
     return <div style={{ flexGrow: 1 }}>
         <AppBar position="static">
@@ -115,7 +120,7 @@ const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeS
                     <MenuIcon/>
                 </IconButton>
                 {
-                    xs &&
+                    smUp &&
                     <Typography variant="h6">
                         Admin
                     </Typography>
