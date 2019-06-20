@@ -28,67 +28,51 @@ export const ApiResource = function () {
 
     this.path = '/' + args.join('/');
 
-    this.get = () => {
-        return new Promise(
-            (resolve, reject) => {
-                AuthorizationService.getAccessToken()
-                    .then(
-                        access_token => {
-                            apiGateway.get(this.path, {
-                                headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                                params: params
-                            })
-                                .then(response => resolve(response.data))
-                                .catch(error => reject(error))
-                        }
-                    )
-                    .catch(error => reject(error))
-            }
-        );
+    this.get = async () => {
+        const access_token = await AuthorizationService.getAccessToken(),
+
+            response = await apiGateway.get(this.path, {
+                headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
+                params: params
+            });
+
+        return response.data;
     };
 
-    this.post = (data) => {
-        return new Promise(
-            (resolve, reject) => {
-                AuthorizationService.getAccessToken()
-                    .then(
-                        access_token => {
-                            apiGateway.post(this.path, data, {
+    this.post = async data => {
+        const access_token = await AuthorizationService.getAccessToken(),
+
+            response = await apiGateway.post(this.path, data, {
                                 headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
                                 parameters: params
-                            })
-                                .then(response => resolve(response.data))
-                                .catch(error => reject(error))
-                        }
-                    )
-                    .catch(error => reject(error))
-            }
-        );
+                            });
+
+        return response.data;
     };
 };
 
 const ErrorCallbacks = [];
 
 const API = {
-    get: async (...args) => {
-        try {
-            return await (new ApiResource(...args)).get()
-        } catch (e) {
-            ErrorCallbacks.forEach(callback => callback(e));
-        }
-    },
+        get: async (...args) => {
+            try {
+                return await (new ApiResource(...args)).get()
+            } catch (e) {
+                ErrorCallbacks.forEach(callback => callback(e));
+            }
+        },
 
-    post: async (...args) => {
-        try {
-            const data = args.pop();
-            return await (new ApiResource(...args)).post(data);
-        } catch (e) {
-            ErrorCallbacks.forEach(callback => callback(e));
-        }
-    },
+        post: async (...args) => {
+            try {
+                const data = args.pop();
+                return await (new ApiResource(...args)).post(data);
+            } catch (e) {
+                ErrorCallbacks.forEach(callback => callback(e));
+            }
+        },
 
-    onError: callback => ErrorCallbacks.push(callback)
-}
+        onError: callback => ErrorCallbacks.push(callback)
+    }
 ;
 
 export default API;

@@ -2,32 +2,20 @@ import API from './ApiService';
 
 export class DataType {
 
-    static dataTypes = {};
-    static promises = {};
+    static dataTypes = {}; // TODO Store data types cache using a pair key tenant.id -> dataType.id
     static criteria = {};
 
-    static getById(id) {
-        let promise = DataType.promises[id];
-        if (!promise) {
-            DataType.promises[id] = promise = new Promise(
-                (resolve, reject) => {
-                    let dataType = DataType.dataTypes[id];
-                    if (!dataType) {
-                        API.get('setup', 'data_type', id, {
-                            headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
-                        }).then(dataType => {
-                            if (dataType._type === JSON_TYPE) delete dataType.schema;
-                            dataType.__proto__ = new DataType();
-                            DataType.promises[id] = dataType;
-                            resolve(dataType);
-                            delete DataType.promises[id];
-                        }).catch(error => reject(error));
-                    } else {
-                        resolve(dataType);
-                    }
-                });
+    static async getById(id) {
+        let dataType = DataType.dataTypes[id];
+        if (!dataType) {
+            dataType = await API.get('setup', 'data_type', id, {
+                headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
+            });
+            if (dataType._type === JSON_TYPE) delete dataType.schema;
+            dataType.__proto__ = new DataType();
+            DataType.dataTypes[id] = dataType;
         }
-        return promise;
+        return dataType;
     }
 
     static async find(criteria) {
