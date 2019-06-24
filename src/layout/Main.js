@@ -8,6 +8,7 @@ import AuthorizationService from "../services/AuthorizationService";
 import {DataType} from "../services/DataTypeService";
 import Drawer from "../components/Drawer";
 import clsx from "clsx";
+import Tabs from "../components/Tabs";
 
 const useStyles = makeStyles(theme => ({
     contentMargin: {
@@ -19,7 +20,8 @@ const Main = () => {
     const [docked, setDocked] = useState(localStorage.getItem('docked') !== 'false'),
         [idToken, setIdToken] = useState(null),
         [config, setConfig] = useState(null),
-        [selectedItem, setSelectedItem] = useState(null),
+        [items, setItems] = useState([]),
+        [selectedIndex, setSelectedIndex] = useState(0),
 
         classes = useStyles(),
 
@@ -40,7 +42,21 @@ const Main = () => {
         if (xs) {
             switchNavigation();
         }
-        setSelectedItem(item);
+        let index = items.indexOf(item);
+        if (index === -1) {
+            index = items.length;
+            setItems([...items, item]);
+        }
+        setSelectedIndex(index);
+    }
+
+    function removeItem(index) {
+        if (selectedIndex === items.length - 1) {
+            setSelectedIndex(selectedIndex - 1);
+        }
+        let newItems = [...items];
+        newItems.splice(index, 1);
+        setItems(newItems);
     }
 
     function configure(data) {
@@ -89,13 +105,14 @@ const Main = () => {
                 onDataTypeSelected={handleDataTypeSelected}
                 dataTypeSelectorDisabled={config === null}
                 idToken={idToken}/>
-        <div style={{ position: 'relative', display: 'flex' }}>
+        <div style={{ position: 'relative', display: 'flex', height: '90vh' }}>
             <div className={clsx(!(xs || docked) && classes.contentMargin)}
                  style={{
                      flexGrow: 1,
-                     order: 1
+                     order: 1,
+                     overflowX: 'auto'
                  }}>
-                <FormTest {...selectedItem}/>
+                <Tabs items={items} index={selectedIndex} onSelect={setSelectedIndex} onCloseItem={removeItem}/>
             </div>
             {
                 xs || navigation

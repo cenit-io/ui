@@ -97,7 +97,7 @@ const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeS
                 position: 'absolute',
                 background: 'white',
                 border: 'gray',
-                zIndex: 1001,
+                zIndex: 1101,
                 right: 0,
                 width: 'max-content'
             }}>

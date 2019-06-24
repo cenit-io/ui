@@ -3,17 +3,17 @@ import ObjectControl from "./ObjectControl";
 
 const valueHash = {};
 
-const FormTest = ({ record, title }) => {
+const FormTest = ({ item, title }) => {
 
     const [json, setJSON] = useState('{}');
 
     let control;
 
-    if (record) {
-        let value = valueHash[record.id];
+    if (item) {
+        let value = valueHash[item.id];
         if (!value) {
             Object.keys(valueHash).forEach(key => delete valueHash[key]);
-            valueHash[record.id] = value = {};
+            valueHash[item.id] = value = {};
             handleChange(value);
         }
 
@@ -21,11 +21,10 @@ const FormTest = ({ record, title }) => {
             display: 'flex',
             marginTop: '10px',
             flexDirection: 'column',
-            height: '90vh',
             overflow: 'auto'
         }}>
             <h3>{title}</h3>
-            <ObjectControl dataTypeId={record.id}
+            <ObjectControl dataTypeId={item.id}
                            value={value}
                            onChange={handleChange}/>
         </div>;

@@ -40,7 +40,7 @@ const Navigation = ({ docked, xs, config, onItemSelected }) => {
         nav = (config.dataTypes || []).map(
             (record, index) => {
                 const title = config.titles[index];
-                return <ListItem button key={record.id} onClick={select({ record, title })}>
+                return <ListItem button key={record.id} onClick={select(record)}>
                     <ListItemIcon>{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}</ListItemIcon>
                     <ListItemText primary={title}/>
                 </ListItem>;
@@ -67,7 +67,8 @@ const Navigation = ({ docked, xs, config, onItemSelected }) => {
                     background: 'white',
                     order: 0,
                     height: (docked && !xs) ? 'unset' : '100%',
-                    boxShadow: '0 19px 38px rgba(0,0,0,0.30)'
+                    boxShadow: '0 19px 38px rgba(0,0,0,0.30)',
+                    zIndex: 1101
                 }}
                 onMouseEnter={() => setOver(true)}
                 onMouseLeave={() => setOver(false)}>
