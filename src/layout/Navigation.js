@@ -6,7 +6,8 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
-import {CircularProgress, makeStyles} from "@material-ui/core";
+import {makeStyles} from "@material-ui/core";
+import Loading from "../components/Loading";
 
 const useStyles = makeStyles(theme => ({
     navOpen: {
@@ -48,15 +49,7 @@ const Navigation = ({ docked, xs, config, onItemSelected }) => {
         );
         nav = <List style={{ overflowX: 'hidden' }}> {nav} </List>;
     } else {
-        nav = <div style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-        }}>
-            <CircularProgress/>
-        </div>
+        nav = <Loading/>;
     }
 
     const open = docked || over;

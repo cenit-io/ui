@@ -188,15 +188,17 @@ export class DataType {
             });
     }
 
-    async find(query) {
-        const limit = 5;
+    async find(query, opts = null) {
+        const limit = opts && opts.limit || 5;
         query = (query || '').toString().trim();
         const params = { limit };
-        const queryProps = await this.titleProps();
-        const orQuery = queryProps.map(
-            prop => ({ [prop.name]: { '$regex': '(?i)' + query } })
-        );
-        params['$or'] = JSON.stringify(orQuery);
+        const queryProps = await ((opts && opts.props) || this.titleProps());
+        if (query.length > 0) {
+            const orQuery = queryProps.map(
+                prop => ({ [prop.name]: { '$regex': '(?i)' + query } })
+            );
+            params['$or'] = JSON.stringify(orQuery);
+        }
         return API.get('setup', 'data_type', this.id, 'digest', {
             params,
             headers: {
