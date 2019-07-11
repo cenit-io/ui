@@ -1,14 +1,17 @@
 import React, {useState} from 'react';
-import {makeStyles, useTheme} from '@material-ui/core/styles';
-import AppBar from '@material-ui/core/AppBar';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
-import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
+import {makeStyles, useTheme} from '@material-ui/core/styles/index';
+import AppBar from '@material-ui/core/AppBar/index';
+import Tabs from '@material-ui/core/Tabs/index';
+import Tab from '@material-ui/core/Tab/index';
+import Button from '@material-ui/core/Button/index';
+import IconButton from '@material-ui/core/IconButton/index';
 import CloseIcon from '@material-ui/icons/Clear';
-import Typography from '@material-ui/core/Typography';
+import Typography from '@material-ui/core/Typography/index';
 import Index from "../actions/Index";
 import SwipeableViews from "react-swipeable-views";
+import {AppBarHeight} from "./AppBar";
+
+export const TabsHeight = '36px';
 
 function TabContainer(props) {
     return (
@@ -81,7 +84,7 @@ export default function NavTabs({ items, index, onSelect, onCloseItem }) {
 
         containers = items.map(
             item => <div key={`container_${item.id}`}
-                         style={{ overflow: 'auto' }}>
+                         style={{ height: `calc(100vh - ${AppBarHeight} - ${TabsHeight})`, overflow: 'auto' }}>
                 <Index dataType={item}/>
             </div>);
 

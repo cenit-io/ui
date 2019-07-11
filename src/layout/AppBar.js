@@ -17,6 +17,8 @@ import TenantSelector from "../components/TenantSelector";
 import useTheme from "@material-ui/core/styles/useTheme";
 import UserCard from "../components/UserCard";
 
+export const AppBarHeight = '64px';
+
 const useStyles = makeStyles(theme => ({
     grow: {
         flexGrow: 1,
@@ -113,38 +115,36 @@ const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeS
         {menu}
     </div>;
 
-    return <div style={{ flexGrow: 1 }}>
-        <AppBar position="static">
-            <Toolbar>
-                <IconButton edge="start" color="inherit" aria-label="Menu" onClick={onToggle}>
-                    <MenuIcon/>
-                </IconButton>
-                {
-                    smUp &&
-                    <Typography variant="h6">
-                        Admin
-                    </Typography>
-                }
-                <div className={classes.search}>
-                    <div className={classes.searchIcon}>
-                        <SearchIcon/>
-                    </div>
-                    <RecordSelector dataTypeSelector={DataTypeSelector}
-                                    onSelect={onDataTypeSelected}
-                                    inputClasses={inputClasses}
-                                    disabled={dataTypeSelectorDisabled}/>
+    return <AppBar position="static" classes={classes.appBar}>
+        <Toolbar>
+            <IconButton edge="start" color="inherit" aria-label="Menu" onClick={onToggle}>
+                <MenuIcon/>
+            </IconButton>
+            {
+                smUp &&
+                <Typography variant="h6">
+                    Admin
+                </Typography>
+            }
+            <div className={classes.search}>
+                <div className={classes.searchIcon}>
+                    <SearchIcon/>
                 </div>
-                <div className={classes.grow}/>
-                <div className={classes.search}>
-                    <div className={classes.searchIcon}>
-                        <HomeIcon/>
-                    </div>
-                    <TenantSelector inputClasses={inputClasses} onSelect={onTenantSelected}/>
+                <RecordSelector dataTypeSelector={DataTypeSelector}
+                                onSelect={onDataTypeSelected}
+                                inputClasses={inputClasses}
+                                disabled={dataTypeSelectorDisabled}/>
+            </div>
+            <div className={classes.grow}/>
+            <div className={classes.search}>
+                <div className={classes.searchIcon}>
+                    <HomeIcon/>
                 </div>
-                {avatar}
-            </Toolbar>
-        </AppBar>
-    </div>
+                <TenantSelector inputClasses={inputClasses} onSelect={onTenantSelected}/>
+            </div>
+            {avatar}
+        </Toolbar>
+    </AppBar>
 };
 
 export default AdminAppBar;

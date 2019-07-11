@@ -49,7 +49,12 @@ function Index({ dataType }) {
         return <Loading/>;
     }
 
-    const headCells = props.map(prop => <TableCell key={prop.prop.name}>{prop.title}</TableCell>),
+    const headCells = props.map(prop => <TableCell key={prop.prop.name}
+        style={{
+            backgroundColor: "#fff",
+            position: "sticky",
+            top: 0
+        }}>{prop.title}</TableCell>),
 
         rows = data.items.map(
             item => <TableRow key={item.id}>

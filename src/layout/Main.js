@@ -1,16 +1,21 @@
 import React, {useState} from 'react';
 import FormTest from "../components/FormTest";
 import {makeStyles, useMediaQuery} from "@material-ui/core";
-import AppBar from './AppBar';
+import AppBar, {AppBarHeight} from './AppBar';
 import Navigation from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
 import AuthorizationService from "../services/AuthorizationService";
 import {DataType} from "../services/DataTypeService";
 import Drawer from "../components/Drawer";
 import clsx from "clsx";
-import Tabs from "../components/Tabs";
+import Tabs from "./Tabs";
 
 const useStyles = makeStyles(theme => ({
+    mainContainer: {
+        position: 'relative',
+        display: 'flex',
+        height: `calc(100vh - ${AppBarHeight})`
+    },
     contentMargin: {
         marginLeft: theme.spacing(7) + 1
     }
@@ -99,18 +104,20 @@ const Main = () => {
         AuthorizationService.getIdToken().then(token => setIdToken(token));
     }
 
+    const navWidth = xs ? 0 : (docked ? '240px' : `${theme.spacing(7) + 1}px` );
+
     return <div>
         <AppBar onToggle={switchNavigation}
                 onTenantSelected={handleTenantSelected}
                 onDataTypeSelected={handleDataTypeSelected}
                 dataTypeSelectorDisabled={config === null}
                 idToken={idToken}/>
-        <div style={{ position: 'relative', display: 'flex', height: '90vh' }}>
+        <div className={classes.mainContainer}>
             <div className={clsx(!(xs || docked) && classes.contentMargin)}
                  style={{
                      flexGrow: 1,
                      order: 1,
-                     overflowX: 'auto'
+                     width: `calc(100vw - ${navWidth})`
                  }}>
                 <Tabs items={items} index={selectedIndex} onSelect={setSelectedIndex} onCloseItem={removeItem}/>
             </div>
