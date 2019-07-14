@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import FormTest from "../components/FormTest";
 import {makeStyles, useMediaQuery} from "@material-ui/core";
-import AppBar, {AppBarHeight} from './AppBar';
+import AppBar, {appBarHeight} from './AppBar';
 import Navigation from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
 import AuthorizationService from "../services/AuthorizationService";
@@ -14,7 +14,7 @@ const useStyles = makeStyles(theme => ({
     mainContainer: {
         position: 'relative',
         display: 'flex',
-        height: `calc(100vh - ${AppBarHeight})`
+        height: `calc(100vh - ${appBarHeight(theme)})`
     },
     contentMargin: {
         marginLeft: theme.spacing(7) + 1

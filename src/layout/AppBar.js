@@ -17,7 +17,7 @@ import TenantSelector from "../components/TenantSelector";
 import useTheme from "@material-ui/core/styles/useTheme";
 import UserCard from "../components/UserCard";
 
-export const AppBarHeight = '64px';
+export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
 const useStyles = makeStyles(theme => ({
     grow: {

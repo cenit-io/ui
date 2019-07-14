@@ -9,9 +9,9 @@ import CloseIcon from '@material-ui/icons/Clear';
 import Typography from '@material-ui/core/Typography/index';
 import Index from "../actions/Index";
 import SwipeableViews from "react-swipeable-views";
-import {AppBarHeight} from "./AppBar";
+import {appBarHeight} from "./AppBar";
 
-export const TabsHeight = '36px';
+export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
 function TabContainer(props) {
     return (
@@ -82,10 +82,12 @@ export default function NavTabs({ items, index, onSelect, onCloseItem }) {
                                                onSelect={onSelect}
                                                onClose={onCloseItem}/>),
 
+        containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`,
+
         containers = items.map(
             item => <div key={`container_${item.id}`}
-                         style={{ height: `calc(100vh - ${AppBarHeight} - ${TabsHeight})`, overflow: 'auto' }}>
-                <Index dataType={item}/>
+                         style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
+                <Index dataType={item} height={containerHeight}/>
             </div>);
 
 

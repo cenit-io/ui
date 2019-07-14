@@ -189,9 +189,10 @@ export class DataType {
     }
 
     async find(query, opts = null) {
-        const limit = opts && opts.limit || 5;
+        const limit = (opts && opts.limit) || 5;
+        const page = (opts && opts.page) || 1;
         query = (query || '').toString().trim();
-        const params = { limit };
+        const params = { limit, page };
         const queryProps = await ((opts && opts.props) || this.titleProps());
         if (query.length > 0) {
             const orQuery = queryProps.map(
