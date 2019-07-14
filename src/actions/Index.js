@@ -296,6 +296,7 @@ class Index extends React.Component {
                 tableHeight = `${tableHeight} - ${theme.spacing(7)}px`;
                 pagination = <TablePagination component='div'
                                               rowsPerPageOptions={ItemsPerPage}
+                                              labelRowsPerPage='Page size'
                                               count={data.count}
                                               rowsPerPage={limit}
                                               page={data.current_page - 1}
