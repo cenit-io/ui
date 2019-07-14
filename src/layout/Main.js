@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import FormTest from "../components/FormTest";
 import {makeStyles, useMediaQuery} from "@material-ui/core";
 import AppBar, {appBarHeight} from './AppBar';
-import Navigation from "./Navigation";
+import Navigation, {navigationWidth} from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
 import AuthorizationService from "../services/AuthorizationService";
 import {DataType} from "../services/DataTypeService";
@@ -104,7 +104,7 @@ const Main = () => {
         AuthorizationService.getIdToken().then(token => setIdToken(token));
     }
 
-    const navWidth = xs ? 0 : (docked ? '240px' : `${theme.spacing(7) + 1}px` );
+    const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px` );
 
     return <div>
         <AppBar onToggle={switchNavigation}

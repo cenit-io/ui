@@ -9,9 +9,11 @@ import MailIcon from '@material-ui/icons/Mail';
 import {makeStyles} from "@material-ui/core";
 import Loading from "../components/Loading";
 
+export const navigationWidth = theme => `${theme.spacing(30)}px`;
+
 const useStyles = makeStyles(theme => ({
     navOpen: {
-        width: '240px',
+        width: navigationWidth(theme),
         transition: theme.transitions.create(['width'], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
