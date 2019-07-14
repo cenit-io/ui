@@ -42,7 +42,7 @@ const useToolbarStyles = makeStyles(theme => ({
     },
 }));
 
-const EnhancedTableToolbar = ({ numSelected }) => {
+const EnhancedTableToolbar = ({ title, numSelected }) => {
     const classes = useToolbarStyles();
 
     return (
@@ -54,7 +54,7 @@ const EnhancedTableToolbar = ({ numSelected }) => {
                     </Typography>
                 ) : (
                     <Typography variant="h6" id="tableTitle">
-                        Nutrition
+                        {title}
                     </Typography>
                 )}
             </div>
@@ -148,17 +148,21 @@ class Index extends React.Component {
     };
 
     componentDidMount() {
-        this.computeProps().then(props => this.setState({ props }))
+        this.computeDataTypeState().then(state => this.setState(state))
     }
 
-    computeProps = async () => {
+    computeDataTypeState = async () => {
         const { dataType } = this.props;
 
-        const props = await dataType.queryProps();
+        const title = await dataType.getTitle(),
 
-        return (await Promise.all(props.map(prop => prop.getTitle()))).map(
-            (title, index) => ({ title, prop: props[index] })
-        );
+            queryProps = await dataType.queryProps(),
+
+            props = (await Promise.all(queryProps.map(prop => prop.getTitle()))).map(
+                (title, index) => ({ title, prop: queryProps[index] })
+            );
+
+        return { title, props };
     };
 
     requestData = async () => {
@@ -238,7 +242,7 @@ class Index extends React.Component {
 
         const { height, classes, theme } = this.props,
 
-            { data, props, order, orderBy, selected, page, dense, limit } = this.state;
+            { title, props, data, order, orderBy, selected, page, dense, limit } = this.state;
 
         const isSelected = name => selected.indexOf(name) !== -1;
 
@@ -298,8 +302,7 @@ class Index extends React.Component {
                                               onChangeRowsPerPage={this.handleChangeRowsPerPage}/>;
             }
 
-            table = <Paper className={classes.root} style={{ height: `calc(${height})` }}>
-                <EnhancedTableToolbar numSelected={selected.length}/>
+            table = <React.Fragment>
                 <div style={{ height: `calc(${tableHeight})`, overflow: 'auto' }}>
                     <Table className={classes.table}
                            size={dense ? 'small' : 'medium'}>
@@ -313,7 +316,7 @@ class Index extends React.Component {
                     </Table>
                 </div>
                 {pagination}
-            </Paper>;
+            </React.Fragment>;
         } else {
             this.requestData().then(data => {
                 console.log(data);
@@ -323,7 +326,11 @@ class Index extends React.Component {
         }
 
 
-        return table;
+        return <Paper className={classes.root} style={{ height: `calc(${height})` }}>
+            <EnhancedTableToolbar title={title}
+                                  numSelected={selected.length}/>
+            {table}
+        </Paper>;
     }
 }
 
