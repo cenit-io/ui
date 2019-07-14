@@ -92,7 +92,8 @@ const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelecte
                                backgroundColor: "#fff",
                                position: "sticky",
                                top: 0,
-                               zIndex: 1
+                               left: 0,
+                               zIndex: 3
                            }}>
                     <Checkbox indeterminate={numSelected > 0 && numSelected < rowCount}
                               checked={numSelected === rowCount}
@@ -144,7 +145,7 @@ class Index extends React.Component {
         selected: [],
         page: 0,
         dense: false,
-        limit: 25
+        limit: MinItemsPerPage
     };
 
     componentDidMount() {
@@ -269,7 +270,13 @@ class Index extends React.Component {
                                      role="checkbox"
                                      aria-checked={isSelected}
                                      tabIndex={-1}>
-                        <TableCell padding="checkbox">
+                        <TableCell padding="checkbox"
+                                   style={{
+                                       backgroundColor: "#fff",
+                                       position: "sticky",
+                                       left: 0,
+                                       zIndex: 2
+                                   }}>
                             <Checkbox checked={isSelected}
                                       inputProps={{ 'aria-labelledby': item.id }}/>
                         </TableCell>
