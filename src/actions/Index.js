@@ -1,82 +1,15 @@
-import React, {useState} from 'react';
+import React from 'react';
 import Loading from '../components/Loading';
-import {Checkbox, makeStyles, Toolbar, Tooltip, Typography, useTheme, withStyles} from "@material-ui/core";
+import {Checkbox, withStyles} from "@material-ui/core";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
-import Paper from '@material-ui/core/Paper';
-import IconButton from '@material-ui/core/IconButton';
-import DeleteIcon from '@material-ui/icons/Delete';
-import FilterListIcon from '@material-ui/icons/FilterList';
-import clsx from "clsx";
-import {lighten} from "@material-ui/core/styles";
 import {appBarHeight} from "../layout/AppBar";
 import TablePagination from "@material-ui/core/TablePagination";
-
-const useToolbarStyles = makeStyles(theme => ({
-    root: {
-        paddingLeft: theme.spacing(2),
-        paddingRight: theme.spacing(1),
-    },
-    highlight:
-        theme.palette.type === 'light'
-            ? {
-                color: theme.palette.secondary.main,
-                backgroundColor: lighten(theme.palette.secondary.light, 0.85),
-            }
-            : {
-                color: theme.palette.text.primary,
-                backgroundColor: theme.palette.secondary.dark,
-            },
-    spacer: {
-        flex: '1 1 100%',
-    },
-    actions: {
-        color: theme.palette.text.secondary,
-    },
-    title: {
-        flex: '0 0 auto',
-    },
-}));
-
-const EnhancedTableToolbar = ({ title, numSelected }) => {
-    const classes = useToolbarStyles();
-
-    return (
-        <Toolbar className={clsx(classes.root, { [classes.highlight]: numSelected > 0 })}>
-            <div className={classes.title}>
-                {numSelected > 0 ? (
-                    <Typography color="inherit" variant="subtitle1">
-                        {numSelected} selected
-                    </Typography>
-                ) : (
-                    <Typography variant="h6" id="tableTitle">
-                        {title}
-                    </Typography>
-                )}
-            </div>
-            <div className={classes.spacer}/>
-            <div className={classes.actions}>
-                {numSelected > 0 ? (
-                    <Tooltip title="Delete">
-                        <IconButton aria-label="Delete">
-                            <DeleteIcon/>
-                        </IconButton>
-                    </Tooltip>
-                ) : (
-                    <Tooltip title="Filter list">
-                        <IconButton aria-label="Filter list">
-                            <FilterListIcon/>
-                        </IconButton>
-                    </Tooltip>
-                )}
-            </div>
-        </Toolbar>
-    );
-};
+import ListIcon from '@material-ui/icons/List';
 
 const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort }) => {
 
@@ -139,31 +72,28 @@ const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
 class Index extends React.Component {
 
+    static Icon = ListIcon;
+
+    static title = 'List';
+
     state = {
         order: 'asc',
         orderBy: 'id',
-        selected: [],
         page: 0,
         dense: false,
         limit: MinItemsPerPage
     };
 
-    componentDidMount() {
-        this.computeDataTypeState().then(state => this.setState(state))
-    }
-
     computeDataTypeState = async () => {
         const { dataType } = this.props;
 
-        const title = await dataType.getTitle(),
-
-            queryProps = await dataType.queryProps(),
+        const queryProps = await dataType.queryProps(),
 
             props = (await Promise.all(queryProps.map(prop => prop.getTitle()))).map(
                 (title, index) => ({ title, prop: queryProps[index] })
             );
 
-        return { title, props };
+        return { props };
     };
 
     requestData = async () => {
@@ -197,16 +127,16 @@ class Index extends React.Component {
         } else {
             selected = [];
         }
-        this.setState({ selected });
+        this.select(selected);
     };
 
-    handleClick = (event, name) => {
-        const { selected } = this.state,
-            selectedIndex = selected.indexOf(name);
+    handleClick = (event, id) => {
+        const { selected, onSelect } = this.props,
+            selectedIndex = selected.indexOf(id);
         let newSelected = [];
 
         if (selectedIndex === -1) {
-            newSelected = newSelected.concat(selected, name);
+            newSelected = newSelected.concat(selected, id);
         } else if (selectedIndex === 0) {
             newSelected = newSelected.concat(selected.slice(1));
         } else if (selectedIndex === selected.length - 1) {
@@ -218,21 +148,26 @@ class Index extends React.Component {
             );
         }
 
-        this.setState({ selected: newSelected });
+        this.select(newSelected);
     };
+
+    select = selected => {
+        this.props.onSelect(selected);
+    }
 
     handleChangePage = (event, page) => {
         page++;
-        this.setState({ page, data: null, selected: [] });
+        this.setState({ page, data: null });
+        this.select([]);
     };
 
     handleChangeRowsPerPage = (event) => {
         this.setState({
             limit: +event.target.value,
             page: 0,
-            data: null,
-            selected: []
+            data: null
         });
+        this.select([]);
     };
 
     handleChangeDense = (event) => {
@@ -241,104 +176,99 @@ class Index extends React.Component {
 
     render() {
 
-        const { height, classes, theme } = this.props,
+        const { height, selected, classes, theme } = this.props,
 
-            { title, props, data, order, orderBy, selected, page, dense, limit } = this.state;
+            { props, data, order, orderBy, page, dense, limit } = this.state;
 
         const isSelected = name => selected.indexOf(name) !== -1;
 
+        let table, tableHeight = `${height} - ${appBarHeight(theme)}`;
 
-        if (!props) {
-            return <Loading/>;
-        }
+        if (props) {
+            if (data) {
+                const headCells = props.map(prop => <TableCell key={prop.prop.name}
+                                                               style={{
+                                                                   backgroundColor: "#fff",
+                                                                   position: "sticky",
+                                                                   top: 0
+                                                               }}>{prop.title}</TableCell>),
 
-        let table;
+                    rows = data.items.map(item => {
+                        let isSelected = selected.indexOf(item.id) !== -1;
+                        return <TableRow hover
+                                         key={item.id}
+                                         onClick={event => this.handleClick(event, item.id)}
+                                         role="checkbox"
+                                         aria-checked={isSelected}
+                                         tabIndex={-1}>
+                            <TableCell padding="checkbox"
+                                       style={{
+                                           backgroundColor: "#fff",
+                                           position: "sticky",
+                                           left: 0,
+                                           zIndex: 2
+                                       }}>
+                                <Checkbox checked={isSelected}
+                                          inputProps={{ 'aria-labelledby': item.id }}/>
+                            </TableCell>
+                            {
+                                props.map(prop => (
+                                    <TableCell key={`${item.id}.${prop.prop.name}`}>
+                                        {item[prop.prop.name]}
+                                    </TableCell>
+                                ))
+                            }
+                        </TableRow>
+                    });
 
-        if (data) {
-            const headCells = props.map(prop => <TableCell key={prop.prop.name}
-                                                           style={{
-                                                               backgroundColor: "#fff",
-                                                               position: "sticky",
-                                                               top: 0
-                                                           }}>{prop.title}</TableCell>),
+                let pagination;
 
-                rows = data.items.map(item => {
-                    let isSelected = selected.indexOf(item.id) !== -1;
-                    return <TableRow hover
-                                     key={item.id}
-                                     onClick={event => this.handleClick(event, item.id)}
-                                     role="checkbox"
-                                     aria-checked={isSelected}
-                                     tabIndex={-1}>
-                        <TableCell padding="checkbox"
-                                   style={{
-                                       backgroundColor: "#fff",
-                                       position: "sticky",
-                                       left: 0,
-                                       zIndex: 2
-                                   }}>
-                            <Checkbox checked={isSelected}
-                                      inputProps={{ 'aria-labelledby': item.id }}/>
-                        </TableCell>
-                        {
-                            props.map(prop => (
-                                <TableCell key={`${item.id}.${prop.prop.name}`}>
-                                    {item[prop.prop.name]}
-                                </TableCell>
-                            ))
-                        }
-                    </TableRow>
+                if (data.count > MinItemsPerPage) {
+                    tableHeight = `${tableHeight} - ${theme.spacing(7)}px`;
+                    pagination = <TablePagination component='div'
+                                                  rowsPerPageOptions={ItemsPerPage}
+                                                  labelRowsPerPage='Page size'
+                                                  count={data.count}
+                                                  rowsPerPage={limit}
+                                                  page={data.current_page - 1}
+                                                  backIconButtonProps={{
+                                                      'aria-label': 'Previous Page',
+                                                  }}
+                                                  nextIconButtonProps={{
+                                                      'aria-label': 'Next Page',
+                                                  }}
+                                                  onChangePage={this.handleChangePage}
+                                                  onChangeRowsPerPage={this.handleChangeRowsPerPage}/>;
+                }
+
+                table = <React.Fragment>
+                    <div style={{ height: `calc(${tableHeight})`, overflow: 'auto' }}>
+                        <Table className={classes.table}
+                               size={dense ? 'small' : 'medium'}>
+                            <EnhancedTableHead props={props}
+                                               onSelectAllClick={this.handleSelectAllClick}
+                                               numSelected={selected.length}
+                                               rowCount={data.items.length}/>
+                            <TableBody>
+                                {rows}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    {pagination}
+                </React.Fragment>;
+            } else {
+                this.requestData().then(data => {
+                    console.log(data);
+                    this.setState({ data })
                 });
-
-            let tableHeight = `${height} - ${appBarHeight(theme)}`, pagination;
-
-            if (data.count > MinItemsPerPage) {
-                tableHeight = `${tableHeight} - ${theme.spacing(7)}px`;
-                pagination = <TablePagination component='div'
-                                              rowsPerPageOptions={ItemsPerPage}
-                                              labelRowsPerPage='Page size'
-                                              count={data.count}
-                                              rowsPerPage={limit}
-                                              page={data.current_page - 1}
-                                              backIconButtonProps={{
-                                                  'aria-label': 'Previous Page',
-                                              }}
-                                              nextIconButtonProps={{
-                                                  'aria-label': 'Next Page',
-                                              }}
-                                              onChangePage={this.handleChangePage}
-                                              onChangeRowsPerPage={this.handleChangeRowsPerPage}/>;
+                table = <Loading height={`calc(${tableHeight})`}/>;
             }
-
-            table = <React.Fragment>
-                <div style={{ height: `calc(${tableHeight})`, overflow: 'auto' }}>
-                    <Table className={classes.table}
-                           size={dense ? 'small' : 'medium'}>
-                        <EnhancedTableHead props={props}
-                                           onSelectAllClick={this.handleSelectAllClick}
-                                           numSelected={selected.length}
-                                           rowCount={data.items.length}/>
-                        <TableBody>
-                            {rows}
-                        </TableBody>
-                    </Table>
-                </div>
-                {pagination}
-            </React.Fragment>;
         } else {
-            this.requestData().then(data => {
-                console.log(data);
-                this.setState({ data })
-            });
-            table = <Loading/>;
+            this.computeDataTypeState().then(state => this.setState(state));
+            table = <Loading height={`calc(${tableHeight})`}/>;
         }
 
-
-        return <Paper className={classes.root} style={{ height: `calc(${height})` }}>
-            <EnhancedTableToolbar title={title}
-                                  numSelected={selected.length}/>
-            {table}
-        </Paper>;
+        return table;
     }
 }
 
