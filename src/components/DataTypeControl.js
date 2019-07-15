@@ -73,7 +73,7 @@ class DataTypeControl extends React.Component {
     handleDelete = prop => () => {
         const { value, onChange } = this.props;
         delete value[prop];
-        onChange(value);
+        onChange && onChange(value);
     };
 
     refresh = () => this.doSetState({});

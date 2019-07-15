@@ -7,6 +7,8 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import clsx from "clsx";
 import {lighten} from "@material-ui/core/styles";
 import Index from "./Index";
+import New from "./New";
+import {appBarHeight} from "../layout/AppBar";
 
 const useToolbarStyles = makeStyles(theme => ({
     root: {
@@ -27,6 +29,7 @@ const useToolbarStyles = makeStyles(theme => ({
         flex: '1 1 100%',
     },
     actions: {
+        display:'flex',
         color: theme.palette.text.secondary,
     },
     title: {
@@ -35,7 +38,8 @@ const useToolbarStyles = makeStyles(theme => ({
 }));
 
 const CollectionActions = [
-    Index
+    Index,
+    New
 ];
 
 const CollectionToolbar = ({ title, selectedCount, onAction }) => {
@@ -115,9 +119,11 @@ class CollectionContainer extends React.Component {
 
     render() {
 
-        const { dataType, height, classes } = this.props,
+        const { dataType, height, classes, theme } = this.props,
 
-            { title, selected, actionIndex } = this.state;
+            { title, selected, actionIndex } = this.state,
+
+        componentHeight = `${height} - ${appBarHeight(theme)}`;
 
         if (!title) {
             this.computeDataTypeState().then(state => this.setState(state));
@@ -128,7 +134,7 @@ class CollectionContainer extends React.Component {
 
             action = <Component dataType={dataType}
                                 selected={selected}
-                                height={height}
+                                height={componentHeight}
                                 onSelect={this.handleSelect}/>;
 
         return <Paper className={classes.root}

@@ -3,28 +3,26 @@ import ObjectControl from "./ObjectControl";
 
 const valueHash = {};
 
-const FormTest = ({ item, title }) => {
+const FormTest = ({ dataType, height }) => {
 
     const [json, setJSON] = useState('{}');
 
     let control;
 
-    if (item) {
-        let value = valueHash[item.id];
+    if (dataType) {
+        let value = valueHash[dataType.id];
         if (!value) {
             Object.keys(valueHash).forEach(key => delete valueHash[key]);
-            valueHash[item.id] = value = {};
+            valueHash[dataType.id] = value = {};
             handleChange(value);
         }
 
         control = <div style={{
             display: 'flex',
-            marginTop: '10px',
             flexDirection: 'column',
             overflow: 'auto'
         }}>
-            <h3>{title}</h3>
-            <ObjectControl dataTypeId={item.id}
+            <ObjectControl dataTypeId={dataType.id}
                            value={value}
                            onChange={handleChange}/>
         </div>;
@@ -34,11 +32,11 @@ const FormTest = ({ item, title }) => {
         setJSON(JSON.stringify(value, null, 2));
     }
 
-    return <div style={{ display: 'flex', padding: '10px' }}>
-        <div style={{ width: '50%', overflow: 'auto', height: '90vh'}}>
+    return <div style={{ display: 'flex', height: `calc(${height})`, overflow: 'auto' }}>
+        <div style={{ width: '50%' }}>
             {control}
         </div>
-        <pre style={{ width: '50%', overflow: 'auto' }}>{json}</pre>
+        <pre style={{ width: '50%' }}>{json}</pre>
     </div>;
 };
 

@@ -182,7 +182,7 @@ class Index extends React.Component {
 
         const isSelected = name => selected.indexOf(name) !== -1;
 
-        let table, tableHeight = `${height} - ${appBarHeight(theme)}`;
+        let table, tableHeight = height;
 
         if (props) {
             if (data) {
