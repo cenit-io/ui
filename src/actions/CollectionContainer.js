@@ -119,7 +119,7 @@ class CollectionContainer extends React.Component {
 
     render() {
 
-        const { dataType, height, classes, theme } = this.props,
+        const { dataType, height, width, classes, theme } = this.props,
 
             { title, selected, actionIndex } = this.state,
 
@@ -135,6 +135,7 @@ class CollectionContainer extends React.Component {
             action = <Component dataType={dataType}
                                 selected={selected}
                                 height={componentHeight}
+                                width={width}
                                 onSelect={this.handleSelect}/>;
 
         return <Paper className={classes.root}

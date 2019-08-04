@@ -69,7 +69,7 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-export default function NavTabs({ items, index, onSelect, onCloseItem }) {
+export default function NavTabs({ items, index, onSelect, onCloseItem, width }) {
     const classes = useStyles(),
 
         theme = useTheme(),
@@ -87,7 +87,7 @@ export default function NavTabs({ items, index, onSelect, onCloseItem }) {
         containers = items.map(
             item => <div key={`container_${item.id}`}
                          style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
-                <CollectionContainer dataType={item} height={containerHeight}/>
+                <CollectionContainer dataType={item} height={containerHeight} width={width}/>
             </div>);
 
 

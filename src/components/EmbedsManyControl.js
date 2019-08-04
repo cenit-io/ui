@@ -11,7 +11,7 @@ import ObjectControl from "./ObjectControl";
 import {Property} from "../services/DataTypeService";
 import './EmbedsManyControl.css'
 
-function EmbedsManyControl({ title, value, property, onDelete, onChange, schema }) {
+function EmbedsManyControl({ title, value, property, onDelete, onChange, schema, width }) {
 
     const [open, setOpen] = useState(false),
 
@@ -48,10 +48,10 @@ function EmbedsManyControl({ title, value, property, onDelete, onChange, schema 
             onChange(value);
         },
 
-    handleChange = item => {
-        value[selectedIndex] = item;
-        onChange(value);
-    };
+        handleChange = item => {
+            value[selectedIndex] = item;
+            onChange(value);
+        };
 
     let dropButton, deleteButton, tabs, tabContainer;
 
@@ -71,17 +71,18 @@ function EmbedsManyControl({ title, value, property, onDelete, onChange, schema 
                 controlProperty.dataType = property.dataType;
                 controlProperty.propertySchema = schema;
                 tabContainer = (
-                    <div className='tab-container'>
+                    <div className='tab-container' style={{width: `calc(${width})`}}>
+                        {tabs}
                         <div className='tab-container-ctrl'>
+                            <div className='tab-container-actions'>
+                                <IconButton onClick={deleteSelected}><ClearIcon/></IconButton>
+                                {selectedIndex > 0 && <IconButton onClick={seek(-1)}><ArrowBackIcon/></IconButton>}
+                                {(selectedIndex < value.length - 1) &&
+                                <IconButton onClick={seek(1)}><ArrowForwardIcon/></IconButton>}
+                            </div>
                             <ObjectControl property={controlProperty}
                                            value={value[selectedIndex]}
                                            onChange={handleChange}/>
-                        </div>
-                        <div className='tab-container-actions'>
-                            <IconButton onClick={deleteSelected}><ClearIcon/></IconButton>
-                            {selectedIndex > 0 && <IconButton onClick={seek(-1)}><ArrowBackIcon/></IconButton>}
-                            {(selectedIndex < value.length - 1) &&
-                            <IconButton onClick={seek(1)}><ArrowForwardIcon/></IconButton>}
                         </div>
                     </div>
                 );
@@ -101,7 +102,6 @@ function EmbedsManyControl({ title, value, property, onDelete, onChange, schema 
             {dropButton}
             <IconButton onClick={addNew}><AddNewIcon/></IconButton>
             {deleteButton}
-            {tabs}
             {tabContainer}
         </div>
     );

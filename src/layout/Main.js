@@ -104,7 +104,8 @@ const Main = () => {
         AuthorizationService.getIdToken().then(token => setIdToken(token));
     }
 
-    const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px` );
+    const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`),
+        tabsWidth = `100vw - ${navWidth}`;
 
     return <div>
         <AppBar onToggle={switchNavigation}
@@ -117,9 +118,13 @@ const Main = () => {
                  style={{
                      flexGrow: 1,
                      order: 1,
-                     width: `calc(100vw - ${navWidth})`
+                     width: `calc(${tabsWidth})`
                  }}>
-                <Tabs items={items} index={selectedIndex} onSelect={setSelectedIndex} onCloseItem={removeItem}/>
+                <Tabs items={items}
+                      index={selectedIndex}
+                      onSelect={setSelectedIndex}
+                      onCloseItem={removeItem}
+                      width={tabsWidth}/>
             </div>
             {
                 xs || navigation

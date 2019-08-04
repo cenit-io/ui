@@ -1,9 +1,11 @@
 
 .tab-container {
     display: flex;
+    flex-direction: column;
 }
 
 .tab-container-ctrl {
+    display: flex;
     flex: 1 0 auto;
 }
 

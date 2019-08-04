@@ -79,7 +79,7 @@ class DataTypeControl extends React.Component {
     refresh = () => this.doSetState({});
 
     render() {
-        const { properties } = this.state, { value } = this.props;
+        const { properties } = this.state, { value, width } = this.props;
 
         if (properties) {
 
@@ -87,6 +87,7 @@ class DataTypeControl extends React.Component {
                 prop => <PropertyControl property={prop}
                                          key={prop.name}
                                          value={value[prop.name]}
+                                         width={width}
                                          onChange={this.handleChange(prop.name)}
                                          onDelete={this.handleDelete(prop.name)}/>
             );

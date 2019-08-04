@@ -11,9 +11,9 @@ class New extends React.Component {
 
     render() {
 
-        const { dataType, height } = this.props;
+        const { dataType, height, width } = this.props;
 
-        return <FormTest dataType={dataType} height={height}/>;
+        return <FormTest dataType={dataType} height={height} width={width}/>;
     }
 }
 

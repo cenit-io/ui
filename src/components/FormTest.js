@@ -3,7 +3,7 @@ import ObjectControl from "./ObjectControl";
 
 const valueHash = {};
 
-const FormTest = ({ dataType, height }) => {
+const FormTest = ({ dataType, height, width }) => {
 
     const [json, setJSON] = useState('{}');
 
@@ -17,26 +17,23 @@ const FormTest = ({ dataType, height }) => {
             handleChange(value);
         }
 
-        control = <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'auto'
-        }}>
-            <ObjectControl dataTypeId={dataType.id}
-                           value={value}
-                           onChange={handleChange}/>
-        </div>;
+        control = <ObjectControl dataTypeId={dataType.id}
+                                 width={width}
+                                 value={value}
+                                 onChange={handleChange}/>;
     }
 
     function handleChange(value) {
         setJSON(JSON.stringify(value, null, 2));
     }
 
-    return <div style={{ display: 'flex', height: `calc(${height})`, overflow: 'auto' }}>
-        <div style={{ width: '50%' }}>
-            {control}
-        </div>
-        <pre style={{ width: '50%' }}>{json}</pre>
+    return <div style={{
+        display: 'flex',
+        height: `calc(${height})`,
+        width: `calc(${width})`,
+        overflow: 'auto'
+    }}>
+        {control}
     </div>;
 };
 
