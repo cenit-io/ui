@@ -22,7 +22,7 @@ const TenantSelector = ({ inputClasses, onSelect }) => {
     }
 
     if (tenant.fetchCurrentTenant) {
-        API.get('setup', 'user', 'me').then(user => selectTenant(user.account));
+        API.get('setup', 'user', 'me').then(user => user && selectTenant(user.account));
     }
 
     return <RecordSelector dataTypeSelector={TenantTypeSelector}

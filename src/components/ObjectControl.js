@@ -7,27 +7,31 @@ class ObjectControl extends DataTypeControl {
             .then(props => {
                 Promise.all(
                     props.map(
-                        prop => new Promise(
-                            (resolve, reject) => {
-                                Promise.all([prop.isReferenced(), prop.isMany(), prop.getSchema()])
-                                    .then(
-                                        fullfill => {
-                                            if (fullfill[0]) { // Referenced
-                                                if (fullfill[1]) { // Many
-                                                    prop.type = 'refMany';
-                                                } else { // One
-                                                    prop.type = 'refOne';
+                        prop => {
+                            if (prop)
+                                return new Promise(
+                                    (resolve, reject) => {
+                                        Promise.all([prop.isReferenced(), prop.isMany(), prop.getSchema()])
+                                            .then(
+                                                fullfill => {
+                                                    if (fullfill[0]) { // Referenced
+                                                        if (fullfill[1]) { // Many
+                                                            prop.type = 'refMany';
+                                                        } else { // One
+                                                            prop.type = 'refOne';
+                                                        }
+                                                    } else {
+                                                        const schema = fullfill[2];
+                                                        prop.type = schema['type'];
+                                                    }
+                                                    resolve(prop);
                                                 }
-                                            } else {
-                                                const schema = fullfill[2];
-                                                prop.type = schema['type'];
-                                            }
-                                            resolve(prop);
-                                        }
-                                    )
-                                    .catch(error => reject(error));
-                            }
-                        )
+                                            )
+                                            .catch(error => reject(error));
+                                    }
+                                );
+                            return Promise.resolve(prop);
+                        }
                     )
                 ).then(props => this.resolveProperties(props));
             });

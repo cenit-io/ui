@@ -5,28 +5,19 @@ import AuthorizationService from "./services/AuthorizationService";
 import {CircularProgress} from "@material-ui/core";
 import Main from "./layout/Main";
 import API from "./services/ApiService";
+import ErrorBoundary from "./components/ErrorBoundary";
+import './components/ContentCentered.css';
 
 API.onError(e => AuthorizationService.authorize());
 
 class App extends React.Component {
 
-    value = {
-        name: 'Mac',
-        checked: true,
-        ref_b: { "id": "5ceca28c6ecd7911b900000f" },
-        many_ref_bs: [
-            { "id": "5ceca28c6ecd7911b900000f" },
-            { "id": "5ceca28c6ecd7911b900000f" }
-        ],
-        many_embedded_bs: [
-            { color: 'red' },
-            { color: 'blue' }
-        ]
-    };
-
     state = { authorizing: true };
 
     componentDidMount() {
+
+        API.onError(e => this.setState({ error: true }));
+
         const params = QueryString.parse(window.location.search.slice(1, window.location.search.length));
 
         let authorize;
@@ -35,23 +26,27 @@ class App extends React.Component {
         } else {
             authorize = AuthorizationService.getAccess();
         }
-        authorize.then(access => access && this.setState({ authorizing: false }));
+        authorize.then(
+            access => access && this.setState({ authorizing: false })
+        ).catch(() => this.setState({ error: true }));
     }
 
     render() {
-        const { authorizing, docked } = this.state;
+        const { authorizing, error } = this.state;
 
-        if (authorizing) return <div style={{
-            width: '100%',
-            height: '100vh',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-        }}>
-            <CircularProgress/>
-        </div>;
+        if (error) {
+            return <ErrorBoundary/>
+        }
 
-        return <Main/>;
+        if (authorizing) {
+            return <div className='content-centered'>
+                <CircularProgress/>
+            </div>;
+        }
+
+        return <ErrorBoundary>
+            <Main/>
+        </ErrorBoundary>;
     }
 }
 

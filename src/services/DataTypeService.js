@@ -38,7 +38,7 @@ export class DataType {
                 }
             }),
 
-            item = response['items'][0];
+            item = response && response['items'][0];
 
         if (item) {
             DataType.criteria[key] = item['id'];
@@ -100,9 +100,9 @@ export class DataType {
     }
 
     async getTitle() {
-        const schema = await this.getSchema();
+        const schema = (await this.getSchema());
 
-        let title = schema['title'];
+        let title = schema && schema['title'];
         if (title) {
             return title.toString();
         }
@@ -143,7 +143,7 @@ export class DataType {
         }
         // Not referenced schema
         if (!dataType) {
-            mergedSchema = await this.mergeSchema(schema);
+            mergedSchema = (await this.mergeSchema(schema)) || {};
             let typeSchema;
             if (mergedSchema['type'] === 'array' && mergedSchema.hasOwnProperty('items')) {
                 typeSchema = mergedSchema['items'];
@@ -200,14 +200,14 @@ export class DataType {
             );
             params['$or'] = JSON.stringify(orQuery);
         }
-        return API.get('setup', 'data_type', this.id, 'digest', {
+        return (await API.get('setup', 'data_type', this.id, 'digest', {
             params,
             headers: {
                 'X-Template-Options': JSON.stringify({
                     viewport: '{_id ' + queryProps.map(p => p.name).join(' ') + '}'
                 })
             }
-        });
+        })) || { items: [] };
     }
 
     async titleViewPort() {
