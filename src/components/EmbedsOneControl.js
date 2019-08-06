@@ -6,7 +6,7 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 
-function EmbedsOneControl({ title, value, property, onDelete, onChange }) {
+function EmbedsOneControl({ title, value, property, onDelete, onChange, width }) {
 
     const [open, setOpen] = useState(false),
 
@@ -19,7 +19,10 @@ function EmbedsOneControl({ title, value, property, onDelete, onChange }) {
 
     if (value) {
         if (open) {
-            objectControl = <ObjectControl property={property} value={value} onChange={onChange}/>;
+            objectControl = <ObjectControl property={property}
+                                           value={value}
+                                           onChange={onChange}
+                                           width={width}/>;
             actionButton = <IconButton onClick={() => setOpen(false)}><ArrowDropUpIcon/></IconButton>;
         } else {
             actionButton = <IconButton onClick={() => setOpen(true)}><ArrowDropDownIcon/></IconButton>;

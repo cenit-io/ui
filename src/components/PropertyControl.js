@@ -1,6 +1,6 @@
 import React from 'react'
 import StringControl from './StringControl';
-import {LinearProgress} from '@material-ui/core';
+import {LinearProgress, withStyles} from '@material-ui/core';
 import './PropertyControl.css'
 import EmbedsOneControl from "./EmbedsOneControl";
 import EmbedsManyControl from "./EmbedsManyControl";
@@ -16,7 +16,7 @@ function controlComponentFor(property) {
         }
 
         case 'array': {
-         return EmbedsManyControl;
+            return EmbedsManyControl;
         }
 
         case 'boolean': {
@@ -36,6 +36,12 @@ function controlComponentFor(property) {
         }
     }
 }
+
+const styles = theme => ({
+    root: {
+        paddingLeft: `${theme.spacing(1)}px`
+    }
+});
 
 class PropertyControl extends React.Component {
 
@@ -64,4 +70,4 @@ class PropertyControl extends React.Component {
     }
 }
 
-export default PropertyControl;
+export default withStyles(styles, { withTheme: true })(PropertyControl);

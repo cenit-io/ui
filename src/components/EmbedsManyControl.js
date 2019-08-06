@@ -9,9 +9,9 @@ import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 import {Property} from "../services/DataTypeService";
-import './EmbedsManyControl.css'
+import './EmbedsManyControl.css';
 
-function EmbedsManyControl({ title, value, property, onDelete, onChange, schema, width }) {
+function EmbedsManyControl({ title, value, property, onDelete, onChange, schema, width, theme}) {
 
     const [open, setOpen] = useState(false),
 
@@ -60,18 +60,20 @@ function EmbedsManyControl({ title, value, property, onDelete, onChange, schema,
             dropButton = value.length > 0 && <IconButton onClick={() => setOpen(false)}><ArrowDropUpIcon/></IconButton>;
             if (value.length > 0) {
                 tabs = value.map((item, index) => <Tab label={`${index}`} key={index}/>);
-                tabs = <Tabs value={selectedIndex}
+                tabs = <div style={{width: `calc(${width} - ${theme.spacing(3)}px)`}}>
+                    <Tabs value={selectedIndex}
                              variant='scrollable'
                              scrollButtons='auto'
                              onChange={(_, index) => setSelectedIndex(index)}>
-                    {tabs}
-                </Tabs>;
+                        {tabs}
+                    </Tabs>
+                </div>;
                 const controlProperty = new Property();
                 controlProperty.name = selectedIndex;
                 controlProperty.dataType = property.dataType;
                 controlProperty.propertySchema = schema;
                 tabContainer = (
-                    <div className='tab-container' style={{width: `calc(${width})`}}>
+                    <div className='tab-container'>
                         {tabs}
                         <div className='tab-container-ctrl'>
                             <div className='tab-container-actions'>
