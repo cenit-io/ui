@@ -11,9 +11,11 @@ export class DataType {
             dataType = await API.get('setup', 'data_type', id, {
                 headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
             });
-            if (dataType._type === JSON_TYPE) delete dataType.schema;
-            dataType.__proto__ = new DataType();
-            DataType.dataTypes[id] = dataType;
+            if (dataType) {
+                if (dataType._type === JSON_TYPE) delete dataType.schema;
+                dataType.__proto__ = new DataType();
+                DataType.dataTypes[id] = dataType;
+            }
         }
         return dataType;
     }

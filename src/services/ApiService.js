@@ -43,9 +43,9 @@ export const ApiResource = function () {
         const access_token = await AuthorizationService.getAccessToken(),
 
             response = await apiGateway.post(this.path, data, {
-                                headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                                parameters: params
-                            });
+                headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
+                parameters: params
+            });
 
         return response.data;
     };
@@ -58,7 +58,10 @@ const API = {
             try {
                 return await (new ApiResource(...args)).get()
             } catch (e) {
-                ErrorCallbacks.forEach(callback => callback(e));
+                if (e.response.status !== 404) {
+                    ErrorCallbacks.forEach(callback => callback(e));
+                }
+                return null;
             }
         },
 
@@ -67,7 +70,10 @@ const API = {
                 const data = args.pop();
                 return await (new ApiResource(...args)).post(data);
             } catch (e) {
-                ErrorCallbacks.forEach(callback => callback(e));
+                if (e.response.status !== 404) {
+                    ErrorCallbacks.forEach(callback => callback(e));
+                }
+                return null;
             }
         },
 

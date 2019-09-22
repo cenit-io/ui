@@ -70,10 +70,13 @@ const Main = () => {
         }
         AuthorizationService.config({ tenant_id: data.tenant_id, dataTypesIds: data.dataTypesIds })
             .then(data => {
-                const dataTypesIds = data.dataTypesIds || [];
+                let dataTypesIds = data.dataTypesIds || [];
                 Promise.all(
                     dataTypesIds.map(id => DataType.getById(id))
                 ).then(dataTypes => {
+                    dataTypes = dataTypes.filter(dataType => dataType);
+                    dataTypesIds = dataTypes.map(dataType => dataType.id);
+                    console.log(dataTypes, dataTypesIds);
                     Promise.all(dataTypes.map(dataType => dataType.getTitle()))
                         .then(titles => setConfig({ ...data, dataTypesIds, dataTypes, titles }));
                 });
