@@ -76,7 +76,6 @@ const Main = () => {
                 ).then(dataTypes => {
                     dataTypes = dataTypes.filter(dataType => dataType);
                     dataTypesIds = dataTypes.map(dataType => dataType.id);
-                    console.log(dataTypes, dataTypesIds);
                     Promise.all(dataTypes.map(dataType => dataType.getTitle()))
                         .then(titles => setConfig({ ...data, dataTypesIds, dataTypes, titles }));
                 });

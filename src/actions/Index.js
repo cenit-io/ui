@@ -258,7 +258,6 @@ class Index extends React.Component {
                 </React.Fragment>;
             } else {
                 this.requestData().then(data => {
-                    console.log(data);
                     this.setState({ data })
                 });
                 table = <Loading height={`calc(${tableHeight})`}/>;
