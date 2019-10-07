@@ -14,8 +14,7 @@ const useToolbarStyles = makeStyles(theme => ({
     root: {
         paddingLeft: theme.spacing(2),
         paddingRight: theme.spacing(1),
-        height: ({ height }) => `calc(${height})`,
-        position: 'relative'
+        height: ({ height }) => `calc(${height})`
     },
     highlight:
         theme.palette.type === 'light'
@@ -97,6 +96,7 @@ const styles = theme => ({
     root: {
         width: '100%',
         overflow: 'auto',
+        position: 'relative'
     }
 });
 
