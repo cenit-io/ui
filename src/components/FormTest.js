@@ -1,11 +1,23 @@
 import React, {useState} from 'react';
 import ObjectControl from "./ObjectControl";
+import {makeStyles} from "@material-ui/core";
+
+const useStyles = makeStyles(() => ({
+    root: {
+        display: 'flex',
+        height: ({ height }) => height ? `calc(${height})` : 'unset',
+        width: ({ width }) => width ? `calc(${width})` : 'unset',
+        overflow: 'auto'
+    }
+}));
 
 const valueHash = {};
 
-const FormTest = ({ dataType, height, width }) => {
+const FormTest = ({ dataType, width }) => {
 
-    const [json, setJSON] = useState('{}');
+    const [json, setJSON] = useState('{}'),
+
+        classes = useStyles();
 
     let control;
 
@@ -27,12 +39,7 @@ const FormTest = ({ dataType, height, width }) => {
         setJSON(JSON.stringify(value, null, 2));
     }
 
-    return <div style={{
-        display: 'flex',
-        height: `calc(${height})`,
-        width: `calc(${width})`,
-        overflow: 'auto'
-    }}>
+    return <div className={classes.root}>
         {control}
     </div>;
 };

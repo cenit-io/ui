@@ -107,7 +107,7 @@ const Main = () => {
     }
 
     const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`),
-        tabsWidth = `100vw - ${navWidth}`;
+        tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
 
     return <div>
         <AppBar onToggle={switchNavigation}

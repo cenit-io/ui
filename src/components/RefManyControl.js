@@ -53,8 +53,9 @@ class RefManyControl extends React.Component {
         const { property } = this.props;
         const value = this.props.value || [];
         if (open && !this.state.items) {
-            property.dataType.titlesFor(...value).then(titles =>
-                {this.setState({ items: titles.map((title, index) => ({ title, id: value[index].id })) })}
+            property.dataType.titlesFor(...value).then(titles => {
+                    this.setState({ items: titles.map((title, index) => ({ title, id: value[index].id })) })
+                }
             );
         }
 
@@ -92,7 +93,8 @@ class RefManyControl extends React.Component {
                         (item, index) => <Chip key={`item_${index}`}
                                                label={item.title}
                                                onClick={this.handleSelect(index)}
-                                               onDelete={this.handleDelete(index)}/>
+                                               onDelete={this.handleDelete(index)}
+                                               style={{ margin: '4px' }}/>
                     );
                 } else {
                     itemsControls = <LinearProgress style={{ flexGrow: 1 }}/>;
@@ -118,7 +120,7 @@ class RefManyControl extends React.Component {
                     <IconButton onClick={this.addNew}><AddNewIcon/></IconButton>
                     {deleteButton}
                 </div>
-                <div style={{ display: 'flex', paddingTop: '10px' }}>
+                <div style={{ display: 'flex', paddingTop: '10px', flexWrap: 'wrap' }}>
                     {itemsControls}
                 </div>
             </div>

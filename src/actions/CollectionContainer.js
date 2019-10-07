@@ -14,6 +14,8 @@ const useToolbarStyles = makeStyles(theme => ({
     root: {
         paddingLeft: theme.spacing(2),
         paddingRight: theme.spacing(1),
+        height: ({ height }) => `calc(${height})`,
+        position: 'relative'
     },
     highlight:
         theme.palette.type === 'light'
@@ -29,7 +31,7 @@ const useToolbarStyles = makeStyles(theme => ({
         flex: '1 1 100%',
     },
     actions: {
-        display:'flex',
+        display: 'flex',
         color: theme.palette.text.secondary,
     },
     title: {
@@ -123,7 +125,7 @@ class CollectionContainer extends React.Component {
 
             { title, selected, actionIndex } = this.state,
 
-        componentHeight = `${height} - ${appBarHeight(theme)}`;
+            componentHeight = `${height} - ${appBarHeight(theme)}`;
 
         if (!title) {
             this.computeDataTypeState().then(state => this.setState(state));
@@ -138,8 +140,7 @@ class CollectionContainer extends React.Component {
                                 width={width}
                                 onSelect={this.handleSelect}/>;
 
-        return <Paper className={classes.root}
-                      style={{ height: `calc(${height})` }}>
+        return <Paper className={classes.root}>
             <CollectionToolbar title={title}
                                selectedCount={selected.length}
                                onAction={this.handleAction}/>
