@@ -14,28 +14,32 @@ const UserCard = ({ idToken, onClose }) => {
         AuthorizationService.logout();
     }
 
-    return <div style={{ padding: '10px', display: 'flex', justifyContent: 'space-between' }}>
-        <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-        }}>
-            {avatar}
+    return <div style={{ padding: '10px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+            }}>
+                {avatar}
+            </div>
+            <div style={{
+                flexGrow: 1,
+                flexDirection: 'column',
+                textAlign: 'right',
+                marginLeft: '10px',
+                wordBreak: 'break-word',
+                maxWidth: '160px'
+            }}>
+                <Typography component="div" variant="subtitle2">
+                    {idToken.name}
+                </Typography>
+                <Typography component="div" variant="caption">
+                    {idToken.email}
+                </Typography>
+            </div>
         </div>
-        <div style={{
-            flexGrow: 1,
-            flexDirection: 'column',
-            textAlign: 'right',
-            marginLeft: '10px',
-            wordBreak: 'break-word',
-            maxWidth: '160px'
-        }}>
-            <Typography component="div" variant="subtitle2">
-                {idToken.name}
-            </Typography>
-            <Typography component="div" variant="caption">
-                {idToken.email}
-            </Typography>
+        <div style={{display: 'flex', justifyContent: 'flex-end'}}>
             <Button variant="contained"
                     color="secondary"
                     size="small"
