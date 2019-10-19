@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import FormTest from "../components/FormTest";
+import FormView from "../components/FormView";
 import {makeStyles, useMediaQuery} from "@material-ui/core";
 import AppBar, {appBarHeight} from './AppBar';
 import Navigation, {navigationWidth} from "./Navigation";

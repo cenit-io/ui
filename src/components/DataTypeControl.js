@@ -3,6 +3,8 @@ import {DataType, Property} from '../services/DataTypeService';
 import {LinearProgress} from '@material-ui/core';
 import PropertyControl from './PropertyControl'
 import './DataTypeControl.css';
+import Typography from "@material-ui/core/Typography";
+import ErrorMessages from "./ErrorMessages";
 
 class DataTypeControl extends React.Component {
 
@@ -79,20 +81,32 @@ class DataTypeControl extends React.Component {
     refresh = () => this.doSetState({});
 
     render() {
-        const { properties } = this.state, { value, width } = this.props;
+        const { properties } = this.state;
+        const { value, width } = this.props;
+        const errors = this.props.errors || {};
 
         if (properties) {
 
-            const controls = properties.map(
+            let controls = properties.map(
                 prop => <PropertyControl property={prop}
                                          key={prop.name}
                                          value={value[prop.name]}
+                                         errors={errors[prop.name]}
                                          width={width}
                                          onChange={this.handleChange(prop.name)}
                                          onDelete={this.handleDelete(prop.name)}/>
             );
 
-            return <div className='form-group'>{controls}</div>;
+            if (errors.$ && errors.$.length) {
+                controls =
+                    <ErrorMessages errors={errors.$} position='top'>
+                        {controls}
+                    </ErrorMessages>;
+            }
+
+            return <div className='form-group'>
+                {controls}
+            </div>;
         }
 
         return <LinearProgress/>;

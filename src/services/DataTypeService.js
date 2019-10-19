@@ -1,5 +1,7 @@
 import API from './ApiService';
 
+const isSimpleSchema = schema => ['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1;
+
 export class DataType {
 
     static dataTypes = {}; // TODO Store data types cache using a pair key tenant.id -> dataType.id
@@ -76,7 +78,7 @@ export class DataType {
     async queryProps() {
         let props = await this.getProps();
         return (await Promise.all(props.map(p => p.getSchema()))).map(
-            (schema, index) => schema['type'] === 'string' ? props[index] : null
+            (schema, index) => isSimpleSchema(schema) ? props[index] : null
         ).filter(p => p)
     }
 
@@ -272,6 +274,10 @@ export class DataType {
             return `${dtTitle} ${item.id}`;
         });
     }
+
+    post(data) {
+        return API.post('setup', 'data_type', this.id, 'digest', data);
+    }
 }
 
 export class Property {
@@ -294,11 +300,7 @@ export class Property {
             (!schema.hasOwnProperty('edi') || (schema['edi'].constructor === Object && !schema['edi']['discard']));
     };
 
-    isSimple = async () => {
-        const schema = await this.getSchema();
-
-        return ['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1;
-    };
+    isSimple = async () => this.isSimpleSchema(await this.getSchema());
 
     async isReferenced() {
         return (await this.getSchema())['referenced'];

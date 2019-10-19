@@ -2,6 +2,7 @@ import React from 'react';
 import {FormControl, IconButton, Input, InputAdornment, InputLabel} from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
 import Random from "../util/Random";
+import FilledInput from "@material-ui/core/FilledInput";
 
 class StringControl extends React.Component {
 
@@ -28,13 +29,16 @@ class StringControl extends React.Component {
     setOver = over => () => this.setState({ over });
 
     render() {
-        const { title, value } = this.props,
-            { key, over } = this.state;
+        const { title, value, errors } = this.props;
+        const { key, over } = this.state;
+
+        const error = errors && errors.length;
 
         return (
-            <FormControl>
+            <FormControl variant="filled">
                 <InputLabel>{title}</InputLabel>
-                <Input key={key}
+                <FilledInput key={key}
+                       error={error}
                        defaultValue={value}
                        onChange={this.handleChange}
                        onMouseEnter={this.setOver(true)}
@@ -47,6 +51,7 @@ class StringControl extends React.Component {
                                </IconButton>
                            </InputAdornment>
                        }
+                       variant='filled'
                 />
             </FormControl>
         );

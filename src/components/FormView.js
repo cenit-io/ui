@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import ObjectControl from "./ObjectControl";
 import {makeStyles} from "@material-ui/core";
 
@@ -11,32 +11,22 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-const valueHash = {};
+const FormView = ({ dataType, width, value, errors, onChange }) => {
 
-const FormTest = ({ dataType, width }) => {
-
-    const [json, setJSON] = useState('{}'),
-
-        classes = useStyles();
+    const classes = useStyles();
 
     let control;
 
     if (dataType) {
-        let value = valueHash[dataType.id];
-        if (!value) {
-            Object.keys(valueHash).forEach(key => delete valueHash[key]);
-            valueHash[dataType.id] = value = {};
-            handleChange(value);
-        }
-
         control = <ObjectControl dataTypeId={dataType.id}
                                  width={width}
                                  value={value}
+                                 errors={errors}
                                  onChange={handleChange}/>;
     }
 
     function handleChange(value) {
-        setJSON(JSON.stringify(value, null, 2));
+        onChange && onChange(value);
     }
 
     return <div className={classes.root}>
@@ -44,4 +34,4 @@ const FormTest = ({ dataType, width }) => {
     </div>;
 };
 
-export default FormTest;
+export default FormView;

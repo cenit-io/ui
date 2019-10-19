@@ -1,7 +1,6 @@
 import React from 'react';
 import NewIcon from '@material-ui/icons/Add';
-import ObjectControl from "../components/ObjectControl";
-import FormTest from "../components/FormTest";
+import FormView from "../components/FormView";
 import {withStyles} from "@material-ui/core";
 import Fab from '@material-ui/core/Fab';
 import SaveIcon from '@material-ui/icons/Save';
@@ -31,18 +30,45 @@ class New extends React.Component {
 
     static title = 'New';
 
+    state = { changed: true, value: {} };
+
+    handleChange = value => {
+        this.setState({ changed: true, value })
+    };
+
+    save = () => {
+        const { dataType } = this.props;
+        const { value } = this.state;
+        dataType.post(value)
+            .then(response => console.log(response))
+            .catch(error => this.setState({ errors: error.response.data }));
+    };
+
     render() {
 
-        const { dataType, theme, classes, width } = this.props;
+        const { dataType, classes } = this.props;
+        const { changed, value, errors } = this.state;
+        const actions = [];
 
-        console.log(width);
+        if (changed) {
+            actions.push(
+                <Fab color="primary"
+                     key='save'
+                     aria-label="add"
+                     className={classes.fab}
+                     onClick={this.save}>
+                    <SaveIcon/>
+                </Fab>
+            );
+        }
 
         return <div className={classes.formContainer}>
-            <FormTest dataType={dataType}/>
+            <FormView dataType={dataType}
+                      value={value}
+                      errors={errors}
+                      onChange={this.handleChange}/>
             <div className={classes.trailing}/>
-            <Fab color="primary" aria-label="add" className={classes.fab}>
-                <SaveIcon/>
-            </Fab>
+            {actions}
         </div>;
     }
 }

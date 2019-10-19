@@ -70,8 +70,13 @@ const API = {
                 const data = args.pop();
                 return await (new ApiResource(...args)).post(data);
             } catch (e) {
-                if (e.response.status !== 404) {
-                    ErrorCallbacks.forEach(callback => callback(e));
+                switch (e.response.status) {
+                    case 404:
+                        return null;
+                    case 422:
+                        throw e;
+                    default:
+                        ErrorCallbacks.forEach(callback => callback(e));
                 }
                 return null;
             }
