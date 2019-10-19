@@ -32,7 +32,7 @@ class StringControl extends React.Component {
         const { title, value, errors } = this.props;
         const { key, over } = this.state;
 
-        const error = errors && errors.length;
+        const error = Boolean(errors && errors.length);
 
         return (
             <FormControl variant="filled">
