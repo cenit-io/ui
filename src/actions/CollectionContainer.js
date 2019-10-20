@@ -121,11 +121,11 @@ class CollectionContainer extends React.Component {
 
     render() {
 
-        const { dataType, height, width, classes, theme } = this.props,
+        const { docked, dataType, height, width, classes, theme } = this.props;
 
-            { title, selected, actionIndex } = this.state,
+        const { title, selected, actionIndex } = this.state;
 
-            componentHeight = `${height} - ${appBarHeight(theme)}`;
+        const componentHeight = `${height} - ${appBarHeight(theme)}`;
 
         if (!title) {
             this.computeDataTypeState().then(state => this.setState(state));
@@ -134,7 +134,8 @@ class CollectionContainer extends React.Component {
 
         const Component = CollectionActions[actionIndex],
 
-            action = <Component dataType={dataType}
+            action = <Component docked={docked}
+                                dataType={dataType}
                                 selected={selected}
                                 height={componentHeight}
                                 width={width}

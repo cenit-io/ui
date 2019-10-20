@@ -1,5 +1,5 @@
 import React from 'react';
-import {FormControl, IconButton, Input, InputAdornment, InputLabel} from "@material-ui/core";
+import {FormControl, IconButton, InputAdornment, InputLabel} from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
 import Random from "../util/Random";
 import FilledInput from "@material-ui/core/FilledInput";
@@ -35,7 +35,7 @@ class StringControl extends React.Component {
         const error = Boolean(errors && errors.length);
 
         return (
-            <FormControl variant="filled">
+            <FormControl variant="filled" fullWidth={true}>
                 <InputLabel>{title}</InputLabel>
                 <FilledInput key={key}
                        error={error}

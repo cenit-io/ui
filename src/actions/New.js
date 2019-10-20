@@ -1,18 +1,29 @@
-import React from 'react';
+import React, {useState} from 'react';
 import NewIcon from '@material-ui/icons/Add';
 import FormView from "../components/FormView";
-import {withStyles} from "@material-ui/core";
+import {useMediaQuery, withStyles} from "@material-ui/core";
 import Fab from '@material-ui/core/Fab';
 import SaveIcon from '@material-ui/icons/Save';
+import clsx from "clsx";
 
 const styles = theme => ({
     root: {
         width: '100%',
         overflow: 'auto',
+        paddingLeft: theme.spacing(1),
+        paddingRight: theme.spacing(1)
     },
     formContainer: {
         height: props => `calc(${props.height})`,
         overflow: 'auto'
+    },
+    mdFormContainer: {
+        paddingLeft: '25%',
+        paddingRight: '25%',
+    },
+    smFormContainer: {
+        paddingLeft: '15%',
+        paddingRight: '15%',
     },
     trailing: {
         height: `${theme.spacing(8)}px`
@@ -24,53 +35,55 @@ const styles = theme => ({
     },
 });
 
-class New extends React.Component {
+const New = ({ docked, dataType, theme, classes }) => {
 
-    static Icon = NewIcon;
+    const [state, setState] = useState({ changed: true, value: {} });
+    const xs = useMediaQuery(theme.breakpoints.down('xs'));
+    const md = useMediaQuery(theme.breakpoints.up('md'));
 
-    static title = 'New';
-
-    state = { changed: true, value: {} };
-
-    handleChange = value => {
-        this.setState({ changed: true, value })
+    const handleChange = value => {
+        setState({ changed: true, value })
     };
 
-    save = () => {
-        const { dataType } = this.props;
-        const { value } = this.state;
+    const { changed, value, errors } = state;
+
+    const save = () => {
         dataType.post(value)
             .then(response => console.log(response))
-            .catch(error => this.setState({ errors: error.response.data }));
+            .catch(error => setState({ ...state, errors: error.response.data }));
     };
 
-    render() {
+    const actions = [];
 
-        const { dataType, classes } = this.props;
-        const { changed, value, errors } = this.state;
-        const actions = [];
-
-        if (changed) {
-            actions.push(
-                <Fab color="primary"
-                     key='save'
-                     aria-label="add"
-                     className={classes.fab}
-                     onClick={this.save}>
-                    <SaveIcon/>
-                </Fab>
-            );
-        }
-
-        return <div className={classes.formContainer}>
-            <FormView dataType={dataType}
-                      value={value}
-                      errors={errors}
-                      onChange={this.handleChange}/>
-            <div className={classes.trailing}/>
-            {actions}
-        </div>;
+    if (changed) {
+        actions.push(
+            <Fab color="primary"
+                 key='save'
+                 aria-label="add"
+                 className={classes.fab}
+                 onClick={save}>
+                <SaveIcon/>
+            </Fab>
+        );
     }
-}
+
+    return <div className={
+        clsx(
+            classes.formContainer,
+            !xs && (docked || !md) && classes.smFormContainer,
+            md && classes.mdFormContainer
+        )}>
+        <FormView dataType={dataType}
+                  value={value}
+                  errors={errors}
+                  onChange={handleChange}/>
+        <div className={classes.trailing}/>
+        {actions}
+    </div>;
+};
+
+New.Icon = NewIcon;
+
+New.title = 'New';
 
 export default withStyles(styles, { withTheme: true })(New);

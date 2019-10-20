@@ -69,7 +69,7 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-export default function NavTabs({ items, index, onSelect, onCloseItem, width }) {
+export default function NavTabs({ docked, items, index, onSelect, onCloseItem, width }) {
     const classes = useStyles(),
 
         theme = useTheme(),
@@ -77,6 +77,7 @@ export default function NavTabs({ items, index, onSelect, onCloseItem, width }) 
         [value, setValue] = React.useState(0),
 
         tabs = items.map((item, i) => <ItemTab key={`tab_${item.id}`}
+                                               docked={docked}
                                                item={item}
                                                index={i}
                                                onSelect={onSelect}
@@ -87,7 +88,7 @@ export default function NavTabs({ items, index, onSelect, onCloseItem, width }) 
         containers = items.map(
             item => <div key={`container_${item.id}`}
                          style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
-                <CollectionContainer dataType={item} height={containerHeight} width={width}/>
+                <CollectionContainer docked={docked} dataType={item} height={containerHeight} width={width}/>
             </div>);
 
 

@@ -1,5 +1,4 @@
 import React, {useState} from 'react';
-import FormView from "../components/FormView";
 import {makeStyles, useMediaQuery} from "@material-ui/core";
 import AppBar, {appBarHeight} from './AppBar';
 import Navigation, {navigationWidth} from "./Navigation";
@@ -122,7 +121,8 @@ const Main = () => {
                      order: 1,
                      width: `calc(${tabsWidth})`
                  }}>
-                <Tabs items={items}
+                <Tabs docked={docked}
+                      items={items}
                       index={selectedIndex}
                       onSelect={setSelectedIndex}
                       onCloseItem={removeItem}
