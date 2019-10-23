@@ -2,9 +2,8 @@ import React from 'react';
 import {DataType, Property} from '../services/DataTypeService';
 import {LinearProgress} from '@material-ui/core';
 import PropertyControl from './PropertyControl'
-import './DataTypeControl.css';
-import Typography from "@material-ui/core/Typography";
 import ErrorMessages from "./ErrorMessages";
+import {FormGroup} from "./FormGroup";
 
 class DataTypeControl extends React.Component {
 
@@ -104,9 +103,9 @@ class DataTypeControl extends React.Component {
                     </ErrorMessages>;
             }
 
-            return <div className='form-group'>
+            return <FormGroup>
                 {controls}
-            </div>;
+            </FormGroup>;
         }
 
         return <LinearProgress/>;

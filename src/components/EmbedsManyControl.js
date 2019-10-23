@@ -9,9 +9,10 @@ import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 import {Property} from "../services/DataTypeService";
+import './FlexBox.css';
 import './EmbedsManyControl.css';
 
-function EmbedsManyControl({ title, value, property, onDelete, onChange, schema, width, theme}) {
+function EmbedsManyControl({ title, value, property, onDelete, onChange, schema, width, theme }) {
 
     const [open, setOpen] = useState(false),
 
@@ -60,11 +61,11 @@ function EmbedsManyControl({ title, value, property, onDelete, onChange, schema,
             dropButton = value.length > 0 && <IconButton onClick={() => setOpen(false)}><ArrowDropUpIcon/></IconButton>;
             if (value.length > 0) {
                 tabs = value.map((item, index) => <Tab label={`${index}`} key={index}/>);
-                tabs = <div style={{width: `calc(${width} - ${theme.spacing(3)}px)`}}>
+                tabs = <div style={{ width: `calc(${width} - ${theme.spacing(3)}px)` }}>
                     <Tabs value={selectedIndex}
-                             variant='scrollable'
-                             scrollButtons='auto'
-                             onChange={(_, index) => setSelectedIndex(index)}>
+                          variant='scrollable'
+                          scrollButtons='auto'
+                          onChange={(_, index) => setSelectedIndex(index)}>
                         {tabs}
                     </Tabs>
                 </div>;
@@ -99,11 +100,13 @@ function EmbedsManyControl({ title, value, property, onDelete, onChange, schema,
     const AddNewIcon = value ? AddIcon : CreateIcon;
 
     return (
-        <div>
-            <TextField label={title} disabled={true}/>
-            {dropButton}
-            <IconButton onClick={addNew}><AddNewIcon/></IconButton>
-            {deleteButton}
+        <div className='flex full-width column'>
+            <div className='flex full-width'>
+                <TextField label={title} disabled={true} style={{flexGrow: 1}}/>
+                {dropButton}
+                <IconButton onClick={addNew}><AddNewIcon/></IconButton>
+                {deleteButton}
+            </div>
             {tabContainer}
         </div>
     );

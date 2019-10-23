@@ -5,6 +5,7 @@ import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
+import './FlexBox.css'
 
 function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, width }) {
 
@@ -34,10 +35,12 @@ function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, 
     }
 
     return (
-        <div>
-            <TextField label={title} disabled={true}/>
-            {actionButton}
-            {deleteButton}
+        <div className='flex full-width column'>
+            <div className='flex full-width'>
+                <TextField label={title} disabled={true} style={{flexGrow: 1}}/>
+                {actionButton}
+                {deleteButton}
+            </div>
             {objectControl}
         </div>
     );

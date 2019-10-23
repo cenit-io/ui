@@ -12,7 +12,7 @@ const BooleanControl = ({ title, onChange, value, onDelete }) => {
         CheckIcon = value === undefined ? BlankIcon : (value ? CheckedIcon : UncheckedIcon);
 
     return (
-        <FormControl>
+        <FormControl variant="filled" fullWidth={true}>
             <InputLabel>{title}</InputLabel>
             <Input disabled
                    onMouseEnter={() => setOver(true)}

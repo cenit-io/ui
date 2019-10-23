@@ -10,6 +10,7 @@ import {
     TextField
 } from "@material-ui/core";
 import Random from "../util/Random";
+import './FlexBox.css';
 
 class RefPicker extends React.Component {
 
@@ -122,7 +123,7 @@ class RefPicker extends React.Component {
             }
             list = (
                 <ClickAwayListener onClickAway={this.handleClickAway}>
-                    <Paper style={{ position: 'absolute', background: 'white', border: 'gray', zIndex: 1102 }}>
+                    <Paper style={{ position: 'absolute', top: `${48}px`, background: 'white', border: 'gray', zIndex: 1102 }}>
                         <List component="nav">
                             {list}
                         </List>
@@ -146,13 +147,13 @@ class RefPicker extends React.Component {
 
         let input;
         if (inputClasses) {
-            input = <InputBase {...inputProps} classes={inputClasses}/>;
+            input = <InputBase {...inputProps} classes={inputClasses} style={{ flexGrow: 1 }}/>;
         } else {
-            input = <TextField {...inputProps}/>;
+            input = <TextField {...inputProps} style={{ flexGrow: 1 }}/>;
         }
 
         return (
-            <div style={{ position: "relative" }}>
+            <div className='flex relative grow-1 column'>
                 {input}
                 {(loading || text === null) && <LinearProgress/>}
                 {list}
