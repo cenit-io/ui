@@ -105,6 +105,7 @@ class Index extends React.Component {
         return dataType.find('', {
             limit: limit,
             page: page,
+            sort: { _id: -1 },
             props: dataType.queryProps()
         });
     };

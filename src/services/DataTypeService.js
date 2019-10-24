@@ -195,6 +195,7 @@ export class DataType {
     async find(query, opts = null) {
         const limit = (opts && opts.limit) || 5;
         const page = (opts && opts.page) || 1;
+        const sort = (opts && opts.sort) || {};
         query = (query || '').toString().trim();
         const params = { limit, page };
         const queryProps = await ((opts && opts.props) || this.titleProps());
@@ -209,7 +210,8 @@ export class DataType {
             headers: {
                 'X-Template-Options': JSON.stringify({
                     viewport: '{_id ' + queryProps.map(p => p.name).join(' ') + '}'
-                })
+                }),
+                'X-Query-Options': JSON.stringify({ sort })
             }
         })) || { items: [] };
     }
