@@ -86,7 +86,7 @@ class DataTypeControl extends React.Component {
 
         if (properties) {
 
-            let controls = properties.map(
+            const controls = properties.map(
                 prop => <PropertyControl property={prop}
                                          key={prop.name}
                                          value={value[prop.name]}
@@ -96,15 +96,10 @@ class DataTypeControl extends React.Component {
                                          onDelete={this.handleDelete(prop.name)}/>
             );
 
-            if (errors.$ && errors.$.length) {
-                controls =
-                    <ErrorMessages errors={errors.$} position='top'>
-                        {controls}
-                    </ErrorMessages>;
-            }
-
             return <FormGroup>
-                {controls}
+                <ErrorMessages errors={errors.$}>
+                    {controls}
+                </ErrorMessages>
             </FormGroup>;
         }
 

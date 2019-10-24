@@ -37,20 +37,21 @@ const styles = theme => ({
 
 const New = ({ docked, dataType, theme, classes }) => {
 
-    const [state, setState] = useState({ changed: true, value: {} });
+    const [value, setValue] = useState({});
+    const [changed, setChanged] = useState(false);
+    const [errors, setErrors] = useState(null);
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
     const md = useMediaQuery(theme.breakpoints.up('md'));
 
     const handleChange = value => {
-        setState({ changed: true, value })
+        setValue(value);
+        setChanged(true);
     };
-
-    const { changed, value, errors } = state;
 
     const save = () => {
         dataType.post(value)
             .then(response => console.log(response))
-            .catch(error => setState({ ...state, errors: error.response.data }));
+            .catch(error => setErrors(error.response.data));
     };
 
     const actions = [];

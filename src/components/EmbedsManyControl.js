@@ -1,95 +1,105 @@
 import React, {useState} from 'react';
-import {IconButton, Tab, Tabs, TextField} from "@material-ui/core";
+import {IconButton, TextField} from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
 import CreateIcon from '@material-ui/icons/AddCircleOutline';
 import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 import {Property} from "../services/DataTypeService";
 import './FlexBox.css';
-import './EmbedsManyControl.css';
+import {ItemChip} from "./ItemChip";
 
-function EmbedsManyControl({ title, value, property, onDelete, onChange, schema, width, theme }) {
+function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema }) {
 
-    const [open, setOpen] = useState(false),
+    const [open, setOpen] = useState(false);
 
-        [selectedIndex, setSelectedIndex] = useState(0),
+    const [controlProperty] = useState(new Property({
+        dataType: property.dataType,
+        propertySchema: schema
+    }));
 
-        addNew = () => {
-            if (value) {
-                value.push({});
-            } else {
-                value = [];
-            }
-            onChange(value);
-            setSelectedIndex(value.length - 1);
-            if (value.length > 0) {
-                setOpen(true);
-            }
-        },
+    const [selectedIndex, setSelectedIndex] = useState(-1);
 
-        deleteSelected = () => {
-            value.splice(selectedIndex, 1);
-            onChange(value);
-            if (value.length === 0) {
+    const addNew = () => {
+        if (value) {
+            value.push({});
+        } else {
+            value = [];
+        }
+        setSelectedIndex(value.length - 1);
+        if (value.length > 0) {
+            setOpen(true);
+        }
+        onChange(value);
+    };
+
+    const deleteIndex = index => {
+            const newValue = [...value];
+            newValue.splice(index, 1);
+            if (newValue.length === 0) {
                 setOpen(false);
-            } else if (value.length === selectedIndex) {
-                setSelectedIndex(selectedIndex - 1);
+            } else if (selectedIndex === index) {
+                setSelectedIndex(-1);
+            } else if (selectedIndex === newValue.length) {
+                setSelectedIndex(newValue.length - 1);
             }
-        },
-
-        seek = (x) => () => {
-            let tmp = value[selectedIndex];
-            value[selectedIndex] = value[selectedIndex + x];
-            value[selectedIndex + x] = tmp;
-            setSelectedIndex(selectedIndex + x);
-            onChange(value);
-        },
-
-        handleChange = item => {
-            value[selectedIndex] = item;
-            onChange(value);
+            onChange(newValue);
         };
 
-    let dropButton, deleteButton, tabs, tabContainer;
+    const seek = (x) => () => {
+        let tmp = value[selectedIndex];
+        value[selectedIndex] = value[selectedIndex + x];
+        value[selectedIndex + x] = tmp;
+        setSelectedIndex(selectedIndex + x);
+        onChange(value);
+    };
+
+    const handleChange = item => {
+        value[selectedIndex] = item;
+        onChange(value);
+    };
+
+    const selectItem = index => () => setSelectedIndex(index);
+
+    const deleteItem = index => () => deleteIndex(index);
+
+    let dropButton, deleteButton, itemChips;
 
     if (value) {
         if (open) {
+            itemChips = value.map(
+                (item, index) => <ItemChip key={`item_${index}`}
+                                           dataType={property.dataType}
+                                           item={item}
+                                           error={errors && errors.hasOwnProperty(String(index))}
+                                           onSelect={selectItem(index)}
+                                           onDelete={deleteItem(index)}
+                                           selected={selectedIndex === index}/>
+            );
+
             dropButton = value.length > 0 && <IconButton onClick={() => setOpen(false)}><ArrowDropUpIcon/></IconButton>;
-            if (value.length > 0) {
-                tabs = value.map((item, index) => <Tab label={`${index}`} key={index}/>);
-                tabs = <div style={{ width: `calc(${width} - ${theme.spacing(3)}px)` }}>
-                    <Tabs value={selectedIndex}
-                          variant='scrollable'
-                          scrollButtons='auto'
-                          onChange={(_, index) => setSelectedIndex(index)}>
-                        {tabs}
-                    </Tabs>
-                </div>;
-                const controlProperty = new Property();
+
+            let itemControl;
+
+            if (selectedIndex !== -1) {
                 controlProperty.name = selectedIndex;
-                controlProperty.dataType = property.dataType;
-                controlProperty.propertySchema = schema;
-                tabContainer = (
-                    <div className='tab-container'>
-                        {tabs}
-                        <div className='tab-container-ctrl'>
-                            <div className='tab-container-actions'>
-                                <IconButton onClick={deleteSelected}><ClearIcon/></IconButton>
-                                {selectedIndex > 0 && <IconButton onClick={seek(-1)}><ArrowBackIcon/></IconButton>}
-                                {(selectedIndex < value.length - 1) &&
-                                <IconButton onClick={seek(1)}><ArrowForwardIcon/></IconButton>}
-                            </div>
-                            <ObjectControl property={controlProperty}
-                                           value={value[selectedIndex]}
-                                           onChange={handleChange}/>
-                        </div>
-                    </div>
+                itemControl = (
+                    <ObjectControl property={controlProperty}
+                                   value={value[selectedIndex]}
+                                   errors={errors && errors[String(selectedIndex)]}
+                                   onChange={handleChange}/>
                 );
             }
+
+            itemChips = (
+                <div className='flex column'>
+                    <div style={{ display: 'flex', paddingTop: '10px', flexWrap: 'wrap' }}>
+                        {itemChips}
+                    </div>
+                    {itemControl}
+                </div>
+            );
         } else {
             dropButton = value.length > 0 &&
                 <IconButton onClick={() => setOpen(true)}><ArrowDropDownIcon/></IconButton>;
@@ -99,15 +109,17 @@ function EmbedsManyControl({ title, value, property, onDelete, onChange, schema,
 
     const AddNewIcon = value ? AddIcon : CreateIcon;
 
+    const itemsCount = value ? `${value.length} items` : '';
+
     return (
         <div className='flex full-width column'>
             <div className='flex full-width'>
-                <TextField label={title} disabled={true} style={{flexGrow: 1}}/>
+                <TextField label={title} disabled={true} style={{ flexGrow: 1 }} value={itemsCount}/>
                 {dropButton}
                 <IconButton onClick={addNew}><AddNewIcon/></IconButton>
                 {deleteButton}
             </div>
-            {tabContainer}
+            {itemChips}
         </div>
     );
 }

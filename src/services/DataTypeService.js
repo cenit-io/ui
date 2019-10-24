@@ -225,6 +225,10 @@ export class DataType {
         return this.__titleProps;
     }
 
+    async titleFor(item) {
+        return (await this.titlesFor(item))[0];
+    }
+
     async titlesFor(...items) {
         items = [...items];
 
@@ -281,6 +285,10 @@ export class DataType {
 }
 
 export class Property {
+
+    constructor(attrs = {}) {
+        Object.keys(attrs).forEach(attr => this[attr] = attrs[attr]);
+    }
 
     getSchema = async () => {
         if (this.propertySchema) {

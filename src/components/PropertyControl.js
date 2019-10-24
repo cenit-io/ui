@@ -60,22 +60,18 @@ class PropertyControl extends React.Component {
 
     render() {
         const { schema } = this.state;
-        const { errors } = this.props;
+        const { errors, property } = this.props;
 
         if (schema) {
-            const ControlComponent = controlComponentFor(this.props.property);
-            let control = <ControlComponent {...this.state} {...this.props}/>;
+            const ControlComponent = controlComponentFor(property);
 
-            if (!ControlComponent.ownErrorMessages) {
-                control =
-                    <ErrorMessages errors={errors}>
-                        {control}
-                    </ErrorMessages>;
-            }
+            const control = <ControlComponent {...this.state} {...this.props}/>;
 
             return (
                 <div className='prop-control'>
-                    {control}
+                    <ErrorMessages errors={ControlComponent.ownErrorMessages ? null : errors}>
+                        {control}
+                    </ErrorMessages>
                 </div>
             );
         }

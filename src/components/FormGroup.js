@@ -17,5 +17,5 @@ export const FormGroup = ({ children }) => {
 
     return <div className={classes.formGroup}>
         {children}
-    </div>
+    </div>;
 };
