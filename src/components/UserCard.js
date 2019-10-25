@@ -1,36 +1,60 @@
-import {Avatar, CircularProgress, Button, Typography} from "@material-ui/core";
+import { Avatar, CircularProgress, Button, Typography, makeStyles } from "@material-ui/core";
 import ExitIcon from '@material-ui/icons/ExitToApp';
 import React from "react";
 import AuthorizationService from "../services/AuthorizationService";
 
+const useStyles = makeStyles(theme => ({
+    root: {
+        padding: `${theme.spacing(1)}px`,
+        display: 'flex',
+        flexDirection: 'column'
+    },
+    profile: {
+        display: 'flex',
+        justifyContent: 'space-between'
+    },
+    avatarContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    avatar: {
+        width: `${theme.spacing(8)}px`,
+        height: `${theme.spacing(8)}px`,
+    },
+    profileData: {
+        flexGrow: 1,
+        flexDirection: 'column',
+        textAlign: 'right',
+        marginLeft: `${theme.spacing(1)}px`,
+        wordBreak: 'break-word',
+        maxWidth: `${theme.spacing(20)}px`
+    },
+    logout: {
+        display: 'flex',
+        justifyContent: 'flex-end'
+    }
+}));
+
 const UserCard = ({ idToken, onClose }) => {
+
+    const classes = useStyles();
 
     if (!idToken) return <CircularProgress/>;
 
-    const avatar = <Avatar alt={idToken.name} src={idToken.picture} style={{ width: '60px', height: '60px' }}/>;
+    const avatar = <Avatar alt={idToken.name} src={idToken.picture} className={classes.avatar}/>;
 
     function logout() {
         onClose && onClose();
         AuthorizationService.logout();
     }
 
-    return <div style={{ padding: '10px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
-            }}>
+    return <div className={classes.root}>
+        <div className={classes.profile}>
+            <div className={classes.avatarContainer}>
                 {avatar}
             </div>
-            <div style={{
-                flexGrow: 1,
-                flexDirection: 'column',
-                textAlign: 'right',
-                marginLeft: '10px',
-                wordBreak: 'break-word',
-                maxWidth: '160px'
-            }}>
+            <div className={classes.profileData}>
                 <Typography component="div" variant="subtitle2">
                     {idToken.name}
                 </Typography>
@@ -39,7 +63,7 @@ const UserCard = ({ idToken, onClose }) => {
                 </Typography>
             </div>
         </div>
-        <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+        <div className={classes.logout}>
             <Button variant="contained"
                     color="secondary"
                     size="small"
