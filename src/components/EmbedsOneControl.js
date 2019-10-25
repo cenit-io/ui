@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {IconButton, TextField} from "@material-ui/core";
+import React, { useState } from 'react';
+import { IconButton, TextField } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
 import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
@@ -7,37 +7,43 @@ import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 import './FlexBox.css'
 
-function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, width }) {
+function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, width, disabled }) {
 
-    const [open, setOpen] = useState(false),
+    const [valueTitle, setValueTitle] = useState('');
+    const [open, setOpen] = useState(false);
 
-        addNew = () => {
-            onChange({});
-            setTimeout(() => setOpen(true));
-        };
+    const addNew = () => {
+        onChange({});
+        setTimeout(() => setOpen(true));
+    };
 
     let objectControl, actionButton, deleteButton;
 
     if (value) {
+        property.dataType.titleFor(value).then(t => setValueTitle(t));
         if (open) {
             objectControl = <ObjectControl property={property}
                                            value={value}
                                            errors={errors}
                                            onChange={onChange}
-                                           width={width}/>;
-            actionButton = <IconButton onClick={() => setOpen(false)}><ArrowDropUpIcon/></IconButton>;
+                                           width={width}
+                                           disabled={disabled}/>;
+            actionButton =
+                <IconButton onClick={() => setOpen(false)} disabled={disabled}><ArrowDropUpIcon/></IconButton>;
         } else {
-            actionButton = <IconButton onClick={() => setOpen(true)}><ArrowDropDownIcon/></IconButton>;
+            actionButton =
+                <IconButton onClick={() => setOpen(true)} disabled={disabled}><ArrowDropDownIcon/></IconButton>;
         }
-        deleteButton = <IconButton onClick={onDelete}><ClearIcon/></IconButton>;
+        deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
     } else {
-        actionButton = <IconButton onClick={addNew}><AddIcon/></IconButton>;
+        valueTitle.length && setValueTitle('');
+        actionButton = <IconButton onClick={addNew} disabled={disabled}><AddIcon/></IconButton>;
     }
 
     return (
         <div className='flex full-width column'>
             <div className='flex full-width'>
-                <TextField label={title} disabled={true} style={{flexGrow: 1}}/>
+                <TextField label={title} disabled={true} className='grow-1' value={valueTitle}/>
                 {actionButton}
                 {deleteButton}
             </div>

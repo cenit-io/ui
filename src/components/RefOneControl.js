@@ -1,5 +1,5 @@
 import React from 'react';
-import {IconButton} from "@material-ui/core";
+import { IconButton } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
 import ClearIcon from '@material-ui/icons/Clear';
 import RefPicker from "./RefPicker";
@@ -34,13 +34,13 @@ class RefOneControl extends React.Component {
     handleDelete = () => this.props.onDelete();
 
     render() {
-        const { title, value, property } = this.props,
-            { text } = this.state;
+        const { title, value, property, disabled } = this.props;
+        const { text } = this.state;
 
         let deleteButton;
 
         if (value) {
-            deleteButton = <IconButton onClick={this.handleDelete}><ClearIcon/></IconButton>;
+            deleteButton = <IconButton onClick={this.handleDelete} disabled={disabled}><ClearIcon/></IconButton>;
         }
 
         return (
@@ -49,8 +49,8 @@ class RefOneControl extends React.Component {
                            label={title}
                            onPick={this.handlePick}
                            text={text}
-                           disabled={text === null}/>
-                <IconButton onClick={() => console.log('New Ref...')}><AddIcon/></IconButton>
+                           disabled={disabled || text === null}/>
+                <IconButton onClick={() => console.log('New Ref...')} disabled={disabled}><AddIcon/></IconButton>
                 {deleteButton}
             </div>
         );

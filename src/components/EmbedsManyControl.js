@@ -1,16 +1,16 @@
-import React, {useState} from 'react';
-import {IconButton, TextField} from "@material-ui/core";
+import React, { useState } from 'react';
+import { IconButton, TextField } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
 import CreateIcon from '@material-ui/icons/AddCircleOutline';
 import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
-import {Property} from "../services/DataTypeService";
+import { Property } from "../services/DataTypeService";
 import './FlexBox.css';
-import {ItemChip} from "./ItemChip";
+import { ItemChip } from "./ItemChip";
 
-function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema }) {
+function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema, disabled }) {
 
     const [open, setOpen] = useState(false);
 
@@ -35,17 +35,17 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
     };
 
     const deleteIndex = index => {
-            const newValue = [...value];
-            newValue.splice(index, 1);
-            if (newValue.length === 0) {
-                setOpen(false);
-            } else if (selectedIndex === index) {
-                setSelectedIndex(-1);
-            } else if (selectedIndex === newValue.length) {
-                setSelectedIndex(newValue.length - 1);
-            }
-            onChange(newValue);
-        };
+        const newValue = [...value];
+        newValue.splice(index, 1);
+        if (newValue.length === 0) {
+            setOpen(false);
+        } else if (selectedIndex === index) {
+            setSelectedIndex(-1);
+        } else if (selectedIndex === newValue.length) {
+            setSelectedIndex(newValue.length - 1);
+        }
+        onChange(newValue);
+    };
 
     /* TODO const seek = (x) => () => {
         let tmp = value[selectedIndex];
@@ -75,10 +75,14 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
                                            error={errors && errors.hasOwnProperty(String(index))}
                                            onSelect={selectItem(index)}
                                            onDelete={deleteItem(index)}
-                                           selected={selectedIndex === index}/>
+                                           selected={selectedIndex === index}
+                                           disabled={disabled}/>
             );
 
-            dropButton = value.length > 0 && <IconButton onClick={() => setOpen(false)}><ArrowDropUpIcon/></IconButton>;
+            dropButton = value.length > 0 &&
+                <IconButton onClick={() => setOpen(false)} disabled={disabled}>
+                    <ArrowDropUpIcon/>
+                </IconButton>;
 
             let itemControl;
 
@@ -88,7 +92,8 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
                     <ObjectControl property={controlProperty}
                                    value={value[selectedIndex]}
                                    errors={errors && errors[String(selectedIndex)]}
-                                   onChange={handleChange}/>
+                                   onChange={handleChange}
+                                   disabled={disabled}/>
                 );
             }
 
@@ -102,9 +107,11 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
             );
         } else {
             dropButton = value.length > 0 &&
-                <IconButton onClick={() => setOpen(true)}><ArrowDropDownIcon/></IconButton>;
+                <IconButton onClick={() => setOpen(true)} disabled={disabled}>
+                    <ArrowDropDownIcon/>
+                </IconButton>;
         }
-        deleteButton = <IconButton onClick={onDelete}><ClearIcon/></IconButton>;
+        deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
     }
 
     const AddNewIcon = value ? AddIcon : CreateIcon;
@@ -116,7 +123,7 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
             <div className='flex full-width'>
                 <TextField label={title} disabled={true} style={{ flexGrow: 1 }} value={itemsCount}/>
                 {dropButton}
-                <IconButton onClick={addNew}><AddNewIcon/></IconButton>
+                <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>
                 {deleteButton}
             </div>
             {itemChips}

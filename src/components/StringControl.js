@@ -29,13 +29,13 @@ class StringControl extends React.Component {
     setOver = over => () => this.setState({ over });
 
     render() {
-        const { title, value, errors } = this.props;
+        const { title, value, errors, disabled } = this.props;
         const { key, over } = this.state;
 
         const error = Boolean(errors && errors.length);
 
         return (
-            <FormControl variant="filled" fullWidth={true}>
+            <FormControl variant="filled" fullWidth={true} disabled={disabled}>
                 <InputLabel>{title}</InputLabel>
                 <FilledInput key={key}
                              error={error}
@@ -44,7 +44,7 @@ class StringControl extends React.Component {
                              onMouseEnter={this.setOver(true)}
                              onMouseLeave={this.setOver(false)}
                              endAdornment={
-                                 over && value !== undefined &&
+                                 !disabled && over && value !== undefined &&
                                  <InputAdornment position="end">
                                      <IconButton onClick={this.handleClear}>
                                          <ClearIcon/>

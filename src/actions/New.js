@@ -1,7 +1,7 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import NewIcon from '@material-ui/icons/Add';
 import FormView from "../components/FormView";
-import {useMediaQuery, withStyles} from "@material-ui/core";
+import { useMediaQuery, withStyles } from "@material-ui/core";
 import Fab from '@material-ui/core/Fab';
 import SaveIcon from '@material-ui/icons/Save';
 import clsx from "clsx";

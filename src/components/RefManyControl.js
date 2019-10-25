@@ -1,12 +1,12 @@
 import React from 'react';
-import {Chip, IconButton, LinearProgress} from "@material-ui/core";
+import { Chip, IconButton, LinearProgress } from "@material-ui/core";
 import ClearIcon from '@material-ui/icons/Clear';
 import AddIcon from '@material-ui/icons/Add';
 import CreateIcon from '@material-ui/icons/AddCircleOutline';
 import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
-
 import RefPicker from "./RefPicker";
+import './FlexBox.css';
 
 
 class RefManyControl extends React.Component {
@@ -79,48 +79,50 @@ class RefManyControl extends React.Component {
     };
 
     render() {
-        const { title, value, property, onDelete } = this.props,
-            { open, items } = this.state;
+        const { title, value, property, onDelete, disabled } = this.props;
+        const { open, items } = this.state;
 
         let dropButton, deleteButton, itemsControls;
 
         if (value) {
             if (open) {
                 dropButton = value.length > 0 &&
-                    <IconButton onClick={() => this.setOpen(false)}><ArrowDropUpIcon/></IconButton>;
+                    <IconButton onClick={() => this.setOpen(false)} disabled={disabled}><ArrowDropUpIcon/></IconButton>;
                 if (items) {
                     itemsControls = items.map(
                         (item, index) => <Chip key={`item_${index}`}
                                                label={item.title}
                                                onClick={this.handleSelect(index)}
                                                onDelete={this.handleDelete(index)}
-                                               style={{ margin: '4px' }}/>
+                                               style={{ margin: '4px' }}
+                                               disabled={disabled}/>
                     );
                 } else {
-                    itemsControls = <LinearProgress style={{ flexGrow: 1 }}/>;
+                    itemsControls = <LinearProgress className='grow-1'/>;
                 }
             } else {
                 dropButton = value.length > 0 &&
-                    <IconButton onClick={() => this.setOpen(true)}><ArrowDropDownIcon/></IconButton>;
+                    <IconButton onClick={() => this.setOpen(true)}
+                                disabled={disabled}><ArrowDropDownIcon/></IconButton>;
             }
-            deleteButton = <IconButton onClick={onDelete}><ClearIcon/></IconButton>;
+            deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
         }
 
         const AddNewIcon = value ? AddIcon : CreateIcon;
 
         return (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex' }}>
+            <div className='flex column'>
+                <div className='flex'>
                     <RefPicker dataType={property.dataType}
                                label={title}
                                onPick={this.handlePick}
                                text={value ? `${value.length} items` : ''}
-                               disabled={items === null}/>
+                               disabled={disabled || items === null}/>
                     {dropButton}
-                    <IconButton onClick={this.addNew}><AddNewIcon/></IconButton>
+                    <IconButton onClick={this.addNew} disabled={disabled}><AddNewIcon/></IconButton>
                     {deleteButton}
                 </div>
-                <div style={{ display: 'flex', paddingTop: '10px', flexWrap: 'wrap' }}>
+                <div className='flex wrap' style={{ paddingTop: '10px' }}>
                     {itemsControls}
                 </div>
             </div>

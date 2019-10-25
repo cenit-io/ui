@@ -1,6 +1,6 @@
 import React from 'react';
 import ObjectControl from "./ObjectControl";
-import {makeStyles} from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
 
 const useStyles = makeStyles(() => ({
     root: {
@@ -11,7 +11,7 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-const FormView = ({ dataType, width, value, errors, onChange }) => {
+const FormView = ({ dataType, width, value, errors, onChange, disabled }) => {
 
     const classes = useStyles();
 
@@ -22,7 +22,8 @@ const FormView = ({ dataType, width, value, errors, onChange }) => {
                                  width={width}
                                  value={value}
                                  errors={errors}
-                                 onChange={handleChange}/>;
+                                 onChange={handleChange}
+                                 disabled={disabled}/>;
     }
 
     function handleChange(value) {

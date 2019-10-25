@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {Chip, CircularProgress, makeStyles} from "@material-ui/core";
+import React, { useState } from 'react';
+import { Chip, CircularProgress, makeStyles } from "@material-ui/core";
 
 const useStyles = makeStyles(theme => ({
     chip: {
@@ -7,7 +7,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error }) => {
+export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, disabled }) => {
 
     const classes = useStyles();
 
@@ -20,7 +20,8 @@ export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error }
                      onClick={onSelect}
                      onDelete={onDelete}
                      className={classes.chip}
-                     color={selected ? 'primary' : (error ? 'secondary' : 'default')}/>;
+                     color={selected ? 'primary' : (error ? 'secondary' : 'default')}
+                     disabled={disabled}/>;
     }
 
     return <CircularProgress className={classes.chip}/>;
