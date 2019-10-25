@@ -1,5 +1,5 @@
 import React from 'react';
-import {FormControl, IconButton, InputAdornment, InputLabel} from "@material-ui/core";
+import { FormControl, IconButton, InputAdornment, InputLabel } from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
 import Random from "../util/Random";
 import FilledInput from "@material-ui/core/FilledInput";
@@ -18,12 +18,12 @@ class StringControl extends React.Component {
 
     handleChange = e => {
         this.state.value = e.target.value;
-        this.props.onChange(e.target.value);
+        setTimeout(this.props.onChange(e.target.value));
     };
 
     handleClear = () => {
-        this.setState({ key: Random.string() });
         this.props.onDelete();
+        setTimeout(() => this.setState({ key: Random.string() }));
     };
 
     setOver = over => () => this.setState({ over });
@@ -38,20 +38,20 @@ class StringControl extends React.Component {
             <FormControl variant="filled" fullWidth={true}>
                 <InputLabel>{title}</InputLabel>
                 <FilledInput key={key}
-                       error={error}
-                       defaultValue={value}
-                       onChange={this.handleChange}
-                       onMouseEnter={this.setOver(true)}
-                       onMouseLeave={this.setOver(false)}
-                       endAdornment={
-                           over && value !== undefined &&
-                           <InputAdornment position="end">
-                               <IconButton onClick={this.handleClear}>
-                                   <ClearIcon/>
-                               </IconButton>
-                           </InputAdornment>
-                       }
-                       variant='filled'
+                             error={error}
+                             defaultValue={value}
+                             onChange={this.handleChange}
+                             onMouseEnter={this.setOver(true)}
+                             onMouseLeave={this.setOver(false)}
+                             endAdornment={
+                                 over && value !== undefined &&
+                                 <InputAdornment position="end">
+                                     <IconButton onClick={this.handleClear}>
+                                         <ClearIcon/>
+                                     </IconButton>
+                                 </InputAdornment>
+                             }
+                             variant='filled'
                 />
             </FormControl>
         );

@@ -1,13 +1,12 @@
 import React from 'react';
 import Loading from '../components/Loading';
-import {Checkbox, withStyles} from "@material-ui/core";
+import { Checkbox, withStyles } from "@material-ui/core";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
-import {appBarHeight} from "../layout/AppBar";
 import TablePagination from "@material-ui/core/TablePagination";
 import ListIcon from '@material-ui/icons/List';
 
@@ -132,7 +131,7 @@ class Index extends React.Component {
     };
 
     handleClick = (event, id) => {
-        const { selected, onSelect } = this.props,
+        const { selected } = this.props,
             selectedIndex = selected.indexOf(id);
         let newSelected = [];
 
@@ -177,50 +176,52 @@ class Index extends React.Component {
 
     render() {
 
-        const { height, selected, classes, theme } = this.props,
+        const { height, selected, classes, theme } = this.props;
 
-            { props, data, order, orderBy, page, dense, limit } = this.state;
+        const { props, data, dense, limit } = this.state;
 
-        const isSelected = name => selected.indexOf(name) !== -1;
+        //const { order, orderBy, page} = this.state;
+
+        //const isSelected = name => selected.indexOf(name) !== -1;
 
         let table, tableHeight = height;
 
         if (props) {
             if (data) {
-                const headCells = props.map(prop => <TableCell key={prop.prop.name}
+                /*const headCells = props.map(prop => <TableCell key={prop.prop.name}
                                                                style={{
                                                                    backgroundColor: "#fff",
                                                                    position: "sticky",
                                                                    top: 0
-                                                               }}>{prop.title}</TableCell>),
+                                                               }}>{prop.title}</TableCell>);*/
 
-                    rows = data.items.map(item => {
-                        let isSelected = selected.indexOf(item.id) !== -1;
-                        return <TableRow hover
-                                         key={item.id}
-                                         onClick={event => this.handleClick(event, item.id)}
-                                         role="checkbox"
-                                         aria-checked={isSelected}
-                                         tabIndex={-1}>
-                            <TableCell padding="checkbox"
-                                       style={{
-                                           backgroundColor: "#fff",
-                                           position: "sticky",
-                                           left: 0,
-                                           zIndex: 2
-                                       }}>
-                                <Checkbox checked={isSelected}
-                                          inputProps={{ 'aria-labelledby': item.id }}/>
-                            </TableCell>
-                            {
-                                props.map(prop => (
-                                    <TableCell key={`${item.id}.${prop.prop.name}`}>
-                                        {item[prop.prop.name]}
-                                    </TableCell>
-                                ))
-                            }
-                        </TableRow>
-                    });
+                const rows = data.items.map(item => {
+                    let isSelected = selected.indexOf(item.id) !== -1;
+                    return <TableRow hover
+                                     key={item.id}
+                                     onClick={event => this.handleClick(event, item.id)}
+                                     role="checkbox"
+                                     aria-checked={isSelected}
+                                     tabIndex={-1}>
+                        <TableCell padding="checkbox"
+                                   style={{
+                                       backgroundColor: "#fff",
+                                       position: "sticky",
+                                       left: 0,
+                                       zIndex: 2
+                                   }}>
+                            <Checkbox checked={isSelected}
+                                      inputProps={{ 'aria-labelledby': item.id }}/>
+                        </TableCell>
+                        {
+                            props.map(prop => (
+                                <TableCell key={`${item.id}.${prop.prop.name}`}>
+                                    {String(item[prop.prop.name])}
+                                </TableCell>
+                            ))
+                        }
+                    </TableRow>
+                });
 
                 let pagination;
 

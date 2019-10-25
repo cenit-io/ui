@@ -47,13 +47,13 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
             onChange(newValue);
         };
 
-    const seek = (x) => () => {
+    /* TODO const seek = (x) => () => {
         let tmp = value[selectedIndex];
         value[selectedIndex] = value[selectedIndex + x];
         value[selectedIndex + x] = tmp;
         setSelectedIndex(selectedIndex + x);
         onChange(value);
-    };
+    }; */
 
     const handleChange = item => {
         value[selectedIndex] = item;

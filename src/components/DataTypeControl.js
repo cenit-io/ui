@@ -1,9 +1,9 @@
 import React from 'react';
-import {DataType, Property} from '../services/DataTypeService';
-import {LinearProgress} from '@material-ui/core';
+import { DataType, Property } from '../services/DataTypeService';
+import { LinearProgress } from '@material-ui/core';
 import PropertyControl from './PropertyControl'
 import ErrorMessages from "./ErrorMessages";
-import {FormGroup} from "./FormGroup";
+import { FormGroup } from "./FormGroup";
 
 class DataTypeControl extends React.Component {
 
@@ -74,7 +74,7 @@ class DataTypeControl extends React.Component {
     handleDelete = prop => () => {
         const { value, onChange } = this.props;
         delete value[prop];
-        onChange && onChange(value);
+        onChange && onChange({ ...value });
     };
 
     refresh = () => this.doSetState({});

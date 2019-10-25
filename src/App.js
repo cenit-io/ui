@@ -1,5 +1,4 @@
 import React from 'react';
-import AppBar from './layout/AppBar';
 import QueryString from 'querystring';
 import AuthorizationService from "./services/AuthorizationService";
 import {CircularProgress} from "@material-ui/core";

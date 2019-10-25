@@ -1,25 +1,16 @@
-import React, {useState} from 'react';
-import {makeStyles, useTheme} from '@material-ui/core/styles/index';
+import React, { useState } from 'react';
+import { makeStyles, useTheme } from '@material-ui/core/styles/index';
 import AppBar from '@material-ui/core/AppBar/index';
 import Tabs from '@material-ui/core/Tabs/index';
 import Tab from '@material-ui/core/Tab/index';
 import Button from '@material-ui/core/Button/index';
 import IconButton from '@material-ui/core/IconButton/index';
 import CloseIcon from '@material-ui/icons/Clear';
-import Typography from '@material-ui/core/Typography/index';
 import SwipeableViews from "react-swipeable-views";
-import {appBarHeight} from "./AppBar";
+import { appBarHeight } from "./AppBar";
 import CollectionContainer from "../actions/CollectionContainer";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
-
-function TabContainer(props) {
-    return (
-        <Typography component="div" style={{ padding: 8 * 3 }}>
-            {props.children}
-        </Typography>
-    );
-}
 
 function ItemTab({ item, index, onSelect, onClose }) {
 
@@ -74,7 +65,7 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
 
         theme = useTheme(),
 
-        [value, setValue] = React.useState(0),
+        [, setValue] = React.useState(0),
 
         tabs = items.map((item, i) => <ItemTab key={`tab_${item.id}`}
                                                docked={docked}
