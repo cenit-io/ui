@@ -1,21 +1,26 @@
 import React from 'react';
-import {makeStyles} from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
+import clsx from 'clsx';
+import './FlexBox.css';
 
 const useStyles = makeStyles(theme => ({
-    formGroup: {
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
+    defaultStyle: {
         borderLeft: 'solid',
         borderLeftColor: theme.palette.text.secondary
+    },
+    errorStyle: {
+        borderLeft: 'solid',
+        borderLeftColor: theme.palette.error.light
     }
+
 }));
 
-export const FormGroup = ({ children }) => {
+export const FormGroup = ({ children, error }) => {
 
     const classes = useStyles();
+    const className = clsx('flex column full-width', (error && classes.errorStyle) || classes.defaultStyle);
 
-    return <div className={classes.formGroup}>
+    return <div className={className}>
         {children}
     </div>;
 };

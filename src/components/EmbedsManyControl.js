@@ -121,7 +121,11 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
     return (
         <div className='flex full-width column'>
             <div className='flex full-width'>
-                <TextField label={title} disabled={true} style={{ flexGrow: 1 }} value={itemsCount}/>
+                <TextField label={title}
+                           disabled={true}
+                           style={{ flexGrow: 1 }}
+                           value={itemsCount}
+                           error={(errors && Object.keys(errors).length > 0) || false}/>
                 {dropButton}
                 <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>
                 {deleteButton}

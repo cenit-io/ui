@@ -63,7 +63,7 @@ const New = ({ docked, dataType, theme, classes }) => {
                 .catch(error => {
                     setSaving(false);
                     setErrors(error.response.data);
-                }), 5000
+                }), 1000
         )
     };
 

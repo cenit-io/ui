@@ -43,7 +43,11 @@ function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, 
     return (
         <div className='flex full-width column'>
             <div className='flex full-width'>
-                <TextField label={title} disabled={true} className='grow-1' value={valueTitle}/>
+                <TextField label={title}
+                           disabled={true}
+                           className='grow-1'
+                           value={valueTitle}
+                           error={(errors && Object.keys(errors).length > 0) || false}/>
                 {actionButton}
                 {deleteButton}
             </div>

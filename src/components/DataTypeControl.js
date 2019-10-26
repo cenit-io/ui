@@ -97,7 +97,7 @@ class DataTypeControl extends React.Component {
                                          disabled={disabled}/>
             );
 
-            return <FormGroup>
+            return <FormGroup error={Object.keys(errors).length > 0}>
                 <ErrorMessages errors={errors.$}>
                     {controls}
                 </ErrorMessages>
