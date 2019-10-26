@@ -10,10 +10,14 @@ import clsx from "clsx";
 import Tabs from "./Tabs";
 
 const useStyles = makeStyles(theme => ({
+    root: {
+        position: 'relative'
+    },
     mainContainer: {
         position: 'relative',
         display: 'flex',
-        height: `calc(100vh - ${appBarHeight(theme)})`
+        height: `calc(100vh - ${appBarHeight(theme)})`,
+        marginTop: appBarHeight(theme)
     },
     contentMargin: {
         marginLeft: theme.spacing(7) + 1
@@ -108,12 +112,7 @@ const Main = () => {
     const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`),
         tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
 
-    return <div>
-        <AppBar onToggle={switchNavigation}
-                onTenantSelected={handleTenantSelected}
-                onDataTypeSelected={handleDataTypeSelected}
-                dataTypeSelectorDisabled={config === null}
-                idToken={idToken}/>
+    return <div className={classes.root}>
         <div className={classes.mainContainer}>
             <div className={clsx(!(xs || docked) && classes.contentMargin)}
                  style={{
@@ -139,6 +138,11 @@ const Main = () => {
                         navigation={navigation}/>
             }
         </div>
+        <AppBar onToggle={switchNavigation}
+                onTenantSelected={handleTenantSelected}
+                onDataTypeSelected={handleDataTypeSelected}
+                dataTypeSelectorDisabled={config === null}
+                idToken={idToken}/>
     </div>
 };
 

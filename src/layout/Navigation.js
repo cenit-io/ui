@@ -63,7 +63,7 @@ const Navigation = ({ docked, xs, config, onItemSelected }) => {
                     order: 0,
                     height: (docked && !xs) ? 'unset' : '100%',
                     boxShadow: '0 19px 38px rgba(0,0,0,0.30)',
-                    zIndex: 1101
+                    zIndex: 1100
                 }}
                 onMouseEnter={() => setOver(true)}
                 onMouseLeave={() => setOver(false)}>

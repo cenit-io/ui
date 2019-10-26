@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
     AppBar,
     Avatar,
@@ -12,7 +12,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import RecordSelector from "../components/RecordSelector";
 import SearchIcon from '@material-ui/icons/Search';
 import HomeIcon from '@material-ui/icons/Home';
-import {fade} from '@material-ui/core/styles/colorManipulator';
+import { fade } from '@material-ui/core/styles/colorManipulator';
 import TenantSelector from "../components/TenantSelector";
 import useTheme from "@material-ui/core/styles/useTheme";
 import UserCard from "../components/UserCard";
@@ -64,16 +64,16 @@ const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
 const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeSelectorDisabled, idToken }) => {
 
-    const [open, setOpen] = useState(false),
+    const [open, setOpen] = useState(false);
 
-        classes = useStyles(),
-        inputClasses = {
-            root: classes.inputRoot,
-            input: classes.inputInput,
-        },
+    const classes = useStyles();
+    const inputClasses = {
+        root: classes.inputRoot,
+        input: classes.inputInput,
+    };
 
-        theme = useTheme(),
-        smUp = useMediaQuery(theme.breakpoints.up('sm'));
+    const theme = useTheme();
+    const smUp = useMediaQuery(theme.breakpoints.up('sm'));
 
     function handleClick(e) {
         setOpen(e.currentTarget);
@@ -115,7 +115,7 @@ const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeS
         {menu}
     </div>;
 
-    return <AppBar position="static" classes={classes.appBar}>
+    return <AppBar position="fixed">
         <Toolbar>
             <IconButton edge="start" color="inherit" aria-label="Menu" onClick={onToggle}>
                 <MenuIcon/>
