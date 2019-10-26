@@ -26,11 +26,9 @@ class StringControl extends React.Component {
         setTimeout(() => this.setState({ key: Random.string() }));
     };
 
-    setOver = over => () => this.setState({ over });
-
     render() {
         const { title, value, errors, disabled } = this.props;
-        const { key, over } = this.state;
+        const { key } = this.state;
 
         const error = Boolean(errors && errors.length);
 
@@ -41,10 +39,8 @@ class StringControl extends React.Component {
                              error={error}
                              defaultValue={value}
                              onChange={this.handleChange}
-                             onMouseEnter={this.setOver(true)}
-                             onMouseLeave={this.setOver(false)}
                              endAdornment={
-                                 !disabled && over && value !== undefined &&
+                                 !disabled && value !== undefined &&
                                  <InputAdornment position="end">
                                      <IconButton onClick={this.handleClear}>
                                          <ClearIcon/>

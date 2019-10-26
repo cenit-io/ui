@@ -7,23 +7,19 @@ import {FormControl, IconButton, Input, InputAdornment, InputLabel} from "@mater
 
 const BooleanControl = ({ title, onChange, value, onDelete, disabled }) => {
 
-    const [over, setOver] = useState(false),
-
-        CheckIcon = value === undefined ? BlankIcon : (value ? CheckedIcon : UncheckedIcon);
+    const CheckIcon = value === undefined ? BlankIcon : (value ? CheckedIcon : UncheckedIcon);
 
     return (
         <FormControl variant="filled" fullWidth={true} disabled={disabled}>
             <InputLabel>{title}</InputLabel>
             <Input disabled
-                   onMouseEnter={() => setOver(true)}
-                   onMouseLeave={() => setOver(false)}
                    endAdornment={
                        <InputAdornment position="end">
                            <IconButton onClick={() => onChange(!value)} disabled={disabled}>
                                <CheckIcon/>
                            </IconButton>
                            {
-                               !disabled && over && value !== undefined &&
+                               !disabled && value !== undefined &&
                                <IconButton onClick={onDelete}>
                                    <ClearIcon/>
                                </IconButton>
