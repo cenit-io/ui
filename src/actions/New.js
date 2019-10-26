@@ -5,6 +5,7 @@ import { useMediaQuery, withStyles } from "@material-ui/core";
 import Fab from '@material-ui/core/Fab';
 import SaveIcon from '@material-ui/icons/Save';
 import clsx from "clsx";
+import LoadingButton from "../components/LoadingButton";
 
 const styles = theme => ({
     root: {
@@ -30,13 +31,15 @@ const styles = theme => ({
     },
     fab: {
         position: 'absolute',
-        top: props => `calc(${props.height})`,
-        left: props => `calc(${props.width} - ${theme.spacing(10)}px)`
+        top: props => `calc(${props.height} - ${theme.spacing(3)}px)`,
+        left: props => `calc(${props.width} - ${theme.spacing(12)}px)`
     },
 });
 
 const New = ({ docked, dataType, theme, classes }) => {
 
+    const [done, setDone] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [value, setValue] = useState({});
     const [changed, setChanged] = useState(false);
     const [errors, setErrors] = useState(null);
@@ -49,22 +52,30 @@ const New = ({ docked, dataType, theme, classes }) => {
     };
 
     const save = () => {
-        dataType.post(value)
-            .then(response => console.log(response))
-            .catch(error => setErrors(error.response.data));
+        setSaving(true);
+        setDone(false);
+        setTimeout(() =>
+            dataType.post(value)
+                .then(response => {
+                    setSaving(false);
+                    setDone(true);
+                })
+                .catch(error => {
+                    setSaving(false);
+                    setErrors(error.response.data);
+                }), 5000
+        )
     };
 
     const actions = [];
 
     if (changed) {
         actions.push(
-            <Fab color="primary"
-                 key='save'
-                 aria-label="add"
-                 className={classes.fab}
-                 onClick={save}>
-                <SaveIcon/>
-            </Fab>
+            <LoadingButton key='save'
+                           loading={saving}
+                           onClick={save}
+                           className={classes.fab}
+                           success={done}/>
         );
     }
 
@@ -77,7 +88,8 @@ const New = ({ docked, dataType, theme, classes }) => {
         <FormView dataType={dataType}
                   value={value}
                   errors={errors}
-                  onChange={handleChange}/>
+                  onChange={handleChange}
+                  disabled={saving}/>
         <div className={classes.trailing}/>
         {actions}
     </div>;
