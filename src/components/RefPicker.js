@@ -123,7 +123,7 @@ class RefPicker extends React.Component {
             }
             list = (
                 <ClickAwayListener onClickAway={this.handleClickAway}>
-                    <Paper style={{ position: 'absolute', top: `${48}px`, background: 'white', border: 'gray' }}>
+                    <Paper style={{ position: 'absolute', top: `${48}px`, background: 'white', border: 'gray', zIndex: 1 }}>
                         <List component="nav">
                             {list}
                         </List>
