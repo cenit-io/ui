@@ -10,7 +10,7 @@ import { Property } from "../services/DataTypeService";
 import './FlexBox.css';
 import { ItemChip } from "./ItemChip";
 
-function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema, disabled }) {
+function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema, disabled, onStack }) {
 
     const [open, setOpen] = useState(false);
 
@@ -66,6 +66,11 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
 
     let dropButton, deleteButton, itemChips;
 
+    const handleStack = item => onStack({
+        ...item,
+        title: async itemValue => `[${property.name} #${selectedIndex}] ${await property.dataType.titleFor(value[selectedIndex])} ${await item.title(itemValue)}`
+    });
+
     if (value) {
         if (open) {
             itemChips = value.map(
@@ -93,7 +98,8 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
                                    value={value[selectedIndex]}
                                    errors={errors && errors[String(selectedIndex)]}
                                    onChange={handleChange}
-                                   disabled={disabled}/>
+                                   disabled={disabled}
+                                   onStack={handleStack}/>
                 );
             }
 

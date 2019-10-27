@@ -1,22 +1,27 @@
 import React, { useState } from 'react';
 import NewIcon from '@material-ui/icons/Add';
+import BackIcon from '@material-ui/icons/ArrowBack';
 import FormView from "../components/FormView";
-import { useMediaQuery, withStyles } from "@material-ui/core";
-import Fab from '@material-ui/core/Fab';
-import SaveIcon from '@material-ui/icons/Save';
+import { useMediaQuery, withStyles, Fab } from "@material-ui/core";
 import clsx from "clsx";
 import LoadingButton from "../components/LoadingButton";
+import SwipeableViews from "react-swipeable-views";
+
+const stackHeaderSpacing = 5;
 
 const styles = theme => ({
     root: {
-        width: '100%',
-        overflow: 'auto',
-        paddingLeft: theme.spacing(1),
-        paddingRight: theme.spacing(1)
+        height: props => `calc(${props.height})`
+    },
+    stackHeader: {
+        height: theme.spacing(stackHeaderSpacing),
+        padding: theme.spacing(1),
+        boxSizing: 'border-box'
     },
     formContainer: {
-        height: props => `calc(${props.height})`,
-        overflow: 'auto'
+        height: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px)`,
+        overflow: 'auto',
+        boxSizing: 'border-box'
     },
     mdFormContainer: {
         paddingLeft: '25%',
@@ -29,33 +34,67 @@ const styles = theme => ({
     trailing: {
         height: `${theme.spacing(8)}px`
     },
-    fab: {
+    fabBack: {
         position: 'absolute',
-        top: props => `calc(${props.height} - ${theme.spacing(3)}px)`,
+        top: props => `calc(${props.height} - ${theme.spacing(2)}px)`,
+        left: props => `calc(${props.width} - ${theme.spacing(19)}px)`
+    },
+    fabSave: {
+        position: 'absolute',
+        top: props => `calc(${props.height} - ${theme.spacing(4)}px)`,
         left: props => `calc(${props.width} - ${theme.spacing(12)}px)`
     },
 });
 
 const New = ({ docked, dataType, theme, classes }) => {
 
+    const [stack, setStack] = useState([{
+        value: {},
+        dataType,
+        title: value => dataType.titleFor(value)
+    }]);
+    const [stackTitles, setStackTitles] = useState([]);
     const [done, setDone] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [value, setValue] = useState({});
     const [changed, setChanged] = useState(false);
     const [errors, setErrors] = useState(null);
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
     const md = useMediaQuery(theme.breakpoints.up('md'));
+
+    const current = stack[stack.length - 1];
+
+    const setValue = value => {
+        const newStack = [...stack];
+        newStack.push({ ...newStack.pop(), value });
+        setStack(newStack);
+        updateStackTitles();
+    };
+
+    const updateStack = stack => {
+        setStack(stack);
+        updateStackTitles(stack);
+    }
+
+    const updateStackTitles = (s = stack) => Promise.all(
+        s.map(item => item.title(item.value))
+    ).then(titles => setStackTitles(titles));
+
+    if (!stackTitles.length) {
+        updateStackTitles();
+    }
 
     const handleChange = value => {
         setValue(value);
         setChanged(true);
     };
 
+    const handleStack = item => updateStack([...stack, item]);
+
     const save = () => {
         setSaving(true);
         setDone(false);
         setTimeout(() =>
-            dataType.post(value)
+            current.dataType.post(current.value)
                 .then(response => {
                     setSaving(false);
                     setDone(true);
@@ -67,31 +106,62 @@ const New = ({ docked, dataType, theme, classes }) => {
         )
     };
 
+    const handleBack = () => {
+        const newStack = [...stack];
+        newStack.pop();
+        updateStack(newStack);
+    };
+
     const actions = [];
 
-    if (changed) {
+    if (stack.length > 1) {
         actions.push(
-            <LoadingButton key='save'
-                           loading={saving}
-                           onClick={save}
-                           className={classes.fab}
-                           success={done}/>
+            <Fab key='back'
+                 size='small'
+                 aria-label="back"
+                 className={classes.fabBack}
+                 onClick={handleBack}>
+                <BackIcon/>
+            </Fab>
         );
     }
 
-    return <div className={
-        clsx(
-            classes.formContainer,
-            !xs && (docked || !md) && classes.smFormContainer,
-            md && classes.mdFormContainer
-        )}>
-        <FormView dataType={dataType}
-                  value={value}
-                  errors={errors}
-                  onChange={handleChange}
-                  disabled={saving}/>
-        <div className={classes.trailing}/>
-        {actions}
+    actions.push(
+        <LoadingButton key='save'
+                       loading={saving}
+                       onClick={save}
+                       className={classes.fabSave}
+                       success={done}/>
+    );
+
+    const forms = stack.map(
+        (item, index) => <FormView key={`form_${index}`}
+                                   dataType={item.dataType}
+                                   value={item.value}
+                                   errors={errors}
+                                   onChange={handleChange}
+                                   disabled={saving}
+                                   onStack={handleStack}/>
+    );
+
+    return <div className={classes.root}>
+        <div className={classes.stackHeader}>
+            {stackTitles.join(' ')}
+        </div>
+        <div className={
+            clsx(
+                classes.formContainer,
+                !xs && (docked || !md) && classes.smFormContainer,
+                md && classes.mdFormContainer
+            )}>
+
+            <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+                            index={stack.length - 1}>
+                {forms}
+            </SwipeableViews>
+            <div className={classes.trailing}/>
+            {actions}
+        </div>
     </div>;
 };
 

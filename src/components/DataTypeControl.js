@@ -81,7 +81,7 @@ class DataTypeControl extends React.Component {
 
     render() {
         const { properties } = this.state;
-        const { value, width, disabled } = this.props;
+        const { value, width, disabled, onStack } = this.props;
         const errors = this.props.errors || {};
 
         if (properties) {
@@ -94,7 +94,8 @@ class DataTypeControl extends React.Component {
                                          width={width}
                                          onChange={this.handleChange(prop.name)}
                                          onDelete={this.handleDelete(prop.name)}
-                                         disabled={disabled}/>
+                                         disabled={disabled}
+                                         onStack={onStack}/>
             );
 
             return <FormGroup error={Object.keys(errors).length > 0}>

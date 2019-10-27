@@ -7,7 +7,7 @@ import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 import './FlexBox.css'
 
-function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, width, disabled }) {
+function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, width, disabled, onStack }) {
 
     const [valueTitle, setValueTitle] = useState('');
     const [open, setOpen] = useState(false);
@@ -16,6 +16,11 @@ function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, 
         onChange({});
         setTimeout(() => setOpen(true));
     };
+
+    const handleStack = item => onStack({
+        ...item,
+        title: async itemValue => `[${property.name}] ${await property.dataType.titleFor(value)} ${await item.title(itemValue)}`
+    });
 
     let objectControl, actionButton, deleteButton;
 
@@ -27,7 +32,8 @@ function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, 
                                            errors={errors}
                                            onChange={onChange}
                                            width={width}
-                                           disabled={disabled}/>;
+                                           disabled={disabled}
+                                           onStack={handleStack}/>;
             actionButton =
                 <IconButton onClick={() => setOpen(false)} disabled={disabled}><ArrowDropUpIcon/></IconButton>;
         } else {

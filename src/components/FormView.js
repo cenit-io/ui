@@ -11,7 +11,7 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-const FormView = ({ dataType, width, value, errors, onChange, disabled }) => {
+const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack }) => {
 
     const classes = useStyles();
 
@@ -23,7 +23,8 @@ const FormView = ({ dataType, width, value, errors, onChange, disabled }) => {
                                  value={value}
                                  errors={errors}
                                  onChange={handleChange}
-                                 disabled={disabled}/>;
+                                 disabled={disabled}
+                                 onStack={onStack}/>;
     }
 
     function handleChange(value) {

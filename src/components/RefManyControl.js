@@ -37,14 +37,18 @@ class RefManyControl extends React.Component {
     };
 
     addNew = () => {
-        let { value, onChange } = this.props;
+        let { value, onChange, onStack, property } = this.props;
         if (value) {
-            console.log('Adding ref...');
+            onStack({
+                value: {},
+                dataType: property.dataType,
+                title: async itemValue => `[${property.name} #${value.length}] ${await property.dataType.titleFor(itemValue)}`
+            });
         } else {
             value = [];
+            onChange(value);
         }
-        onChange(value);
-        if (value.length > 0) {
+        if (value && value.length > 0) {
             this.setState({ open: true });
         }
     };

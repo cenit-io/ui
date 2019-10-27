@@ -33,6 +33,15 @@ class RefOneControl extends React.Component {
 
     handleDelete = () => this.props.onDelete();
 
+    handleAddNew = () => {
+        const { onStack, property } = this.props;
+        onStack({
+            value: {},
+            dataType: property.dataType,
+            title: async value => `[${property.name}] ${await property.dataType.titleFor(value)}`
+        });
+    };
+
     render() {
         const { title, value, property, disabled } = this.props;
         const { text } = this.state;
@@ -50,7 +59,7 @@ class RefOneControl extends React.Component {
                            onPick={this.handlePick}
                            text={text}
                            disabled={disabled || text === null}/>
-                <IconButton onClick={() => console.log('New Ref...')} disabled={disabled}><AddIcon/></IconButton>
+                <IconButton onClick={this.handleAddNew} disabled={disabled}><AddIcon/></IconButton>
                 {deleteButton}
             </div>
         );
