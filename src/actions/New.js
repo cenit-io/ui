@@ -48,6 +48,7 @@ const styles = theme => ({
 
 const New = ({ docked, dataType, theme, classes }) => {
 
+    const [ref] = useState(React.createRef());
     const [stack, setStack] = useState([{
         value: {},
         dataType,
@@ -73,6 +74,7 @@ const New = ({ docked, dataType, theme, classes }) => {
     const updateStack = stack => {
         setStack(stack);
         updateStackTitles(stack);
+        setTimeout(() => ref.current.scrollTop = (stack[stack.length - 1].scrollTop || 0));
     }
 
     const updateStackTitles = (s = stack) => Promise.all(
@@ -88,7 +90,10 @@ const New = ({ docked, dataType, theme, classes }) => {
         setChanged(true);
     };
 
-    const handleStack = item => updateStack([...stack, item]);
+    const handleStack = item => {
+        current.scrollTop = ref.current.scrollTop;
+        updateStack([...stack, item]);
+    };
 
     const save = () => {
         setSaving(true);
@@ -148,12 +153,13 @@ const New = ({ docked, dataType, theme, classes }) => {
         <div className={classes.stackHeader}>
             {stackTitles.join(' ')}
         </div>
-        <div className={
-            clsx(
-                classes.formContainer,
-                !xs && (docked || !md) && classes.smFormContainer,
-                md && classes.mdFormContainer
-            )}>
+        <div ref={ref}
+             className={
+                 clsx(
+                     classes.formContainer,
+                     !xs && (docked || !md) && classes.smFormContainer,
+                     md && classes.mdFormContainer
+                 )}>
 
             <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
                             index={stack.length - 1}>
