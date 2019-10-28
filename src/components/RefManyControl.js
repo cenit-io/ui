@@ -42,14 +42,18 @@ class RefManyControl extends React.Component {
             onStack({
                 value: {},
                 dataType: property.dataType,
-                title: async itemValue => `[${property.name} #${value.length}] ${await property.dataType.titleFor(itemValue)}`
+                title: async itemValue => `[${property.name} #${value.length}] ${await property.dataType.titleFor(itemValue)}`,
+                callback: itemValue => {
+                    onChange([...value, itemValue]);
+                    this.setOpen(true);
+                }
             });
         } else {
             value = [];
             onChange(value);
         }
         if (value && value.length > 0) {
-            this.setState({ open: true });
+            this.setOpen(true);
         }
     };
 
