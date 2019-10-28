@@ -216,8 +216,12 @@ export class DataType {
         })) || { items: [] };
     }
 
-    async titleViewPort() {
-        return `{${(await this.titleProps()).map(p => p.name).join(' ')}}`;
+    async list(opts = {}) {
+        return API.get('setup', 'data_type', this.id, 'digest', opts);
+    }
+
+    async titleViewPort(...plus) {
+        return `{${(await this.titleProps()).map(p => p.name).concat(plus).join(' ')}}`;
     }
 
     async titlePropNames() {
@@ -253,9 +257,9 @@ export class DataType {
         let completeItems;
         if (missingIds.length > 0) {
             completeItems = (
-                await this.find({
+                await this.list({
                     params: { _id: { '$in': missingIds } },
-                    headers: { 'X-Template-Options': JSON.stringify({ viewport: await this.titleViewPort() }) }
+                    headers: { 'X-Template-Options': JSON.stringify({ viewport: await this.titleViewPort('_id') }) }
                 })
             ).items;
         } else {
@@ -265,7 +269,7 @@ export class DataType {
         for (let item of completeItems) {
             if (missingProps[item.id]) {
                 for (let i of missingProps[item.id]) {
-                    items[i] = item;
+                    items[i] = {...items[i], ...item};
                 }
             }
         }
@@ -281,8 +285,13 @@ export class DataType {
         });
     }
 
-    post(data) {
-        return API.post('setup', 'data_type', this.id, 'digest', data);
+    post(data, opts = {}) {
+        const { viewport } = opts;
+        opts = {};
+        if (viewport) {
+            opts.headers = { 'X-Template-Options': JSON.stringify({ viewport }) }
+        }
+        return API.post('setup', 'data_type', this.id, 'digest', opts, data);
     }
 }
 

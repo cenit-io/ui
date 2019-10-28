@@ -99,10 +99,14 @@ const New = ({ docked, dataType, theme, classes }) => {
         setSaving(true);
         setDone(false);
         setTimeout(() =>
-            current.dataType.post(current.value)
+            current.dataType.post(current.value, { viewport: current.viewport || '{_id}' })
                 .then(response => {
-                    setSaving(false);
                     setDone(true);
+                    setTimeout(() => {
+                        handleBack();
+                        current.callback && current.callback(response);
+                        setSaving(false);
+                    }, 300);
                 })
                 .catch(error => {
                     setSaving(false);
@@ -115,11 +119,12 @@ const New = ({ docked, dataType, theme, classes }) => {
         const newStack = [...stack];
         newStack.pop();
         updateStack(newStack);
+        setDone(false);
     };
 
     const actions = [];
 
-    if (stack.length > 1) {
+    if (stack.length > 1 && !saving) {
         actions.push(
             <Fab key='back'
                  size='small'

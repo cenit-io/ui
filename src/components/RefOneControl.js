@@ -10,7 +10,7 @@ class RefOneControl extends React.Component {
         const { value } = props;
         if (value) {
             if (value !== state.value) {
-                props.property.dataType.titlesFor(value).then(titles => state.updateText(titles[0]));
+                props.property.dataType.titleFor(value).then(title => state.updateText(title));
                 return { value, text: null };
             }
         } else {
@@ -34,11 +34,12 @@ class RefOneControl extends React.Component {
     handleDelete = () => this.props.onDelete();
 
     handleAddNew = () => {
-        const { onStack, property } = this.props;
+        const { onStack, property, onChange } = this.props;
         onStack({
             value: {},
             dataType: property.dataType,
-            title: async value => `[${property.name}] ${await property.dataType.titleFor(value)}`
+            title: async value => `[${property.name}] ${await property.dataType.titleFor(value)}`,
+            callback: newValue => onChange(newValue)
         });
     };
 
