@@ -58,18 +58,21 @@ const New = ({ docked, dataType, theme, classes }) => {
     const [done, setDone] = useState(false);
     const [saving, setSaving] = useState(false);
     const [changed, setChanged] = useState(false);
-    const [errors, setErrors] = useState(null);
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
     const md = useMediaQuery(theme.breakpoints.up('md'));
 
     const current = stack[stack.length - 1];
 
-    const setValue = value => {
+    const updateCurrent = item => {
         const newStack = [...stack];
-        newStack.push({ ...newStack.pop(), value });
+        newStack.push({ ...newStack.pop(), ...item });
         setStack(newStack);
         updateStackTitles();
     };
+
+    const setValue = value => updateCurrent({ value });
+
+    const setErrors = errors => updateCurrent({ errors });
 
     const updateStack = stack => {
         setStack(stack);
@@ -148,7 +151,7 @@ const New = ({ docked, dataType, theme, classes }) => {
         (item, index) => <FormView key={`form_${index}`}
                                    dataType={item.dataType}
                                    value={item.value}
-                                   errors={errors}
+                                   errors={current.errors}
                                    onChange={handleChange}
                                    disabled={saving}
                                    onStack={handleStack}/>
