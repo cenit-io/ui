@@ -6,6 +6,8 @@ import { useMediaQuery, withStyles, Fab } from "@material-ui/core";
 import clsx from "clsx";
 import LoadingButton from "../components/LoadingButton";
 import SwipeableViews from "react-swipeable-views";
+import copy from 'copy-to-clipboard';
+import CopyIcon from '@material-ui/icons/FileCopy';
 
 const stackHeaderSpacing = 5;
 
@@ -21,7 +23,20 @@ const styles = theme => ({
     formContainer: {
         height: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px)`,
         overflow: 'auto',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        flexGrow: 1
+    },
+    jsonContainer: {
+        height: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px)`,
+        overflow: 'auto',
+        boxSizing: 'border-box',
+        background: theme.palette.background.default,
+        color: theme.palette.text.secondary
+    },
+    jsonBox: {
+        width: '50%',
+        paddingLeft: theme.spacing(1),
+        paddingRight: theme.spacing(1)
     },
     mdFormContainer: {
         paddingLeft: '25%',
@@ -37,13 +52,27 @@ const styles = theme => ({
     fabBack: {
         position: 'absolute',
         top: props => `calc(${props.height} - ${theme.spacing(2)}px)`,
-        left: props => `calc(${props.width} - ${theme.spacing(19)}px)`
+        left: props => `calc(${props.width} - ${theme.spacing(19)}px)`,
+        color: theme.palette.text.secondary
     },
     fabSave: {
         position: 'absolute',
         top: props => `calc(${props.height} - ${theme.spacing(4)}px)`,
         left: props => `calc(${props.width} - ${theme.spacing(12)}px)`
     },
+    fabJson: {
+        position: 'absolute',
+        top: props => theme.spacing(14),
+        left: props => `calc(${props.width} - ${theme.spacing(11)}px)`,
+        fontWeight: 'bold',
+        color: theme.palette.text.secondary
+    },
+    fabCopy: {
+        position: 'absolute',
+        top: props => theme.spacing(21),
+        left: props => `calc(${props.width} - ${theme.spacing(11)}px)`,
+        color: theme.palette.text.secondary
+    }
 });
 
 const New = ({ docked, dataType, theme, classes }) => {
@@ -60,6 +89,7 @@ const New = ({ docked, dataType, theme, classes }) => {
     const [changed, setChanged] = useState(false);
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
     const md = useMediaQuery(theme.breakpoints.up('md'));
+    const [jsonMode, setJsonMode] = useState(false);
 
     const current = stack[stack.length - 1];
 
@@ -147,6 +177,18 @@ const New = ({ docked, dataType, theme, classes }) => {
                        success={done}/>
     );
 
+    if (md) {
+        actions.push(
+            <Fab key='json'
+                 size='small'
+                 aria-label="JSON"
+                 className={classes.fabJson}
+                 onClick={() => setJsonMode(!jsonMode)}>
+                {'{...}'}
+            </Fab>
+        );
+    }
+
     const forms = stack.map(
         (item, index) => <FormView key={`form_${index}`}
                                    dataType={item.dataType}
@@ -158,24 +200,46 @@ const New = ({ docked, dataType, theme, classes }) => {
                                    edit={item.edit}/>
     );
 
+    let jsonView;
+    if (md && jsonMode) {
+        jsonView = <div className={clsx(classes.jsonContainer, classes.jsonBox)}>
+                <pre>
+                    {JSON.stringify(current.value, null, 2)}
+                </pre>
+        </div>;
+
+        actions.push(
+            <Fab key='copy'
+                 size='small'
+                 aria-label="JSON"
+                 className={classes.fabCopy}
+                 onClick={() => copy(JSON.stringify(current.value, null, 2))}>
+                <CopyIcon/>
+            </Fab>
+        );
+    }
+
     return <div className={classes.root}>
         <div className={classes.stackHeader}>
             {stackTitles.join(' ')}
         </div>
-        <div ref={ref}
-             className={
-                 clsx(
-                     classes.formContainer,
-                     !xs && (docked || !md) && classes.smFormContainer,
-                     md && classes.mdFormContainer
-                 )}>
+        <div style={{ display: 'flex' }}>
+            <div ref={ref}
+                 className={
+                     clsx(
+                         classes.formContainer,
+                         !xs && !jsonView && (docked || !md) && classes.smFormContainer,
+                         md && ((jsonMode && classes.jsonBox) || classes.mdFormContainer)
+                     )}>
 
-            <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                            index={stack.length - 1}>
-                {forms}
-            </SwipeableViews>
-            <div className={classes.trailing}/>
-            {actions}
+                <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+                                index={stack.length - 1}>
+                    {forms}
+                </SwipeableViews>
+                <div className={classes.trailing}/>
+                {actions}
+            </div>
+            {jsonView}
         </div>
     </div>;
 };
