@@ -83,7 +83,20 @@ class RefManyControl extends React.Component {
     };
 
     handleSelect = index => () => {
-        console.log('Selecting', this.state.items[index]);
+        const { onStack, property, onChange, value } = this.props;
+        onStack({
+            value: value[index],
+            dataType: property.dataType,
+            title: async value => `[${property.name} #${index}] ${await property.dataType.titleFor(value)}`,
+            callback: item => property.dataType.titleFor(item).then(
+                title => this.setState(prev => {
+                    const items = [...prev.items];
+                    items[index] = { ...items[index], title };
+                    return { items };
+                })
+            ),
+            edit: true
+        });
     };
 
     render() {
