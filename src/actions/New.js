@@ -112,16 +112,29 @@ const styles = theme => ({
         height: props => props.height,
         overflow: 'auto',
         background: theme.palette.background.default
+    },
+    successLabel: {
+        color: theme.palette.text.secondary
+    },
+    alignCenter: {
+        textAlign: 'center'
     }
 });
 
 const New = ({ docked, dataType, theme, classes, edit }) => {
 
-    const initialStack = () => [{
-        value: {},
-        dataType,
-        title: value => dataType.titleFor(value)
-    }];
+    const initialStack = () => [
+        {
+            value: {},
+            dataType,
+            title: () => ''
+        },
+        {
+            value: {},
+            dataType,
+            title: value => dataType.titleFor(value)
+        }
+    ];
     const [ref] = useState(React.createRef());
     const [stack, setStack] = useState(initialStack());
     const [stackTitles, setStackTitles] = useState([]);
@@ -154,7 +167,7 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
         });
     };
 
-    const updateStackTitles = (s = stack) => s.length && Promise.all(
+    const updateStackTitles = (s = stack) => s.length > 1 && Promise.all(
         s.map(item => item.title(item.value))
     ).then(titles => setStackTitles(titles));
 
@@ -172,8 +185,8 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
             current.dataType.post(current.value, { viewport: current.viewport || '{_id}' })
                 .then(response => {
                     setDone(true);
+                    setValue({ ...current.value, ...response });
                     setTimeout(() => {
-                        setValue({ ...current.value, ...response });
                         handleBack();
                         current.callback && current.callback(response);
                         setSaving(false);
@@ -198,26 +211,26 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
         setDone(false);
     };
 
-    let content;
-    if (stack.length) {
-        const actions = [];
+    const actions = [];
 
-        if (!stackTitles.length) {
-            updateStackTitles();
-        }
+    if (!stackTitles.length) {
+        updateStackTitles();
+    }
 
-        if (stack.length > 1 && !saving) {
-            actions.push(
-                <Fab key='back'
-                     size='small'
-                     aria-label="back"
-                     className={classes.fabBack}
-                     onClick={handleBack}>
-                    <BackIcon/>
-                </Fab>
-            );
-        }
+    if (stack.length > 2 && !saving) {
+        actions.push(
+            <Fab key='back'
+                 size='small'
+                 aria-label="back"
+                 className={classes.fabBack}
+                 onClick={handleBack}>
+                <BackIcon/>
+            </Fab>
+        );
+    }
 
+    let jsonView;
+    if (stack.length > 1) {
         actions.push(
             <LoadingButton key='save'
                            loading={saving && !done}
@@ -238,18 +251,6 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
             );
         }
 
-        const forms = stack.map(
-            (item, index) => <FormView key={`form_${index}`}
-                                       dataType={item.dataType}
-                                       value={item.value}
-                                       errors={item.errors}
-                                       onChange={handleChange}
-                                       disabled={saving}
-                                       onStack={handleStack}
-                                       edit={item.edit}/>
-        );
-
-        let jsonView;
         if (md && jsonMode) {
             jsonView = <div className={clsx(classes.jsonContainer, classes.jsonBox)}>
                 <pre>
@@ -267,44 +268,23 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
                 </Fab>
             );
         }
+    }
 
-        content = <React.Fragment>
-            <div className={classes.stackHeader}>
-                {stackTitles.join(' ')}
-            </div>
-            <div style={{ display: 'flex' }}>
-                <div ref={ref}
-                     className={
-                         clsx(
-                             classes.formContainer,
-                             !xs && !jsonView && (docked || !md) && classes.smFormContainer,
-                             md && ((jsonMode && classes.jsonBox) || classes.mdFormContainer)
-                         )}>
+    const DataTypeIcon = StorageIcon;
 
-                    <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                                    index={stack.length - 1}>
-                        {forms}
-                    </SwipeableViews>
-                    <div className={classes.trailing}/>
-                    {actions}
-                </div>
-                {jsonView}
-            </div>
-        </React.Fragment>;
-    } else {
-        const DataTypeIcon = StorageIcon;
-        content = <div className={clsx(classes.fullHeight, classes.center, classes.okContainer)}>
+    const successAlert = (
+        <div key='successAlert' className={clsx(classes.fullHeight, classes.center, classes.okContainer)}>
             <div className={clsx(classes.okBox, classes.center)}>
                 <SuccessIcon className={classes.okIcon} color="primary"/>
                 <DataTypeIcon/>
             </div>
             <Typography variant='h5'>
-                {stackTitles[0]}
+                {stackTitles[1]}
             </Typography>
-            <Typography variant='subtitle1'>
+            <Typography variant='subtitle1' className={clsx(classes.successLabel, classes.alignCenter)}>
                 Successfully {edit ? 'updated' : 'created'}
             </Typography>
-            <div>
+            <div className={classes.alignCenter}>
                 <Button variant="outlined"
                         color="primary"
                         startIcon={<ViewIcon/>}
@@ -326,12 +306,42 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
                 Add another
             </Button>
             <div className={classes.trailing}></div>
-        </div>;
-    }
+        </div>
+    );
 
+    const forms = stack.map(
+        (item, index) => index ? <FormView key={`form_${index}`}
+                                           dataType={item.dataType}
+                                           value={item.value}
+                                           errors={item.errors}
+                                           onChange={handleChange}
+                                           disabled={saving}
+                                           onStack={handleStack}
+                                           edit={item.edit}/> : successAlert
+    );
 
     return <div className={classes.root}>
-        {content}
+        <div className={classes.stackHeader}>
+            {stack.length > 1 && stackTitles.join(' ')}
+        </div>
+        <div style={{ display: 'flex' }}>
+            <div ref={ref}
+                 className={
+                     clsx(
+                         classes.formContainer,
+                         !xs && !jsonView && (docked || !md) && classes.smFormContainer,
+                         md && ((jsonMode && classes.jsonBox) || classes.mdFormContainer)
+                     )}>
+
+                <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+                                index={stack.length - 1}>
+                    {forms}
+                </SwipeableViews>
+                <div className={classes.trailing}/>
+                {actions}
+            </div>
+            {jsonView}
+        </div>
     </div>;
 };
 
