@@ -82,11 +82,13 @@ const styles = theme => ({
     },
     okBox: {
         width: '100px',
-        height: '100px',
+        minHeight: '100px',
         borderRadius: '50%',
         position: 'relative',
         background: theme.palette.primary.light,
-        marginBottom: theme.spacing(3)
+        marginTop: theme.spacing(3),
+        marginBottom: theme.spacing(3),
+        justifyContent: 'center'
     },
     okIcon: {
         position: 'absolute',
@@ -101,13 +103,14 @@ const styles = theme => ({
     center: {
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center'
+        alignItems: 'center'
     },
     actionButton: {
         margin: theme.spacing(1)
     },
     okContainer: {
+        height: props => props.height,
+        overflow: 'auto',
         background: theme.palette.background.default
     }
 });
