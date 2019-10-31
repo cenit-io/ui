@@ -11,20 +11,23 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack }) => {
+const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack, edit }) => {
 
     const classes = useStyles();
 
     let control;
 
     if (dataType) {
-        control = <ObjectControl dataTypeId={dataType.id}
+        control = <ObjectControl rootDataType={dataType}
+                                 path='$'
+                                 dataTypeId={dataType.id}
                                  width={width}
                                  value={value}
                                  errors={errors}
                                  onChange={handleChange}
                                  disabled={disabled}
-                                 onStack={onStack}/>;
+                                 onStack={onStack}
+                                 edit={edit}/>;
     }
 
     function handleChange(value) {

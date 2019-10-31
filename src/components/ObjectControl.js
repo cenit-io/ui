@@ -2,6 +2,12 @@ import DataTypeControl from "./DataTypeControl";
 
 class ObjectControl extends DataTypeControl {
 
+    isReady() {
+        return super.isReady() && (
+            !this.props.edit || this.state.valueFetched
+        );
+    }
+
     schemaReady() {
         this.getDataType().visibleProps()
             .then(props => {
@@ -33,7 +39,18 @@ class ObjectControl extends DataTypeControl {
                             return Promise.resolve(prop);
                         }
                     )
-                ).then(props => this.resolveProperties(props));
+                ).then(props => {
+                    this.resolveProperties(props);
+                    const { rootDataType, jsonPath, edit, value, onChange } = this.props;
+                    if (edit) {
+                        rootDataType.get(value.id, { jsonPath }).then(
+                            v => {
+                                onChange(v);
+                                this.setState({ valueFetched: true });
+                            }
+                        );
+                    }
+                });
             });
     }
 }

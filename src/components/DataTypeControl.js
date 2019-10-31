@@ -79,12 +79,16 @@ class DataTypeControl extends React.Component {
 
     refresh = () => this.doSetState({});
 
+    isReady() {
+        return this.state.properties;
+    }
+
     render() {
         const { properties } = this.state;
         const { value, width, disabled, onStack } = this.props;
         const errors = this.props.errors || {};
 
-        if (properties) {
+        if (this.isReady()) {
 
             const controls = properties.map(
                 prop => <PropertyControl property={prop}

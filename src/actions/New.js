@@ -151,10 +151,11 @@ const New = ({ docked, dataType, theme, classes }) => {
         (item, index) => <FormView key={`form_${index}`}
                                    dataType={item.dataType}
                                    value={item.value}
-                                   errors={current.errors}
+                                   errors={item.errors}
                                    onChange={handleChange}
                                    disabled={saving}
-                                   onStack={handleStack}/>
+                                   onStack={handleStack}
+                                   edit={item.edit}/>
     );
 
     return <div className={classes.root}>

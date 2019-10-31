@@ -1,6 +1,7 @@
 import React from 'react';
 import { IconButton } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
+import EditIcon from '@material-ui/icons/Edit';
 import ClearIcon from '@material-ui/icons/Clear';
 import RefPicker from "./RefPicker";
 
@@ -43,13 +44,25 @@ class RefOneControl extends React.Component {
         });
     };
 
+    handleEdit = () => {
+        const { onStack, property, onChange, value } = this.props;
+        onStack({
+            value,
+            dataType: property.dataType,
+            title: async value => `[${property.name}] ${await property.dataType.titleFor(value)}`,
+            callback: newValue => onChange(newValue),
+            edit: true
+        });
+    };
+
     render() {
         const { title, value, property, disabled } = this.props;
         const { text } = this.state;
 
-        let deleteButton;
+        let editButton, deleteButton;
 
         if (value) {
+            editButton = <IconButton onClick={this.handleEdit} disabled={disabled}><EditIcon/></IconButton>;
             deleteButton = <IconButton onClick={this.handleDelete} disabled={disabled}><ClearIcon/></IconButton>;
         }
 
@@ -60,6 +73,7 @@ class RefOneControl extends React.Component {
                            onPick={this.handlePick}
                            text={text}
                            disabled={disabled || text === null}/>
+                {editButton}
                 <IconButton onClick={this.handleAddNew} disabled={disabled}><AddIcon/></IconButton>
                 {deleteButton}
             </div>

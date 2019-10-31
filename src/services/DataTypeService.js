@@ -269,7 +269,7 @@ export class DataType {
         for (let item of completeItems) {
             if (missingProps[item.id]) {
                 for (let i of missingProps[item.id]) {
-                    items[i] = {...items[i], ...item};
+                    items[i] = { ...items[i], ...item };
                 }
             }
         }
@@ -292,6 +292,15 @@ export class DataType {
             opts.headers = { 'X-Template-Options': JSON.stringify({ viewport }) }
         }
         return API.post('setup', 'data_type', this.id, 'digest', opts, data);
+    }
+
+    get(id, opts = {}) {
+        const { jsonPath } = opts;
+        opts = { headers: { 'X-Record-Id': id } };
+        if (jsonPath) {
+            opts.headers['X-JSON-Path'] = jsonPath;
+        }
+        return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
 }
 
