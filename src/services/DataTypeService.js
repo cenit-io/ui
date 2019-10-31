@@ -281,7 +281,7 @@ export class DataType {
             if (title) {
                 return title;
             }
-            return `${dtTitle} ${item.id}`;
+            return `${dtTitle} ${item.id || '(new)'}`;
         });
     }
 
