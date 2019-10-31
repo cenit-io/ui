@@ -1,7 +1,7 @@
 import React from 'react';
 import { makeStyles } from "@material-ui/core";
 import clsx from 'clsx';
-import './FlexBox.css';
+import '../util/FlexBox.css';
 
 const useStyles = makeStyles(theme => ({
     defaultStyle: {

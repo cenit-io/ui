@@ -6,7 +6,7 @@ import CreateIcon from '@material-ui/icons/AddCircleOutline';
 import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import RefPicker from "./RefPicker";
-import './FlexBox.css';
+import '../util/FlexBox.css';
 
 
 class RefManyControl extends React.Component {

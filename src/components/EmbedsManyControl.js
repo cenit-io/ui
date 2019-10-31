@@ -7,7 +7,7 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 import { Property } from "../services/DataTypeService";
-import './FlexBox.css';
+import '../util/FlexBox.css';
 import { ItemChip } from "./ItemChip";
 
 function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema, disabled, onStack }) {

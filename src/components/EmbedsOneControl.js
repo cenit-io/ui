@@ -5,7 +5,7 @@ import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
-import './FlexBox.css'
+import '../util/FlexBox.css'
 
 function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, width, disabled, onStack }) {
 
