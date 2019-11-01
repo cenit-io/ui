@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -6,7 +6,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
-import {makeStyles} from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
 import Loading from "../components/Loading";
 
 export const navigationWidth = theme => `${theme.spacing(30)}px`;
@@ -35,15 +35,15 @@ const Navigation = ({ docked, xs, config, onItemSelected }) => {
 
         classes = useStyles(),
 
-        select = item => () => onItemSelected(item);
+        select = dataType => () => onItemSelected({ dataTypeId: dataType.id });
 
     let nav;
 
     if (config) {
         nav = (config.dataTypes || []).map(
-            (record, index) => {
+            (dataType, index) => {
                 const title = config.titles[index];
-                return <ListItem button key={record.id} onClick={select(record)}>
+                return <ListItem button key={dataType.id} onClick={select(dataType)}>
                     <ListItemIcon>{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}</ListItemIcon>
                     <ListItemText primary={title}/>
                 </ListItem>;

@@ -9,6 +9,7 @@ import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import TablePagination from "@material-ui/core/TablePagination";
 import ListIcon from '@material-ui/icons/List';
+import ActionRegistry, { ActionKind } from "./ActionRegistry";
 
 const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort }) => {
 
@@ -70,10 +71,6 @@ const MinItemsPerPage = 5;
 const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
 class Index extends React.Component {
-
-    static Icon = ListIcon;
-
-    static title = 'List';
 
     state = {
         order: 'asc',
@@ -273,4 +270,8 @@ class Index extends React.Component {
     }
 }
 
-export default withStyles(styles, { withTheme: true })(Index);
+export default ActionRegistry.register(withStyles(styles, { withTheme: true })(Index), {
+    kind: ActionKind.collection,
+    icon: ListIcon,
+    title: 'List'
+});

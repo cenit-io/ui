@@ -1,10 +1,10 @@
-import React, {useState} from 'react';
-import {makeStyles, useMediaQuery} from "@material-ui/core";
-import AppBar, {appBarHeight} from './AppBar';
-import Navigation, {navigationWidth} from "./Navigation";
+import React, { useState } from 'react';
+import { makeStyles, useMediaQuery } from "@material-ui/core";
+import AppBar, { appBarHeight } from './AppBar';
+import Navigation, { navigationWidth } from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
 import AuthorizationService from "../services/AuthorizationService";
-import {DataType} from "../services/DataTypeService";
+import { DataType } from "../services/DataTypeService";
 import Drawer from "../components/Drawer";
 import clsx from "clsx";
 import Tabs from "./Tabs";
@@ -50,8 +50,22 @@ const Main = () => {
         if (xs) {
             switchNavigation();
         }
-        let index = items.indexOf(item);
+        let index = items.findIndex(
+            value => Object.keys(item).reduce(
+                (match, key) => match && value[key] === item[key], true
+            )
+        );
         if (index === -1) {
+            item.getDataType = function () {
+                return DataType.getById(this.dataTypeId);
+            };
+            item.getTitle = async function titleFor() {
+                const dataType = await this.getDataType();
+                if (this.id) {
+                    return dataType.titleFor({ id: this.id });
+                }
+                return dataType.getTitle();
+            };
             index = items.length;
             setItems([...items, item]);
         }
@@ -125,6 +139,7 @@ const Main = () => {
                       index={selectedIndex}
                       onSelect={setSelectedIndex}
                       onCloseItem={removeItem}
+                      onSelectItem={handleItemSelected}
                       width={tabsWidth}/>
             </div>
             {

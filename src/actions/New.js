@@ -15,6 +15,7 @@ import Typography from '@material-ui/core/Typography';
 import StorageIcon from '@material-ui/icons/Storage';
 import ViewIcon from '@material-ui/icons/OpenInNew';
 import EditIcon from '@material-ui/icons/Edit';
+import ActionRegistry, { ActionKind } from "./ActionRegistry";
 
 const stackHeaderSpacing = 5;
 
@@ -121,8 +122,9 @@ const styles = theme => ({
     }
 });
 
-const New = ({ docked, dataType, theme, classes, edit }) => {
+const New = ({ docked, dataType, theme, classes, edit, onSelectItem }) => {
 
+    const [id, setId] = useState(null);
     const initialStack = () => [
         {
             value: {},
@@ -132,7 +134,8 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
         {
             value: {},
             dataType,
-            title: value => dataType.titleFor(value)
+            title: value => dataType.titleFor(value),
+            callback: ({ id }) => setId(id)
         }
     ];
     const [ref] = useState(React.createRef());
@@ -188,7 +191,10 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
                     setValue({ ...current.value, ...response });
                     setTimeout(() => {
                         handleBack();
-                        current.callback && current.callback(response);
+                        if (current.callback) {
+                            console.log('CALLBACK', response);
+                            current.callback(response);
+                        }
                         setSaving(false);
                     }, 1000);
                 })
@@ -294,7 +300,8 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
                 <Button variant="outlined"
                         color="primary"
                         startIcon={<EditIcon/>}
-                        className={classes.actionButton}>
+                        className={classes.actionButton}
+                        onClick={() => onSelectItem({ dataTypeId: dataType.id, id })}>
                     Edit
                 </Button>
             </div>
@@ -345,8 +352,8 @@ const New = ({ docked, dataType, theme, classes, edit }) => {
     </div>;
 };
 
-New.Icon = NewIcon;
-
-New.title = 'New';
-
-export default withStyles(styles, { withTheme: true })(New);
+export default ActionRegistry.register(withStyles(styles, { withTheme: true })(New), {
+    kind: ActionKind.collection,
+    icon: NewIcon,
+    title: 'New'
+});

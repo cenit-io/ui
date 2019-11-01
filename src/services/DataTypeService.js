@@ -295,8 +295,11 @@ export class DataType {
     }
 
     get(id, opts = {}) {
-        const { jsonPath } = opts;
+        const { viewport, jsonPath } = opts;
         opts = { headers: { 'X-Record-Id': id } };
+        if (viewport) {
+            opts.headers = { 'X-Template-Options': JSON.stringify({ viewport }) }
+        }
         if (jsonPath) {
             opts.headers['X-JSON-Path'] = jsonPath;
         }

@@ -8,7 +8,9 @@ import IconButton from '@material-ui/core/IconButton/index';
 import CloseIcon from '@material-ui/icons/Clear';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
-import CollectionContainer from "../actions/CollectionContainer";
+import ActionContainer from "../actions/ActionContainer";
+import { DataType } from "../services/DataTypeService";
+import { ActionKind } from "../actions/ActionRegistry";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
@@ -23,7 +25,7 @@ function ItemTab({ item, index, onSelect, onClose }) {
         <Tab
             component={ClosableComponent}
             onClick={() => onSelect(index)}
-            label={data.title}
+            label={data.title || '...'}
             onClose={() => onClose(index)}
         />
     );
@@ -60,28 +62,31 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-export default function NavTabs({ docked, items, index, onSelect, onCloseItem, width }) {
-    const classes = useStyles(),
-
-        theme = useTheme(),
-
-        [, setValue] = React.useState(0),
-
-        tabs = items.map((item, i) => <ItemTab key={`tab_${item.id}`}
-                                               docked={docked}
-                                               item={item}
-                                               index={i}
-                                               onSelect={onSelect}
-                                               onClose={onCloseItem}/>),
-
-        containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`,
-
-        containers = items.map(
-            item => <div key={`container_${item.id}`}
-                         style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
-                <CollectionContainer docked={docked} dataType={item} height={containerHeight} width={width}/>
-            </div>);
-
+export default function NavTabs({ docked, items, index, onSelect, onCloseItem, width, onSelectItem }) {
+    const classes = useStyles();
+    const theme = useTheme();
+    const [, setValue] = React.useState(0);
+    const tabs = items.map((item, i) => <ItemTab key={`tab_${item.dataTypeId}`}
+                                                 docked={docked}
+                                                 item={item}
+                                                 index={i}
+                                                 onSelect={onSelect}
+                                                 onClose={onCloseItem}/>);
+    const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`;
+    const containers = items.map(
+        item => {
+            const kind = item.id ? ActionKind.member : ActionKind.collection;
+            return <div key={`container_${item.dataTypeId}`}
+                        style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
+                <ActionContainer kind={kind}
+                                 docked={docked}
+                                 item={item}
+                                 height={containerHeight}
+                                 width={width}
+                                 onSelectItem={onSelectItem}/>
+            </div>;
+        }
+    );
 
     function handleChange(event, newValue) {
         setValue(newValue);
