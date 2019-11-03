@@ -59,25 +59,25 @@ const styles = theme => ({
     },
     fabBack: {
         position: 'absolute',
-        top: props => `calc(${props.height} - ${theme.spacing(2)}px)`,
+        top: props => `calc(${props.height} - ${theme.spacing(8)}px)`,
         left: props => `calc(${props.width} - ${theme.spacing(19)}px)`,
         color: theme.palette.text.secondary
     },
     fabSave: {
         position: 'absolute',
-        top: props => `calc(${props.height} - ${theme.spacing(4)}px)`,
+        top: props => `calc(${props.height} - ${theme.spacing(10)}px)`,
         left: props => `calc(${props.width} - ${theme.spacing(12)}px)`
     },
     fabJson: {
         position: 'absolute',
-        top: theme.spacing(14),
+        top: theme.spacing(8),
         left: props => `calc(${props.width} - ${theme.spacing(11)}px)`,
         fontWeight: 'bold',
         color: theme.palette.text.secondary
     },
     fabCopy: {
         position: 'absolute',
-        top: theme.spacing(21),
+        top: theme.spacing(15),
         left: props => `calc(${props.width} - ${theme.spacing(11)}px)`,
         color: theme.palette.text.secondary
     },
@@ -192,7 +192,6 @@ const New = ({ docked, dataType, theme, classes, edit, onSelectItem }) => {
                     setTimeout(() => {
                         handleBack();
                         if (current.callback) {
-                            console.log('CALLBACK', response);
                             current.callback(response);
                         }
                         setSaving(false);

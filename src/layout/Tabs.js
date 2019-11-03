@@ -66,7 +66,7 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
     const classes = useStyles();
     const theme = useTheme();
     const [, setValue] = React.useState(0);
-    const tabs = items.map((item, i) => <ItemTab key={`tab_${item.dataTypeId}`}
+    const tabs = items.map((item, i) => <ItemTab key={`tab_${item.dataTypeId}_${item.id}`}
                                                  docked={docked}
                                                  item={item}
                                                  index={i}
@@ -76,7 +76,7 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
     const containers = items.map(
         item => {
             const kind = item.id ? ActionKind.member : ActionKind.collection;
-            return <div key={`container_${item.dataTypeId}`}
+            return <div key={`container_${item.dataTypeId}_${item.id}`}
                         style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
                 <ActionContainer kind={kind}
                                  docked={docked}

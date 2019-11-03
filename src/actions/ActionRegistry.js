@@ -14,17 +14,23 @@ class ActionRegistryClass {
 
     register = (action, props = {}) => {
         props.key = Random.string();
+        if (!props.hasOwnProperty('arity')) {
+            props.arity = 0;
+        }
         Object.keys(props).forEach(key => action[key] = props[key]);
         this.actions[action.key] = action;
         return action;
     };
 
-    findBy = criteria => Object.values(this.actions).filter(
-        action => Object.keys(criteria).reduce(
-            (match, key) => match && criteria[key] === action[key],
-            true
-        )
-    );
+    findBy = (...criterion) => {
+        return Object.values(this.actions).filter(
+            action => criterion.find(
+                criteria => !Object.keys(criteria).find(
+                    key => criteria[key] !== action[key]
+                )
+            )
+        );
+    };
 }
 
 const ActionRegistry = new ActionRegistryClass();

@@ -51,8 +51,8 @@ const Main = () => {
             switchNavigation();
         }
         let index = items.findIndex(
-            value => Object.keys(item).reduce(
-                (match, key) => match && value[key] === item[key], true
+            value => !Object.keys(item).find(
+                key => value[key] !== item[key]
             )
         );
         if (index === -1) {

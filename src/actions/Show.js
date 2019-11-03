@@ -23,5 +23,6 @@ const Show = ({ docked, item, onSelectItem }) => {
 export default ActionRegistry.register(Show, {
     kind: ActionKind.member,
     icon: ShowIcon,
-    title: 'Show'
+    title: 'Show',
+    arity: 1
 });

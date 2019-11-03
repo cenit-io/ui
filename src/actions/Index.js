@@ -127,25 +127,27 @@ class Index extends React.Component {
         this.select(selected);
     };
 
-    handleClick = (event, id) => {
-        const { selected } = this.props,
-            selectedIndex = selected.indexOf(id);
-        let newSelected = [];
+    handleSelectOne = id => () => {
+        const { selection } = this.props;
+        if (selection.length === 1 && selection[0] === id) {
+            this.select([]);
+        } else {
+            this.select([id]);
+        }
+    }
 
-        if (selectedIndex === -1) {
-            newSelected = newSelected.concat(selected, id);
-        } else if (selectedIndex === 0) {
-            newSelected = newSelected.concat(selected.slice(1));
-        } else if (selectedIndex === selected.length - 1) {
-            newSelected = newSelected.concat(selected.slice(0, -1));
-        } else if (selectedIndex > 0) {
-            newSelected = newSelected.concat(
-                selected.slice(0, selectedIndex),
-                selected.slice(selectedIndex + 1),
-            );
+    handleSelect = id => () => {
+        const { selection } = this.props;
+        const index = selection.indexOf(id);
+        const newSelection = [...selection];
+
+        if (index === -1) {
+            newSelection.push(id);
+        } else {
+            newSelection.splice(index, 1);
         }
 
-        this.select(newSelected);
+        this.select(newSelection);
     };
 
     select = selected => {
@@ -173,13 +175,13 @@ class Index extends React.Component {
 
     render() {
 
-        const { height, selected, classes, theme } = this.props;
+        const { height, selection, classes, theme } = this.props;
 
         const { props, data, dense, limit } = this.state;
 
         //const { order, orderBy, page} = this.state;
 
-        //const isSelected = name => selected.indexOf(name) !== -1;
+        //const isSelected = name => selection.indexOf(name) !== -1;
 
         let table, tableHeight = height;
 
@@ -193,10 +195,10 @@ class Index extends React.Component {
                                                                }}>{prop.title}</TableCell>);*/
 
                 const rows = data.items.map(item => {
-                    let isSelected = selected.indexOf(item.id) !== -1;
+                    let isSelected = selection.indexOf(item.id) !== -1;
                     return <TableRow hover
                                      key={item.id}
-                                     onClick={event => this.handleClick(event, item.id)}
+                                     onClick={this.handleSelectOne(item.id)}
                                      role="checkbox"
                                      aria-checked={isSelected}
                                      tabIndex={-1}>
@@ -208,7 +210,8 @@ class Index extends React.Component {
                                        zIndex: 2
                                    }}>
                             <Checkbox checked={isSelected}
-                                      inputProps={{ 'aria-labelledby': item.id }}/>
+                                      inputProps={{ 'aria-labelledby': item.id }}
+                                      onChange={this.handleSelect(item.id)}/>
                         </TableCell>
                         {
                             props.map(prop => (
@@ -246,7 +249,7 @@ class Index extends React.Component {
                                size={dense ? 'small' : 'medium'}>
                             <EnhancedTableHead props={props}
                                                onSelectAllClick={this.handleSelectAllClick}
-                                               numSelected={selected.length}
+                                               numSelected={selection.length}
                                                rowCount={data.items.length}/>
                             <TableBody>
                                 {rows}
