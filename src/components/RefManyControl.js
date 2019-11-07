@@ -28,7 +28,7 @@ class RefManyControl extends React.Component {
 
     handlePick = item => {
         const value = this.props.value || [];
-        value.push({ id: item.record.id });
+        value.push({ id: item.record.id, _reference: true });
         this.props.onChange(value);
         this.setState(prev => ({
             items: [...(prev.items || []), { id: item.record.id, title: item.title }],
@@ -83,7 +83,7 @@ class RefManyControl extends React.Component {
     };
 
     handleSelect = index => () => {
-        const { onStack, property, onChange, value } = this.props;
+        const { onStack, property, value } = this.props;
         onStack({
             value: value[index],
             dataType: property.dataType,

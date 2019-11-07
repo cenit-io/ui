@@ -7,7 +7,7 @@ import {FormControl, IconButton, Input, InputAdornment, InputLabel} from "@mater
 
 const BooleanControl = ({ title, onChange, value, onDelete, disabled }) => {
 
-    const CheckIcon = value === undefined ? BlankIcon : (value ? CheckedIcon : UncheckedIcon);
+    const CheckIcon = value === undefined || value === null ? BlankIcon : (value ? CheckedIcon : UncheckedIcon);
 
     return (
         <FormControl variant="filled" fullWidth={true} disabled={disabled}>
@@ -19,7 +19,7 @@ const BooleanControl = ({ title, onChange, value, onDelete, disabled }) => {
                                <CheckIcon/>
                            </IconButton>
                            {
-                               !disabled && value !== undefined &&
+                               !disabled && value !== undefined && value !== null &&
                                <IconButton onClick={onDelete}>
                                    <ClearIcon/>
                                </IconButton>

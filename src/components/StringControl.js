@@ -40,7 +40,7 @@ class StringControl extends React.Component {
                              defaultValue={value}
                              onChange={this.handleChange}
                              endAdornment={
-                                 !disabled && value !== undefined &&
+                                 !disabled && value !== undefined && value !== null &&
                                  <InputAdornment position="end">
                                      <IconButton onClick={this.handleClear}>
                                          <ClearIcon/>

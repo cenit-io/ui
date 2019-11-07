@@ -66,16 +66,37 @@ class DataTypeControl extends React.Component {
 
     handleChange = prop => v => {
         const { value, onChange } = this.props;
-        value[prop] = v;
+        value[prop.name] = v;
+        if (prop.type === 'refMany' || prop.type === 'array') {
+            this._reset(prop.name, value);
+        }
         onChange && onChange(value);
         this.refresh();
     };
 
     handleDelete = prop => () => {
-        const { value, onChange } = this.props;
-        delete value[prop];
+        const { value, onChange, edit } = this.props;
+        if (edit) {
+            if (prop.type === 'refMany' || prop.type === 'array') {
+                delete value[prop.name];
+                this._reset(prop.name, value);
+            } else {
+                value[prop.name] = null;
+            }
+        } else {
+            delete value[prop.name];
+        }
         onChange && onChange({ ...value });
     };
+
+    _reset = (prop, value) => {
+        const resetProps = value._reset || [];
+        const index = resetProps.indexOf(prop);
+        if (index === -1) {
+            resetProps.push(prop);
+        }
+        value._reset = resetProps;
+    }
 
     refresh = () => this.doSetState({});
 
@@ -96,8 +117,8 @@ class DataTypeControl extends React.Component {
                                          value={value[prop.name]}
                                          errors={errors[prop.name]}
                                          width={width}
-                                         onChange={this.handleChange(prop.name)}
-                                         onDelete={this.handleDelete(prop.name)}
+                                         onChange={this.handleChange(prop)}
+                                         onDelete={this.handleDelete(prop)}
                                          disabled={disabled}
                                          onStack={onStack}/>
             );

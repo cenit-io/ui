@@ -26,7 +26,10 @@ class RefOneControl extends React.Component {
     state = { updateText: this.updateText };
 
     handlePick = item => {
-        const value = { id: item.record.id };
+        const value = {
+            id: item.record.id,
+            _reference: true
+        };
         //TODO this.state.value = value;
         this.props.onChange(value);
         this.setState({ value, text: item.title });
@@ -40,7 +43,10 @@ class RefOneControl extends React.Component {
             value: {},
             dataType: property.dataType,
             title: async value => `[${property.name}] ${await property.dataType.titleFor(value)}`,
-            callback: newValue => onChange(newValue)
+            callback: newValue => onChange({
+                id: newValue.id,
+                _reference: true
+            })
         });
     };
 
@@ -50,7 +56,10 @@ class RefOneControl extends React.Component {
             value,
             dataType: property.dataType,
             title: async value => `[${property.name}] ${await property.dataType.titleFor(value)}`,
-            callback: newValue => onChange(newValue),
+            callback: newValue =>onChange({
+                id: newValue.id,
+                _reference: true
+            }),
             edit: true
         });
     };

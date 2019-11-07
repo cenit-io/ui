@@ -43,7 +43,10 @@ class ObjectControl extends DataTypeControl {
                     this.resolveProperties(props);
                     const { rootDataType, jsonPath, edit, value, onChange } = this.props;
                     if (edit) {
-                        rootDataType.get(value.id, { jsonPath }).then(
+                        rootDataType.get(value.id, {
+                            jsonPath,
+                            with_references: true
+                        }).then(
                             v => {
                                 onChange(v);
                                 this.setState({ valueFetched: true });

@@ -295,14 +295,20 @@ export class DataType {
     }
 
     get(id, opts = {}) {
-        const { viewport, jsonPath } = opts;
+        const { viewport, jsonPath, with_references } = opts;
         opts = { headers: { 'X-Record-Id': id } };
+        const templateOptions = {};
         if (viewport) {
-            opts.headers = { 'X-Template-Options': JSON.stringify({ viewport }) }
+            templateOptions.viewport = viewport;
         }
+        if (with_references) {
+            templateOptions.with_references = with_references;
+        }
+        opts.headers['X-Template-Options'] = JSON.stringify(templateOptions);
         if (jsonPath) {
             opts.headers['X-JSON-Path'] = jsonPath;
         }
+        console.log('OPTS', opts);
         return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
 }

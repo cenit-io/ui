@@ -8,6 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Index from "./Index";
 import New from './New';
 import Show from "./Show";
+import Edit from './Edit';
 import ActionToolbar from "./ActionToolbar";
 
 
@@ -66,7 +67,7 @@ function ActionContainer({ docked, item, height, width, onSelectItem, kind }) {
     return <React.Fragment>
         <ActionToolbar title={title}
                        kind={kind}
-                       arity={selection.length}
+                       arity={kind === ActionKind.member ? 1 : selection.length}
                        onAction={handleAction}
                        selectedKey={actionKey}/>
         <div className={classes.actionContainer}
