@@ -11,7 +11,7 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack, edit }) => {
+const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack, rootId }) => {
 
     const classes = useStyles();
 
@@ -19,7 +19,7 @@ const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack,
 
     if (dataType) {
         control = <ObjectControl rootDataType={dataType}
-                                 path='$'
+                                 jsonPath='$'
                                  dataTypeId={dataType.id}
                                  width={width}
                                  value={value}
@@ -27,7 +27,7 @@ const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack,
                                  onChange={handleChange}
                                  disabled={disabled}
                                  onStack={onStack}
-                                 edit={edit}/>;
+                                 rootId={rootId}/>;
     }
 
     function handleChange(value) {

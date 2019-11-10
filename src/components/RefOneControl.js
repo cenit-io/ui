@@ -60,7 +60,7 @@ class RefOneControl extends React.Component {
                 id: newValue.id,
                 _reference: true
             }),
-            edit: true
+            rootId: value.id
         });
     };
 

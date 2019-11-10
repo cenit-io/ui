@@ -4,7 +4,7 @@ class ObjectControl extends DataTypeControl {
 
     isReady() {
         return super.isReady() && (
-            !this.props.edit || this.state.valueFetched
+            !this.props.rootId || this.state.valueFetched
         );
     }
 
@@ -41,9 +41,10 @@ class ObjectControl extends DataTypeControl {
                     )
                 ).then(props => {
                     this.resolveProperties(props);
-                    const { rootDataType, jsonPath, edit, value, onChange } = this.props;
-                    if (edit) {
-                        rootDataType.get(value.id, {
+                    const { rootDataType, jsonPath, rootId, onChange } = this.props;
+                    console.log('Setting schema ready, editing', rootId, jsonPath);
+                    if (rootId) {
+                        rootDataType.get(rootId, {
                             jsonPath,
                             with_references: true
                         }).then(

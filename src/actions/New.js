@@ -3,13 +3,13 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import NewIcon from '@material-ui/icons/Add';
 
-const New = ({ docked, dataType, theme, classes, edit, onSelectItem, height }) => {
+const New = ({ docked, dataType, theme, classes, rootId, onSelectItem, height }) => {
     return <FormEditor height={height}
                        docked={docked}
                        dataType={dataType}
                        theme={theme}
                        classes={classes}
-                       edit={edit}
+                       rootId={rootId}
                        onSelectItem={onSelectItem}/>;
 };
 

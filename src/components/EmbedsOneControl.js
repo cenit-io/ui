@@ -6,9 +6,11 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 import '../util/FlexBox.css'
+import PropertyControl from "./PropertyControl";
 
-function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, width, disabled, onStack }) {
+function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, property, onDelete, onChange, width, disabled, onStack, rootId }) {
 
+    const [isEdit, setEdit] = useState(value);
     const [valueTitle, setValueTitle] = useState('');
     const [open, setOpen] = useState(false);
 
@@ -22,25 +24,33 @@ function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, 
         title: async itemValue => `[${property.name}] ${await property.dataType.titleFor(value)} ${await item.title(itemValue)}`
     });
 
+    const handleDelete = () => {
+      setEdit(false);
+      onDelete();
+    };
+
     let objectControl, actionButton, deleteButton;
 
     if (value) {
         property.dataType.titleFor(value).then(t => setValueTitle(t));
         if (open) {
-            objectControl = <ObjectControl property={property}
+            objectControl = <ObjectControl rootDataType={rootDataType}
+                                           jsonPath={jsonPath}
+                                           property={property}
                                            value={value}
                                            errors={errors}
                                            onChange={onChange}
                                            width={width}
                                            disabled={disabled}
-                                           onStack={handleStack}/>;
+                                           onStack={handleStack}
+                                           rootId={isEdit ? rootId : null}/>;
             actionButton =
                 <IconButton onClick={() => setOpen(false)} disabled={disabled}><ArrowDropUpIcon/></IconButton>;
         } else {
             actionButton =
                 <IconButton onClick={() => setOpen(true)} disabled={disabled}><ArrowDropDownIcon/></IconButton>;
         }
-        deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
+        deleteButton = <IconButton onClick={handleDelete} disabled={disabled}><ClearIcon/></IconButton>;
     } else {
         valueTitle.length && setValueTitle('');
         actionButton = <IconButton onClick={addNew} disabled={disabled}><AddIcon/></IconButton>;

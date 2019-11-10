@@ -6,7 +6,8 @@ import FormEditor from "../components/FormEditor";
 
 const Edit = ({ docked, dataType, item, onSelectItem, height }) => {
 
-    return <FormEditor docked={docked}
+    return <FormEditor rootId={item.id}
+                       docked={docked}
                        dataType={dataType}
                        value={{ id: item.id }}
                        onSelectItem={onSelectItem}

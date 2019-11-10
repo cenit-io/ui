@@ -10,7 +10,7 @@ import { Property } from "../services/DataTypeService";
 import '../util/FlexBox.css';
 import { ItemChip } from "./ItemChip";
 
-function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema, disabled, onStack }) {
+function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, errors, onDelete, onChange, schema, disabled, onStack, rootId }) {
 
     const [open, setOpen] = useState(false);
 
@@ -94,7 +94,8 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
             if (selectedIndex !== -1) {
                 controlProperty.name = selectedIndex;
                 itemControl = (
-                    <ObjectControl property={controlProperty}
+                    <ObjectControl key={`ctrl_${selectedIndex}`}
+                                   property={controlProperty}
                                    value={value[selectedIndex]}
                                    errors={errors && errors[String(selectedIndex)]}
                                    onChange={handleChange}

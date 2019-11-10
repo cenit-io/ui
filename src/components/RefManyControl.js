@@ -95,7 +95,7 @@ class RefManyControl extends React.Component {
                     return { items };
                 })
             ),
-            edit: true
+            rootId: value[index].id
         });
     };
 

@@ -120,7 +120,7 @@ const styles = theme => ({
     }
 });
 
-const FormEditor = ({ docked, dataType, theme, classes, edit, onSelectItem, height, value }) => {
+const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, height, value }) => {
 
     const [id, setId] = useState((value && value.id) || null);
     const initialStack = () => [
@@ -134,7 +134,7 @@ const FormEditor = ({ docked, dataType, theme, classes, edit, onSelectItem, heig
             dataType,
             title: value => dataType.titleFor(value),
             callback: ({ id }) => setId(id),
-            edit: value && Boolean(value.id)
+            rootId: value && value.id
         }
     ];
     const [ref] = useState(React.createRef());
@@ -184,10 +184,10 @@ const FormEditor = ({ docked, dataType, theme, classes, edit, onSelectItem, heig
         setSaving(true);
         setDone(false);
         setTimeout(() => {
-                const opts = { viewport: current.viewport || '{_id}' };
-                if (edit) {
-                    opts['X-Parser-Options'] = { add_only: true };
-                }
+                const opts = {
+                    viewport: current.viewport || '{_id}',
+                    add_only: rootId
+                };
                 current.dataType.post(current.value, opts)
                     .then(response => {
                         setDone(true);
@@ -291,7 +291,7 @@ const FormEditor = ({ docked, dataType, theme, classes, edit, onSelectItem, heig
                 {stackTitles[1]}
             </Typography>
             <Typography variant='subtitle1' className={clsx(classes.successLabel, classes.alignCenter)}>
-                Successfully {edit ? 'updated' : 'created'}
+                Successfully {rootId ? 'updated' : 'created'}
             </Typography>
             <div className={classes.alignCenter}>
                 <Button variant="outlined"
@@ -327,7 +327,7 @@ const FormEditor = ({ docked, dataType, theme, classes, edit, onSelectItem, heig
                                            onChange={handleChange}
                                            disabled={saving}
                                            onStack={handleStack}
-                                           edit={item.edit}/> : successAlert
+                                           rootId={item.rootId}/> : successAlert
     );
 
     return <div className={classes.root}>

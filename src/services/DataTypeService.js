@@ -281,23 +281,27 @@ export class DataType {
             if (title) {
                 return title;
             }
-            return `${dtTitle} ${item.id || '(new)'}`;
+            return `${dtTitle} ${item.id || '(blank)'}`;
         });
     }
 
     post(data, opts = {}) {
-        const { viewport } = opts;
-        opts = {};
+        const { viewport, add_only } = opts;
+        opts = { headers: {} };
         if (viewport) {
-            opts.headers = { 'X-Template-Options': JSON.stringify({ viewport }) }
+            opts.headers['X-Template-Options'] = JSON.stringify({ viewport });
+        }
+        if (add_only) {
+            opts.headers['X-Parser-Options'] = JSON.stringify({ add_only: true });
         }
         return API.post('setup', 'data_type', this.id, 'digest', opts, data);
     }
 
     get(id, opts = {}) {
         const { viewport, jsonPath, with_references } = opts;
+        const include_blanks = opts.hasOwnProperty('include_blanks') ? opts.include_blanks : true;
+        const templateOptions = { include_blanks };
         opts = { headers: { 'X-Record-Id': id } };
-        const templateOptions = {};
         if (viewport) {
             templateOptions.viewport = viewport;
         }
@@ -308,7 +312,6 @@ export class DataType {
         if (jsonPath) {
             opts.headers['X-JSON-Path'] = jsonPath;
         }
-        console.log('OPTS', opts);
         return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
 }

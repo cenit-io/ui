@@ -4,6 +4,7 @@ import { LinearProgress } from '@material-ui/core';
 import PropertyControl from './PropertyControl'
 import ErrorMessages from "./ErrorMessages";
 import { FormGroup } from "./FormGroup";
+import ObjectControl from "./ObjectControl";
 
 class DataTypeControl extends React.Component {
 
@@ -68,34 +69,32 @@ class DataTypeControl extends React.Component {
         const { value, onChange } = this.props;
         value[prop.name] = v;
         if (prop.type === 'refMany' || prop.type === 'array') {
-            this._reset(prop.name, value);
+            this._update(prop.name, value);
         }
         onChange && onChange(value);
         this.refresh();
     };
 
     handleDelete = prop => () => {
-        const { value, onChange, edit } = this.props;
-        if (edit) {
+        const { value, onChange, rootId } = this.props;
+        if (rootId) {
             if (prop.type === 'refMany' || prop.type === 'array') {
-                delete value[prop.name];
-                this._reset(prop.name, value);
-            } else {
-                value[prop.name] = null;
+                this._update(prop.name, value);
             }
+            value[prop.name] = null;
         } else {
             delete value[prop.name];
         }
         onChange && onChange({ ...value });
     };
 
-    _reset = (prop, value) => {
-        const resetProps = value._reset || [];
+    _update = (prop, value) => {
+        const resetProps = value._update || [];
         const index = resetProps.indexOf(prop);
         if (index === -1) {
             resetProps.push(prop);
         }
-        value._reset = resetProps;
+        value._update = resetProps;
     }
 
     refresh = () => this.doSetState({});
@@ -106,13 +105,15 @@ class DataTypeControl extends React.Component {
 
     render() {
         const { properties } = this.state;
-        const { value, width, disabled, onStack } = this.props;
+        const { rootDataType, jsonPath, value, width, disabled, onStack, rootId } = this.props;
         const errors = this.props.errors || {};
 
         if (this.isReady()) {
 
             const controls = properties.map(
-                prop => <PropertyControl property={prop}
+                prop => <PropertyControl rootDataType={rootDataType}
+                                         jsonPath={`${jsonPath}.${prop.name}`}
+                                         property={prop}
                                          key={prop.name}
                                          value={value[prop.name]}
                                          errors={errors[prop.name]}
@@ -120,7 +121,8 @@ class DataTypeControl extends React.Component {
                                          onChange={this.handleChange(prop)}
                                          onDelete={this.handleDelete(prop)}
                                          disabled={disabled}
-                                         onStack={onStack}/>
+                                         onStack={onStack}
+                                         rootId={rootId}/>
             );
 
             return <FormGroup error={Object.keys(errors).length > 0}>
