@@ -10,16 +10,21 @@ import { Property } from "../services/DataTypeService";
 import '../util/FlexBox.css';
 import { ItemChip } from "./ItemChip";
 
+const INDEX = Symbol.for('_index');
+
 function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, errors, onDelete, onChange, schema, disabled, onStack, rootId }) {
 
     const [open, setOpen] = useState(false);
-
     const [controlProperty] = useState(new Property({
         dataType: property.dataType,
         propertySchema: schema
     }));
-
     const [selectedIndex, setSelectedIndex] = useState(-1);
+
+    if (rootId && value && !value.indexed) {
+        value.forEach((item, index) => item[INDEX] = index);
+        value.indexed = true;
+    }
 
     const addNew = () => {
         if (value) {
@@ -36,6 +41,7 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
 
     const deleteIndex = index => {
         const newValue = [...value];
+        newValue.indexed = value.indexed;
         newValue.splice(index, 1);
         if (newValue.length === 0) {
             setOpen(false);
@@ -93,6 +99,15 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
 
             if (selectedIndex !== -1) {
                 controlProperty.name = selectedIndex;
+                let editProps;
+                const index = value[selectedIndex][INDEX];
+                if (typeof index === 'number') {
+                    editProps = {
+                        rootId,
+                        rootDataType,
+                        jsonPath: `${jsonPath}[${index}]`
+                    };
+                }
                 itemControl = (
                     <ObjectControl key={`ctrl_${selectedIndex}`}
                                    property={controlProperty}
@@ -100,7 +115,8 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
                                    errors={errors && errors[String(selectedIndex)]}
                                    onChange={handleChange}
                                    disabled={disabled}
-                                   onStack={handleStack}/>
+                                   onStack={handleStack}
+                                   {...editProps}/>
                 );
             }
 
