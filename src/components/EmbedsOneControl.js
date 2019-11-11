@@ -4,9 +4,8 @@ import AddIcon from '@material-ui/icons/Add';
 import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
-import ObjectControl from "./ObjectControl";
-import '../util/FlexBox.css'
-import PropertyControl from "./PropertyControl";
+import ObjectControl, { FETCHED } from "./ObjectControl";
+import '../util/FlexBox.css';
 
 function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, property, onDelete, onChange, width, disabled, onStack, rootId }) {
 
@@ -15,7 +14,7 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
     const [open, setOpen] = useState(false);
 
     const addNew = () => {
-        onChange({});
+        onChange({ [FETCHED]: true });
         setTimeout(() => setOpen(true));
     };
 
@@ -25,8 +24,8 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
     });
 
     const handleDelete = () => {
-      setEdit(false);
-      onDelete();
+        setEdit(false);
+        onDelete();
     };
 
     let objectControl, actionButton, deleteButton;

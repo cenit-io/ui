@@ -1,11 +1,17 @@
 import DataTypeControl from "./DataTypeControl";
 
+export const FETCHED = Symbol.for('_fetched');
+
 class ObjectControl extends DataTypeControl {
 
+    valueReady() {
+        const { rootId, value } = this.props;
+
+        return !rootId || (value && value[FETCHED]);
+    };
+
     isReady() {
-        return super.isReady() && (
-            !this.props.rootId || this.state.valueFetched
-        );
+        return super.isReady() && this.valueReady();
     }
 
     schemaReady() {
@@ -41,16 +47,16 @@ class ObjectControl extends DataTypeControl {
                     )
                 ).then(props => {
                     this.resolveProperties(props);
-                    const { rootDataType, jsonPath, rootId, onChange } = this.props;
-                    console.log('Setting schema ready, editing', rootId, jsonPath);
-                    if (rootId) {
+                    const { rootDataType, jsonPath, rootId, onChange, value } = this.props;
+                    if (!this.valueReady()) {
+                        console.log('Fetching for editing', rootId, jsonPath);
                         rootDataType.get(rootId, {
                             jsonPath,
                             with_references: true
                         }).then(
                             v => {
+                                (v = v || {})[FETCHED] = true;
                                 onChange(v);
-                                this.setState({ valueFetched: true });
                             }
                         );
                     }
