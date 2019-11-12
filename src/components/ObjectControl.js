@@ -49,16 +49,19 @@ class ObjectControl extends DataTypeControl {
                     this.resolveProperties(props);
                     const { rootDataType, jsonPath, rootId, onChange, value } = this.props;
                     if (!this.valueReady()) {
-                        console.log('Fetching for editing', rootId, jsonPath);
-                        rootDataType.shallowGet(rootId, {
-                            jsonPath,
-                            with_references: true
-                        }).then(
-                            v => {
-                                (v = v || {})[FETCHED] = true;
-                                onChange(v);
-                            }
-                        );
+                        this.getDataType().shallowViewPort().then(viewport => {
+                            console.log('Fetching for editing', rootId, jsonPath, viewport);
+                            rootDataType.get(rootId, {
+                                viewport,
+                                jsonPath,
+                                with_references: true
+                            }).then(
+                                v => {
+                                    (v = v || {})[FETCHED] = true;
+                                    onChange(v);
+                                }
+                            );
+                        });
                     }
                 });
             });

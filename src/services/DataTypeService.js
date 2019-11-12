@@ -323,9 +323,7 @@ export class DataType {
                 (prop, index) => simples[index] ? Promise.resolve('') : prop.dataType.titleViewPort('_id')
             )
         );
-        const viewport = '{' + props.map( (prop, index) => `${prop.name} ${childViewports[index]}`).join('') + '}';
-        console.log(viewport);
-        return viewport;
+        return '{' + props.map( (prop, index) => `${prop.name} ${childViewports[index]}`).join('') + '}';
     }
 
     async shallowGet(id, opts = {}) {
