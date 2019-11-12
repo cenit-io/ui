@@ -314,6 +314,24 @@ export class DataType {
         }
         return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
+
+    async shallowViewPort() {
+        const props = await this.getProps();
+        const simples = await Promise.all(props.map(p => p.isSimple()));
+        const childViewports = await Promise.all(
+            props.map(
+                (prop, index) => simples[index] ? Promise.resolve('') : prop.dataType.titleViewPort('_id')
+            )
+        );
+        const viewport = '{' + props.map( (prop, index) => `${prop.name} ${childViewports[index]}`).join('') + '}';
+        console.log(viewport);
+        return viewport;
+    }
+
+    async shallowGet(id, opts = {}) {
+        opts = { viewport: await this.shallowViewPort(), ...opts };
+        return this.get(id, opts);
+    }
 }
 
 export class Property {
@@ -340,7 +358,7 @@ export class Property {
             (!schema.hasOwnProperty('edi') || (schema['edi'].constructor === Object && !schema['edi']['discard']));
     };
 
-    isSimple = async () => this.isSimpleSchema(await this.getSchema());
+    isSimple = async () => isSimpleSchema(await this.getSchema());
 
     async isReferenced() {
         return (await this.getSchema())['referenced'];

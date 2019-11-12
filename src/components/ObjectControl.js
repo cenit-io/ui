@@ -50,7 +50,7 @@ class ObjectControl extends DataTypeControl {
                     const { rootDataType, jsonPath, rootId, onChange, value } = this.props;
                     if (!this.valueReady()) {
                         console.log('Fetching for editing', rootId, jsonPath);
-                        rootDataType.get(rootId, {
+                        rootDataType.shallowGet(rootId, {
                             jsonPath,
                             with_references: true
                         }).then(
