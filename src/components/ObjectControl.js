@@ -58,6 +58,7 @@ class ObjectControl extends DataTypeControl {
                             }).then(
                                 v => {
                                     (v = v || {})[FETCHED] = true;
+                                    Object.getOwnPropertySymbols(value).forEach(symbol => v[symbol] = value[symbol]);
                                     onChange(v);
                                 }
                             );
