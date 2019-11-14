@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IconButton, TextField } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
 import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
@@ -13,6 +13,17 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
     const [isEdit, setEdit] = useState(value);
     const [valueTitle, setValueTitle] = useState('');
     const [open, setOpen] = useState(false);
+    const valueKey = JSON.stringify(value);
+
+    useEffect(()=>{
+        let subscription;
+        if (value) {
+            subscription = property.dataType.titleFor(value).subscribe(title => setValueTitle(title));
+        } else {
+            setValueTitle('');
+        }
+        return () => subscription && subscription.unsubscribe();
+    }, [value, property, valueKey]);
 
     const addNew = () => {
         onChange({ [FETCHED]: true });
@@ -35,11 +46,6 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
     let objectControl, actionButton, deleteButton;
 
     if (value) {
-        property.dataType.titleFor(value).subscribe(t => {
-            if (t !== valueTitle) { //TODO Use efects
-                setValueTitle(t);
-            }
-        });
         if (open) {
             objectControl = <ObjectControl rootDataType={rootDataType}
                                            jsonPath={jsonPath}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Chip, CircularProgress, makeStyles } from "@material-ui/core";
 
 const useStyles = makeStyles(theme => ({
@@ -8,16 +8,14 @@ const useStyles = makeStyles(theme => ({
 }));
 
 export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, disabled }) => {
-
     const classes = useStyles();
-
     const [title, setTitle] = useState(null);
+    const itemKey = JSON.stringify(item);
 
-    dataType.titleFor(item).subscribe(t => {
-        if (t !== title) { //TODO Use React effects
-            setTitle(t);
-        }
-    });
+    useEffect(() => {
+        const subscription = dataType.titleFor(item).subscribe(t => setTitle(t));
+        return () => subscription.unsubscribe();
+    }, [dataType, item, itemKey]);
 
     if (title) {
         return <Chip label={title}
