@@ -1,6 +1,6 @@
 import React from 'react'
 import StringControl from './StringControl';
-import {LinearProgress, withStyles} from '@material-ui/core';
+import { LinearProgress, withStyles } from '@material-ui/core';
 import './PropertyControl.css'
 import EmbedsOneControl from "./EmbedsOneControl";
 import EmbedsManyControl from "./EmbedsManyControl";
@@ -8,6 +8,7 @@ import BooleanControl from "./BooleanControl";
 import RefOneControl from "./RefOneControl";
 import RefManyControl from "./RefManyControl";
 import ErrorMessages from "./ErrorMessages";
+import zzip from "../util/zzip";
 
 function controlComponentFor(property) {
     switch (property.type) {
@@ -52,10 +53,9 @@ class PropertyControl extends React.Component {
     state = {};
 
     componentDidMount() {
-        Promise.all([
-            this.props.property.getSchema(),
-            this.props.property.getTitle(),
-        ]).then(([schema, title]) => this.setState({ schema, title }));
+        zzip(this.props.property.getSchema(), this.props.property.getTitle()).subscribe(
+            ([schema, title]) => this.setState({ schema, title })
+        );
     }
 
     render() {

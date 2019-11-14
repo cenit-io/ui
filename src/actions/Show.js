@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ShowIcon from '@material-ui/icons/RemoveRedEye';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import Loading from "../components/Loading";
+import { switchMap } from "rxjs/operators";
 
 
 const Show = ({ docked, item, onSelectItem }) => {
@@ -9,9 +10,9 @@ const Show = ({ docked, item, onSelectItem }) => {
     const [value, setValue] = useState(null);
 
     if (!value) {
-        item.getDataType().then(
-            dataType => dataType.get(item.id).then(value => setValue(value))
-        )
+        item.getDataType().pipe(
+            switchMap(dataType => dataType.get(item.id))
+        ).subscribe(value => setValue(value));
         return <Loading/>;
     }
 

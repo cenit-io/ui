@@ -1,4 +1,7 @@
 import API from './ApiService';
+import { of } from "rxjs";
+import { map, switchMap } from "rxjs/operators";
+import zzip from "../util/zzip";
 
 const isSimpleSchema = schema => ['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1;
 
@@ -7,22 +10,26 @@ export class DataType {
     static dataTypes = {}; // TODO Store data types cache using a pair key tenant.id -> dataType.id
     static criteria = {};
 
-    static async getById(id) {
-        let dataType = DataType.dataTypes[id];
-        if (!dataType) {
-            dataType = await API.get('setup', 'data_type', id, {
-                headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
-            });
-            if (dataType) {
-                if (dataType._type === JSON_TYPE) delete dataType.schema;
-                dataType.__proto__ = new DataType();
-                DataType.dataTypes[id] = dataType;
-            }
+    static getById(id) {
+        const dataType = DataType.dataTypes[id];
+        if (dataType) {
+            return of(dataType);
         }
-        return dataType;
+        return API.get('setup', 'data_type', id, {
+            headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
+        }).pipe(
+            map(dataType => {
+                if (dataType) {
+                    if (dataType._type === JSON_TYPE) delete dataType.schema;
+                    dataType.__proto__ = new DataType();
+                    DataType.dataTypes[id] = dataType;
+                }
+                return dataType;
+            })
+        );
     }
 
-    static async find(criteria) {
+    static find(criteria) {
         const key = Object.keys(criteria).sort()
             .map(
                 key => `${key}(${JSON.stringify(criteria[key])})`
@@ -34,92 +41,118 @@ export class DataType {
             return this.getById(id);
         }
 
-        const response = await API.get('setup', 'data_type', {
-                params: { limit: 1 },
-                headers: {
-                    'X-Template-Options': JSON.stringify({ viewport: '{_id}' }),
-                    'X-Query-Selector': JSON.stringify(criteria)
+        return API.get('setup', 'data_type', {
+            params: { limit: 1 },
+            headers: {
+                'X-Template-Options': JSON.stringify({ viewport: '{_id}' }),
+                'X-Query-Selector': JSON.stringify(criteria)
+            }
+        }).pipe(
+            switchMap(response => {
+                const item = response && response['items'][0];
+
+                if (item) {
+                    DataType.criteria[key] = item['id'];
+
+                    return this.getById(item['id']);
                 }
-            }),
 
-            item = response && response['items'][0];
-
-        if (item) {
-            DataType.criteria[key] = item['id'];
-
-            return this.getById(item['id']);
-        }
-
-        return null;
+                return of(null);
+            })
+        );
     }
 
-    async getSchema() {
-        if (!this.schema) {
-            this.schema = await API.get('setup', 'data_type', this.id, 'digest', 'schema');
+    getSchema() {
+        if (this.schema) {
+            return of(this.schema);
         }
-        return this.schema;
+
+        return API.get('setup', 'data_type', this.id, 'digest', 'schema').pipe(
+            map(schema => this.schema = schema)
+        );
     }
 
-    async getProps() {
-        if (!this.properties) {
-            const schema = await this.getSchema();
-
-            this.propertiesSchema = this.propertiesSchema || await this.mergeSchema(schema['properties'] || {});
-
-            this.properties = await Promise.all(
-                Object.keys(this.propertiesSchema).map(
-                    property => this.propertyFrom(property, this.propertiesSchema[property])
+    propertiesSchema() {
+        if (this.propertiesSchemaCache) {
+            return of(this.propertiesSchemaCache)
+        }
+        return this.getSchema().pipe(
+            switchMap(
+                schema => this.mergeSchema(schema['properties'] || {}).pipe(
+                    map(propertiesSchema => this.propertiesSchemaCache = propertiesSchema)
                 )
-            );
+            )
+        );
+    }
+
+    getProps() {
+        if (this.properties) {
+            return of(this.properties);
         }
-        return this.properties;
+        return this.propertiesSchema().pipe(
+            switchMap(propertiesSchemas => zzip(
+                ...Object.keys(propertiesSchemas).map(
+                    property => this.propertyFrom(property, propertiesSchemas[property])
+                )
+            ).pipe(map(properties => this.properties = properties)))
+        );
     }
 
-    async queryProps() {
-        let props = await this.getProps();
-        return (await Promise.all(props.map(p => p.getSchema()))).map(
-            (schema, index) => isSimpleSchema(schema) ? props[index] : null
-        ).filter(p => p)
+    queryProps() {
+        return this.getProps().pipe(
+            switchMap(props => zzip(...props.map(p => p.getSchema())).pipe(
+                map(
+                    schemas => schemas.map(
+                        (schema, index) => isSimpleSchema(schema) ? props[index] : null
+                    ).filter(p => p)
+                )
+            ))
+        );
     }
 
-    async titleProps() {
-        const props = await this.getProps(),
-            titlePropNames = await this.titlePropNames();
-        return props.filter(p => titlePropNames.indexOf(p.name) > -1);
+    titleProps() {
+        return this.getProps().pipe(
+            switchMap(
+                props => this.titlePropNames().pipe(
+                    map(titlePropNames => props.filter(p => titlePropNames.indexOf(p.name) > -1))
+                )
+            ));
     }
 
-    async visibleProps() {
-        const props = await this.getProps();
-
-        return (await Promise.all(props.map(prop => prop.isVisible())))
-            .map((v, index) => v ? props[index] : null)
-            .filter(p => p);
+    visibleProps() {
+        return this.getProps().pipe(
+            switchMap(
+                props => zzip(...props.map(prop => prop.isVisible())).pipe(
+                    map(visible => visible.map((v, index) => v ? props[index] : null).filter(p => p))
+                )
+            ));
     }
 
-    async mergeSchema(schema) {
+    mergeSchema(schema) {
         if (schema['extends'] || schema['$ref']) {
             return API.post('setup', 'data_type', this.id, 'digest', 'schema', schema);
         }
-        return schema;
+        return of(schema);
     }
 
-    async getTitle() {
-        const schema = (await this.getSchema());
-
-        let title = schema && schema['title'];
-        if (title) {
-            return title.toString();
-        }
-
-        return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+    getTitle() {
+        return this.getSchema().pipe(
+            map(schema => {
+                const title = schema && schema['title'];
+                if (title) {
+                    return title.toString();
+                }
+                return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            })
+        );
     }
 
-    async getSchemaEntry(key) {
-        return (await this.getSchema())[key];
+    getSchemaEntry(key) {
+        return this.getSchema().pipe(map(schema => schema[key]));
     }
 
-    async propertyFrom(name, schema) {
-        let ref, mergedSchema, dataType;
+    propertyFrom(name, schema) {
+        let ref, dataType = of(null);
         // Checking referenced schema
         if (
             schema.constructor === Object && (
@@ -138,36 +171,50 @@ export class DataType {
                     Object.keys(items).length === 1 && (ref = items['$ref']) && (ref.constructor === String || ref.constructor === Object))
             ) {
                 if (ref.constructor === Object) {
-                    dataType = await DataType.find(ref);
+                    dataType = DataType.find(ref);
                 } else {
-                    dataType = (await DataType.find({ namespace: this.namespace, name: ref })) ||
-                        (await DataType.find({ name: ref }));
+                    dataType = DataType.find({ namespace: this.namespace, name: ref }).pipe(
+                        switchMap(dt => (dt && of(dt)) || DataType.find({ name: ref }))
+                    );
                 }
             }
         }
-        // Not referenced schema
-        if (!dataType) {
-            mergedSchema = (await this.mergeSchema(schema)) || {};
-            let typeSchema;
-            if (mergedSchema['type'] === 'array' && mergedSchema.hasOwnProperty('items')) {
-                typeSchema = mergedSchema['items'];
-            } else {
-                typeSchema = mergedSchema;
-            }
-            dataType = new DataType();
-            dataType._type = JSON_TYPE;
-            dataType.name = this.name + '::' + name;
-            dataType.schema = typeSchema;
-        }
 
-        mergedSchema = await dataType.mergeSchema(schema);
+        return dataType.pipe(
+            switchMap(dataType => {
+                let mergedSchema;
+                // Not referenced schema
+                if (dataType) {
+                    mergedSchema = dataType.mergeSchema(schema);
+                } else {
+                    mergedSchema = this.mergeSchema(schema).pipe(
+                        map(mergedSchema => {
+                            let typeSchema;
+                            if (mergedSchema['type'] === 'array' && mergedSchema.hasOwnProperty('items')) {
+                                typeSchema = mergedSchema['items'];
+                            } else {
+                                typeSchema = mergedSchema;
+                            }
+                            dataType = new DataType();
+                            dataType._type = JSON_TYPE;
+                            dataType.name = this.name + '::' + name;
+                            dataType.schema = typeSchema;
+                        })
+                    );
+                }
 
-        const prop = new Property();
-        prop.name = name;
-        prop.dataType = dataType;
-        prop.propertySchema = mergedSchema;
+                return mergedSchema.pipe(
+                    map(mergedSchema => {
+                        const prop = new Property();
+                        prop.name = name;
+                        prop.dataType = dataType;
+                        prop.propertySchema = mergedSchema;
 
-        return prop;
+                        return prop;
+                    })
+                );
+            })
+        );
     }
 
     strip(schema) {
@@ -192,97 +239,115 @@ export class DataType {
             });
     }
 
-    async find(query, opts = null) {
+    find(query, opts = null) {
         const limit = (opts && opts.limit) || 5;
         const page = (opts && opts.page) || 1;
         const sort = (opts && opts.sort) || {};
         query = (query || '').toString().trim();
         const params = { limit, page };
-        const queryProps = await ((opts && opts.props) || this.titleProps());
-        if (query.length > 0) {
-            const orQuery = queryProps.map(
-                prop => ({ [prop.name]: { '$regex': '(?i)' + query } })
-            );
-            params['$or'] = JSON.stringify(orQuery);
-        }
-        return (await API.get('setup', 'data_type', this.id, 'digest', {
-            params,
-            headers: {
-                'X-Template-Options': JSON.stringify({
-                    viewport: '{_id ' + queryProps.map(p => p.name).join(' ') + '}'
-                }),
-                'X-Query-Options': JSON.stringify({ sort })
-            }
-        })) || { items: [] };
+        const props = (opts && opts.props) || this.titleProps();
+
+        return props.pipe(
+            switchMap(queryProps => {
+                if (query.length > 0) {
+                    const orQuery = queryProps.map(
+                        prop => ({ [prop.name]: { '$regex': '(?i)' + query } })
+                    );
+                    params['$or'] = JSON.stringify(orQuery);
+                }
+                return API.get('setup', 'data_type', this.id, 'digest', {
+                    params,
+                    headers: {
+                        'X-Template-Options': JSON.stringify({
+                            viewport: '{_id ' + queryProps.map(p => p.name).join(' ') + '}'
+                        }),
+                        'X-Query-Options': JSON.stringify({ sort })
+                    }
+                }).pipe(map(response => response || { items: [] }));
+            })
+        );
     }
 
-    async list(opts = {}) {
+    list(opts = {}) {
         return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
 
-    async titleViewPort(...plus) {
-        return `{${(await this.titleProps()).map(p => p.name).concat(plus).join(' ')}}`;
+    titleViewPort(...plus) {
+        return this.titleProps().pipe(
+            map(props => `{${props.map(p => p.name).concat(plus).join(' ')}}`)
+        );
     }
 
-    async titlePropNames() {
+    titlePropNames() {
         if (!this.__titleProps) {
             this.__titleProps = ['id', 'name', 'title'];
         }
-        return this.__titleProps;
+        return of(this.__titleProps);
     }
 
-    async titleFor(item) {
-        return (await this.titlesFor(item))[0];
+    titleFor(item) {
+        return this.titlesFor(item).pipe(map(titles => titles[0]));
     }
 
-    async titlesFor(...items) {
+    titlesFor(...items) {
         items = [...items];
 
-        const titleProps = await this.titleProps(),
-            missingProps = {};
+        return this.titleProps().pipe(
+            switchMap(
+                titleProps => {
+                    const missingProps = {};
 
-        for (let i = 0; i < items.length; i++) {
-            let item = items[i];
-            if (item.hasOwnProperty('id')) {
-                for (let prop of titleProps) {
-                    if (!item.hasOwnProperty(prop.name)) {
-                        missingProps[item.id] = [...(missingProps[item.id] || []), i];
-                        break;
+                    for (let i = 0; i < items.length; i++) {
+                        let item = items[i];
+                        if (item.hasOwnProperty('id')) {
+                            for (let prop of titleProps) {
+                                if (!item.hasOwnProperty(prop.name)) {
+                                    missingProps[item.id] = [...(missingProps[item.id] || []), i];
+                                    break;
+                                }
+                            }
+                        }
                     }
+
+                    const missingIds = Object.keys(missingProps);
+                    let completeItems;
+                    if (missingIds.length > 0) {
+                        completeItems = this.titleViewPort('_id').pipe(
+                            switchMap(
+                                viewport => this.list({
+                                    params: { _id: { '$in': missingIds } },
+                                    headers: { 'X-Template-Options': JSON.stringify({ viewport }) }
+                                }).pipe(map(response => response.items))
+                            ));
+                    } else {
+                        completeItems = of([]);
+                    }
+
+                    return completeItems.pipe(
+                        switchMap(completeItems => {
+                            for (let item of completeItems) {
+                                if (missingProps[item.id]) {
+                                    for (let i of missingProps[item.id]) {
+                                        items[i] = { ...items[i], ...item };
+                                    }
+                                }
+                            }
+
+                            return this.getTitle().pipe(
+                                map(
+                                    dtTitle => items.map(item => {
+                                        let title = item.title || item.name;
+                                        if (title) {
+                                            return title;
+                                        }
+                                        return `${dtTitle} ${item.id || '(blank)'}`;
+                                    })
+                                ));
+                        })
+                    );
                 }
-            }
-        }
-
-        const missingIds = Object.keys(missingProps);
-        let completeItems;
-        if (missingIds.length > 0) {
-            completeItems = (
-                await this.list({
-                    params: { _id: { '$in': missingIds } },
-                    headers: { 'X-Template-Options': JSON.stringify({ viewport: await this.titleViewPort('_id') }) }
-                })
-            ).items;
-        } else {
-            completeItems = [];
-        }
-
-        for (let item of completeItems) {
-            if (missingProps[item.id]) {
-                for (let i of missingProps[item.id]) {
-                    items[i] = { ...items[i], ...item };
-                }
-            }
-        }
-
-        const dtTitle = await this.getTitle();
-
-        return items.map(item => {
-            let title = item.title || item.name;
-            if (title) {
-                return title;
-            }
-            return `${dtTitle} ${item.id || '(blank)'}`;
-        });
+            )
+        )
     }
 
     post(data, opts = {}) {
@@ -315,20 +380,31 @@ export class DataType {
         return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
 
-    async shallowViewPort() {
-        const props = await this.getProps();
-        const simples = await Promise.all(props.map(p => p.isSimple()));
-        const childViewports = await Promise.all(
-            props.map(
-                (prop, index) => simples[index] ? Promise.resolve('') : prop.dataType.titleViewPort('_id')
+    shallowViewPort() {
+        let properties;
+        return this.getProps().pipe(
+            map(props => properties = props),
+            switchMap(
+                props => zzip(
+                    ...props.map(
+                        p => p.isSimple().pipe(
+                            switchMap(simple => (simple && of('')) || p.dataType.titleViewPort('_id'))
+                        )
+                    )
+                )
+            ),
+            map(
+                childViewports => '{' + properties.map(
+                    (prop, index) => `${prop.name} ${childViewports[index]}`
+                ).join('') + '}'
             )
         );
-        return '{' + props.map( (prop, index) => `${prop.name} ${childViewports[index]}`).join('') + '}';
     }
 
-    async shallowGet(id, opts = {}) {
-        opts = { viewport: await this.shallowViewPort(), ...opts };
-        return this.get(id, opts);
+    shallowGet(id, opts = {}) {
+        return this.shallowViewPort().pipe(
+            switchMap(viewport => this.get(id, { viewport, ...opts }))
+        );
     }
 }
 
@@ -338,43 +414,44 @@ export class Property {
         Object.keys(attrs).forEach(attr => this[attr] = attrs[attr]);
     }
 
-    getSchema = async () => {
+    getSchema = () => {
         if (this.propertySchema) {
-            return this.propertySchema;
+            return of(this.propertySchema);
         }
         return this.dataType.getSchema();
     };
 
-    getSchemaEntry = async key => {
-        return (await this.getSchema())[key];
+    getSchemaEntry = key => {
+        return this.getSchema().pipe(map(schema => schema[key]));
     };
 
-    isVisible = async () => {
-        const schema = await this.getSchema();
-
-        return (!schema.hasOwnProperty('visible') || schema['visible']) &&
-            (!schema.hasOwnProperty('edi') || (schema['edi'].constructor === Object && !schema['edi']['discard']));
+    isVisible = () => {
+        return this.getSchema().pipe(
+            map(
+                schema => (!schema.hasOwnProperty('visible') || schema['visible']) &&
+                    (!schema.hasOwnProperty('edi') || (schema['edi'].constructor === Object && !schema['edi']['discard']))
+            )
+        );
     };
 
-    isSimple = async () => isSimpleSchema(await this.getSchema());
+    isSimple = () => this.getSchema().pipe(map(schema => isSimpleSchema(schema)));
 
-    async isReferenced() {
-        return (await this.getSchema())['referenced'];
+    isReferenced() {
+        return this.getSchema().pipe(map(schema => schema['referenced']));
     }
 
-    async isMany() {
-        return (await this.getSchema())['type'] === 'array';
+    isMany() {
+        return this.getSchema().pipe(map(schema => schema['type'] === 'array'));
     }
 
-    async getTitle() {
-        const schema = await this.getSchema();
-
-        let title = schema['title'];
-        if (title) {
-            return title.toString();
-        }
-
-        return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+    getTitle() {
+        return this.getSchema().pipe(map(schema => {
+            const title = schema['title'];
+            if (title) {
+                return title.toString();
+            }
+            return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+        }));
     }
 }
 

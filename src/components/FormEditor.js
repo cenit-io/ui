@@ -14,6 +14,9 @@ import Typography from '@material-ui/core/Typography/index';
 import StorageIcon from '@material-ui/icons/Storage';
 import ViewIcon from '@material-ui/icons/OpenInNew';
 import EditIcon from '@material-ui/icons/Edit';
+import { catchError } from "rxjs/operators";
+import zzip from "../util/zzip";
+import { of } from "rxjs";
 
 const stackHeaderSpacing = 5;
 
@@ -127,7 +130,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
         {
             value: { ...value },
             dataType,
-            title: () => ''
+            title: () => of('')
         },
         {
             value: { ...value },
@@ -169,9 +172,9 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
         });
     };
 
-    const updateStackTitles = (s = stack) => s.length > 1 && Promise.all(
-        s.map(item => item.title(item.value))
-    ).then(titles => setStackTitles(titles));
+    const updateStackTitles = (s = stack) => s.length > 1 && zzip(
+        ...s.map(item => item.title(item.value))
+    ).subscribe(titles => setStackTitles(titles));
 
     const handleChange = value => setValue(value);
 
@@ -188,22 +191,22 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
                     viewport: current.viewport || '{_id}',
                     add_only: rootId
                 };
-                current.dataType.post(current.value, opts)
-                    .then(response => {
-                        setDone(true);
-                        setValue({ ...current.value, ...response });
-                        setTimeout(() => {
-                            handleBack();
-                            if (current.callback) {
-                                current.callback(response);
-                            }
-                            setSaving(false);
-                        }, 1000);
-                    })
-                    .catch(error => {
+                current.dataType.post(current.value, opts).pipe(
+                    catchError(error => {
                         setSaving(false);
                         setErrors(error.response.data);
-                    });
+                    })
+                ).subscribe(response => {
+                    setDone(true);
+                    setValue({ ...current.value, ...response });
+                    setTimeout(() => {
+                        handleBack();
+                        if (current.callback) {
+                            current.callback(response);
+                        }
+                        setSaving(false);
+                    }, 1000);
+                });
             }, 1000
         );
     };

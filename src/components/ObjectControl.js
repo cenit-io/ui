@@ -1,4 +1,7 @@
 import DataTypeControl from "./DataTypeControl";
+import { map, switchMap } from "rxjs/operators";
+import { of } from "rxjs";
+import zzip from "../util/zzip";
 
 export const FETCHED = Symbol.for('_fetched');
 
@@ -15,56 +18,50 @@ class ObjectControl extends DataTypeControl {
     }
 
     schemaReady() {
-        this.getDataType().visibleProps()
-            .then(props => {
-                Promise.all(
-                    props.map(
-                        prop => {
-                            if (prop)
-                                return new Promise(
-                                    (resolve, reject) => {
-                                        Promise.all([prop.isReferenced(), prop.isMany(), prop.getSchema()])
-                                            .then(
-                                                fullfill => {
-                                                    if (fullfill[0]) { // Referenced
-                                                        if (fullfill[1]) { // Many
-                                                            prop.type = 'refMany';
-                                                        } else { // One
-                                                            prop.type = 'refOne';
-                                                        }
-                                                    } else {
-                                                        const schema = fullfill[2];
-                                                        prop.type = schema['type'];
-                                                    }
-                                                    resolve(prop);
-                                                }
-                                            )
-                                            .catch(error => reject(error));
+        this.getDataType().visibleProps().pipe(
+            switchMap(props =>
+                zzip(...props.map(
+                    prop => (prop && zzip(prop.isReferenced(), prop.isMany(), prop.getSchema()).pipe(
+                            map(
+                                fullfill => {
+                                    if (fullfill[0]) { // Referenced
+                                        if (fullfill[1]) { // Many
+                                            prop.type = 'refMany';
+                                        } else { // One
+                                            prop.type = 'refOne';
+                                        }
+                                    } else {
+                                        const schema = fullfill[2];
+                                        prop.type = schema['type'];
                                     }
-                                );
-                            return Promise.resolve(prop);
-                        }
-                    )
-                ).then(props => {
-                    this.resolveProperties(props);
-                    const { rootDataType, jsonPath, rootId, onChange, value } = this.props;
-                    if (!this.valueReady()) {
-                        this.getDataType().shallowViewPort().then(viewport => {
+                                    return prop;
+                                }
+                            ))
+                    ) || of(prop))
+                )
+            )
+        ).subscribe(
+            props => {
+                this.resolveProperties(props);
+                const { rootDataType, jsonPath, rootId, onChange, value } = this.props;
+                if (!this.valueReady()) {
+                    this.getDataType().shallowViewPort().pipe(
+                        switchMap(viewport => {
                             console.log('Fetching for editing', rootId, jsonPath, viewport);
-                            rootDataType.get(rootId, {
+                            return rootDataType.get(rootId, {
                                 viewport,
                                 jsonPath,
                                 with_references: true
-                            }).then(
-                                v => {
-                                    (v = v || {})[FETCHED] = true;
-                                    Object.getOwnPropertySymbols(value).forEach(symbol => v[symbol] = value[symbol]);
-                                    onChange(v);
-                                }
-                            );
-                        });
-                    }
-                });
+                            });
+                        })
+                    ).subscribe(
+                        v => {
+                            (v = v || {})[FETCHED] = true;
+                            Object.getOwnPropertySymbols(value).forEach(symbol => v[symbol] = value[symbol]);
+                            onChange(v);
+                        }
+                    );
+                }
             });
     }
 }

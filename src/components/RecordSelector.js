@@ -22,7 +22,7 @@ const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputCla
         fetchDataType = DataType.find(dataTypeSelector);
     }
 
-    fetchDataType.then(dt => setDataType(dt));
+    fetchDataType.subscribe(dt => setDataType(dt));
 
     return <div><InputBase disabled/><LinearProgress/></div>;
 };

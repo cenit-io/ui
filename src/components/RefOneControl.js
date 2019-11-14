@@ -4,6 +4,7 @@ import AddIcon from '@material-ui/icons/Add';
 import EditIcon from '@material-ui/icons/Edit';
 import ClearIcon from '@material-ui/icons/Clear';
 import RefPicker from "./RefPicker";
+import { map } from "rxjs/operators";
 
 class RefOneControl extends React.Component {
 
@@ -11,8 +12,12 @@ class RefOneControl extends React.Component {
         const { value } = props;
         if (value) {
             if (value !== state.value) {
-                props.property.dataType.titleFor(value).then(title => state.updateText(title));
-                return { value, text: null };
+                props.property.dataType.titleFor(value).subscribe(text => {
+                    if (text !== state.text) {
+                        state.updateText(text);
+                    }
+                });
+                return { value };
             }
         } else {
             return { text: '' };
@@ -42,7 +47,7 @@ class RefOneControl extends React.Component {
         onStack({
             value: {},
             dataType: property.dataType,
-            title: async value => `[${property.name}] ${await property.dataType.titleFor(value)}`,
+            title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
             callback: newValue => onChange({
                 id: newValue.id,
                 _reference: true
@@ -55,8 +60,8 @@ class RefOneControl extends React.Component {
         onStack({
             value,
             dataType: property.dataType,
-            title: async value => `[${property.name}] ${await property.dataType.titleFor(value)}`,
-            callback: newValue =>onChange({
+            title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
+            callback: newValue => onChange({
                 id: newValue.id,
                 _reference: true
             }),

@@ -10,6 +10,8 @@ import TableSortLabel from '@material-ui/core/TableSortLabel';
 import TablePagination from "@material-ui/core/TablePagination";
 import ListIcon from '@material-ui/icons/List';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
+import { map, switchMap } from "rxjs/operators";
+import zzip from "../util/zzip";
 
 const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort }) => {
 
@@ -80,19 +82,25 @@ class Index extends React.Component {
         limit: MinItemsPerPage
     };
 
-    computeDataTypeState = async () => {
+    computeDataTypeState = () => {
         const { dataType } = this.props;
 
-        const queryProps = await dataType.queryProps(),
-
-            props = (await Promise.all(queryProps.map(prop => prop.getTitle()))).map(
-                (title, index) => ({ title, prop: queryProps[index] })
-            );
-
-        return { props };
+        return dataType.queryProps().pipe(
+            switchMap(
+                queryProps => zzip(...queryProps.map(prop => prop.getTitle())).pipe(
+                    map(titles => {
+                            const props = titles.map(
+                                (title, index) => ({ title, prop: queryProps[index] })
+                            );
+                            return { props };
+                        }
+                    )
+                )
+            )
+        );
     };
 
-    requestData = async () => {
+    requestData = () => {
 
         const { dataType } = this.props,
 
@@ -259,13 +267,13 @@ class Index extends React.Component {
                     {pagination}
                 </React.Fragment>;
             } else {
-                this.requestData().then(data => {
+                this.requestData().subscribe(data => {
                     this.setState({ data })
                 });
                 table = <Loading height={`calc(${tableHeight})`}/>;
             }
         } else {
-            this.computeDataTypeState().then(state => this.setState(state));
+            this.computeDataTypeState().subscribe(state => this.setState(state));
             table = <Loading height={`calc(${tableHeight})`}/>;
         }
 

@@ -47,9 +47,9 @@ class RefPicker extends React.Component {
                     this.setState({ loading: true });
                     dataType
                         .find(query, dataType.titleViewPort())
-                        .then(({ items }) => {
+                        .subscribe(({ items }) => {
                             if (items) {
-                                dataType.titlesFor(...items).then(titles => {
+                                dataType.titlesFor(...items).subscribe(titles => {
                                     items = titles.map((title, index) => ({ record: items[index], title }));
                                     this.setState({ items, loading: false, itemsQuery: query });
                                 })
@@ -123,7 +123,13 @@ class RefPicker extends React.Component {
             }
             list = (
                 <ClickAwayListener onClickAway={this.handleClickAway}>
-                    <Paper style={{ position: 'absolute', top: `${48}px`, background: 'white', border: 'gray', zIndex: 1 }}>
+                    <Paper style={{
+                        position: 'absolute',
+                        top: `${48}px`,
+                        background: 'white',
+                        border: 'gray',
+                        zIndex: 1
+                    }}>
                         <List component="nav">
                             {list}
                         </List>

@@ -1,5 +1,7 @@
 import axios from "axios";
 import Random from "../util/Random";
+import { from, of } from "rxjs";
+import { map, switchMap } from "rxjs/operators";
 
 export const Config = {
     localhost: 'http://localhost:3000',
@@ -27,7 +29,7 @@ const AuthorizationService = {
         window.location = `${AuthorizeURL}&state=${state}`;
     },
 
-    getAccess: async function () {
+    getAccess: function () {
         let access;
         try {
             access = JSON.parse(localStorage.getItem(ACCESS_KEY));
@@ -43,48 +45,51 @@ const AuthorizationService = {
             this.authorize();
         }
 
-        return access;
+        return of(access);
     },
 
-    getAccessToken: async function () {
-        let access = await this.getAccess();
-
-        if (access) {
-            return access.access_token;
-        }
-
-        return null;
+    getAccessToken: function () {
+        return this.getAccess().pipe(
+            map(access => (access && access.access_token) || null)
+        );
     },
 
-    getAccessWith: async params => {
-        const access = (await appGateway.post('token', params.code)).data;
+    getAccessWith: params => {
+        return from(appGateway.post('token', params.code)).pipe(
+            map(response => {
+                const access = response.data;
 
-        localStorage.setItem(ACCESS_KEY, JSON.stringify(access));
+                localStorage.setItem(ACCESS_KEY, JSON.stringify(access));
 
-        const prevLocation = localStorage.getItem(params.state);
+                const prevLocation = localStorage.getItem(params.state);
 
-        localStorage.removeItem(params.state);
+                localStorage.removeItem(params.state);
 
-        if (prevLocation) {
-            window.location = prevLocation;
-        }
+                if (prevLocation) {
+                    window.location = prevLocation;
+                }
 
-        return access;
+                return access;
+            })
+        );
     },
 
-    getIdToken: async function () {
-        if (!this.idToken) {
-            let access = await this.getAccess();
-
-            if (access) {
-                const base64 = access.id_token.split('.')[1]
-                    .replace('-', '+')
-                    .replace('_', '/');
-                this.idToken = JSON.parse(window.atob(base64));
-            }
-
+    getIdToken: function () {
+        if (this.idToken) {
+            return of(this.idToken);
         }
-        return this.idToken;
+
+        return this.getAccess().pipe(
+            map(access => {
+                if (access) {
+                    const base64 = access.id_token.split('.')[1]
+                        .replace('-', '+')
+                        .replace('_', '/');
+                    this.idToken = JSON.parse(window.atob(base64));
+                }
+                return this.idToken;
+            })
+        );
     },
 
     logout: function () {
@@ -92,14 +97,14 @@ const AuthorizationService = {
         window.location = LogoutURL;
     },
 
-    config: async function (data = {}) {
-        const access = await this.getAccess(),
-
-            response = await appGateway.post('config', data, {
-                headers: { Authorization: `Bearer ${access.access_token}` }
-            });
-
-        return response.data;
+    config: function (data = {}) {
+        return this.getAccess().pipe(
+            switchMap(access => from(
+                appGateway.post('config', data, {
+                    headers: { Authorization: `Bearer ${access.access_token}` }
+                })
+            ).pipe(map(response => response.data)))
+        );
     }
 };
 

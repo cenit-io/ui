@@ -10,6 +10,7 @@ import New from './New';
 import Show from "./Show";
 import Edit from './Edit';
 import ActionToolbar from "./ActionToolbar";
+import zzip from "../util/zzip";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -46,10 +47,10 @@ function ActionContainer({ docked, item, height, width, onSelectItem, kind }) {
     const componentHeight = `${height} - ${appBarHeight(theme)}`;
 
     if (!title) {
-        item.getDataType().then(dataType => {
-            setDataType(dataType);
-            item.getTitle().then(title => setTitle(title));
-        });
+        zzip(item.getDataType(), item.getTitle()).subscribe(([dataType, title]) => {
+                setDataType(dataType);
+                setTitle(title);
+            });
         return <Loading/>;
     }
 

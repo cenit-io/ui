@@ -9,6 +9,7 @@ import ObjectControl from "./ObjectControl";
 import { Property } from "../services/DataTypeService";
 import '../util/FlexBox.css';
 import { ItemChip } from "./ItemChip";
+import { map, switchMap } from "rxjs/operators";
 
 const INDEX = Symbol.for('_index');
 
@@ -74,7 +75,15 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
 
     const handleStack = item => onStack({
         ...item,
-        title: async itemValue => `[${property.name} #${selectedIndex}] ${await property.dataType.titleFor(value[selectedIndex])} ${await item.title(itemValue)}`
+        title: itemValue => property.dataType.titleFor(value[selectedIndex]).pipe(
+            switchMap(
+                selectedTitle => item.title(itemValue).pipe(
+                    map(
+                        itemTitle => `[${property.name} #${selectedIndex}] ${selectedTitle} ${itemTitle}`
+                    )
+                )
+            )
+        )
     });
 
     if (value) {

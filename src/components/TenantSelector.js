@@ -13,7 +13,7 @@ const TenantSelector = ({ inputClasses, onSelect }) => {
             account: {
                 id: selection.record.id
             }
-        }).then(() => selectTenant(selection.record));
+        }).subscribe(() => selectTenant(selection.record));
     }
 
     function selectTenant(tenant) {
@@ -22,7 +22,7 @@ const TenantSelector = ({ inputClasses, onSelect }) => {
     }
 
     if (tenant.fetchCurrentTenant) {
-        API.get('setup', 'user', 'me').then(user => user && selectTenant(user.account));
+        API.get('setup', 'user', 'me').subscribe(user => user && selectTenant(user.account));
     }
 
     return <RecordSelector dataTypeSelector={TenantTypeSelector}

@@ -6,6 +6,7 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl, { FETCHED } from "./ObjectControl";
 import '../util/FlexBox.css';
+import { map, switchMap } from "rxjs/operators";
 
 function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, property, onDelete, onChange, width, disabled, onStack, rootId }) {
 
@@ -20,7 +21,10 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
 
     const handleStack = item => onStack({
         ...item,
-        title: async itemValue => `[${property.name}] ${await property.dataType.titleFor(value)} ${await item.title(itemValue)}`
+        title: itemValue => item.title(itemValue).pipe(
+            switchMap(itemTitle => property.dataType.titleFor(value).pipe(
+                map(title => `[${property.name}] ${title} ${itemTitle}`)
+            )))
     });
 
     const handleDelete = () => {
@@ -31,7 +35,11 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
     let objectControl, actionButton, deleteButton;
 
     if (value) {
-        property.dataType.titleFor(value).then(t => setValueTitle(t));
+        property.dataType.titleFor(value).subscribe(t => {
+            if (t !== valueTitle) { //TODO Use efects
+                setValueTitle(t);
+            }
+        });
         if (open) {
             objectControl = <ObjectControl rootDataType={rootDataType}
                                            jsonPath={jsonPath}

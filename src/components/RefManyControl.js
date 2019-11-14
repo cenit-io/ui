@@ -7,6 +7,7 @@ import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import RefPicker from "./RefPicker";
 import '../util/FlexBox.css';
+import { map } from "rxjs/operators";
 
 
 class RefManyControl extends React.Component {
@@ -42,7 +43,9 @@ class RefManyControl extends React.Component {
             onStack({
                 value: {},
                 dataType: property.dataType,
-                title: async itemValue => `[${property.name} #${value.length}] ${await property.dataType.titleFor(itemValue)}`,
+                title: itemValue => property.dataType.titleFor(itemValue).pipe(
+                    map(itemTitle => `[${property.name} #${value.length}] ${itemTitle}`)
+                ),
                 callback: itemValue => {
                     onChange([...value, itemValue]);
                     this.setOpen(true);
@@ -61,7 +64,7 @@ class RefManyControl extends React.Component {
         const { property } = this.props;
         const value = this.props.value || [];
         if (open && !this.state.items) {
-            property.dataType.titlesFor(...value).then(titles => {
+            property.dataType.titlesFor(...value).subscribe(titles => {
                     this.setState({ items: titles.map((title, index) => ({ title, id: value[index].id })) })
                 }
             );
@@ -87,8 +90,8 @@ class RefManyControl extends React.Component {
         onStack({
             value: value[index],
             dataType: property.dataType,
-            title: async value => `[${property.name} #${index}] ${await property.dataType.titleFor(value)}`,
-            callback: item => property.dataType.titleFor(item).then(
+            title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name} #${index}] ${title}`)),
+            callback: item => property.dataType.titleFor(item).subscribe(
                 title => this.setState(prev => {
                     const items = [...prev.items];
                     items[index] = { ...items[index], title };

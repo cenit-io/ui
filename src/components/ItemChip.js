@@ -13,7 +13,11 @@ export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, 
 
     const [title, setTitle] = useState(null);
 
-    dataType.titleFor(item).then(title => setTitle(title));
+    dataType.titleFor(item).subscribe(t => {
+        if (t !== title) { //TODO Use React effects
+            setTitle(t);
+        }
+    });
 
     if (title) {
         return <Chip label={title}

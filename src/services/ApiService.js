@@ -1,5 +1,7 @@
 import axios from 'axios';
-import AuthorizationService, {Config} from './AuthorizationService';
+import AuthorizationService, { Config } from './AuthorizationService';
+import { catchError, map, switchMap } from "rxjs/operators";
+import { from } from "rxjs";
 
 const apiGateway = axios.create({
     baseURL: `${Config.cenitHost}/api/v3`,
@@ -28,58 +30,58 @@ export const ApiResource = function () {
 
     this.path = '/' + args.join('/');
 
-    this.get = async () => {
-        const access_token = await AuthorizationService.getAccessToken(),
-
-            response = await apiGateway.get(this.path, {
-                headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                params: params
-            });
-
-        return response.data;
+    this.get = () => {
+        return AuthorizationService.getAccessToken().pipe(
+            switchMap(access_token => from(
+                apiGateway.get(this.path, {
+                    headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
+                    params: params
+                })).pipe(map(response => response.data))
+            )
+        );
     };
 
-    this.post = async data => {
-        const access_token = await AuthorizationService.getAccessToken(),
-
-            response = await apiGateway.post(this.path, data, {
-                headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                parameters: params
-            });
-
-        return response.data;
+    this.post = data => {
+        return AuthorizationService.getAccessToken().pipe(
+            switchMap(access_token => from(
+                apiGateway.post(this.path, data, {
+                    headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
+                    parameters: params
+                })).pipe(map(response => response.data))
+            )
+        );
     };
 };
 
 const ErrorCallbacks = [];
 
 const API = {
-        get: async (...args) => {
-            try {
-                return await (new ApiResource(...args)).get()
-            } catch (e) {
-                if (e.response.status !== 404) {
-                    ErrorCallbacks.forEach(callback => callback(e));
-                }
-                return null;
-            }
+        get: (...args) => {
+            return (new ApiResource(...args)).get().pipe(
+                catchError(e => {
+                    if (e.response.status !== 404) {
+                        ErrorCallbacks.forEach(callback => callback(e));
+                    }
+                    return null;
+                })
+            )
         },
 
-        post: async (...args) => {
-            try {
-                const data = args.pop();
-                return await (new ApiResource(...args)).post(data);
-            } catch (e) {
-                switch (e.response.status) {
-                    case 404:
-                        return null;
-                    case 422:
-                        throw e;
-                    default:
-                        ErrorCallbacks.forEach(callback => callback(e));
-                }
-                return null;
-            }
+        post: (...args) => {
+            const data = args.pop();
+            return (new ApiResource(...args)).post(data).pipe(
+                catchError(e => {
+                    switch (e.response.status) {
+                        case 404:
+                            return null;
+                        case 422:
+                            throw e;
+                        default:
+                            ErrorCallbacks.forEach(callback => callback(e));
+                    }
+                    return null;
+                })
+            );
         },
 
         onError: callback => ErrorCallbacks.push(callback)

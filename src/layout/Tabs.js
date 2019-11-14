@@ -19,7 +19,7 @@ function ItemTab({ item, index, onSelect, onClose }) {
     const [data, setData] = useState({});
 
     if (data.item !== item) {
-        item.getTitle().then(title => setData({ item, title }));
+        item.getTitle().subscribe(title => setData({ item, title }));
     }
     return (
         <Tab

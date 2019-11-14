@@ -1,11 +1,12 @@
 import React from 'react';
 import QueryString from 'querystring';
 import AuthorizationService from "./services/AuthorizationService";
-import {CircularProgress} from "@material-ui/core";
+import { CircularProgress } from "@material-ui/core";
 import Main from "./layout/Main";
 import API from "./services/ApiService";
 import ErrorBoundary from "./components/ErrorBoundary";
 import './components/ContentCentered.css';
+import { catchError } from "rxjs/operators";
 
 API.onError(e => AuthorizationService.authorize());
 
@@ -25,9 +26,9 @@ class App extends React.Component {
         } else {
             authorize = AuthorizationService.getAccess();
         }
-        authorize.then(
+        authorize.pipe(catchError(error => this.setState({ error: true }))).subscribe(
             access => access && this.setState({ authorizing: false })
-        ).catch(() => this.setState({ error: true }));
+        );
     }
 
     render() {

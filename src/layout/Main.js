@@ -8,6 +8,8 @@ import { DataType } from "../services/DataTypeService";
 import Drawer from "../components/Drawer";
 import clsx from "clsx";
 import Tabs from "./Tabs";
+import { switchMap } from "rxjs/operators";
+import zzip from "../util/zzip";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -59,12 +61,15 @@ const Main = () => {
             item.getDataType = function () {
                 return DataType.getById(this.dataTypeId);
             };
-            item.getTitle = async function titleFor() {
-                const dataType = await this.getDataType();
-                if (this.id) {
-                    return dataType.titleFor({ id: this.id });
-                }
-                return dataType.getTitle();
+            item.getTitle = function titleFor() {
+                return this.getDataType().pipe(switchMap(
+                    dataType => {
+                        if (this.id) {
+                            return dataType.titleFor({ id: this.id });
+                        }
+                        return dataType.getTitle();
+                    }
+                ));
             };
             index = items.length;
             setItems([...items, item]);
@@ -85,18 +90,20 @@ const Main = () => {
         if (!config || config.tenant_id !== data.tenant_id) {
             setConfig(null);
         }
+        let dataTypesIds, dataTypes;
         AuthorizationService.config({ tenant_id: data.tenant_id, dataTypesIds: data.dataTypesIds })
-            .then(data => {
-                let dataTypesIds = data.dataTypesIds || [];
-                Promise.all(
-                    dataTypesIds.map(id => DataType.getById(id))
-                ).then(dataTypes => {
-                    dataTypes = dataTypes.filter(dataType => dataType);
-                    dataTypesIds = dataTypes.map(dataType => dataType.id);
-                    Promise.all(dataTypes.map(dataType => dataType.getTitle()))
-                        .then(titles => setConfig({ ...data, dataTypesIds, dataTypes, titles }));
-                });
-            });
+            .pipe(
+                switchMap(data => {
+                    dataTypesIds = data.dataTypesIds || [];
+                    return zzip(...dataTypesIds.map(id => DataType.getById(id))).pipe(
+                        switchMap(dts => {
+                            dataTypes = dts;
+                            dts = dts.filter(dataType => dataType);
+                            dataTypesIds = dts.map(dataType => dataType.id);
+                            return zzip(...dts.map(dataType => dataType.getTitle()));
+                        })
+                    );
+                })).subscribe(titles => setConfig({ ...data, dataTypesIds, dataTypes, titles }));
     }
 
     function handleTenantSelected(tenant) {
@@ -120,7 +127,7 @@ const Main = () => {
     }
 
     if (!idToken) {
-        AuthorizationService.getIdToken().then(token => setIdToken(token));
+        AuthorizationService.getIdToken().subscribe(token => setIdToken(token));
     }
 
     const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`),
