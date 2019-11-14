@@ -5,6 +5,7 @@ import PropertyControl from './PropertyControl'
 import ErrorMessages from "./ErrorMessages";
 import { FormGroup } from "./FormGroup";
 import ObjectControl from "./ObjectControl";
+import '../util/FlexBox.css';
 
 class DataTypeControl extends React.Component {
 
@@ -132,7 +133,7 @@ class DataTypeControl extends React.Component {
             </FormGroup>;
         }
 
-        return <LinearProgress/>;
+        return <LinearProgress className='full-width'/>;
     }
 }
 
