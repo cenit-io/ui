@@ -195,17 +195,20 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
                     catchError(error => {
                         setSaving(false);
                         setErrors(error.response.data);
+                        return of(null);
                     })
                 ).subscribe(response => {
                     setDone(true);
-                    setValue({ ...current.value, ...response });
-                    setTimeout(() => {
-                        handleBack();
-                        if (current.callback) {
-                            current.callback(response);
-                        }
-                        setSaving(false);
-                    }, 1000);
+                    if (value) {
+                        setValue({ ...current.value, ...response });
+                        setTimeout(() => {
+                            handleBack();
+                            if (current.callback) {
+                                current.callback(response);
+                            }
+                            setSaving(false);
+                        }, 1000);
+                    }
                 });
             }, 1000
         );

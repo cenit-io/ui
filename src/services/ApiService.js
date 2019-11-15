@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AuthorizationService, { Config } from './AuthorizationService';
 import { catchError, map, switchMap } from "rxjs/operators";
-import { from } from "rxjs";
+import { from, of } from "rxjs";
 
 const apiGateway = axios.create({
     baseURL: `${Config.cenitHost}/api/v3`,
@@ -62,7 +62,7 @@ const API = {
                     if (e.response.status !== 404) {
                         ErrorCallbacks.forEach(callback => callback(e));
                     }
-                    return null;
+                    return of(null);
                 })
             )
         },
@@ -73,13 +73,13 @@ const API = {
                 catchError(e => {
                     switch (e.response.status) {
                         case 404:
-                            return null;
+                            break;
                         case 422:
                             throw e;
                         default:
                             ErrorCallbacks.forEach(callback => callback(e));
                     }
-                    return null;
+                    return of(null);
                 })
             );
         },
