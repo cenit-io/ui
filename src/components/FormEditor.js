@@ -198,8 +198,8 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
                         return of(null);
                     })
                 ).subscribe(response => {
-                    setDone(true);
                     if (value) {
+                        setDone(true);
                         setValue({ ...current.value, ...response });
                         setTimeout(() => {
                             handleBack();
@@ -208,6 +208,8 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
                             }
                             setSaving(false);
                         }, 1000);
+                    } else {
+                        setSaving(false);
                     }
                 });
             }, 1000

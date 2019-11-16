@@ -107,7 +107,7 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
             let itemControl;
 
             if (selectedIndex !== -1) {
-                controlProperty.name = selectedIndex;
+                controlProperty.jsonKey = controlProperty.name = selectedIndex;
                 let editProps;
                 const index = value[selectedIndex][INDEX];
                 if (typeof index === 'number') {

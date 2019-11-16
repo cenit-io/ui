@@ -199,6 +199,8 @@ export class DataType {
                             dataType._type = JSON_TYPE;
                             dataType.name = this.name + '::' + name;
                             dataType.schema = typeSchema;
+
+                            return mergedSchema;
                         })
                     );
                 }
@@ -207,6 +209,7 @@ export class DataType {
                     map(mergedSchema => {
                         const prop = new Property();
                         prop.name = name;
+                        prop.jsonKey = (mergedSchema.edi && mergedSchema.edi.segment) || name;
                         prop.dataType = dataType;
                         prop.propertySchema = mergedSchema;
 

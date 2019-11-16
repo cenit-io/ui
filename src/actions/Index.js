@@ -224,7 +224,7 @@ class Index extends React.Component {
                         {
                             props.map(prop => (
                                 <TableCell key={`${item.id}.${prop.prop.name}`}>
-                                    {String(item[prop.prop.name])}
+                                    {String(item[prop.prop.jsonKey])}
                                 </TableCell>
                             ))
                         }

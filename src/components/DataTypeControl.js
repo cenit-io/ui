@@ -68,7 +68,7 @@ class DataTypeControl extends React.Component {
 
     handleChange = prop => v => {
         const { value, onChange } = this.props;
-        value[prop.name] = v;
+        value[prop.jsonKey] = v;
         if (prop.type === 'refMany' || prop.type === 'array') {
             this._update(prop.name, value);
         }
@@ -82,9 +82,9 @@ class DataTypeControl extends React.Component {
             if (prop.type === 'refMany' || prop.type === 'array') {
                 this._update(prop.name, value);
             }
-            value[prop.name] = null;
+            value[prop.jsonKey] = null;
         } else {
-            delete value[prop.name];
+            delete value[prop.jsonKey];
         }
         onChange && onChange({ ...value });
     };
@@ -116,7 +116,7 @@ class DataTypeControl extends React.Component {
                                          jsonPath={`${jsonPath}.${prop.name}`}
                                          property={prop}
                                          key={prop.name}
-                                         value={value[prop.name]}
+                                         value={value[prop.jsonKey]}
                                          errors={errors[prop.name]}
                                          width={width}
                                          onChange={this.handleChange(prop)}
