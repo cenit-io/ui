@@ -198,7 +198,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
                         return of(null);
                     })
                 ).subscribe(response => {
-                    if (value) {
+                    if (response) {
                         setDone(true);
                         setValue({ ...current.value, ...response });
                         setTimeout(() => {
