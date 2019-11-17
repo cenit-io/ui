@@ -14,7 +14,7 @@ import { map, switchMap } from "rxjs/operators";
 const INDEX = Symbol.for('_index');
 
 function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, errors, onDelete, onChange, schema, disabled, onStack, rootId }) {
-    const [focused, setFocused] = useState(false);
+
     const [open, setOpen] = useState(false);
     const [controlProperty] = useState(new Property({
         dataType: property.dataType,
@@ -150,7 +150,7 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
 
     const itemsCount = value ? `${value.length} items` : '';
 
-    const text = itemsCount || (focused && String(value)) || itemsCount;
+    const placeholder = itemsCount || String(value) || itemsCount;
 
     return (
         <div className='flex full-width column'>
@@ -158,10 +158,9 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
                 <TextField label={title}
                            readOnly
                            style={{ flexGrow: 1 }}
-                           value={text}
-                           error={(errors && Object.keys(errors).length > 0) || false}
-                           onFocus={() => setFocused(true)}
-                           onBlur={() => setFocused(false)}/>
+                           value={itemsCount}
+                           placeholder={placeholder}
+                           error={(errors && Object.keys(errors).length > 0) || false}/>
                 {dropButton}
                 <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>
                 {deleteButton}

@@ -27,6 +27,8 @@ class RefManyControl extends React.Component {
 
     state = { items: null };
 
+    setFocused = focused => this.setState({ focused });
+
     handlePick = item => {
         const value = this.props.value || [];
         value.push({ id: item.record.id, _reference: true });
@@ -134,14 +136,20 @@ class RefManyControl extends React.Component {
 
         const AddNewIcon = value ? AddIcon : CreateIcon;
 
+        const itemsText = value ? `${value.length} items` : '';
+
+        const placeholder = itemsText || String(value);
+
         return (
             <div className='flex column'>
                 <div className='flex'>
                     <RefPicker dataType={property.dataType}
                                label={title}
                                onPick={this.handlePick}
-                               text={value ? `${value.length} items` : ''}
-                               disabled={disabled || items === null}/>
+                               text={itemsText}
+                               placeholder={placeholder}
+                               disabled={disabled}
+                               readOnly={items === null}/>
                     {dropButton}
                     <IconButton onClick={this.addNew} disabled={disabled}><AddNewIcon/></IconButton>
                     {deleteButton}

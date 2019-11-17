@@ -98,10 +98,12 @@ class RefPicker extends React.Component {
         }
     };
 
+    handleFocus = () => !this.props.readOnly && setTimeout(this.activate(true), 500);
+
     render() {
 
         const { query, items, key, loading, itemsQuery } = this.state,
-            { label, text, disabled, inputClasses } = this.props;
+            { label, text, disabled, inputClasses, readOnly, placeholder } = this.props;
 
         let list;
         if (query !== null && items) {
@@ -140,12 +142,12 @@ class RefPicker extends React.Component {
 
         const inputProps = {
             key: key,
-            inputProps: { ref: this.ref },
+            inputProps: { ref: this.ref, readOnly: Boolean(readOnly) },
             editable: String(query !== null),
-            onFocus: () => setTimeout(this.activate(true), 500),
+            onFocus: this.handleFocus,
             onChange: this.handleChange,
             label: label,
-            placeholder: label,
+            placeholder: placeholder || label,
             defaultValue: query !== null ? query : (text || ''),
             onKeyDown: this.handleKeyDown,
             disabled: disabled

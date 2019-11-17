@@ -9,7 +9,7 @@ import '../util/FlexBox.css';
 import { map, switchMap } from "rxjs/operators";
 
 function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, property, onDelete, onChange, width, disabled, onStack, rootId }) {
-    const [focused, setFocused] = useState(false);
+
     const [isEdit, setEdit] = useState(value);
     const [valueTitle, setValueTitle] = useState('');
     const [open, setOpen] = useState(false);
@@ -69,18 +69,15 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
         actionButton = <IconButton onClick={addNew} disabled={disabled}><AddIcon/></IconButton>;
     }
 
-    const text = valueTitle || (focused && String(value)) || valueTitle;
-
     return (
         <div className='flex full-width column'>
             <div className='flex full-width'>
                 <TextField label={title}
                            readOnly
                            className='grow-1'
-                           value={text}
-                           error={(errors && Object.keys(errors).length > 0) || false}
-                           onFocus={() => setFocused(true)}
-                           onBlur={() => setFocused(false)}/>
+                           value={valueTitle}
+                           placeholder={valueTitle || (!value && String(value)) || valueTitle}
+                           error={(errors && Object.keys(errors).length > 0) || false}/>
                 {actionButton}
                 {deleteButton}
             </div>
