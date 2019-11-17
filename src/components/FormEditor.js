@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import BackIcon from '@material-ui/icons/ArrowBack';
 import FormView from "./FormView";
 import { useMediaQuery, withStyles, Fab } from "@material-ui/core/index";
@@ -149,13 +149,51 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
     const md = useMediaQuery(theme.breakpoints.up('md'));
     const [jsonMode, setJsonMode] = useState(false);
 
+    useEffect(() => {
+        const subscription = zzip(
+            ...stack.map(item => item.title(item.value))
+        ).subscribe(titles => setStackTitles(titles));
+        return () => subscription.unsubscribe();
+    }, [stack.length]);
+
+    useEffect(() => {
+        let subscription;
+        if (saving) {
+            setDone(false);
+            const opts = {
+                viewport: current.viewport || '{_id}',
+                add_only: rootId
+            };
+            subscription = current.dataType.post(current.value, opts).pipe(
+                catchError(error => {
+                    setErrors(error.response.data);
+                    return of(null);
+                })
+            ).subscribe(response => {
+                if (response) {
+                    setDone(true);
+                    setValue({ ...current.value, ...response });
+                    setTimeout(() => {
+                        handleBack();
+                        if (current.callback) {
+                            current.callback(response);
+                        }
+                        setSaving(false);
+                    }, 1000);
+                } else {
+                    setSaving(false);
+                }
+            });
+        }
+        return () => subscription && subscription.unsubscribe();
+    }, [saving]);
+
     const current = stack[stack.length - 1];
 
     const updateCurrent = item => {
         const newStack = [...stack];
         newStack.push({ ...newStack.pop(), ...item });
         setStack(newStack);
-        updateStackTitles(newStack);
     };
 
     const setValue = value => updateCurrent({ value });
@@ -164,17 +202,12 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
 
     const updateStack = stack => {
         setStack(stack);
-        updateStackTitles(stack);
         setTimeout(() => {
             if (stack.length && ref.current) {
                 ref.current.scrollTop = (stack[stack.length - 1].scrollTop || 0)
             }
         });
     };
-
-    const updateStackTitles = (s = stack) => s.length > 1 && zzip(
-        ...s.map(item => item.title(item.value))
-    ).subscribe(titles => setStackTitles(titles));
 
     const handleChange = value => setValue(value);
 
@@ -185,35 +218,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
 
     const save = () => {
         setSaving(true);
-        setDone(false);
-        setTimeout(() => {
-                const opts = {
-                    viewport: current.viewport || '{_id}',
-                    add_only: rootId
-                };
-                current.dataType.post(current.value, opts).pipe(
-                    catchError(error => {
-                        setSaving(false);
-                        setErrors(error.response.data);
-                        return of(null);
-                    })
-                ).subscribe(response => {
-                    if (response) {
-                        setDone(true);
-                        setValue({ ...current.value, ...response });
-                        setTimeout(() => {
-                            handleBack();
-                            if (current.callback) {
-                                current.callback(response);
-                            }
-                            setSaving(false);
-                        }, 1000);
-                    } else {
-                        setSaving(false);
-                    }
-                });
-            }, 1000
-        );
+
     };
 
     const handleBack = () => {
@@ -229,10 +234,6 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
     };
 
     const actions = [];
-
-    if (!stackTitles.length) {
-        updateStackTitles();
-    }
 
     if (stack.length > 2 && !saving) {
         actions.push(

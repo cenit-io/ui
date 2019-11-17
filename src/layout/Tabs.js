@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles, useTheme } from '@material-ui/core/styles/index';
 import AppBar from '@material-ui/core/AppBar/index';
 import Tabs from '@material-ui/core/Tabs/index';
@@ -9,23 +9,24 @@ import CloseIcon from '@material-ui/icons/Clear';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
 import ActionContainer from "../actions/ActionContainer";
-import { DataType } from "../services/DataTypeService";
 import { ActionKind } from "../actions/ActionRegistry";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
 function ItemTab({ item, index, onSelect, onClose }) {
 
-    const [data, setData] = useState({});
+    const [title, setTitle] = useState('...');
 
-    if (data.item !== item) {
-        item.getTitle().subscribe(title => setData({ item, title }));
-    }
+    useEffect(() => {
+        const subscription = item.getTitle().subscribe(title => setTitle(title));
+        return () => subscription.unsubscribe();
+    }, [item]);
+
     return (
         <Tab
             component={ClosableComponent}
             onClick={() => onSelect(index)}
-            label={data.title || '...'}
+            label={title}
             onClose={() => onClose(index)}
         />
     );
@@ -105,7 +106,7 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
                 </Tabs>
             </AppBar>
             <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                            index={index}>
+                            index={index < 0 ? 0 : index}>
                 {containers}
             </SwipeableViews>
         </div>

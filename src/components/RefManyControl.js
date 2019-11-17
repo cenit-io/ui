@@ -66,7 +66,7 @@ class RefManyControl extends React.Component {
         const { property } = this.props;
         const value = this.props.value || [];
         if (open && !this.state.items) {
-            property.dataType.titlesFor(...value).subscribe(titles => {
+            property.dataType.titlesFor(...value).subscribe(titles => { //TODO sanitize with unsubscribe
                     this.setState({ items: titles.map((title, index) => ({ title, id: value[index].id })) })
                 }
             );
@@ -93,7 +93,7 @@ class RefManyControl extends React.Component {
             value: value[index],
             dataType: property.dataType,
             title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name} #${index}] ${title}`)),
-            callback: item => property.dataType.titleFor(item).subscribe(
+            callback: item => property.dataType.titleFor(item).subscribe( //TODO sanitize with unsubscribe
                 title => this.setState(prev => {
                     const items = [...prev.items];
                     items[index] = { ...items[index], title };

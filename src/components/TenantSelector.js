@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import API from "../services/ApiService";
 import RecordSelector from "./RecordSelector";
 
@@ -6,24 +6,37 @@ const TenantTypeSelector = { namespace: '""', name: 'Account' };
 
 const TenantSelector = ({ inputClasses, onSelect, readOnly }) => {
     const [tenant, setTenant] = useState({ name: 'Loading...', fetchCurrentTenant: true });
+    const [selection, setSelection] = useState(null);
 
-    function handleSelect(selection) {
-        setTenant({ name: selection.record.name, disabled: true });
-        API.post('setup', 'user', 'me', {
-            account: {
-                id: selection.record.id
-            }
-        }).subscribe(() => selectTenant(selection.record));
-    }
+    useEffect(() => {
+        let subscription;
+        if (selection){
+            setTenant({ name: selection.record.name, disabled: true });
+            subscription = API.post('setup', 'user', 'me', {
+                account: {
+                    id: selection.record.id
+                }
+            }).subscribe(() => selectTenant(selection.record));
+        }
+        return () => subscription && subscription.unsubscribe();
+    }, [selection]);
 
-    function selectTenant(tenant) {
+    useEffect(() => {
+        let subscription;
+        if (tenant.fetchCurrentTenant) {
+            subscription = API.get('setup', 'user', 'me').subscribe(
+                user => user && selectTenant(user.account)
+            );
+        }
+        return () => subscription && subscription.unsubscribe();
+    }, [tenant]);
+
+    const handleSelect = selection => setSelection(selection);
+
+    const selectTenant = tenant => {
         setTenant(tenant);
         onSelect(tenant);
-    }
-
-    if (tenant.fetchCurrentTenant) {
-        API.get('setup', 'user', 'me').subscribe(user => user && selectTenant(user.account));
-    }
+    };
 
     return <RecordSelector dataTypeSelector={TenantTypeSelector}
                            inputClasses={inputClasses}

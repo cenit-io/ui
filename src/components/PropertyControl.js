@@ -53,7 +53,7 @@ class PropertyControl extends React.Component {
     state = {};
 
     componentDidMount() {
-        zzip(this.props.property.getSchema(), this.props.property.getTitle()).subscribe(
+        zzip(this.props.property.getSchema(), this.props.property.getTitle()).subscribe( //TODO sanitize with unsubscribe
             ([schema, title]) => this.setState({ schema, title })
         );
     }

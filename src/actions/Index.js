@@ -267,13 +267,15 @@ class Index extends React.Component {
                     {pagination}
                 </React.Fragment>;
             } else {
-                this.requestData().subscribe(data => {
+                this.requestData().subscribe(data => { //TODO sanitize with unsubscribe
                     this.setState({ data })
                 });
                 table = <Loading height={`calc(${tableHeight})`}/>;
             }
         } else {
-            this.computeDataTypeState().subscribe(state => this.setState(state));
+            this.computeDataTypeState().subscribe( //TODO sanitize with unsubscribe
+                state => this.setState(state)
+            );
             table = <Loading height={`calc(${tableHeight})`}/>;
         }
 

@@ -12,11 +12,12 @@ class RefOneControl extends React.Component {
         const { value } = props;
         if (value) {
             if (value !== state.value) {
-                props.property.dataType.titleFor(value).subscribe(text => {
-                    if (text !== state.text) {
-                        state.updateText(text);
-                    }
-                });
+                props.property.dataType.titleFor(value).subscribe( //TODO sanitize with unsubscribe
+                    text => {
+                        if (text !== state.text) {
+                            state.updateText(text);
+                        }
+                    });
                 return { value };
             }
         } else {

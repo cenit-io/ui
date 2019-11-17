@@ -32,7 +32,9 @@ class DataTypeControl extends React.Component {
                 this.setSchemaResolver(resolver);
             } else {
                 DataType.getById(props.dataTypeId)
-                    .subscribe(dataType => this.setSchemaResolver(dataType));
+                    .subscribe( //TODO sanitize with unsubscribe
+                        dataType => this.setSchemaResolver(dataType)
+                    );
             }
         }
     }
@@ -50,10 +52,11 @@ class DataTypeControl extends React.Component {
     setSchema = (resolver = null) => {
         (resolver || this.schemaResolver || this.props.dataType || this.props.property)
             .getSchema()
-            .subscribe(schema => {
-                this.schema = schema;
-                this.schemaReady();
-            });
+            .subscribe( //TODO sanitize with unsubscribe
+                schema => {
+                    this.schema = schema;
+                    this.schemaReady();
+                });
     };
 
     schemaReady() {

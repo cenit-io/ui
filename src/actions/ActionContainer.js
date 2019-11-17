@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Loading from '../components/Loading';
 import { useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
@@ -31,6 +31,23 @@ function ActionContainer({ docked, item, height, width, onSelectItem, kind }) {
     const theme = useTheme();
     const classes = actionContainerStyles();
 
+    const itemKey = JSON.stringify(item);
+
+    useEffect(() => {
+        const subscription = zzip(
+            item.getDataType(),
+            item.getTitle()
+        ).subscribe(([dataType, title]) => {
+            setDataType(dataType);
+            setTitle(title);
+        });
+        return () => subscription.unsubscribe();
+    }, [item, itemKey]);
+
+    if (!title) {
+        return <Loading/>;
+    }
+
     const handleSelect = selection => setSelection(selection);
 
     const handleAction = actionKey => {
@@ -45,14 +62,6 @@ function ActionContainer({ docked, item, height, width, onSelectItem, kind }) {
     };
 
     const componentHeight = `${height} - ${appBarHeight(theme)}`;
-
-    if (!title) {
-        zzip(item.getDataType(), item.getTitle()).subscribe(([dataType, title]) => {
-                setDataType(dataType);
-                setTitle(title);
-            });
-        return <Loading/>;
-    }
 
     const ActionComponent = ActionRegistry.byKey(actionKey);
 

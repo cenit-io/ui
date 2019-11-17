@@ -47,16 +47,18 @@ class RefPicker extends React.Component {
                     this.setState({ loading: true });
                     dataType
                         .find(query, dataType.titleViewPort())
-                        .subscribe(({ items }) => {
-                            if (items) {
-                                dataType.titlesFor(...items).subscribe(titles => {
-                                    items = titles.map((title, index) => ({ record: items[index], title }));
+                        .subscribe( //TODO sanitize with unsubscribe
+                            ({ items }) => {
+                                if (items) {
+                                    dataType.titlesFor(...items).subscribe(
+                                        titles => { //TODO sanitize with unsubscribe
+                                            items = titles.map((title, index) => ({ record: items[index], title }));
+                                            this.setState({ items, loading: false, itemsQuery: query });
+                                        })
+                                } else {
                                     this.setState({ items, loading: false, itemsQuery: query });
-                                })
-                            } else {
-                                this.setState({ items, loading: false, itemsQuery: query });
-                            }
-                        });
+                                }
+                            });
                 }, 700);
         }
         this.setState({ ...additionalState, query });

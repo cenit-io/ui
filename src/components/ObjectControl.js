@@ -40,7 +40,7 @@ class ObjectControl extends DataTypeControl {
                     ) || of(prop))
                 )
             )
-        ).subscribe(
+        ).subscribe( //TODO sanitize with unsubscribe
             props => {
                 this.resolveProperties(props);
                 const { rootDataType, jsonPath, rootId, onChange, value } = this.props;
@@ -54,7 +54,7 @@ class ObjectControl extends DataTypeControl {
                                 with_references: true
                             });
                         })
-                    ).subscribe(
+                    ).subscribe( //TODO sanitize with unsubscribe
                         v => {
                             (v = v || {})[FETCHED] = true;
                             Object.getOwnPropertySymbols(value).forEach(symbol => v[symbol] = value[symbol]);

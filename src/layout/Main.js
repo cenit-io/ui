@@ -94,16 +94,20 @@ const Main = () => {
         AuthorizationService.config({ tenant_id: data.tenant_id, dataTypesIds: data.dataTypesIds })
             .pipe(
                 switchMap(data => {
-                    dataTypesIds = data.dataTypesIds || [];
-                    return zzip(...dataTypesIds.map(id => DataType.getById(id))).pipe(
-                        switchMap(dts => {
-                            dataTypes = dts;
-                            dts = dts.filter(dataType => dataType);
-                            dataTypesIds = dts.map(dataType => dataType.id);
-                            return zzip(...dts.map(dataType => dataType.getTitle()));
-                        })
-                    );
-                })).subscribe(titles => setConfig({ ...data, dataTypesIds, dataTypes, titles }));
+                        dataTypesIds = data.dataTypesIds || [];
+                        return zzip(...dataTypesIds.map(id => DataType.getById(id))).pipe(
+                            switchMap(dts => {
+                                dataTypes = dts;
+                                dts = dts.filter(dataType => dataType);
+                                dataTypesIds = dts.map(dataType => dataType.id);
+                                return zzip(...dts.map(dataType => dataType.getTitle()));
+                            })
+                        );
+                    }
+                )
+            ).subscribe( //TODO sanitize with unsubscribe
+            titles => setConfig({ ...data, dataTypesIds, dataTypes, titles })
+        );
     }
 
     function handleTenantSelected(tenant) {
@@ -127,7 +131,7 @@ const Main = () => {
     }
 
     if (!idToken) {
-        AuthorizationService.getIdToken().subscribe(token => setIdToken(token));
+        AuthorizationService.getIdToken().subscribe(token => setIdToken(token));  //TODO sanitize with unsubscribe
     }
 
     const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`),

@@ -7,6 +7,7 @@ import API from "./services/ApiService";
 import ErrorBoundary from "./components/ErrorBoundary";
 import './components/ContentCentered.css';
 import { catchError } from "rxjs/operators";
+import { of } from "rxjs";
 
 API.onError(e => AuthorizationService.authorize());
 
@@ -26,7 +27,12 @@ class App extends React.Component {
         } else {
             authorize = AuthorizationService.getAccess();
         }
-        authorize.pipe(catchError(error => this.setState({ error: true }))).subscribe(
+        authorize.pipe(
+            catchError(error => {
+                this.setState({ error: true });
+                return of(null);
+            })
+        ).subscribe( //TODO sanitize with unsubscribe
             access => access && this.setState({ authorizing: false })
         );
     }
