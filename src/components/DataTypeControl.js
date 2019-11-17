@@ -4,8 +4,8 @@ import { LinearProgress } from '@material-ui/core';
 import PropertyControl from './PropertyControl'
 import ErrorMessages from "./ErrorMessages";
 import { FormGroup } from "./FormGroup";
-import ObjectControl from "./ObjectControl";
 import '../util/FlexBox.css';
+import FormContex from "../services/FormContext";
 
 class DataTypeControl extends React.Component {
 
@@ -96,7 +96,7 @@ class DataTypeControl extends React.Component {
             resetProps.push(prop);
         }
         value._update = resetProps;
-    }
+    };
 
     refresh = () => this.doSetState({});
 
@@ -108,6 +108,7 @@ class DataTypeControl extends React.Component {
         const { properties } = this.state;
         const { rootDataType, jsonPath, value, width, disabled, onStack, rootId, readOnly } = this.props;
         const errors = this.props.errors || {};
+        const context = rootId ? FormContex.edit : FormContex.new;
 
         if (this.isReady()) {
 
@@ -122,7 +123,7 @@ class DataTypeControl extends React.Component {
                                          onChange={this.handleChange(prop)}
                                          onDelete={this.handleDelete(prop)}
                                          disabled={disabled}
-                                         readOnly={readOnly}
+                                         readOnly={readOnly || prop.isReadOnly(context)}
                                          onStack={onStack}
                                          rootId={rootId}/>
             );

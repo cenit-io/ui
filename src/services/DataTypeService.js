@@ -2,6 +2,7 @@ import API from './ApiService';
 import { of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
+import FormContext from "./FormContext";
 
 const isSimpleSchema = schema => ['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1;
 
@@ -455,6 +456,10 @@ export class Property {
             }
             return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
         }));
+    }
+
+    isReadOnly(context) {
+        return context === FormContext.edit && this.name === '_id';
     }
 }
 
