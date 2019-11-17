@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import ClearIcon from '@material-ui/icons/Clear';
 import BlankIcon from '@material-ui/icons/IndeterminateCheckBox';
 import CheckedIcon from '@material-ui/icons/CheckBox';
@@ -25,7 +25,7 @@ const BooleanControl = ({ title, onChange, value, onDelete, disabled }) => {
             <InputLabel>{title}</InputLabel>
             <FilledInput key={displayValue}
                          readOnly
-                         value={focused ? displayValue : ''}
+                         placeholder={displayValue}
                          autoFocus={focused}
                          endAdornment={
                              <InputAdornment position="end">
