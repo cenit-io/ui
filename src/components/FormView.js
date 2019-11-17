@@ -11,7 +11,7 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack, rootId }) => {
+const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack, rootId, readOnly }) => {
 
     const classes = useStyles();
 
@@ -26,6 +26,7 @@ const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack,
                                  errors={errors}
                                  onChange={handleChange}
                                  disabled={disabled}
+                                 readOnly={readOnly}
                                  onStack={onStack}
                                  rootId={rootId}/>;
     }

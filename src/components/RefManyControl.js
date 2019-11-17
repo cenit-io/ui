@@ -105,7 +105,7 @@ class RefManyControl extends React.Component {
     };
 
     render() {
-        const { title, value, property, onDelete, disabled } = this.props;
+        const { title, value, property, onDelete, disabled, readOnly } = this.props;
         const { open, items } = this.state;
 
         let dropButton, deleteButton, itemsControls;
@@ -119,7 +119,7 @@ class RefManyControl extends React.Component {
                         (item, index) => <Chip key={`item_${index}`}
                                                label={item.title}
                                                onClick={this.handleSelect(index)}
-                                               onDelete={this.handleDelete(index)}
+                                               onDelete={(!readOnly && this.handleDelete(index)) || null}
                                                style={{ margin: '4px' }}
                                                disabled={disabled}/>
                     );
@@ -131,10 +131,16 @@ class RefManyControl extends React.Component {
                     <IconButton onClick={() => this.setOpen(true)}
                                 disabled={disabled}><ArrowDropDownIcon/></IconButton>;
             }
-            deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
+            if (!readOnly) {
+                deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
+            }
         }
 
-        const AddNewIcon = value ? AddIcon : CreateIcon;
+        let addButton;
+        if (!readOnly) {
+            const AddNewIcon = value ? AddIcon : CreateIcon;
+            addButton = <IconButton onClick={this.addNew} disabled={disabled}><AddNewIcon/></IconButton>;
+        }
 
         const itemsText = value ? `${value.length} items` : '';
 
@@ -149,9 +155,9 @@ class RefManyControl extends React.Component {
                                text={itemsText}
                                placeholder={placeholder}
                                disabled={disabled}
-                               readOnly={items === null}/>
+                               readOnly={readOnly || items === null}/>
                     {dropButton}
-                    <IconButton onClick={this.addNew} disabled={disabled}><AddNewIcon/></IconButton>
+                    {addButton}
                     {deleteButton}
                 </div>
                 <div className='flex wrap' style={{ paddingTop: '10px' }}>

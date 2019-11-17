@@ -27,7 +27,7 @@ class StringControl extends React.Component {
     };
 
     render() {
-        const { title, value, errors, disabled } = this.props;
+        const { title, value, errors, disabled, readOnly } = this.props;
         const { key } = this.state;
 
         const error = Boolean(errors && errors.length);
@@ -36,11 +36,12 @@ class StringControl extends React.Component {
             <FormControl variant="filled" fullWidth={true} disabled={disabled}>
                 <InputLabel>{title}</InputLabel>
                 <FilledInput key={key}
+                             readOnly={readOnly}
                              error={error}
                              defaultValue={value}
                              onChange={this.handleChange}
                              endAdornment={
-                                 !disabled && value !== undefined && value !== null &&
+                                 !readOnly && !disabled && value !== undefined && value !== null &&
                                  <InputAdornment position="end">
                                      <IconButton onClick={this.handleClear}>
                                          <ClearIcon/>

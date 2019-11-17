@@ -5,7 +5,7 @@ import CheckedIcon from '@material-ui/icons/CheckBox';
 import UncheckedIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import { FormControl, IconButton, FilledInput, InputAdornment, InputLabel } from "@material-ui/core";
 
-const BooleanControl = ({ title, onChange, value, onDelete, disabled }) => {
+const BooleanControl = ({ title, onChange, value, onDelete, disabled, readOnly }) => {
     const [focused, setFocused] = useState(false);
     const CheckIcon = value === undefined || value === null ? BlankIcon : (value ? CheckedIcon : UncheckedIcon);
     const displayValue = String(value);
@@ -30,11 +30,11 @@ const BooleanControl = ({ title, onChange, value, onDelete, disabled }) => {
                          endAdornment={
                              <InputAdornment position="end">
 
-                                 <IconButton onClick={handleChange} disabled={disabled}>
+                                 <IconButton onClick={handleChange} disabled={disabled || readOnly}>
                                      <CheckIcon color={focused ? 'primary' : 'inherit'}/>
                                  </IconButton>
                                  {
-                                     !disabled && value !== undefined && value !== null &&
+                                     !disabled && !readOnly && value !== undefined && value !== null &&
                                      <IconButton onClick={handleDelete}>
                                          <ClearIcon/>
                                      </IconButton>

@@ -3,7 +3,7 @@ import {DataType} from "../services/DataTypeService";
 import {InputBase, LinearProgress} from "@material-ui/core";
 import RefPicker from "./RefPicker";
 
-const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputClasses, disabled }) => {
+const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputClasses, disabled, readOnly }) => {
     const [dataType, setDataType] = useState(null);
 
     if (dataType) {
@@ -11,7 +11,8 @@ const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputCla
                           onPick={onSelect}
                           text={text}
                           inputClasses={inputClasses}
-                          disabled={disabled}/>;
+                          disabled={disabled}
+                          readOnly={readOnly}/>;
     }
 
     let fetchDataType;

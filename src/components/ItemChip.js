@@ -7,7 +7,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, disabled }) => {
+export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, disabled, readOnly }) => {
     const classes = useStyles();
     const [title, setTitle] = useState(null);
     const itemKey = JSON.stringify(item);
@@ -20,7 +20,7 @@ export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, 
     if (title) {
         return <Chip label={title}
                      onClick={onSelect}
-                     onDelete={onDelete}
+                     onDelete={(!readOnly && onDelete) || null}
                      className={classes.chip}
                      color={selected ? 'primary' : (error ? 'secondary' : 'default')}
                      disabled={disabled}/>;

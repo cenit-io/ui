@@ -8,7 +8,7 @@ import ObjectControl, { FETCHED } from "./ObjectControl";
 import '../util/FlexBox.css';
 import { map, switchMap } from "rxjs/operators";
 
-function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, property, onDelete, onChange, width, disabled, onStack, rootId }) {
+function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, property, onDelete, onChange, width, disabled, onStack, rootId, readOnly }) {
 
     const [isEdit, setEdit] = useState(value);
     const [valueTitle, setValueTitle] = useState('');
@@ -55,6 +55,7 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
                                            onChange={onChange}
                                            width={width}
                                            disabled={disabled}
+                                           readOnly={readOnly}
                                            onStack={handleStack}
                                            rootId={isEdit ? rootId : null}/>;
             actionButton =
@@ -63,10 +64,14 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
             actionButton =
                 <IconButton onClick={() => setOpen(true)} disabled={disabled}><ArrowDropDownIcon/></IconButton>;
         }
-        deleteButton = <IconButton onClick={handleDelete} disabled={disabled}><ClearIcon/></IconButton>;
+        if (!readOnly) {
+            deleteButton = <IconButton onClick={handleDelete} disabled={disabled}><ClearIcon/></IconButton>;
+        }
     } else {
         valueTitle.length && setValueTitle('');
-        actionButton = <IconButton onClick={addNew} disabled={disabled}><AddIcon/></IconButton>;
+        if (!readOnly) {
+            actionButton = <IconButton onClick={addNew} disabled={disabled}><AddIcon/></IconButton>;
+        }
     }
 
     return (

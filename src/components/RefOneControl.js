@@ -70,14 +70,20 @@ class RefOneControl extends React.Component {
     };
 
     render() {
-        const { title, value, property, disabled } = this.props;
+        const { title, value, property, disabled, readOnly } = this.props;
         const { text } = this.state;
 
-        let editButton, deleteButton;
+        let addButton, editButton, deleteButton;
 
         if (value) {
             editButton = <IconButton onClick={this.handleEdit} disabled={disabled}><EditIcon/></IconButton>;
-            deleteButton = <IconButton onClick={this.handleDelete} disabled={disabled}><ClearIcon/></IconButton>;
+            if (!readOnly) {
+                deleteButton = <IconButton onClick={this.handleDelete} disabled={disabled}><ClearIcon/></IconButton>;
+            }
+        }
+
+        if (!readOnly) {
+            addButton = <IconButton onClick={this.handleAddNew} disabled={disabled}><AddIcon/></IconButton>;
         }
 
         return (
@@ -86,9 +92,10 @@ class RefOneControl extends React.Component {
                            label={title}
                            onPick={this.handlePick}
                            text={text}
-                           disabled={disabled || text === null}/>
+                           disabled={disabled || text === null}
+                           readOnly={readOnly}/>
                 {editButton}
-                <IconButton onClick={this.handleAddNew} disabled={disabled}><AddIcon/></IconButton>
+                {addButton}
                 {deleteButton}
             </div>
         );

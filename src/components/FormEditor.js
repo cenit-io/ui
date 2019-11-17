@@ -123,7 +123,7 @@ const styles = theme => ({
     }
 });
 
-const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, height, value }) => {
+const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, height, value, readOnly }) => {
 
     const [id, setId] = useState((value && value.id) || null);
     const initialStack = () => [
@@ -248,13 +248,15 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
 
     let jsonView;
     if (stack.length > 1) {
-        actions.push(
-            <LoadingButton key='save'
-                           loading={saving && !done}
-                           onClick={save}
-                           className={classes.fabSave}
-                           success={done}/>
-        );
+        if (!readOnly) {
+            actions.push(
+                <LoadingButton key='save'
+                               loading={saving && !done}
+                               onClick={save}
+                               className={classes.fabSave}
+                               success={done}/>
+            );
+        }
 
         if (md) {
             actions.push(
@@ -334,6 +336,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
                                            errors={item.errors}
                                            onChange={handleChange}
                                            disabled={saving}
+                                           readOnly={readOnly}
                                            onStack={handleStack}
                                            rootId={item.rootId}/> : successAlert
     );

@@ -13,7 +13,7 @@ import { map, switchMap } from "rxjs/operators";
 
 const INDEX = Symbol.for('_index');
 
-function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, errors, onDelete, onChange, schema, disabled, onStack, rootId }) {
+function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, errors, onDelete, onChange, schema, disabled, onStack, rootId, readOnly }) {
 
     const [open, setOpen] = useState(false);
     const [controlProperty] = useState(new Property({
@@ -96,10 +96,11 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
                                            onSelect={selectItem(index)}
                                            onDelete={deleteItem(index)}
                                            selected={selectedIndex === index}
-                                           disabled={disabled}/>
+                                           disabled={disabled}
+                                           readOnly={readOnly}/>
             );
 
-            dropButton = value.length > 0 &&
+            dropButton = !readOnly && value.length > 0 &&
                 <IconButton onClick={() => setOpen(false)} disabled={disabled}>
                     <ArrowDropUpIcon/>
                 </IconButton>;
@@ -124,6 +125,7 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
                                    errors={errors && errors[String(selectedIndex)]}
                                    onChange={handleChange}
                                    disabled={disabled}
+                                   readOnly={readOnly}
                                    onStack={handleStack}
                                    {...editProps}/>
                 );
@@ -143,10 +145,16 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
                     <ArrowDropDownIcon/>
                 </IconButton>;
         }
-        deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
+        if (!readOnly) {
+            deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
+        }
     }
 
-    const AddNewIcon = value ? AddIcon : CreateIcon;
+    let addButton;
+    if (!readOnly) {
+        const AddNewIcon = value ? AddIcon : CreateIcon;
+        addButton = <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>;
+    }
 
     const itemsCount = value ? `${value.length} items` : '';
 
@@ -162,7 +170,7 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
                            placeholder={placeholder}
                            error={(errors && Object.keys(errors).length > 0) || false}/>
                 {dropButton}
-                <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>
+                {addButton}
                 {deleteButton}
             </div>
             {itemChips}

@@ -1,10 +1,10 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import API from "../services/ApiService";
 import RecordSelector from "./RecordSelector";
 
 const TenantTypeSelector = { namespace: '""', name: 'Account' };
 
-const TenantSelector = ({ inputClasses, onSelect }) => {
+const TenantSelector = ({ inputClasses, onSelect, readOnly }) => {
     const [tenant, setTenant] = useState({ name: 'Loading...', fetchCurrentTenant: true });
 
     function handleSelect(selection) {
@@ -29,7 +29,8 @@ const TenantSelector = ({ inputClasses, onSelect }) => {
                            inputClasses={inputClasses}
                            text={tenant.name}
                            onSelect={handleSelect}
-                           disabled={tenant.disabled}/>;
+                           disabled={tenant.disabled}
+                           readOnly={readOnly}/>;
 };
 
 export default TenantSelector;

@@ -106,7 +106,7 @@ class DataTypeControl extends React.Component {
 
     render() {
         const { properties } = this.state;
-        const { rootDataType, jsonPath, value, width, disabled, onStack, rootId } = this.props;
+        const { rootDataType, jsonPath, value, width, disabled, onStack, rootId, readOnly } = this.props;
         const errors = this.props.errors || {};
 
         if (this.isReady()) {
@@ -122,6 +122,7 @@ class DataTypeControl extends React.Component {
                                          onChange={this.handleChange(prop)}
                                          onDelete={this.handleDelete(prop)}
                                          disabled={disabled}
+                                         readOnly={readOnly}
                                          onStack={onStack}
                                          rootId={rootId}/>
             );
