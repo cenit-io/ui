@@ -9,13 +9,13 @@ import '../util/FlexBox.css';
 import { map, switchMap } from "rxjs/operators";
 
 function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, property, onDelete, onChange, width, disabled, onStack, rootId }) {
-
+    const [focused, setFocused] = useState(false);
     const [isEdit, setEdit] = useState(value);
     const [valueTitle, setValueTitle] = useState('');
     const [open, setOpen] = useState(false);
     const valueKey = JSON.stringify(value);
 
-    useEffect(()=>{
+    useEffect(() => {
         let subscription;
         if (value) {
             subscription = property.dataType.titleFor(value).subscribe(title => setValueTitle(title));
@@ -69,14 +69,18 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
         actionButton = <IconButton onClick={addNew} disabled={disabled}><AddIcon/></IconButton>;
     }
 
+    const text = valueTitle || (focused && String(value)) || valueTitle;
+
     return (
         <div className='flex full-width column'>
             <div className='flex full-width'>
                 <TextField label={title}
-                           disabled={true}
+                           readOnly
                            className='grow-1'
-                           value={valueTitle}
-                           error={(errors && Object.keys(errors).length > 0) || false}/>
+                           value={text}
+                           error={(errors && Object.keys(errors).length > 0) || false}
+                           onFocus={() => setFocused(true)}
+                           onBlur={() => setFocused(false)}/>
                 {actionButton}
                 {deleteButton}
             </div>
