@@ -1,7 +1,6 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import StringControl from './StringControl';
-import { LinearProgress, withStyles } from '@material-ui/core';
-import './PropertyControl.css'
+import { LinearProgress, makeStyles } from '@material-ui/core';
 import EmbedsOneControl from "./EmbedsOneControl";
 import EmbedsManyControl from "./EmbedsManyControl";
 import BooleanControl from "./BooleanControl";
@@ -39,45 +38,44 @@ function controlComponentFor(property) {
     }
 }
 
-const styles = theme => ({
-    root: {
-        paddingLeft: `${theme.spacing(1)}px`
+const useStyles = makeStyles(theme => ({
+    control: {
+        padding: theme.spacing(1)
     },
     error: {
         color: theme.palette.error.main
     }
-});
+}));
 
-class PropertyControl extends React.Component {
+function PropertyControl(props) {
+    const { errors, property } = props;
+    const [state, setState] = useState({});
+    const { schema } = state;
+    const classes = useStyles();
 
-    state = {};
+    useEffect(() => {
+        const subscription = zzip(property.getSchema(), property.getTitle()).subscribe(
+            ([schema, title]) => setState({ schema, title })
+        );
 
-    componentDidMount() {
-        zzip(this.props.property.getSchema(), this.props.property.getTitle()).subscribe( //TODO sanitize with unsubscribe
-            ([schema, title]) => this.setState({ schema, title })
+        return () => subscription.unsubscribe();
+    }, [property]);
+
+    if (schema) {
+        const ControlComponent = controlComponentFor(property);
+
+        const control = <ControlComponent {...state} {...props}/>;
+
+        return (
+            <div className={classes.control}>
+                <ErrorMessages errors={ControlComponent.ownErrorMessages ? null : errors}>
+                    {control}
+                </ErrorMessages>
+            </div>
         );
     }
 
-    render() {
-        const { schema } = this.state;
-        const { errors, property } = this.props;
-
-        if (schema) {
-            const ControlComponent = controlComponentFor(property);
-
-            const control = <ControlComponent {...this.state} {...this.props}/>;
-
-            return (
-                <div className='prop-control'>
-                    <ErrorMessages errors={ControlComponent.ownErrorMessages ? null : errors}>
-                        {control}
-                    </ErrorMessages>
-                </div>
-            );
-        }
-
-        return <LinearProgress/>;
-    }
+    return <LinearProgress/>;
 }
 
-export default withStyles(styles, { withTheme: true })(PropertyControl);
+export default PropertyControl;
