@@ -72,7 +72,7 @@ const MinItemsPerPage = 5;
 
 const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
-function Index({ dataType, height, selection, onSelect }) {
+function Index({ dataType, height, selectedItems, onSelect }) {
 
     const [props, setProps] = useState(null);
     const [data, setData] = useState(null);
@@ -116,55 +116,51 @@ function Index({ dataType, height, selection, onSelect }) {
 
         setOrder(isDesc ? 'asc' : 'desc');
         setOrderBy(property);
-    };
-
-    const select = selected => {
-        onSelect(selected);
     }
 
     const handleSelectAllClick = event => {
-        let selected;
+        let selection;
         if (event.target.checked) {
-            selected = data.items.map(item => item.id);
+            selection = [...data.items];
         } else {
-            selected = [];
+            selection = [];
         }
-        select(selected);
+        onSelect(selection);
     };
 
-    const handleSelectOne = id => () => {
-        if (selection.length === 1 && selection[0] === id) {
-            select([]);
+    const handleSelectOne = item => () => {
+        if (selectedItems.length === 1 && selectedItems[0].id === item.id) {
+            onSelect([]);
         } else {
-            select([id]);
+            onSelect([item]);
         }
     }
 
-    const handleSelect = id => () => {
-        const index = selection.indexOf(id);
-        const newSelection = [...selection];
+    const handleSelect = item => () => {
+        const index = selectedItems.findIndex(i => i.id === item.id);
+        const newSelection = [...selectedItems];
 
         if (index === -1) {
-            newSelection.push(id);
+            newSelection.push(item);
         } else {
             newSelection.splice(index, 1);
         }
 
-        select(newSelection);
+        onSelect(newSelection);
     };
 
     const handleChangePage = (event, page) => {
         page++;
         setPage(page);
         setData(null);
-        select([]);
+        onSelect([]);
     };
 
     const handleChangeRowsPerPage = event => {
         setLimit(+event.target.value);
         setPage(0);
         setData(null);
-        select([]);
+        onSelect([]);
     };
 
     const handleChangeDense = event => {
@@ -173,7 +169,7 @@ function Index({ dataType, height, selection, onSelect }) {
 
     //const { order, orderBy, page} = this.state;
 
-    //const isSelected = name => selection.indexOf(name) !== -1;
+    //const isSelected = name => selectedItems.indexOf(name) !== -1;
 
     let tableHeight = height;
 
@@ -189,10 +185,10 @@ function Index({ dataType, height, selection, onSelect }) {
                                                    }}>{prop.title}</TableCell>);*/
 
     const rows = data.items.map(item => {
-        let isSelected = selection.indexOf(item.id) !== -1;
+        let isSelected = selectedItems.findIndex(i => i.id === item.id) !== -1;
         return <TableRow hover
                          key={item.id}
-                         onClick={handleSelectOne(item.id)}
+                         onClick={handleSelectOne(item)}
                          role="checkbox"
                          aria-checked={isSelected}
                          tabIndex={-1}>
@@ -205,7 +201,7 @@ function Index({ dataType, height, selection, onSelect }) {
                        }}>
                 <Checkbox checked={isSelected}
                           inputProps={{ 'aria-labelledby': item.id }}
-                          onChange={handleSelect(item.id)}/>
+                          onChange={handleSelect(item)}/>
             </TableCell>
             {
                 props.map(prop => (
@@ -243,7 +239,7 @@ function Index({ dataType, height, selection, onSelect }) {
                    size={dense ? 'small' : 'medium'}>
                 <EnhancedTableHead props={props}
                                    onSelectAllClick={handleSelectAllClick}
-                                   numSelected={selection.length}
+                                   numSelected={selectedItems.length}
                                    rowCount={data.items.length}/>
                 <TableBody>
                     {rows}

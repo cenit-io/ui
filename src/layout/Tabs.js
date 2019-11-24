@@ -8,8 +8,8 @@ import IconButton from '@material-ui/core/IconButton/index';
 import CloseIcon from '@material-ui/icons/Clear';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
-import ActionContainer from "../actions/ActionContainer";
-import { ActionKind } from "../actions/ActionRegistry";
+import MemberContainer from "../actions/MemberContainer";
+import CollectionContainer from "../actions/CollectionContainer";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
@@ -63,7 +63,7 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-export default function NavTabs({ docked, items, index, onSelect, onCloseItem, width, onSelectItem }) {
+export default function NavTabs({ docked, items, index, onSelect, onCloseItem, width, onItemPickup }) {
     const classes = useStyles();
     const theme = useTheme();
     const [, setValue] = React.useState(0);
@@ -76,15 +76,14 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
     const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`;
     const containers = items.map(
         item => {
-            const kind = item.id ? ActionKind.member : ActionKind.collection;
+            const ContainerComponent = item.id ? MemberContainer : CollectionContainer;
             return <div key={`container_${item.dataTypeId}_${item.id}`}
                         style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
-                <ActionContainer kind={kind}
-                                 docked={docked}
-                                 item={item}
-                                 height={containerHeight}
-                                 width={width}
-                                 onSelectItem={onSelectItem}/>
+                <ContainerComponent docked={docked}
+                                    item={item}
+                                    height={containerHeight}
+                                    width={width}
+                                    onItemPickup={onItemPickup}/>
             </div>;
         }
     );

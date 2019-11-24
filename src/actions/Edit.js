@@ -4,13 +4,13 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 
 
-const Edit = ({ docked, dataType, item, onSelectItem, height }) => {
+const Edit = ({ docked, dataType, item, onItemPickup, height }) => {
 
     return <FormEditor rootId={item.id}
                        docked={docked}
                        dataType={dataType}
                        value={{ id: item.id }}
-                       onSelectItem={onSelectItem}
+                       onItemPickup={onItemPickup}
                        height={height}/>;
 };
 

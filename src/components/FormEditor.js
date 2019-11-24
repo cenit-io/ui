@@ -123,7 +123,7 @@ const styles = theme => ({
     }
 });
 
-const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, height, value, readOnly }) => {
+const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, height, value, readOnly }) => {
 
     const [id, setId] = useState((value && value.id) || null);
     const initialStack = () => [
@@ -315,7 +315,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSelectItem, he
                         color="primary"
                         startIcon={<EditIcon/>}
                         className={classes.actionButton}
-                        onClick={() => onSelectItem({ dataTypeId: dataType.id, id })}>
+                        onClick={() => onItemPickup({ dataTypeId: dataType.id, id })}>
                     Edit
                 </Button>
             </div>

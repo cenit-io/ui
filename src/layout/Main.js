@@ -27,29 +27,29 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Main = () => {
-    const [docked, setDocked] = useState(localStorage.getItem('docked') !== 'false'),
-        [idToken, setIdToken] = useState(null),
-        [config, setConfig] = useState(null),
-        [items, setItems] = useState([]),
-        [selectedIndex, setSelectedIndex] = useState(0),
+    const [docked, setDocked] = useState(localStorage.getItem('docked') !== 'false');
+    const [idToken, setIdToken] = useState(null);
+    const [config, setConfig] = useState(null);
+    const [items, setItems] = useState([]);
+    const [selectedIndex, setSelectedIndex] = useState(0);
 
-        classes = useStyles(),
+    const classes = useStyles();
 
-        theme = useTheme(),
-        xs = useMediaQuery(theme.breakpoints.down('xs')),
+    const theme = useTheme();
+    const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
-        navigation = <Navigation docked={docked}
-                                 xs={xs}
-                                 config={config}
-                                 onItemSelected={handleItemSelected}/>,
+    const navigation = <Navigation docked={docked}
+                                   xs={xs}
+                                   config={config}
+                                   onItemSelected={handleItemSelected}/>;
 
-        switchNavigation = () => {
-            localStorage.setItem('docked', String(!docked));
-            setDocked(!docked);
-        };
+    const switchNavigation = () => {
+        localStorage.setItem('docked', String(!docked));
+        setDocked(!docked);
+    };
 
     function handleItemSelected(item) {
-        if (xs) {
+        if (xs && docked) {
             switchNavigation();
         }
         let index = items.findIndex(
@@ -150,7 +150,7 @@ const Main = () => {
                       index={selectedIndex}
                       onSelect={setSelectedIndex}
                       onCloseItem={removeItem}
-                      onSelectItem={handleItemSelected}
+                      onItemPickup={handleItemSelected}
                       width={tabsWidth}/>
             </div>
             {

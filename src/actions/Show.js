@@ -6,7 +6,7 @@ import { switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
 
 
-const Show = ({ docked, item, onSelectItem }) => {
+const Show = ({ docked, item, onItemPickup }) => {
 
     const [value, setValue] = useState(null);
     const itemKey = JSON.stringify(item);
