@@ -60,7 +60,7 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
             if (action.kind === ActionKind.collection) {
                 setActionKey(actionKey);
             } else {
-                onItemPickup({ dataTypeId: dataType.id, id: selectedItems[0].id })
+                onItemPickup({ dataTypeId: dataType.id, id: selectedItems[0].id });
             }
         }
     };

@@ -4,7 +4,6 @@ import { useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
 import ActionRegistry from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
-import zzip from "../util/zzip";
 import MemberActionsToolbar from "./MemberActionsToolbar";
 import Show from "./Show";
 
@@ -20,7 +19,6 @@ const actionContainerStyles = makeStyles(theme => ({
 
 function MemberContainer({ docked, item, height, width, onItemPickup }) {
     const [actionKey, setActionKey] = useState(Show.key);
-    const [title, setTitle] = useState(null);
     const [dataType, setDataType] = useState(null);
 
     const theme = useTheme();
@@ -29,17 +27,11 @@ function MemberContainer({ docked, item, height, width, onItemPickup }) {
     const itemKey = JSON.stringify(item);
 
     useEffect(() => {
-        const subscription = zzip(
-            item.getDataType(),
-            item.getTitle()
-        ).subscribe(([dataType, title]) => {
-            setDataType(dataType);
-            setTitle(title);
-        });
+        const subscription = item.getDataType().subscribe(dataType => setDataType(dataType));
         return () => subscription.unsubscribe();
     }, [item, itemKey]);
 
-    if (!title) {
+    if (!dataType) {
         return <Loading/>;
     }
 
@@ -62,7 +54,10 @@ function MemberContainer({ docked, item, height, width, onItemPickup }) {
                                                        onItemPickup={onItemPickup}/>;
 
     return <React.Fragment>
-        <MemberActionsToolbar title={title} onAction={handleAction}/>
+        <MemberActionsToolbar dataType={dataType}
+                              item={item}
+                              onAction={handleAction}
+                              onItemPickup={onItemPickup}/>
         <div className={classes.actionContainer}
              style={{ height: `calc(${componentHeight})` }}>
             {action}
