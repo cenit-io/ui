@@ -5,6 +5,8 @@ Issues & next features
 
 ### Issues
 
+- Tab recovery from Not Found responses.
+
 - Refresh Index when redirected from delete callback.
 
 - Prevent recursive referenced items edition.
