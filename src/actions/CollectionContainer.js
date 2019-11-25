@@ -9,10 +9,10 @@ import Index from "./Index";
 import New from './New';
 import Show from "./Show";
 import Edit from './Edit';
+import Delete from './Delete';
 import ActionPicker from "./ActionPicker";
 import zzip from "../util/zzip";
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
-import MemberActionsToolbar from "./MemberActionsToolbar";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -57,7 +57,7 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
     const handleAction = actionKey => {
         const action = ActionRegistry.byKey(actionKey);
         if (action) {
-            if (action.kind === ActionKind.collection) {
+            if (action.kind === ActionKind.collection || action.kind === ActionKind.bulk) {
                 setActionKey(actionKey);
             } else {
                 onItemPickup({ dataTypeId: dataType.id, id: selectedItems[0].id });

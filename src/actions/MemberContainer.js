@@ -17,9 +17,10 @@ const actionContainerStyles = makeStyles(theme => ({
     }
 }));
 
-function MemberContainer({ docked, item, height, width, onItemPickup }) {
+function MemberContainer({ docked, item, height, width, onItemPickup, onClose, updateItem }) {
     const [actionKey, setActionKey] = useState(Show.key);
     const [dataType, setDataType] = useState(null);
+    const [disabled, setDisabled] = useState(false);
 
     const theme = useTheme();
     const classes = actionContainerStyles();
@@ -49,15 +50,20 @@ function MemberContainer({ docked, item, height, width, onItemPickup }) {
     const action = ActionComponent && <ActionComponent docked={docked}
                                                        dataType={dataType}
                                                        item={item}
+                                                       updateItem={updateItem}
                                                        height={componentHeight}
                                                        width={width}
-                                                       onItemPickup={onItemPickup}/>;
+                                                       onItemPickup={onItemPickup}
+                                                       onCancel={() => handleAction(Show.key)}
+                                                       onDisable={disabled => setDisabled(disabled)}
+                                                       onClose={onClose}/>;
 
     return <React.Fragment>
         <MemberActionsToolbar dataType={dataType}
                               item={item}
                               onAction={handleAction}
-                              onItemPickup={onItemPickup}/>
+                              onItemPickup={onItemPickup}
+                              disabled={disabled}/>
         <div className={classes.actionContainer}
              style={{ height: `calc(${componentHeight})` }}>
             {action}

@@ -384,6 +384,12 @@ export class DataType {
         return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
 
+    delete(selector) {
+        return API.delete('setup', 'data_type', this.id, 'digest', {
+            headers: { 'X-Query-Selector': JSON.stringify(selector) }
+        });
+    }
+
     shallowViewPort() {
         let properties;
         return this.getProps().pipe(

@@ -66,24 +66,44 @@ const useStyles = makeStyles(theme => ({
 export default function NavTabs({ docked, items, index, onSelect, onCloseItem, width, onItemPickup }) {
     const classes = useStyles();
     const theme = useTheme();
-    const [, setValue] = React.useState(0);
-    const tabs = items.map((item, i) => <ItemTab key={`tab_${item.dataTypeId}_${item.id}`}
-                                                 docked={docked}
-                                                 item={item}
-                                                 index={i}
-                                                 onSelect={onSelect}
-                                                 onClose={onCloseItem}/>);
+    const [, setValue] = useState(0);
+    const [tabItems, setTabItems] = useState({});
+
+    const updateItem = index => item => setTabItems({
+        ...tabItems,
+        [index]: { ...items[index], ...item }
+    }); // TODO Remove spread operators when removing getTitle & getDataType functions from items
+
+    const handleClose = index => () => {
+        delete tabItems[index];
+        onCloseItem(index);
+    };
+
+    const tabs = items.map(
+        (item, i) => (
+            <ItemTab key={`tab_${item.dataTypeId}_${item.id}`}
+                     docked={docked}
+                     item={tabItems[i] || item}
+                     index={i}
+                     onSelect={onSelect}
+                     onClose={onCloseItem}/>
+        )
+    );
+
     const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`;
+
     const containers = items.map(
-        item => {
+        (item, index) => {
             const ContainerComponent = item.id ? MemberContainer : CollectionContainer;
             return <div key={`container_${item.dataTypeId}_${item.id}`}
                         style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
                 <ContainerComponent docked={docked}
-                                    item={item}
+                                    item={tabItems[index] || item}
+                                    updateItem={updateItem(index)}
                                     height={containerHeight}
                                     width={width}
-                                    onItemPickup={onItemPickup}/>
+                                    onItemPickup={onItemPickup}
+                                    onClose={handleClose(index)}/>
             </div>;
         }
     );

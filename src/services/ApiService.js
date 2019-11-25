@@ -41,6 +41,17 @@ export const ApiResource = function () {
         );
     };
 
+    this.delete = () => {
+        return AuthorizationService.getAccessToken().pipe(
+            switchMap(access_token => from(
+                apiGateway.delete(this.path, {
+                    headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
+                    params: params
+                })).pipe(map(response => response && response.data))
+            )
+        );
+    };
+
     this.post = data => {
         return AuthorizationService.getAccessToken().pipe(
             switchMap(access_token => from(
@@ -56,36 +67,50 @@ export const ApiResource = function () {
 const ErrorCallbacks = [];
 
 const API = {
-        get: (...args) => {
-            return (new ApiResource(...args)).get().pipe(
-                catchError(e => {
-                    if (e.response.status !== 404) {
+    get: (...args) => {
+        return (new ApiResource(...args)).get().pipe(
+            catchError(e => {
+                if (e.response.status !== 404) {
+                    ErrorCallbacks.forEach(callback => callback(e));
+                }
+                return of(null);
+            })
+        )
+    },
+
+    post: (...args) => {
+        const data = args.pop();
+        return (new ApiResource(...args)).post(data).pipe(
+            catchError(e => {
+                switch (e.response.status) {
+                    case 404:
+                        break;
+                    case 422:
+                        throw e;
+                    default:
                         ErrorCallbacks.forEach(callback => callback(e));
-                    }
-                    return of(null);
-                })
-            )
-        },
+                }
+                return of(null);
+            })
+        );
+    },
 
-        post: (...args) => {
-            const data = args.pop();
-            return (new ApiResource(...args)).post(data).pipe(
-                catchError(e => {
-                    switch (e.response.status) {
-                        case 404:
-                            break;
-                        case 422:
-                            throw e;
-                        default:
-                            ErrorCallbacks.forEach(callback => callback(e));
-                    }
-                    return of(null);
-                })
-            );
-        },
+    delete: (...args) => {
+        return (new ApiResource(...args)).delete().pipe(
+            catchError(e => {
+                switch (e.response.status) {
+                    case 404:
+                    case 422:
+                        break;
+                    default:
+                        ErrorCallbacks.forEach(callback => callback(e));
+                }
+                throw e;
+            })
+        );
+    },
 
-        onError: callback => ErrorCallbacks.push(callback)
-    }
-;
+    onError: callback => ErrorCallbacks.push(callback)
+};
 
 export default API;

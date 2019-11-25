@@ -123,7 +123,7 @@ const styles = theme => ({
     }
 });
 
-const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, height, value, readOnly }) => {
+const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, height, value, readOnly, onUpdate }) => {
 
     const [id, setId] = useState((value && value.id) || null);
     const initialStack = () => [
@@ -136,7 +136,12 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
             value: { ...value },
             dataType,
             title: value => dataType.titleFor(value),
-            callback: ({ id }) => setId(id),
+            callback: value => {
+                setId(value.id);
+                if (onUpdate && rootId) {
+                    onUpdate(value);
+                }
+            },
             rootId: value && value.id
         }
     ];

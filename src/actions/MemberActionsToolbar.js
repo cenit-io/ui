@@ -22,7 +22,7 @@ const useToolbarStyles = makeStyles(theme => ({
     }
 }));
 
-const MemberActionsToolbar = ({ dataType, item, arity, onAction, kind, selectedKey, onItemPickup }) => {
+const MemberActionsToolbar = ({ dataType, item, disabled, arity, onAction, kind, selectedKey, onItemPickup }) => {
     const [titles, setTitles] = useState(null);
     const classes = useToolbarStyles();
 
@@ -38,7 +38,7 @@ const MemberActionsToolbar = ({ dataType, item, arity, onAction, kind, selectedK
     let breadcumb;
     if (titles) {
         breadcumb = <div className={classes.breadcrumb}>
-            <Chip label={titles[0]} onClick={() => onItemPickup({ dataTypeId: dataType.id})}/>
+            <Chip label={titles[0]} onClick={() => onItemPickup({ dataTypeId: dataType.id })}/>
             <ChevronRight/>
             <Typography variant="h6">
                 {titles[1]}
@@ -52,7 +52,8 @@ const MemberActionsToolbar = ({ dataType, item, arity, onAction, kind, selectedK
             <div className={classes.spacer}/>
             <ActionPicker kind={ActionKind.member}
                           arity={1}
-                          onAction={onAction}/>
+                          onAction={onAction}
+                          disabled={disabled}/>
         </Toolbar>
     );
 };

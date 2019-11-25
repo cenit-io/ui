@@ -10,7 +10,7 @@ const useToolbarStyles = makeStyles(theme => ({
     }
 }));
 
-function ActionPicker({ kind, arity, selectedKey, onAction }) {
+function ActionPicker({ disabled, kind, arity, selectedKey, onAction }) {
     const classes = useToolbarStyles();
 
     const handleAction = actionKey => () => onAction(actionKey);
@@ -18,15 +18,16 @@ function ActionPicker({ kind, arity, selectedKey, onAction }) {
         kind = ActionKind.member;
     }
 
-    let actions = ActionRegistry.findBy({ kind, arity }).map(
+    let actions = ActionRegistry.findBy({ kind, arity }, { kind: ActionKind.bulk }).map(
         action => {
             const Icon = action.icon;
 
             return <Tooltip key={`action_${action.key}`}
                             title={action.title}>
                 <IconButton aria-label={action.title}
-                            color={selectedKey === action.key ? 'primary' : 'default'}
-                            onClick={handleAction(action.key)}>
+                            color={selectedKey === action.key ? (action.activeColor || 'primary') : 'default'}
+                            onClick={handleAction(action.key)}
+                            disabled={disabled}>
                     <Icon/>
                 </IconButton>
             </Tooltip>

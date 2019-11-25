@@ -3,7 +3,8 @@ import Random from '../util/Random';
 export const ActionKind = Object.freeze({
     root: 'root',
     collection: 'collection',
-    member: 'member'
+    member: 'member',
+    bulk: 'bulk'
 });
 
 class ActionRegistryClass {
