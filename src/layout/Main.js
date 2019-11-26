@@ -55,22 +55,11 @@ const Main = () => {
         let index = items.findIndex(
             value => !Object.keys(item).find(
                 key => value[key] !== item[key]
+            ) && !Object.getOwnPropertySymbols(item).find(
+                key => value[key] !== item[key]
             )
         );
         if (index === -1) {
-            item.getDataType = function () {
-                return DataType.getById(this.dataTypeId);
-            };
-            item.getTitle = function titleFor() {
-                return this.getDataType().pipe(switchMap(
-                    dataType => {
-                        if (this.id) {
-                            return dataType.titleFor({ id: this.id });
-                        }
-                        return dataType.getTitle();
-                    }
-                ));
-            };
             index = items.length;
             setItems([...items, item]);
         }

@@ -14,9 +14,10 @@ import Typography from '@material-ui/core/Typography/index';
 import StorageIcon from '@material-ui/icons/Storage';
 import ViewIcon from '@material-ui/icons/OpenInNew';
 import EditIcon from '@material-ui/icons/Edit';
-import { catchError } from "rxjs/operators";
+import { catchError, switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import { of } from "rxjs";
+import { DataTypeId } from "../common/Symbols";
 
 const stackHeaderSpacing = 5;
 
@@ -136,6 +137,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
             value: { ...value },
             dataType,
             title: value => dataType.titleFor(value),
+            viewport: dataType.titleViewPort('_id'),
             callback: value => {
                 setId(value.id);
                 if (onUpdate && rootId) {
@@ -165,11 +167,11 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
         let subscription;
         if (saving) {
             setDone(false);
-            const opts = {
-                viewport: current.viewport || '{_id}',
-                add_only: rootId
-            };
-            subscription = current.dataType.post(current.value, opts).pipe(
+            subscription = (current.viewport || of('{_id}')).pipe(
+                switchMap(viewport => current.dataType.post(current.value, {
+                    viewport,
+                    add_only: rootId
+                })),
                 catchError(error => {
                     setErrors(error.response.data);
                     return of(null);
@@ -320,7 +322,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
                         color="primary"
                         startIcon={<EditIcon/>}
                         className={classes.actionButton}
-                        onClick={() => onItemPickup({ dataTypeId: dataType.id, id })}>
+                        onClick={() => onItemPickup({ [DataTypeId]: dataType.id, id })}>
                     Edit
                 </Button>
             </div>

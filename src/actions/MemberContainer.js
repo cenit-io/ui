@@ -7,6 +7,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import MemberActionsToolbar from "./MemberActionsToolbar";
 import Show from "./Show";
 import Random from "../util/Random";
+import { DataType } from "../services/DataTypeService";
+import { DataTypeId } from "../common/Symbols";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -30,7 +32,9 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
     const itemKey = JSON.stringify(item);
 
     useEffect(() => {
-        const subscription = item.getDataType().subscribe(dataType => setDataType(dataType));
+        const subscription = DataType.getById(item[DataTypeId]).subscribe(
+            dataType => setDataType(dataType)
+        );
         return () => subscription.unsubscribe();
     }, [item, itemKey]);
 

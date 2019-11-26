@@ -2,19 +2,17 @@ import React, { useEffect, useState } from 'react';
 import ShowIcon from '@material-ui/icons/RemoveRedEye';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import Loading from "../components/Loading";
-import { switchMap } from "rxjs/operators";
-import zzip from "../util/zzip";
 
 
-const Show = ({ docked, item, onItemPickup }) => {
+const Show = ({ docked, dataType, item, onItemPickup }) => {
 
     const [value, setValue] = useState(null);
     const itemKey = JSON.stringify(item);
 
     useEffect(() => {
-        const subscription = item.getDataType().pipe(
-            switchMap(dataType => dataType.get(item.id))
-        ).subscribe(value => setValue(value));
+        const subscription = dataType.get(item.id).subscribe(
+            value => setValue(value)
+        );
         return () => subscription.unsubscribe();
     }, [item, itemKey]);
 

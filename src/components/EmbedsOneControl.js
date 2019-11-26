@@ -4,9 +4,10 @@ import AddIcon from '@material-ui/icons/Add';
 import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
-import ObjectControl, { FETCHED } from "./ObjectControl";
-import '../util/FlexBox.css';
+import ObjectControl from "./ObjectControl";
+import '../common/FlexBox.css';
 import { map, switchMap } from "rxjs/operators";
+import { FETCHED } from "../common/Symbols";
 
 function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, property, onDelete, onChange, width, disabled, onStack, rootId, readOnly }) {
 

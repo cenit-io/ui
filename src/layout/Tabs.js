@@ -10,6 +10,9 @@ import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
 import MemberContainer from "../actions/MemberContainer";
 import CollectionContainer from "../actions/CollectionContainer";
+import { switchMap } from "rxjs/operators";
+import { DataType } from "../services/DataTypeService";
+import { DataTypeId } from "../common/Symbols";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
@@ -18,16 +21,22 @@ function ItemTab({ item, index, onSelect, onClose }) {
     const [title, setTitle] = useState('...');
 
     useEffect(() => {
-        const subscription = item.getTitle().subscribe(title => setTitle(title));
+        const subscription = DataType.getById(item[DataTypeId]).pipe(switchMap(
+            dataType => {
+                if (item.id) {
+                    return dataType.titleFor(item);
+                }
+                return dataType.getTitle();
+            }
+        )).subscribe(title => setTitle(title));
         return () => subscription.unsubscribe();
     }, [item]);
 
     return (
-        <Tab
-            component={ClosableComponent}
-            onClick={() => onSelect(index)}
-            label={title}
-            onClose={() => onClose(index)}
+        <Tab component={ClosableComponent}
+             onClick={() => onSelect(index)}
+             label={title}
+             onClose={() => onClose(index)}
         />
     );
 }
@@ -69,10 +78,13 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
     const [, setValue] = useState(0);
     const [tabItems, setTabItems] = useState({});
 
-    const updateItem = index => item => setTabItems({
-        ...tabItems,
-        [index]: { ...items[index], ...item }
-    }); // TODO Remove spread operators when removing getTitle & getDataType functions from items
+    const updateItem = index => item => {
+        Object.getOwnPropertySymbols(items[index]).forEach(symbol => item[symbol] = items[index][symbol]);
+        setTabItems({
+            ...tabItems,
+            [index]: item
+        });
+    };
 
     const handleClose = index => () => {
         delete tabItems[index];
@@ -81,7 +93,7 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
 
     const tabs = items.map(
         (item, i) => (
-            <ItemTab key={`tab_${item.dataTypeId}_${item.id}`}
+            <ItemTab key={`tab_${item[DataTypeId]}_${item.id}`}
                      docked={docked}
                      item={tabItems[i] || item}
                      index={i}
@@ -95,7 +107,7 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
     const containers = items.map(
         (item, index) => {
             const ContainerComponent = item.id ? MemberContainer : CollectionContainer;
-            return <div key={`container_${item.dataTypeId}_${item.id}`}
+            return <div key={`container_${item[DataTypeId]}_${item.id}`}
                         style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
                 <ContainerComponent docked={docked}
                                     item={tabItems[index] || item}

@@ -7,11 +7,12 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 import { Property } from "../services/DataTypeService";
-import '../util/FlexBox.css';
+import '../common/FlexBox.css';
 import { ItemChip } from "./ItemChip";
 import { map, switchMap } from "rxjs/operators";
+import { INDEX } from "../common/Symbols";
 
-const INDEX = Symbol.for('_index');
+
 
 function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, errors, onDelete, onChange, schema, disabled, onStack, rootId, readOnly }) {
 

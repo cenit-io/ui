@@ -8,8 +8,7 @@ import { FormGroup } from "./FormGroup";
 import ErrorMessages from "./ErrorMessages";
 import { LinearProgress } from "@material-ui/core";
 import React, { useEffect, useState } from "react";
-
-export const FETCHED = Symbol.for('_fetched');
+import { FETCHED } from "../common/Symbols";
 
 function ObjectControl(props) {
     const [state, setState] = useState({});

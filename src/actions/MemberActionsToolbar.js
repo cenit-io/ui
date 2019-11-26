@@ -6,6 +6,7 @@ import ActionPicker from "./ActionPicker";
 import { ActionKind } from "./ActionRegistry";
 import zzip from "../util/zzip";
 import RefreshIcon from "@material-ui/icons/Refresh";
+import { DataTypeId } from "../common/Symbols";
 
 const useToolbarStyles = makeStyles(theme => ({
     root: {
@@ -30,7 +31,7 @@ const MemberActionsToolbar = ({ dataType, item, disabled, arity, onAction, kind,
     useEffect(() => {
         const subscription = zzip(
             dataType.getTitle(),
-            item.getTitle()
+            dataType.titleFor(item)
         ).subscribe(titles => setTitles(titles));
 
         return () => subscription.unsubscribe();
@@ -39,7 +40,7 @@ const MemberActionsToolbar = ({ dataType, item, disabled, arity, onAction, kind,
     let breadcumb;
     if (titles) {
         breadcumb = <div className={classes.breadcrumb}>
-            <Chip label={titles[0]} onClick={() => onItemPickup({ dataTypeId: dataType.id })}/>
+            <Chip label={titles[0]} onClick={() => onItemPickup({ [DataTypeId]: dataType.id })}/>
             <ChevronRight/>
             <Typography variant="h6">
                 {titles[1]}

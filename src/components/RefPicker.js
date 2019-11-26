@@ -10,7 +10,7 @@ import {
     TextField
 } from "@material-ui/core";
 import Random from "../util/Random";
-import '../util/FlexBox.css';
+import '../common/FlexBox.css';
 
 class RefPicker extends React.Component {
 

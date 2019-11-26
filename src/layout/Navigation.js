@@ -8,6 +8,7 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
 import { makeStyles } from "@material-ui/core";
 import Loading from "../components/Loading";
+import { DataTypeId } from "../common/Symbols";
 
 export const navigationWidth = theme => `${theme.spacing(30)}px`;
 
@@ -35,7 +36,7 @@ const Navigation = ({ docked, xs, config, onItemSelected }) => {
 
         classes = useStyles(),
 
-        select = dataType => () => onItemSelected({ dataTypeId: dataType.id });
+        select = dataType => () => onItemSelected({ [DataTypeId]: dataType.id });
 
     let nav;
 

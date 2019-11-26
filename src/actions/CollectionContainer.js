@@ -10,10 +10,11 @@ import New from './New';
 import Show from "./Show";
 import Edit from './Edit';
 import Delete from './Delete';
-import ActionPicker from "./ActionPicker";
-import zzip from "../util/zzip";
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
 import Random from "../util/Random";
+import { DataType } from "../services/DataTypeService";
+import { switchMap } from "rxjs/operators";
+import { DataTypeId } from "../common/Symbols";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -40,13 +41,12 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
     const itemKey = JSON.stringify(item);
 
     useEffect(() => {
-        const subscription = zzip(
-            item.getDataType(),
-            item.getTitle()
-        ).subscribe(([dataType, title]) => {
-            setDataType(dataType);
-            setTitle(title);
-        });
+        const subscription = DataType.getById(item[DataTypeId]).pipe(
+            switchMap(dataType => {
+                    setDataType(dataType);
+                    return dataType.getTitle();
+                }
+            )).subscribe(title => setTitle(title));
         return () => subscription.unsubscribe();
     }, [item, itemKey]);
 
@@ -64,7 +64,7 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
                 setActionComponentKey(Random.string());
             } else {
                 setSelectedItems([]);
-                onItemPickup({ dataTypeId: dataType.id, id: selectedItems[0].id });
+                onItemPickup({ [DataTypeId]: dataType.id, id: selectedItems[0].id });
             }
         }
     };
