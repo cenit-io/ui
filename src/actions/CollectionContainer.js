@@ -13,6 +13,7 @@ import Delete from './Delete';
 import ActionPicker from "./ActionPicker";
 import zzip from "../util/zzip";
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
+import Random from "../util/Random";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -31,6 +32,7 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
     const [actionKey, setActionKey] = useState(Index.key);
     const [title, setTitle] = useState(null);
     const [dataType, setDataType] = useState(null);
+    const [actionComponentKey, setActionComponentKey] = useState(Random.string());
 
     const theme = useTheme();
     const classes = actionContainerStyles();
@@ -59,7 +61,9 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
         if (action) {
             if (action.kind === ActionKind.collection || action.kind === ActionKind.bulk) {
                 setActionKey(actionKey);
+                setActionComponentKey(Random.string());
             } else {
+                setSelectedItems([]);
                 onItemPickup({ dataTypeId: dataType.id, id: selectedItems[0].id });
             }
         }
@@ -69,7 +73,8 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
 
     const ActionComponent = ActionRegistry.byKey(actionKey);
 
-    const action = ActionComponent && <ActionComponent docked={docked}
+    const action = ActionComponent && <ActionComponent key={actionComponentKey}
+                                                       docked={docked}
                                                        dataType={dataType}
                                                        item={item}
                                                        selectedItems={selectedItems}
@@ -82,7 +87,8 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
         <CollectionActionsToolbar title={title}
                                   onAction={handleAction}
                                   arity={selectedItems.length}
-                                  selectedKey={actionKey}/>
+                                  selectedKey={actionKey}
+                                  onRefresh={() => setActionComponentKey(Random.string())}/>
         <div className={classes.actionContainer}
              style={{ height: `calc(${componentHeight})` }}>
             {action}

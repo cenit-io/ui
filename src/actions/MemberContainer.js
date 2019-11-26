@@ -6,6 +6,7 @@ import ActionRegistry from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
 import MemberActionsToolbar from "./MemberActionsToolbar";
 import Show from "./Show";
+import Random from "../util/Random";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -21,6 +22,7 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
     const [actionKey, setActionKey] = useState(Show.key);
     const [dataType, setDataType] = useState(null);
     const [disabled, setDisabled] = useState(false);
+    const [actionComponentKey, setActionComponentKey] = useState(Random.string());
 
     const theme = useTheme();
     const classes = actionContainerStyles();
@@ -39,6 +41,7 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
     const handleAction = actionKey => {
         const action = ActionRegistry.byKey(actionKey);
         if (action) {
+            setActionComponentKey(Random.string());
             setActionKey(actionKey);
         }
     };
@@ -47,7 +50,8 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
 
     const ActionComponent = ActionRegistry.byKey(actionKey);
 
-    const action = ActionComponent && <ActionComponent docked={docked}
+    const action = ActionComponent && <ActionComponent key={actionComponentKey}
+                                                       docked={docked}
                                                        dataType={dataType}
                                                        item={item}
                                                        updateItem={updateItem}
@@ -63,7 +67,8 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
                               item={item}
                               onAction={handleAction}
                               onItemPickup={onItemPickup}
-                              disabled={disabled}/>
+                              disabled={disabled}
+                              onRefresh={() => setActionComponentKey(Random.string())}/>
         <div className={classes.actionContainer}
              style={{ height: `calc(${componentHeight})` }}>
             {action}

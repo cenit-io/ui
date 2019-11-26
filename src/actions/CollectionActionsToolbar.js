@@ -1,12 +1,13 @@
 import React from 'react';
-import { makeStyles, Toolbar, Typography, Chip } from "@material-ui/core";
+import { makeStyles, Toolbar, Typography, Chip, IconButton } from "@material-ui/core";
+import RefreshIcon from "@material-ui/icons/Refresh";
 import { appBarHeight } from "../layout/AppBar";
 import ActionPicker from "./ActionPicker";
 import { ActionKind } from "./ActionRegistry";
 
 const useToolbarStyles = makeStyles(theme => ({
     root: {
-        paddingLeft: theme.spacing(2),
+        paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
         height: appBarHeight(theme)
     },
@@ -18,7 +19,7 @@ const useToolbarStyles = makeStyles(theme => ({
     }
 }));
 
-function CollectionActionsToolbar({ title, arity, onAction, selectedKey }) {
+function CollectionActionsToolbar({ title, arity, onAction, selectedKey, onRefresh }) {
     const classes = useToolbarStyles();
 
     return (
@@ -29,12 +30,15 @@ function CollectionActionsToolbar({ title, arity, onAction, selectedKey }) {
                 </Typography>
             </div>
             <div className={classes.spacer}/>
-            { arity > 0 && <Chip label={`${arity} selected`} color='secondary'/> }
+            {arity > 0 && <Chip label={`${arity} selected`} color='secondary'/>}
             <div className={classes.spacer}/>
             <ActionPicker kind={ActionKind.collection}
                           arity={arity}
                           onAction={onAction}
                           selectedKey={selectedKey}/>
+            <IconButton onClick={onRefresh}>
+                <RefreshIcon/>
+            </IconButton>
         </Toolbar>
     );
 };

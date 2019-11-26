@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { makeStyles, Toolbar, Typography, Chip } from "@material-ui/core";
+import { makeStyles, Toolbar, Typography, Chip, IconButton } from "@material-ui/core";
 import ChevronRight from "@material-ui/icons/ChevronRight";
 import { appBarHeight } from "../layout/AppBar";
 import ActionPicker from "./ActionPicker";
 import { ActionKind } from "./ActionRegistry";
 import zzip from "../util/zzip";
+import RefreshIcon from "@material-ui/icons/Refresh";
 
 const useToolbarStyles = makeStyles(theme => ({
     root: {
@@ -22,7 +23,7 @@ const useToolbarStyles = makeStyles(theme => ({
     }
 }));
 
-const MemberActionsToolbar = ({ dataType, item, disabled, arity, onAction, kind, selectedKey, onItemPickup }) => {
+const MemberActionsToolbar = ({ dataType, item, disabled, arity, onAction, kind, selectedKey, onItemPickup, onRefresh }) => {
     const [titles, setTitles] = useState(null);
     const classes = useToolbarStyles();
 
@@ -54,6 +55,10 @@ const MemberActionsToolbar = ({ dataType, item, disabled, arity, onAction, kind,
                           arity={1}
                           onAction={onAction}
                           disabled={disabled}/>
+            <IconButton disabled={disabled}
+                        onClick={onRefresh}>
+                <RefreshIcon/>
+            </IconButton>
         </Toolbar>
     );
 };
