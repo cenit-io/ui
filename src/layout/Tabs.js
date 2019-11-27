@@ -10,34 +10,26 @@ import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
 import MemberContainer from "../actions/MemberContainer";
 import CollectionContainer from "../actions/CollectionContainer";
-import { switchMap } from "rxjs/operators";
-import { DataType } from "../services/DataTypeService";
-import { DataTypeId } from "../common/Symbols";
+import { DataTypeId, TitleSubject } from "../common/Symbols";
+import { Subject } from "rxjs";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
 function ItemTab({ item, index, onSelect, onClose }) {
 
     const [title, setTitle] = useState('...');
+    const titleSubject = item[TitleSubject];
 
     useEffect(() => {
-        const subscription = DataType.getById(item[DataTypeId]).pipe(switchMap(
-            dataType => {
-                if (item.id) {
-                    return dataType.titleFor(item);
-                }
-                return dataType.getTitle();
-            }
-        )).subscribe(title => setTitle(title));
+        const subscription = titleSubject.subscribe(title => setTitle(title));
         return () => subscription.unsubscribe();
-    }, [item]);
+    }, [titleSubject]);
 
     return (
         <Tab component={ClosableComponent}
              onClick={() => onSelect(index)}
              label={title}
-             onClose={() => onClose(index)}
-        />
+             onClose={() => onClose(index)}/>
     );
 }
 
@@ -76,30 +68,23 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
     const classes = useStyles();
     const theme = useTheme();
     const [, setValue] = useState(0);
-    const [tabItems, setTabItems] = useState({});
-
-    const updateItem = index => item => {
-        Object.getOwnPropertySymbols(items[index]).forEach(symbol => item[symbol] = items[index][symbol]);
-        setTabItems({
-            ...tabItems,
-            [index]: item
-        });
-    };
 
     const handleClose = index => () => {
-        delete tabItems[index];
         onCloseItem(index);
     };
 
     const tabs = items.map(
-        (item, i) => (
-            <ItemTab key={`tab_${item[DataTypeId]}_${item.id}`}
-                     docked={docked}
-                     item={tabItems[i] || item}
-                     index={i}
-                     onSelect={onSelect}
-                     onClose={onCloseItem}/>
-        )
+        (item, i) => {
+            if (!item[TitleSubject]) {
+                item[TitleSubject] = new Subject();
+            }
+            return <ItemTab key={`tab_${item[DataTypeId]}_${item.id}`}
+                            docked={docked}
+                            item={items[i] || item}
+                            index={i}
+                            onSelect={onSelect}
+                            onClose={onCloseItem}/>;
+        }
     );
 
     const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`;
@@ -110,8 +95,7 @@ export default function NavTabs({ docked, items, index, onSelect, onCloseItem, w
             return <div key={`container_${item[DataTypeId]}_${item.id}`}
                         style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
                 <ContainerComponent docked={docked}
-                                    item={tabItems[index] || item}
-                                    updateItem={updateItem(index)}
+                                    item={item}
                                     height={containerHeight}
                                     width={width}
                                     onItemPickup={onItemPickup}

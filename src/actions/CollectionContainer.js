@@ -14,7 +14,7 @@ import CollectionActionsToolbar from "./CollectionActionsToolbar";
 import Random from "../util/Random";
 import { DataType } from "../services/DataTypeService";
 import { switchMap } from "rxjs/operators";
-import { DataTypeId } from "../common/Symbols";
+import { DataTypeId, TitleSubject } from "../common/Symbols";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -46,7 +46,10 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
                     setDataType(dataType);
                     return dataType.getTitle();
                 }
-            )).subscribe(title => setTitle(title));
+            )).subscribe(title => {
+                item[TitleSubject].next(title);
+                setTitle(title);
+            });
         return () => subscription.unsubscribe();
     }, [item, itemKey]);
 

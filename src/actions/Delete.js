@@ -147,7 +147,7 @@ const Delete = ({ docked, dataType, onDisable, theme, onItemPickup, height, item
             {statusUI}
             <DeleteIcon/>
         </div>
-        <Typography variant='h5'>
+        <Typography variant='h5' className={classes.alignCenter}>
             {text}
         </Typography>
         {actions}

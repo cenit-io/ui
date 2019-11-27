@@ -14,7 +14,7 @@ const Show = ({ docked, dataType, item, onItemPickup }) => {
             value => setValue(value)
         );
         return () => subscription.unsubscribe();
-    }, [item, itemKey]);
+    }, [dataType, item, itemKey]);
 
     if (value) {
         return <pre>
