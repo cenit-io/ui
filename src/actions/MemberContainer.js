@@ -9,7 +9,7 @@ import Show from "./Show";
 import Random from "../util/Random";
 import { DataType } from "../services/DataTypeService";
 import { DataTypeId, TitleSubject } from "../common/Symbols";
-import { switchMap } from "rxjs/operators";
+import { map, switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import { of } from "rxjs";
 import copySymbols from "../util/cpSymbols";
@@ -40,11 +40,13 @@ const actionContainerStyles = makeStyles(theme => ({
 }));
 
 function MemberContainer({ docked, item, height, width, onItemPickup, onClose, updateItem }) {
-    const [memberItem, setMemberItem] = useState(item);
+    const [memberItem, setMemberItem] = useState(null);
     const [actionKey, setActionKey] = useState(Show.key);
     const [dataType, setDataType] = useState(null);
     const [disabled, setDisabled] = useState(false);
     const [actionComponentKey, setActionComponentKey] = useState(Random.string());
+    const [dataTypeTitle, setDataTypeTitle] = useState(null);
+    const [itemTitle, setItemTitle] = useState(null);
     const [titles, setTitles] = useState({});
     const [error, setError] = useState(null);
 
@@ -52,61 +54,56 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
     const classes = actionContainerStyles();
 
     useEffect(() => {
-        if (item !== memberItem) {
-            setMemberItem(item);
-        }
-    }, [item, memberItem])
-
-    useEffect(() => {
-        const subscription = DataType.getById(memberItem[DataTypeId]).pipe(
+        const subscription = DataType.getById(item[DataTypeId]).pipe(
             switchMap(
                 dataType => {
+                    setDataType(dataType);
+                    setMemberItem(null);
                     if (dataType) {
-                        setDataType(dataType);
-                        return zzip(
-                            dataType.getTitle(),
-                            dataType.titleViewPort('_id').pipe(
-                                switchMap(
-                                    viewport =>{
-                                        return dataType.get(memberItem.id, { viewport });
-                                    }
-                                ),
-                                switchMap(
-                                    titledItem => {
-                                        if (titledItem) {
-                                            return dataType.titleFor(titledItem);
-                                        }
-                                        return of(null);
-                                    }
-                                )
+                        return dataType.titleViewPort('_id').pipe(
+                            switchMap(
+                                viewport => {
+                                    return zzip(
+                                        dataType.getTitle(),
+                                        dataType.get(item.id, { viewport })
+                                    )
+                                }
                             )
                         );
                     }
+                    setError(`Data type with ID ${item[DataTypeId]} not found!`);
                     return of([null, null]);
                 }
             )
-        ).subscribe(([dataTypeTitle, itemTitle]) => {
-            if (dataTypeTitle) {
-                if (itemTitle) {
-                    memberItem[TitleSubject].next(itemTitle);
-                    setTitles({ dataTypeTitle, itemTitle });
-                } else {
-                    setError(`${dataTypeTitle} record with ID ${memberItem.id} not found!`);
-                }
+        ).subscribe(([dataTypeTitle, titledItem]) => {
+            setDataTypeTitle(dataTypeTitle);
+            if (titledItem) {
+                setMemberItem(copySymbols(item, titledItem));
             } else {
-                setError(`Data type with ID ${memberItem[DataTypeId]} not found!`);
+                setError(`${dataTypeTitle} record with ID ${item.id} not found!`);
             }
         });
+
         return () => subscription.unsubscribe();
-    }, [memberItem]);
+    }, [item])
+
+    useEffect(() => {
+        if (dataType && memberItem) {
+            const subscription = dataType.titleFor(memberItem).subscribe(
+                itemTitle => {
+                    memberItem[TitleSubject].next(itemTitle);
+                    setItemTitle(itemTitle);
+                }
+            );
+            return () => subscription.unsubscribe();
+        }
+    }, [dataType, memberItem]);
 
     if (error) {
         return <div>{error}</div>
     }
 
-    const { dataTypeTitle, itemTitle } = titles;
-
-    if (itemTitle === undefined || itemTitle === null) {
+    if (!memberItem) {
         return <Loading/>;
     }
 
