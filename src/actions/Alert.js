@@ -4,6 +4,7 @@ import DefaultMainIcon from "@material-ui/icons/LinkOff";
 import DefaultSmallIcon from "@material-ui/icons/Cancel";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles, useTheme } from "@material-ui/core";
+import ResponsiveContainer from "../components/ResponsiveContainer";
 
 const alertStyles = makeStyles(theme => ({
     okBox: {
@@ -34,9 +35,9 @@ const alertStyles = makeStyles(theme => ({
         margin: theme.spacing(1)
     },
     okContainer: {
-        height: props => props.height,
         overflow: 'auto',
-        background: theme.palette.background.default
+        background: theme.palette.background.default,
+        padding: theme.spacing(3)
     },
     alignCenter: {
         textAlign: 'center'
@@ -54,21 +55,23 @@ function Alert({ title, message, children, mainIcon, smallIcon, smallIconColor, 
 
     smallIconColor = smallIconColor || 'error';
 
-    return <div key='successAlert' className={clsx(classes.fullHeight, classes.center, classes.okContainer)}>
-        <div className={clsx(classes.okBox, classes.center)} style={{ background }}>
-            <SmallIcon className={classes.okIcon} color={smallIconColor}/>
-            <MainIcon fontSize='large'/>
+    return <ResponsiveContainer>
+        <div key='successAlert' className={clsx(classes.fullHeight, classes.center, classes.okContainer)}>
+            <div className={clsx(classes.okBox, classes.center)} style={{ background }}>
+                <SmallIcon className={classes.okIcon} color={smallIconColor}/>
+                <MainIcon fontSize='large'/>
+            </div>
+            <Typography variant='h5'>
+                {title}
+            </Typography>
+            <Typography variant='subtitle1' className={classes.alignCenter}>
+                {message}
+            </Typography>
+            <div className={classes.alignCenter}>
+                {children}
+            </div>
         </div>
-        <Typography variant='h5'>
-            {title}
-        </Typography>
-        <Typography variant='subtitle1' className={classes.alignCenter}>
-            {message}
-        </Typography>
-        <div className={classes.alignCenter}>
-            {children}
-        </div>
-    </div>
+    </ResponsiveContainer>;
 }
 
 export default Alert;

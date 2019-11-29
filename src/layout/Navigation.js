@@ -41,7 +41,7 @@ const Navigation = ({ docked, xs, config, onItemSelected }) => {
     let nav;
 
     if (config) {
-        nav = (config.dataTypes || []).map(
+        nav = (config.dataTypes || []).filter(dt => dt).map(
             (dataType, index) => {
                 const title = config.titles[index];
                 return <ListItem button key={dataType.id} onClick={select(dataType)}>

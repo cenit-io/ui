@@ -120,7 +120,7 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
         updateItem && updateItem(item);
     };
 
-    const breadcumb = (
+        const breadcumb = (
         <div className={classes.breadcrumb}>
             <Chip label={dataTypeTitle} onClick={() => onItemPickup({ [DataTypeId]: dataType.id })}/>
             <ChevronRight/>

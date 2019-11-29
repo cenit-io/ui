@@ -8,6 +8,7 @@ import clsx from "clsx";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import { CircularProgress, makeStyles } from "@material-ui/core";
+import ResponsiveContainer from "../components/ResponsiveContainer";
 
 const useStyles = makeStyles(theme => ({
     okBox: {
@@ -39,8 +40,10 @@ const useStyles = makeStyles(theme => ({
         margin: theme.spacing(1)
     },
     okContainer: {
-        height: props => props.height,
-        overflow: 'auto',
+        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         background: theme.palette.background.default
     },
     successLabel: {
@@ -142,16 +145,18 @@ const Delete = ({ docked, dataType, onDisable, theme, onItemPickup, height, item
             }
     }
 
-    return <div key='successAlert' className={clsx(classes.fullHeight, classes.center, classes.okContainer)}>
-        <div className={clsx(classes.okBox, classes.center)}>
-            {statusUI}
-            <DeleteIcon/>
+    return <ResponsiveContainer>
+        <div className={classes.okContainer}>
+            <div className={clsx(classes.okBox, classes.center)}>
+                {statusUI}
+                <DeleteIcon fontSize='large'/>
+            </div>
+            <Typography variant='h5' className={classes.alignCenter}>
+                {text}
+            </Typography>
+            {actions}
         </div>
-        <Typography variant='h5' className={classes.alignCenter}>
-            {text}
-        </Typography>
-        {actions}
-    </div>;
+    </ResponsiveContainer>;
 };
 
 export default ActionRegistry.register(Delete, {
