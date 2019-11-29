@@ -9,12 +9,13 @@ import Show from "./Show";
 import Random from "../util/Random";
 import { DataType } from "../services/DataTypeService";
 import { DataTypeId, TitleSubject } from "../common/Symbols";
-import { map, switchMap } from "rxjs/operators";
+import { switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import { of } from "rxjs";
 import copySymbols from "../util/cpSymbols";
 import ChevronRight from "@material-ui/core/SvgIcon/SvgIcon";
 import ActionPicker from "./ActionPicker";
+import Alert from "./Alert";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -47,7 +48,6 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
     const [actionComponentKey, setActionComponentKey] = useState(Random.string());
     const [dataTypeTitle, setDataTypeTitle] = useState(null);
     const [itemTitle, setItemTitle] = useState(null);
-    const [titles, setTitles] = useState({});
     const [error, setError] = useState(null);
 
     const theme = useTheme();
@@ -100,7 +100,7 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
     }, [dataType, memberItem]);
 
     if (error) {
-        return <div>{error}</div>
+        return <Alert message={error}/>;
     }
 
     if (!memberItem) {
