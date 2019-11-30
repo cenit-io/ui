@@ -1,6 +1,5 @@
 import React from 'react';
-import { makeStyles, Toolbar, Typography, Chip, IconButton } from "@material-ui/core";
-import RefreshIcon from "@material-ui/icons/Refresh";
+import { makeStyles, Toolbar, Typography, Chip } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
 import ActionPicker from "./ActionPicker";
 import { ActionKind } from "./ActionRegistry";
@@ -36,9 +35,6 @@ function CollectionActionsToolbar({ title, arity, onAction, selectedKey, onRefre
                           arity={arity}
                           onAction={onAction}
                           selectedKey={selectedKey}/>
-            <IconButton onClick={onRefresh}>
-                <RefreshIcon/>
-            </IconButton>
         </Toolbar>
     );
 };

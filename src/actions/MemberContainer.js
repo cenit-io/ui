@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Loading from '../components/Loading';
-import { Chip, IconButton, Toolbar, Typography, useTheme } from "@material-ui/core";
+import { Chip, Toolbar, Typography, useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
-import RefreshIcon from "@material-ui/icons/Refresh";
 import Show from "./Show";
 import Random from "../util/Random";
 import { DataType } from "../services/DataTypeService";
@@ -154,10 +153,6 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
                           arity={1}
                           onAction={handleAction}
                           disabled={disabled}/>
-            <IconButton disabled={disabled}
-                        onClick={() => setActionComponentKey(Random.string())}>
-                <RefreshIcon/>
-            </IconButton>
         </Toolbar>
         <div className={classes.actionContainer}
              style={{ height: `calc(${componentHeight})` }}>
