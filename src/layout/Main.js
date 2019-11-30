@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles, useMediaQuery } from "@material-ui/core";
 import AppBar, { appBarHeight } from './AppBar';
 import Navigation, { navigationWidth } from "./Navigation";
@@ -30,6 +30,7 @@ const Main = () => {
     const [docked, setDocked] = useState(localStorage.getItem('docked') !== 'false');
     const [idToken, setIdToken] = useState(null);
     const [config, setConfig] = useState(null);
+    const [currentConfig, setCurrentConfig] = useState(null);
     const [items, setItems] = useState([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -38,9 +39,49 @@ const Main = () => {
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
+    useEffect(() => {
+        if (!idToken) {
+            const subscription = AuthorizationService.getIdToken().subscribe(
+                token => setIdToken(token)
+            );
+
+            return () => subscription.unsubscribe();
+        }
+    }, [idToken]);
+
+    useEffect(() => {
+        if (config) {
+            if (currentConfig && currentConfig.tenant_id !== config.tenant_id) {
+                setCurrentConfig(null);
+            }
+            let dataTypesIds, dataTypes;
+            const subscription = AuthorizationService.config({
+                tenant_id: config.tenant_id,
+                dataTypesIds: config.dataTypesIds
+            })
+                .pipe(
+                    switchMap(data => {
+                            dataTypesIds = data.dataTypesIds || [];
+                            return zzip(...dataTypesIds.map(id => DataType.getById(id))).pipe(
+                                switchMap(dts => {
+                                    dataTypes = dts;
+                                    dts = dts.filter(dataType => dataType);
+                                    dataTypesIds = dts.map(dataType => dataType.id);
+                                    return zzip(...dts.map(dataType => dataType.getTitle()));
+                                })
+                            );
+                        }
+                    )
+                ).subscribe(
+                    titles => setCurrentConfig({ ...config, dataTypesIds, dataTypes, titles })
+                );
+            return () => subscription.unsubscribe();
+        }
+    }, [config]);
+
     const navigation = <Navigation docked={docked}
                                    xs={xs}
-                                   config={config}
+                                   config={currentConfig}
                                    onItemSelected={handleItemSelected}/>;
 
     const switchNavigation = () => {
@@ -75,56 +116,33 @@ const Main = () => {
         setItems(newItems);
     }
 
-    function configure(data) {
-        if (!config || config.tenant_id !== data.tenant_id) {
-            setConfig(null);
-        }
-        let dataTypesIds, dataTypes;
-        AuthorizationService.config({ tenant_id: data.tenant_id, dataTypesIds: data.dataTypesIds })
-            .pipe(
-                switchMap(data => {
-                        dataTypesIds = data.dataTypesIds || [];
-                        return zzip(...dataTypesIds.map(id => DataType.getById(id))).pipe(
-                            switchMap(dts => {
-                                dataTypes = dts;
-                                dts = dts.filter(dataType => dataType);
-                                dataTypesIds = dts.map(dataType => dataType.id);
-                                return zzip(...dts.map(dataType => dataType.getTitle()));
-                            })
-                        );
-                    }
-                )
-            ).subscribe( //TODO sanitize with unsubscribe
-            titles => setConfig({ ...data, dataTypesIds, dataTypes, titles })
-        );
-    }
-
     function handleTenantSelected(tenant) {
-        if (!config || tenant.id !== config.tenant_id) {
-            configure({ tenant_id: tenant.id })
+        if (!currentConfig || tenant.id !== currentConfig.tenant_id) {
+            setConfig({ tenant_id: tenant.id })
         }
     }
 
     function handleDataTypeSelected(dataType) {
-        const dataTypesIds = config.dataTypesIds || [],
-            dataTypes = config.dataTypes || [],
-            titles = config.titles || [],
+        const dataTypesIds = currentConfig.dataTypesIds || [],
+            dataTypes = currentConfig.dataTypes || [],
+            titles = currentConfig.titles || [],
             dataTypeId = dataType.record.id;
 
         if (dataTypesIds.indexOf(dataTypeId) === -1) {
             dataTypesIds.push(dataTypeId);
             dataTypes.push(dataType.record);
             titles.push(dataType.title);
-            configure({ tenant_id: config.tenant_id, dataTypesIds, dataTypes, titles });
+            setConfig({
+                tenant_id: currentConfig.tenant_id,
+                dataTypesIds,
+                dataTypes,
+                titles
+            });
         }
     }
 
-    if (!idToken) {
-        AuthorizationService.getIdToken().subscribe(token => setIdToken(token));  //TODO sanitize with unsubscribe
-    }
-
-    const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`),
-        tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
+    const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`);
+    const tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
 
     return <div className={classes.root}>
         <div className={classes.mainContainer}>
@@ -156,7 +174,7 @@ const Main = () => {
         <AppBar onToggle={switchNavigation}
                 onTenantSelected={handleTenantSelected}
                 onDataTypeSelected={handleDataTypeSelected}
-                dataTypeSelectorDisabled={config === null}
+                dataTypeSelectorDisabled={currentConfig === null}
                 idToken={idToken}/>
     </div>
 };

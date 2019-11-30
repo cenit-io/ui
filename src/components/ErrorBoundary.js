@@ -1,5 +1,5 @@
 import React from 'react';
-import './ContentCentered.css'
+import '../common/FlexBox.css'
 
 class ErrorBoundary extends React.Component {
 
@@ -18,7 +18,7 @@ class ErrorBoundary extends React.Component {
             { children } = this.props;
 
         if (error || !children || children.length === 0) {
-            return <div className='content-centered'>
+            return <div className='flex full-width full-v-height justify-content-center align-items-center'>
                 Ups! This is an error... The app will reboot in a few seconds, reload manually if not.
             </div>;
         }
