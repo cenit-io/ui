@@ -62,7 +62,7 @@ const useStyles = makeStyles(theme => ({
 
 const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
-const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeSelectorDisabled, idToken }) => {
+const AdminAppBar = ({ onToggle, onTenantSelected, dataTypeSelectorDisabled, idToken, dataTypeSubject }) => {
 
     const [open, setOpen] = useState(false);
 
@@ -131,7 +131,7 @@ const AdminAppBar = ({ onToggle, onTenantSelected, onDataTypeSelected, dataTypeS
                     <SearchIcon/>
                 </div>
                 <RecordSelector dataTypeSelector={DataTypeSelector}
-                                onSelect={onDataTypeSelected}
+                                onSelect={selection => dataTypeSubject.next(selection.record)}
                                 inputClasses={inputClasses}
                                 disabled={dataTypeSelectorDisabled}/>
             </div>

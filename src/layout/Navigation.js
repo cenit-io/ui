@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -9,6 +9,10 @@ import MailIcon from '@material-ui/icons/Mail';
 import { makeStyles } from "@material-ui/core";
 import Loading from "../components/Loading";
 import { DataTypeId } from "../common/Symbols";
+import zzip from "../util/zzip";
+import { of } from "rxjs";
+import { map, switchMap } from "rxjs/operators";
+import { DataType } from "../services/DataTypeService";
 
 export const navigationWidth = theme => `${theme.spacing(30)}px`;
 
@@ -30,25 +34,64 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const Navigation = ({ docked, xs, config, onItemSelected }) => {
+const Navigation = ({ docked, xs, config, onItemSelected, dataTypeSubject, updateConfig }) => {
 
-    const [over, setOver] = useState(false),
+    const [over, setOver] = useState(false);
+    const [titles, setTitles] = useState({});
+    const classes = useStyles();
+    const navigation = config && config.navigation;
 
-        classes = useStyles(),
+    useEffect(() => {
+        const subscription = dataTypeSubject.subscribe(
+            dataType => {
+                if (!navigation || !navigation[dataType.id]) {
+                    updateConfig({
+                        navigation: {
+                            ...navigation,
+                            [dataType.id]: {}
+                        }
+                    });
+                }
+            }
+        );
+        return () => subscription.unsubscribe();
+    }, [dataTypeSubject]);
 
-        select = dataType => () => onItemSelected({ [DataTypeId]: dataType.id });
+    useEffect(() => {
+        if (navigation) {
+            const subscription = zzip(
+                ...Object.keys(navigation).map(id => {
+                    if (titles[id]) {
+                        return of({ id, title: titles[id] });
+                    }
+                    return DataType.getById(id).pipe(
+                        switchMap(dataType => dataType.getTitle()),
+                        map(title => ({ id, title }))
+                    )
+                })
+            ).subscribe(
+                titles => setTitles(
+                    titles.reduce((prev, current) => ({ ...prev, [current.id]: current.title }), {})
+                )
+            );
+            return () => subscription.unsubscribe();
+        }
+    }, [navigation]);
+
+    const select = dataType => () => onItemSelected({ [DataTypeId]: dataType.id });
 
     let nav;
-
-    if (config) {
-        nav = (config.dataTypes || []).filter(dt => dt).map(
-            (dataType, index) => {
-                const title = config.titles[index];
-                return <ListItem button key={dataType.id} onClick={select(dataType)}>
+    if (navigation) {
+        nav = Object.keys(navigation).map(
+            (id, index) => (
+                <ListItem button
+                          key={id}
+                          onClick={select({ id })}
+                          disabled={!titles.hasOwnProperty(id)}>
                     <ListItemIcon>{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}</ListItemIcon>
-                    <ListItemText primary={title}/>
-                </ListItem>;
-            }
+                    <ListItemText primary={titles[id] || id}/>
+                </ListItem>
+            )
         );
         nav = <List style={{ overflowX: 'hidden' }}> {nav} </List>;
     } else {

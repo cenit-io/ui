@@ -4,12 +4,10 @@ import AppBar, { appBarHeight } from './AppBar';
 import Navigation, { navigationWidth } from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
 import AuthorizationService from "../services/AuthorizationService";
-import { DataType } from "../services/DataTypeService";
 import Drawer from "../components/Drawer";
 import clsx from "clsx";
 import Tabs from "./Tabs";
-import { switchMap } from "rxjs/operators";
-import zzip from "../util/zzip";
+import { Subject } from "rxjs";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -33,6 +31,7 @@ const Main = () => {
     const [currentConfig, setCurrentConfig] = useState(null);
     const [items, setItems] = useState([]);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [dataTypeSubject] = useState(new Subject());
 
     const classes = useStyles();
 
@@ -52,37 +51,29 @@ const Main = () => {
     useEffect(() => {
         if (config) {
             if (currentConfig && currentConfig.tenant_id !== config.tenant_id) {
+                setItems([]);
                 setCurrentConfig(null);
             }
-            let dataTypesIds, dataTypes;
-            const subscription = AuthorizationService.config({
-                tenant_id: config.tenant_id,
-                dataTypesIds: config.dataTypesIds
-            })
-                .pipe(
-                    switchMap(data => {
-                            dataTypesIds = data.dataTypesIds || [];
-                            return zzip(...dataTypesIds.map(id => DataType.getById(id))).pipe(
-                                switchMap(dts => {
-                                    dataTypes = dts;
-                                    dts = dts.filter(dataType => dataType);
-                                    dataTypesIds = dts.map(dataType => dataType.id);
-                                    return zzip(...dts.map(dataType => dataType.getTitle()));
-                                })
-                            );
-                        }
-                    )
-                ).subscribe(
-                    titles => setCurrentConfig({ ...config, dataTypesIds, dataTypes, titles })
+            if (config.tenant_id) {
+                const subscription = AuthorizationService.config(config).subscribe(
+                    config => setCurrentConfig(config)
                 );
-            return () => subscription.unsubscribe();
+                return () => subscription.unsubscribe();
+            }
         }
     }, [config]);
 
-    const navigation = <Navigation docked={docked}
+    const { tenant_id } = currentConfig || {};
+
+    const updateConfig = partialConfig => setConfig({ tenant_id, ...currentConfig, ...partialConfig });
+
+    const navigation = <Navigation key={tenant_id}
+                                   docked={docked}
                                    xs={xs}
                                    config={currentConfig}
-                                   onItemSelected={handleItemSelected}/>;
+                                   dataTypeSubject={dataTypeSubject}
+                                   onItemSelected={handleItemSelected}
+                                   updateConfig={updateConfig}/>;
 
     const switchNavigation = () => {
         localStorage.setItem('docked', String(!docked));
@@ -117,27 +108,8 @@ const Main = () => {
     }
 
     function handleTenantSelected(tenant) {
-        if (!currentConfig || tenant.id !== currentConfig.tenant_id) {
+        if (!config || tenant.id !== config.tenant_id) {
             setConfig({ tenant_id: tenant.id })
-        }
-    }
-
-    function handleDataTypeSelected(dataType) {
-        const dataTypesIds = currentConfig.dataTypesIds || [],
-            dataTypes = currentConfig.dataTypes || [],
-            titles = currentConfig.titles || [],
-            dataTypeId = dataType.record.id;
-
-        if (dataTypesIds.indexOf(dataTypeId) === -1) {
-            dataTypesIds.push(dataTypeId);
-            dataTypes.push(dataType.record);
-            titles.push(dataType.title);
-            setConfig({
-                tenant_id: currentConfig.tenant_id,
-                dataTypesIds,
-                dataTypes,
-                titles
-            });
         }
     }
 
@@ -173,8 +145,8 @@ const Main = () => {
         </div>
         <AppBar onToggle={switchNavigation}
                 onTenantSelected={handleTenantSelected}
-                onDataTypeSelected={handleDataTypeSelected}
                 dataTypeSelectorDisabled={currentConfig === null}
+                dataTypeSubject={dataTypeSubject}
                 idToken={idToken}/>
     </div>
 };
