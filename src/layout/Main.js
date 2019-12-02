@@ -28,10 +28,9 @@ const Main = () => {
     const [docked, setDocked] = useState(localStorage.getItem('docked') !== 'false');
     const [idToken, setIdToken] = useState(null);
     const [config, setConfig] = useState(null);
-    const [currentConfig, setCurrentConfig] = useState(null);
-    const [items, setItems] = useState([]);
-    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [resolvedConfig, setResolvedConfig] = useState(null);
     const [dataTypeSubject] = useState(new Subject());
+    const [tabItemSubject] = useState(new Subject());
 
     const classes = useStyles();
 
@@ -50,62 +49,34 @@ const Main = () => {
 
     useEffect(() => {
         if (config) {
-            if (currentConfig && currentConfig.tenant_id !== config.tenant_id) {
-                setItems([]);
-                setCurrentConfig(null);
-            }
-            if (config.tenant_id) {
-                const subscription = AuthorizationService.config(config).subscribe(
-                    config => setCurrentConfig(config)
+            const tenant_id = config.tenant_id || (resolvedConfig && resolvedConfig.tenant_id);
+            if (tenant_id) {
+                const subscription = AuthorizationService.config({ tenant_id, ...config }).subscribe(
+                    config => setResolvedConfig(config)
                 );
                 return () => subscription.unsubscribe();
+            } else {
+                setResolvedConfig(null);
             }
         }
     }, [config]);
 
-    const { tenant_id } = currentConfig || {};
+    const { tenant_id } = resolvedConfig || {};
 
-    const updateConfig = partialConfig => setConfig({ tenant_id, ...currentConfig, ...partialConfig });
+    const updateConfig = partialConfig => setConfig(partialConfig);
 
     const navigation = <Navigation key={tenant_id}
                                    docked={docked}
                                    xs={xs}
-                                   config={currentConfig}
+                                   config={resolvedConfig}
                                    dataTypeSubject={dataTypeSubject}
-                                   onItemSelected={handleItemSelected}
+                                   tabItemSubject={tabItemSubject}
                                    updateConfig={updateConfig}/>;
 
     const switchNavigation = () => {
         localStorage.setItem('docked', String(!docked));
         setDocked(!docked);
     };
-
-    function handleItemSelected(item) {
-        if (xs && docked) {
-            switchNavigation();
-        }
-        let index = items.findIndex(
-            value => !Object.keys(item).find(
-                key => value[key] !== item[key]
-            ) && !Object.getOwnPropertySymbols(item).find(
-                key => value[key] !== item[key]
-            )
-        );
-        if (index === -1) {
-            index = items.length;
-            setItems([...items, item]);
-        }
-        setSelectedIndex(index);
-    }
-
-    function removeItem(index) {
-        if (selectedIndex === items.length - 1) {
-            setSelectedIndex(selectedIndex - 1);
-        }
-        let newItems = [...items];
-        newItems.splice(index, 1);
-        setItems(newItems);
-    }
 
     function handleTenantSelected(tenant) {
         if (!config || tenant.id !== config.tenant_id) {
@@ -125,12 +96,10 @@ const Main = () => {
                      width: `calc(${tabsWidth})`
                  }}>
                 <Tabs docked={docked}
-                      items={items}
-                      index={selectedIndex}
-                      onSelect={setSelectedIndex}
-                      onCloseItem={removeItem}
-                      onItemPickup={handleItemSelected}
-                      width={tabsWidth}/>
+                      config={resolvedConfig}
+                      tabItemSubject={tabItemSubject}
+                      width={tabsWidth}
+                      updateConfig={updateConfig}/>
             </div>
             {
                 xs || navigation
@@ -145,7 +114,7 @@ const Main = () => {
         </div>
         <AppBar onToggle={switchNavigation}
                 onTenantSelected={handleTenantSelected}
-                dataTypeSelectorDisabled={currentConfig === null}
+                dataTypeSelectorDisabled={resolvedConfig === null}
                 dataTypeSubject={dataTypeSubject}
                 idToken={idToken}/>
     </div>

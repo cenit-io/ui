@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { makeStyles, useTheme } from '@material-ui/core/styles/index';
 import AppBar from '@material-ui/core/AppBar/index';
 import Tabs from '@material-ui/core/Tabs/index';
@@ -10,12 +10,12 @@ import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
 import MemberContainer from "../actions/MemberContainer";
 import CollectionContainer from "../actions/CollectionContainer";
-import { DataTypeId, TitleSubject } from "../common/Symbols";
+import { DataTypeId, TabIndex, TabKey, TitleSubject } from "../common/Symbols";
 import { Subject } from "rxjs";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
-function ItemTab({ item, index, onSelect, onClose }) {
+function ItemTab({ item, onClick, onClose }) {
 
     const [title, setTitle] = useState('...');
     const titleSubject = item[TitleSubject];
@@ -27,9 +27,9 @@ function ItemTab({ item, index, onSelect, onClose }) {
 
     return (
         <Tab component={ClosableComponent}
-             onClick={() => onSelect(index)}
              label={title}
-             onClose={() => onClose(index)}/>
+             onClick={onClick}
+             onClose={onClose}/>
     );
 }
 
@@ -64,48 +64,173 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-export default function NavTabs({ docked, items, index, onSelect, onCloseItem, width, onItemPickup }) {
+function reducer(state, action) {
+    switch (action.type) {
+
+        case 'selectItem': {
+            const { item, updateConfig } = action;
+            let { items } = state;
+
+            const itemKey = `${item[DataTypeId]}_${item.id}`;
+            const values = Object.values(items);
+
+            let index = values.length;
+
+            const existingItem = values.find(value => value[TabKey] === itemKey);
+
+            if (existingItem) {
+                index = existingItem[TabIndex];
+            } else {
+                index = values.length;
+                item[TabIndex] = index;
+                item[TabKey] = itemKey;
+                items = { ...items, [item[TabKey]]: item };
+            }
+
+            updateConfig({
+                tabs: {
+                    index,
+                    items: Object.values(items).sort(
+                        (a, b) => a[TabIndex] - b[TabIndex]
+                    ).map(
+                        item => ({ DataTypeId: item[DataTypeId], id: item.id })
+                    )
+                }
+            });
+
+            return { index, items };
+        }
+
+        case 'buildItems': {
+            const { config } = action;
+            let { items } = state;
+
+            let newItems = {};
+            let index = 0;
+
+            if (config) {
+                const tabs = config.tabs || {};
+                index = tabs.index || 0;
+                const tabItems = tabs.items || [];
+                tabItems.forEach(
+                    (item, index) => {
+                        const id = `${item.DataTypeId}_${item.id}`;
+                        if (items.hasOwnProperty(id)) {
+                            newItems[id] = items[id];
+                        } else {
+                            newItems[id] = {
+                                id: item.id,
+                                [DataTypeId]: item.DataTypeId
+                            }
+                        }
+                        newItems[id][TabIndex] = index;
+                        newItems[id][TabKey] = id;
+                    }
+                );
+            }
+
+            items = newItems;
+
+            return { index, items };
+        }
+
+        case 'closeItem': {
+            const { key, updateConfig } = action;
+            let { index, items } = state;
+
+            const removedItem = items[key];
+            if (removedItem) {
+                delete items[key];
+                const values = Object.values(items);
+                values.forEach(value => {
+                    if (value[TabIndex] > removedItem[TabIndex]) {
+                        value[TabIndex]--;
+                    }
+                });
+                if (index === values.length) {
+                    index--;
+                }
+
+                updateConfig({
+                    tabs: {
+                        index,
+                        items: Object.values(items).sort(
+                            (a, b) => a[TabIndex] - b[TabIndex]
+                        ).map(
+                            item => ({ DataTypeId: item[DataTypeId], id: item.id })
+                        )
+                    }
+                });
+            }
+
+            return { index, items };
+        }
+        case 'selectIndex':
+            return { ...state, index: action.index };
+
+        default:
+            throw new Error(`Action not supported: ${JSON.stringify(action)}`);
+    }
+}
+
+export default function NavTabs({ docked, config, updateConfig, width, tabItemSubject }) {
     const classes = useStyles();
     const theme = useTheme();
-    const [, setValue] = useState(0);
+    const [state, dispatch] = useReducer(reducer, { index: 0, items: {} });
 
-    const handleClose = index => () => {
-        onCloseItem(index);
-    };
+    const { items, index } = state;
 
-    const tabs = items.map(
-        (item, i) => {
+    useEffect(() => {
+        const subscription = tabItemSubject.subscribe(
+            item => dispatch({ type: 'selectItem', item, updateConfig })
+        );
+        return () => subscription.unsubscribe();
+    }, [tabItemSubject, updateConfig]);
+
+    useEffect(() => dispatch({ type: 'buildItems', config }), [config]);
+
+    const handleSelect = index => () => dispatch({ type: 'selectIndex', index });
+
+    const handleClose = key => () => dispatch({ type: 'closeItem', key, updateConfig });
+
+    const onItemPickup = item => tabItemSubject.next(item);
+
+    const sortedItems = Object.values(items).sort((a, b) => a[TabIndex] - b[TabIndex]);
+
+    const tabs = sortedItems.map(
+        (item, index) => {
+            const key = item[TabKey];
             if (!item[TitleSubject]) {
                 item[TitleSubject] = new Subject();
             }
-            return <ItemTab key={`tab_${item[DataTypeId]}_${item.id}`}
+            return <ItemTab key={`tab_${key}`}
                             docked={docked}
-                            item={items[i] || item}
-                            index={i}
-                            onSelect={onSelect}
-                            onClose={onCloseItem}/>;
+                            item={item}
+                            onClick={handleSelect(index)}
+                            onClose={handleClose(key)}/>;
         }
     );
 
     const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`;
 
-    const containers = items.map(
-        (item, index) => {
+    const containers = sortedItems.map(
+        item => {
             const ContainerComponent = item.id ? MemberContainer : CollectionContainer;
-            return <div key={`container_${item[DataTypeId]}_${item.id}`}
+            const key = item[TabKey];
+            return <div key={`container_${key}`}
                         style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
                 <ContainerComponent docked={docked}
                                     item={item}
                                     height={containerHeight}
                                     width={width}
                                     onItemPickup={onItemPickup}
-                                    onClose={handleClose(index)}/>
+                                    onClose={handleClose(key)}/>
             </div>;
         }
     );
 
     function handleChange(event, newValue) {
-        setValue(newValue);
+        console.warn('CHANGED', newValue);
     }
 
     return (

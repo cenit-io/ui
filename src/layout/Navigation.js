@@ -34,7 +34,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const Navigation = ({ docked, xs, config, onItemSelected, dataTypeSubject, updateConfig }) => {
+const Navigation = ({ docked, xs, config, dataTypeSubject, tabItemSubject, updateConfig }) => {
 
     const [over, setOver] = useState(false);
     const [titles, setTitles] = useState({});
@@ -78,7 +78,7 @@ const Navigation = ({ docked, xs, config, onItemSelected, dataTypeSubject, updat
         }
     }, [navigation]);
 
-    const select = dataType => () => onItemSelected({ [DataTypeId]: dataType.id });
+    const select = dataType => () => tabItemSubject.next({ [DataTypeId]: dataType.id });
 
     let nav;
     if (navigation) {
