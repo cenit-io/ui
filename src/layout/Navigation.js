@@ -65,7 +65,7 @@ const Navigation = ({ docked, xs, config, dataTypeSubject, tabItemSubject, updat
                         return of({ id, title: titles[id] });
                     }
                     return DataType.getById(id).pipe(
-                        switchMap(dataType => dataType.getTitle()),
+                        switchMap(dataType => (dataType && dataType.getTitle()) || '404'),
                         map(title => ({ id, title }))
                     )
                 })
@@ -75,6 +75,10 @@ const Navigation = ({ docked, xs, config, dataTypeSubject, tabItemSubject, updat
                 )
             );
             return () => subscription.unsubscribe();
+        } else {
+            updateConfig({
+                navigation: {}
+            });
         }
     }, [navigation]);
 
