@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import clsx from 'clsx';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -34,28 +34,40 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+function navigationReducer(state, action) {
+    let { type, config, updateConfig } = action;
+    const navigation = config && config.navigation;
+    switch (type) {
+        case 'add': {
+            updateConfig({
+                navigation: {
+                    ...navigation,
+                    [action.dataType.id]: {}
+                }
+            });
+        }
+            break;
+        case 'update': {
+            return { ...state, ...action.state };
+        }
+    }
+    return state;
+}
+
 const Navigation = ({ docked, xs, config, dataTypeSubject, tabItemSubject, updateConfig }) => {
 
     const [over, setOver] = useState(false);
-    const [titles, setTitles] = useState({});
+    const [state, dispatch] = useReducer(navigationReducer, { titles: {} });
     const classes = useStyles();
     const navigation = config && config.navigation;
+    const { titles } = state;
 
     useEffect(() => {
         const subscription = dataTypeSubject.subscribe(
-            dataType => {
-                if (!navigation || !navigation[dataType.id]) {
-                    updateConfig({
-                        navigation: {
-                            ...navigation,
-                            [dataType.id]: {}
-                        }
-                    });
-                }
-            }
+            dataType => dispatch({ type: 'add', config, updateConfig, dataType })
         );
         return () => subscription.unsubscribe();
-    }, [dataTypeSubject]);
+    }, [config, updateConfig, dataTypeSubject]);
 
     useEffect(() => {
         if (navigation) {
@@ -70,9 +82,14 @@ const Navigation = ({ docked, xs, config, dataTypeSubject, tabItemSubject, updat
                     )
                 })
             ).subscribe(
-                titles => setTitles(
-                    titles.reduce((prev, current) => ({ ...prev, [current.id]: current.title }), {})
-                )
+                titles => dispatch({
+                    type: 'update',
+                    state: {
+                        titles: titles.reduce(
+                            (prev, current) => ({ ...prev, [current.id]: current.title }), {}
+                        )
+                    }
+                })
             );
             return () => subscription.unsubscribe();
         } else {
