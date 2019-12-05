@@ -8,6 +8,7 @@
     "axios": "^0.18.1",
     "clsx": "^1.0.4",
     "copy-to-clipboard": "^3.2.0",
+    "liquidjs": "^9.4.2",
     "query-string": "^6.8.3",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",

@@ -1,8 +1,9 @@
 import API from './ApiService';
-import { of } from "rxjs";
+import { from, of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import FormContext from "./FormContext";
+import LiquidEngine from "./LiquidEngine";
 
 const isSimpleSchema = schema => ['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1;
 
@@ -284,7 +285,20 @@ export class DataType {
 
     titlePropNames() {
         if (!this.__titleProps) {
-            this.__titleProps = ['id', 'name', 'title'];
+            return this.getSchema().pipe(
+                switchMap(
+                    schema => {
+                        if (schema.label) {
+                            this.__titleProps = LiquidEngine.parse(schema.label).map(
+                                template => template.token.value.split('|')[0].trim()
+                            ).filter(token => token.length);
+                        } else {
+                            this.__titleProps = ['id', 'name', 'title'];
+                        }
+
+                        return of(this.__titleProps);
+                    })
+            );
         }
         return of(this.__titleProps);
     }
@@ -296,9 +310,9 @@ export class DataType {
     titlesFor(...items) {
         items = [...items];
 
-        return this.titleProps().pipe(
+        return zzip(this.getSchema(), this.titleProps()).pipe(
             switchMap(
-                titleProps => {
+                ([schema, titleProps]) => {
                     const missingProps = {};
 
                     for (let i = 0; i < items.length; i++) {
@@ -338,15 +352,20 @@ export class DataType {
                             }
 
                             return this.getTitle().pipe(
-                                map(
-                                    dtTitle => items.map(item => {
-                                        let title = item.title || item.name;
-                                        if (title) {
-                                            return title;
-                                        }
-                                        return `${dtTitle} ${item.id || '(blank)'}`;
-                                    })
-                                ));
+                                switchMap(
+                                    dtTitle => zzip(...items.map(item => {
+                                            if (schema.label) {
+                                                return from(LiquidEngine.parseAndRender(schema.label, item));
+                                            }
+                                            let title = item.title || item.name;
+                                            if (title) {
+                                                return of(title);
+                                            }
+                                            return of(`${dtTitle} ${item.id || '(blank)'}`);
+                                        })
+                                    )
+                                )
+                            );
                         })
                     );
                 }
@@ -355,13 +374,20 @@ export class DataType {
     }
 
     post(data, opts = {}) {
-        const { viewport, add_only } = opts;
+        const { viewport, add_only, add_new } = opts;
         opts = { headers: {} };
         if (viewport) {
             opts.headers['X-Template-Options'] = JSON.stringify({ viewport });
         }
+        let parserOptions;
         if (add_only) {
-            opts.headers['X-Parser-Options'] = JSON.stringify({ add_only: true });
+            parserOptions = { add_only: true };
+        }
+        if (add_new) {
+            parserOptions = { ...parserOptions, add_new: true };
+        }
+        if (parserOptions) {
+            opts.headers['X-Parser-Options'] = JSON.stringify(parserOptions);
         }
         return API.post('setup', 'data_type', this.id, 'digest', opts, data);
     }
@@ -455,12 +481,13 @@ export class Property {
     }
 
     getTitle() {
-        return this.getSchema().pipe(map(schema => {
+        return this.getSchema().pipe(
+            switchMap(schema => {
             const title = schema['title'];
             if (title) {
-                return title.toString();
+                return from(LiquidEngine.parseAndRender(title.toString(), this));
             }
-            return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            return of(this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()));
         }));
     }
 
