@@ -67,6 +67,7 @@ const Main = () => {
 
     const navigation = <Navigation key={tenant_id}
                                    docked={docked}
+                                   setDocked={setDocked}
                                    xs={xs}
                                    config={resolvedConfig}
                                    dataTypeSubject={dataTypeSubject}

@@ -54,7 +54,7 @@ function navigationReducer(state, action) {
     return state;
 }
 
-const Navigation = ({ docked, xs, config, dataTypeSubject, tabItemSubject, updateConfig }) => {
+const Navigation = ({ docked, setDocked, xs, config, dataTypeSubject, tabItemSubject, updateConfig }) => {
 
     const [over, setOver] = useState(false);
     const [state, dispatch] = useReducer(navigationReducer, { titles: {} });
@@ -99,7 +99,12 @@ const Navigation = ({ docked, xs, config, dataTypeSubject, tabItemSubject, updat
         }
     }, [navigation]);
 
-    const select = dataType => () => tabItemSubject.next({ [DataTypeId]: dataType.id });
+    const select = id => () => {
+        if (xs) {
+            setDocked(false);
+        }
+        tabItemSubject.next({ [DataTypeId]: id });
+    };
 
     let nav;
     if (navigation) {
@@ -107,7 +112,7 @@ const Navigation = ({ docked, xs, config, dataTypeSubject, tabItemSubject, updat
             (id, index) => (
                 <ListItem button
                           key={id}
-                          onClick={select({ id })}
+                          onClick={select(id)}
                           disabled={!titles.hasOwnProperty(id)}>
                     <ListItemIcon>{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}</ListItemIcon>
                     <ListItemText primary={titles[id] || id}/>
@@ -128,7 +133,8 @@ const Navigation = ({ docked, xs, config, dataTypeSubject, tabItemSubject, updat
                     order: 0,
                     height: (docked && !xs) ? 'unset' : '100%',
                     boxShadow: '0 19px 38px rgba(0,0,0,0.30)',
-                    zIndex: 1100
+                    zIndex: 1100,
+                    overflow: 'auto'
                 }}
                 onMouseEnter={() => setOver(true)}
                 onMouseLeave={() => setOver(false)}>
