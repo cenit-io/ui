@@ -170,7 +170,8 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
             subscription = (current.viewport || of('{_id}')).pipe(
                 switchMap(viewport => current.dataType.post(current.value, {
                     viewport,
-                    add_only: rootId
+                    add_only: rootId,
+                    add_new: !rootId
                 })),
                 catchError(error => {
                     setErrors(error.response.data);
