@@ -17,6 +17,10 @@ const styles = makeStyles(theme => ({
     smFormContainer: {
         paddingLeft: '15%',
         paddingRight: '15%',
+    },
+    xsFormContainer: {
+        paddingLeft: theme.spacing(1),
+        paddingRight: theme.spacing(1),
     }
 }));
 
@@ -31,6 +35,7 @@ function ResponsiveContainer({ docked, forwardRef, children }) {
                 className={
                     clsx(
                         classes.formContainer,
+                        xs && classes.xsFormContainer,
                         !xs && classes.smFormContainer,
                         md && classes.mdFormContainer
                     )}>

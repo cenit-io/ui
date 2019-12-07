@@ -12,10 +12,21 @@ const apiGateway = axios.create({
 
 export const ApiResource = function () {
 
-    let args = Array.prototype.slice.call(arguments).flat(), params = args[args.length - 1], headers, size;
+    let args = Array.prototype.slice.call(arguments).flat();
+    let params = args[args.length - 1];
+    let headers;
+    let size;
+    let onUploadProgress;
+    let cancelToken;
 
     if (params && params.constructor === Object) {
         params = args.pop();
+
+        onUploadProgress = params.onUploadProgress;
+        delete params.onUploadProgress;
+        cancelToken = params.cancelToken;
+        delete params.cancelToken;
+
         headers = params.headers;
         if (headers &&
             headers.constructor === Object &&
@@ -35,7 +46,9 @@ export const ApiResource = function () {
             switchMap(access_token => from(
                 apiGateway.get(this.path, {
                     headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                    params: params
+                    params,
+                    onUploadProgress,
+                    cancelToken
                 })).pipe(map(response => response.data))
             )
         );
@@ -46,7 +59,9 @@ export const ApiResource = function () {
             switchMap(access_token => from(
                 apiGateway.delete(this.path, {
                     headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                    params: params
+                    params,
+                    onUploadProgress,
+                    cancelToken
                 })).pipe(map(response => response && response.data))
             )
         );
@@ -57,7 +72,9 @@ export const ApiResource = function () {
             switchMap(access_token => from(
                 apiGateway.post(this.path, data, {
                     headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                    parameters: params
+                    params,
+                    onUploadProgress,
+                    cancelToken
                 })).pipe(map(response => response.data))
             )
         );
@@ -70,7 +87,10 @@ const API = {
     get: (...args) => {
         return (new ApiResource(...args)).get().pipe(
             catchError(e => {
-                if (e.response.status !== 404) {
+                if (axios.isCancel(e)) {
+                    throw e;
+                }
+                if (e.response && e.response.status !== 404) {
                     ErrorCallbacks.forEach(callback => callback(e));
                 }
                 return of(null);
@@ -82,13 +102,18 @@ const API = {
         const data = args.pop();
         return (new ApiResource(...args)).post(data).pipe(
             catchError(e => {
-                switch (e.response.status) {
-                    case 404:
-                        break;
-                    case 422:
-                        throw e;
-                    default:
-                        ErrorCallbacks.forEach(callback => callback(e));
+                if (axios.isCancel(e)) {
+                    throw e;
+                }
+                if (e.response) {
+                    switch (e.response.status) {
+                        case 404:
+                            break;
+                        case 422:
+                            throw e;
+                        default:
+                            ErrorCallbacks.forEach(callback => callback(e));
+                    }
                 }
                 return of(null);
             })
@@ -98,12 +123,17 @@ const API = {
     delete: (...args) => {
         return (new ApiResource(...args)).delete().pipe(
             catchError(e => {
-                switch (e.response.status) {
-                    case 404:
-                    case 422:
-                        break;
-                    default:
-                        ErrorCallbacks.forEach(callback => callback(e));
+                if (axios.isCancel(e)) {
+                    throw e;
+                }
+                if (e.response) {
+                    switch (e.response.status) {
+                        case 404:
+                        case 422:
+                            break;
+                        default:
+                            ErrorCallbacks.forEach(callback => callback(e));
+                    }
                 }
                 throw e;
             })

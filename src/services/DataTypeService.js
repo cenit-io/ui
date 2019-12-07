@@ -23,7 +23,11 @@ export class DataType {
             map(dataType => {
                 if (dataType) {
                     if (dataType._type === JSON_TYPE) delete dataType.schema;
-                    dataType.__proto__ = new DataType();
+                    if (dataType._type === FILE_TYPE) {
+                        dataType.__proto__ = new FileDataType();
+                    } else {
+                        dataType.__proto__ = new DataType();
+                    }
                     DataType.dataTypes[id] = dataType;
                 }
                 return dataType;
@@ -444,6 +448,18 @@ export class DataType {
     }
 }
 
+class FileDataType extends DataType {
+
+    upload(data, opts = {}) {
+        const { filename, onUploadProgress, cancelToken } = opts;
+        opts = { headers: {}, onUploadProgress, cancelToken };
+        if (filename) {
+            opts.headers['X-Digest-Options'] = JSON.stringify({ filename });
+        }
+        return API.post('setup', 'data_type', this.id, 'digest', 'upload', opts, data);
+    }
+}
+
 export class Property {
 
     constructor(attrs = {}) {
@@ -483,12 +499,12 @@ export class Property {
     getTitle() {
         return this.getSchema().pipe(
             switchMap(schema => {
-            const title = schema['title'];
-            if (title) {
-                return from(LiquidEngine.parseAndRender(title.toString(), this));
-            }
-            return of(this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()));
-        }));
+                const title = schema['title'];
+                if (title) {
+                    return from(LiquidEngine.parseAndRender(title.toString(), this));
+                }
+                return of(this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()));
+            }));
     }
 
     isReadOnly(context) {
