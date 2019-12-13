@@ -18,7 +18,8 @@ const New = ({ docked, dataType, theme, classes, rootId, onItemPickup, width, he
     return <FileUploader width={width}
                          height={height}
                          docked={docked}
-                         dataType={dataType}/>
+                         dataType={dataType}
+                         onItemPickup={onItemPickup}/>
 };
 
 export default ActionRegistry.register(New, {

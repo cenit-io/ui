@@ -102,9 +102,6 @@ const API = {
         const data = args.pop();
         return (new ApiResource(...args)).post(data).pipe(
             catchError(e => {
-                if (axios.isCancel(e)) {
-                    throw e;
-                }
                 if (e.response) {
                     switch (e.response.status) {
                         case 404:
@@ -114,8 +111,9 @@ const API = {
                         default:
                             ErrorCallbacks.forEach(callback => callback(e));
                     }
+                    return of(null);
                 }
-                return of(null);
+                throw e;
             })
         );
     },
