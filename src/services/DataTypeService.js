@@ -254,13 +254,26 @@ export class DataType {
         const sort = (opts && opts.sort) || {};
         query = (query || '').toString().trim();
         const params = { limit, page };
-        const props = (opts && opts.props) || this.titleProps();
+        const props = (opts && opts.props) ||
+            this.titleProps().pipe(
+                switchMap(
+                    titleProps => zzip(
+                        ...titleProps.map(p => p.is('string')
+                        )
+                    ).pipe(
+                        map(
+                            strFlags => strFlags.map(
+                                (flag, index) => flag && titleProps[index]).filter(p => p)
+                        )
+                    )
+                )
+            ); // TODO Query on other types than string and prevent no query props
 
         return props.pipe(
             switchMap(queryProps => {
                 if (query.length > 0) {
                     const orQuery = queryProps.map(
-                        prop => ({ [prop.name]: { '$regex': '(?i)' + query } })
+                        prop => ({ [prop.name]: { '$regex': `(?i)${query}` } })
                     );
                     params['$or'] = JSON.stringify(orQuery);
                 }
@@ -487,6 +500,8 @@ export class Property {
     };
 
     isSimple = () => this.getSchema().pipe(map(schema => isSimpleSchema(schema)));
+
+    is = type => this.getSchema().pipe(map(schema => schema['type'] === type));
 
     isReferenced() {
         return this.getSchema().pipe(map(schema => schema['referenced']));
