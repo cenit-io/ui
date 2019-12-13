@@ -12,11 +12,14 @@ import {
     LinearProgress, ListItemSecondaryAction
 } from "@material-ui/core";
 import UploadIcon from "@material-ui/icons/CloudUpload";
-import ListIcon from "@material-ui/icons/List";
+import ScheduleIcon from "@material-ui/icons/Schedule";
 import CancelIcon from "@material-ui/icons/Cancel";
+import SuccessIcon from "@material-ui/icons/CheckCircle";
+import LaunchIcon from "@material-ui/icons/Launch";
+import RetryIcon from "@material-ui/icons/Refresh";
 import clsx from "clsx";
-import SwipeableViews from "react-swipeable-views";
 import axios, { CancelToken } from "axios";
+import { DataTypeId } from "../common/Symbols";
 
 const FileStatus = Object.freeze({
     waiting: 'waiting',
@@ -35,26 +38,40 @@ const FileStatus = Object.freeze({
 const dropStyles = theme => ({
     dropArea: {
         background: theme.palette.background.default,
-        borderRadius: '25%',
         width: '100%',
-        height: ({ height }) => `calc(${height} - ${theme.spacing(12)}px)`
+        height: ({ height }) => `calc(${height} - ${theme.spacing(9)}px)`,
+        outline: 'transparent',
+        border: 'solid 2px transparent'
+    },
+    emptyDropArea: {
+        borderRadius: '25%',
+    },
+    activeDropArea: {
+        borderColor: theme.palette.primary.main
     },
     fileList: {
         background: theme.palette.background.default,
-        height: ({ height }) => `calc(${height} - ${theme.spacing(12)}px)`,
+        width: '95%',
+        maxHeight: ({ height }) => `calc(${height} - ${theme.spacing(9)}px)`,
         overflow: 'auto',
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1)
     },
-    trailing: {
-        width: '100%',
-        height: theme.spacing(3)
+    dropMsg: {
+        display: 'block',
+        textAlign: 'center',
+        marginTop: theme.spacing(3)
+    },
+    dropIt: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        background: theme.palette.background.default
     },
     backToDrop: {
         position: 'absolute',
         left: theme.spacing(2),
         top: ({ height }) => `calc(${height} - ${theme.spacing(8)}px)`
-
     },
     goToList: {
         position: 'absolute',
@@ -64,7 +81,6 @@ const dropStyles = theme => ({
     },
     fileItem: {
         marginTop: theme.spacing(1),
-        borderRadius: 5,
         border: 'solid 1px'
     },
     [FileStatus.waiting]: {
@@ -93,6 +109,37 @@ const dropStyles = theme => ({
     }
 });
 
+function MultiIconButton({
+                             DefaultIcon, OverIcon, onMouseEnter, onMouseLeave,
+                             defaultColor, overColor, ...other
+                         }) {
+    const [state, setState] = useState('default');
+
+    const handleMouseEnter = e => {
+        setState('over');
+        if (onMouseEnter) {
+            onMouseEnter(e);
+        }
+    };
+
+    const handleMouseLeave = e => {
+        setState('default');
+        if (onMouseLeave) {
+            onMouseLeave(e);
+        }
+    };
+
+    const Icon = (state === 'over' && OverIcon) || DefaultIcon;
+    const color = (state === 'over' && overColor) || defaultColor;
+
+    return <IconButton {...other}
+                       onMouseEnter={handleMouseEnter}
+                       onMouseLeave={handleMouseLeave}
+                       color={color}>
+        <Icon/>
+    </IconButton>
+}
+
 function uploaderReducer(state, action) {
     switch (action.type) {
         case 'add': {
@@ -120,37 +167,85 @@ function uploaderReducer(state, action) {
             return { ...state, currentProgress: action.value };
         }
 
+        case 'refresh': {
+            return { ...state };
+        }
+
         default: {
             return state
         }
     }
 }
 
-function FileItem({ classes, file, status }) {
+function FileItem({ classes, file, status, launch, dispatch }) {
     let progress, action;
+
+    const handleLaunch = e => {
+        e.stopPropagation();
+        launch(file.id)
+    };
+
+    const cancel = (file, status = FileStatus.waiting) => e => {
+        e.stopPropagation();
+        if (status === FileStatus.uploading) {
+            file.cancelToken.cancel();
+        } else {
+            file.status = FileStatus.cancelled;
+        }
+        dispatch({ type: 'refresh' });
+    };
+
+    const handleRetry = e => {
+        e.stopPropagation();
+        file.status = FileStatus.waiting;
+        dispatch({ type: 'next' });
+    };
+
     switch (status) {
         case FileStatus.uploading: {
             progress = <LinearProgress variant="determinate" value={file.progress} className='full-width'/>;
             action = (
-                <IconButton edge="end" onClick={() => file.cancelToken.cancel()}>
-                    <CancelIcon/>
-                </IconButton>
+                <MultiIconButton edge="end"
+                                 DefaultIcon={UploadIcon}
+                                 OverIcon={CancelIcon}
+                                 onClick={cancel(file, FileStatus.uploading)}/>
             );
         }
             break;
 
         case FileStatus.waiting: {
             action = (
-                <IconButton edge="end" onClick={() => status = FileStatus.cancelled}>
-                    <CancelIcon/>
-                </IconButton>
+                <MultiIconButton edge="end"
+                                 DefaultIcon={ScheduleIcon}
+                                 OverIcon={CancelIcon}
+                                 onClick={cancel(file)}/>
             );
         }
             break;
+
         case FileStatus.finishing: {
             progress = <LinearProgress/>;
         }
             break;
+
+        case FileStatus.success: {
+            action = (
+                <MultiIconButton edge="end"
+                                 DefaultIcon={SuccessIcon}
+                                 OverIcon={LaunchIcon}
+                                 onClick={handleLaunch}
+                                 defaultColor="primary"/>
+            );
+        }
+            break;
+
+        default: {
+            action = (
+                <MultiIconButton edge="end"
+                                 DefaultIcon={RetryIcon}
+                                 onClick={handleRetry}/>
+            );
+        }
     }
 
     return <ListItem className={clsx(classes.fileItem, classes[status])}>
@@ -174,7 +269,7 @@ function FileItem({ classes, file, status }) {
     </ListItem>;
 }
 
-function FileUploader({ dataType, width, height, classes, theme }) {
+function FileUploader({ dataType, onItemPickup, width, height, classes, theme }) {
     const [state, dispatch] = useReducer(uploaderReducer, {
         step: 0,
         files: []
@@ -207,11 +302,15 @@ function FileUploader({ dataType, width, height, classes, theme }) {
                 },
                 cancelToken: current.cancelToken.token
             }).subscribe(
-                () => {
+                response => {
+                    if (response) {
+                        current.id = response.id;
+                    }
                     current.status = FileStatus.success;
                     dispatch({ type: 'next' });
                 },
                 error => {
+                    console.log('ERROR');
                     if (axios.isCancel(error)) {
                         current.status = FileStatus.cancelled;
                         current.message = 'Cancelled by user';
@@ -232,52 +331,62 @@ function FileUploader({ dataType, width, height, classes, theme }) {
         }
     }, [current]);
 
+    const launch = id => onItemPickup({ [DataTypeId]: dataType.id, id });
+
     const fileList = files.map(
-        (file, index) => <FileItem key={`file_${index}`} status={file.status} file={file} classes={classes}/>
+        (file, index) => <FileItem key={`file_${index}`}
+                                   status={file.status}
+                                   file={file}
+                                   classes={classes}
+                                   launch={launch}
+                                   dispatch={dispatch}/>
     );
+
+    let dropIt;
+    if (isDragActive) {
+        dropIt = <div
+            className={clsx(
+                'relative', 'flex', 'justify-content-center', 'align-items-center', 'column',
+                'full-width', 'full-height',
+                classes.dropIt,
+                files.length === 0 && classes.emptyDropArea
+            )}>
+            <div className={classes.dropMsg}>
+                <UploadIcon fontSize='large' color="primary"/>
+                <Typography color='textPrimary' variant='h6'>
+                    Drop it!
+                </Typography>
+            </div>
+        </div>;
+    }
 
     return (
         <ResponsiveContainer>
-            <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                            index={step}>
-                <div key='drop'
-                     className={clsx('flex', 'justify-content-center', 'align-items-center', 'column', classes.dropArea)}
-                     {...getRootProps()}>
-                    <input {...getInputProps()} />
-                    <UploadIcon fontSize='large'/>
-                    <Typography color='textPrimary' variant='h6'>
-                        {isDragActive ? 'Drop it!' : 'Drop files here'}
-                    </Typography>
-                    {
-                        !isDragActive &&
-                        <Typography variant='caption' color='textSecondary'>
-                            Or click to select files
-                        </Typography>
-                    }
-                </div>
-
+            <div key='drop'
+                 className={clsx(
+                     'relative', 'flex', 'justify-content-center', 'align-items-center', 'column',
+                     classes.dropArea,
+                     files.length === 0 && classes.emptyDropArea,
+                     isDragActive && classes.activeDropArea
+                 )}
+                 {...getRootProps()}>
+                <input {...getInputProps()} />
                 <div key='list'
                      className={classes.fileList}>
                     <List>
                         {fileList}
+                        <ListItem component="div" className={classes.dropMsg}>
+                            <UploadIcon fontSize='large'/>
+                            <Typography color='textPrimary' variant='h6'>
+                                Drop files here
+                            </Typography>
+                            <Typography variant='caption' color='textSecondary'>
+                                Or click to select files
+                            </Typography>
+                        </ListItem>
                     </List>
                 </div>
-            </SwipeableViews>
-            <div className={classes.actions}>
-                {
-                    step === 1 &&
-                    <IconButton className={classes.backToDrop}
-                                onClick={() => dispatch({ type: 'goto', step: 0 })}>
-                        <UploadIcon fontSize='large'/>
-                    </IconButton>
-                }
-                {
-                    step === 0 && files.length > 0 &&
-                    <IconButton className={classes.goToList}
-                                onClick={() => dispatch({ type: 'goto', step: 1 })}>
-                        <ListIcon fontSize='large'/>
-                    </IconButton>
-                }
+                {dropIt}
             </div>
         </ResponsiveContainer>
     );
