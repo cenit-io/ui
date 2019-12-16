@@ -52,7 +52,8 @@ class RefOneControl extends React.Component {
             callback: newValue => onChange({
                 id: newValue.id,
                 _reference: true
-            })
+            }),
+            max: 1
         });
     };
 

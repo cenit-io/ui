@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ObjectControl from "./ObjectControl";
 import { makeStyles } from "@material-ui/core";
+import { catchError, switchMap } from "rxjs/operators";
+import { of } from "rxjs";
 
 const useStyles = makeStyles(() => ({
     root: {
@@ -11,9 +13,29 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-const FormView = ({ dataType, width, value, errors, onChange, disabled, onStack, rootId, readOnly }) => {
+const FormView = ({ dataType, width, value, onChange, disabled, onStack, rootId, readOnly, submitter, onSubmitDone }) => {
 
+    const [errors, setErrors] = useState(null);
     const classes = useStyles();
+
+    useEffect(() => {
+        const subscription = submitter.pipe(
+            switchMap(
+                ({ value, viewport }) =>
+                    dataType.post(value, {
+                        viewport,
+                        add_only: rootId,
+                        add_new: !rootId
+                    })
+            ),
+            catchError(error => {
+                setErrors(error.response.data);
+                return of(null);
+            })
+        ).subscribe(value => onSubmitDone(value));
+
+        return () => subscription.unsubscribe();
+    }, [submitter, dataType, onSubmitDone, rootId]);
 
     let control;
 

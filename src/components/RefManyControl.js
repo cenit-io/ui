@@ -49,7 +49,10 @@ class RefManyControl extends React.Component {
                     map(itemTitle => `[${property.name} #${value.length}] ${itemTitle}`)
                 ),
                 callback: itemValue => {
-                    onChange([...value, itemValue]);
+                    if (itemValue.constructor !== Array) {
+                        itemValue = [itemValue];
+                    }
+                    onChange([...value, ...itemValue]);
                     this.setOpen(true);
                 }
             });

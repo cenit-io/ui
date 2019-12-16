@@ -461,15 +461,22 @@ export class DataType {
     }
 }
 
-class FileDataType extends DataType {
+export class FileDataType extends DataType {
 
     upload(data, opts = {}) {
         const { filename, onUploadProgress, cancelToken } = opts;
         opts = { headers: {}, onUploadProgress, cancelToken };
+
         if (filename) {
             opts.headers['X-Digest-Options'] = JSON.stringify({ filename });
         }
-        return API.post('setup', 'data_type', this.id, 'digest', 'upload', opts, data);
+
+        const formData = new FormData();
+        formData.append('data', data);
+
+        opts.headers['Content-Type'] = 'multipart/form-data';
+
+        return API.post('setup', 'data_type', this.id, 'digest', 'upload', opts, formData);
     }
 }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import BackIcon from '@material-ui/icons/ArrowBack';
 import FormView from "./FormView";
 import { useMediaQuery, withStyles, Fab } from "@material-ui/core/index";
@@ -14,10 +14,24 @@ import Typography from '@material-ui/core/Typography/index';
 import StorageIcon from '@material-ui/icons/Storage';
 import ViewIcon from '@material-ui/icons/OpenInNew';
 import EditIcon from '@material-ui/icons/Edit';
-import { catchError, switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
-import { of } from "rxjs";
+import { of, Subject } from "rxjs";
 import { DataTypeId } from "../common/Symbols";
+import { FileDataType } from "../services/DataTypeService";
+import FileUploader from "./FileUploader";
+
+function withForm(item) {
+    item.formComponent = formComponentFor(item.dataType);
+    item.submitter = new Subject();
+    return item;
+}
+
+function formComponentFor(dataType) {
+    if (dataType.constructor === FileDataType) {
+        return FileUploader;
+    }
+    return FormView;
+}
 
 const stackHeaderSpacing = 5;
 
@@ -128,12 +142,12 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
 
     const [id, setId] = useState((value && value.id) || null);
     const initialStack = () => [
-        {
+        withForm({
             value: { ...value },
             dataType,
             title: () => of('')
-        },
-        {
+        }),
+        withForm({
             value: { ...value },
             dataType,
             title: value => dataType.titleFor(value),
@@ -145,7 +159,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
                 }
             },
             rootId: value && value.id
-        }
+        })
     ];
     const [ref] = useState(React.createRef());
     const [stack, setStack] = useState(initialStack());
@@ -156,6 +170,24 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
     const md = useMediaQuery(theme.breakpoints.up('md'));
     const [jsonMode, setJsonMode] = useState(false);
 
+    const current = stack[stack.length - 1];
+
+    const onSubmitDone = useCallback(value => {
+        if (value) {
+            setDone(true);
+            setValue({ ...current.value, ...value });
+            setTimeout(() => {
+                handleBack();
+                if (current.callback) {
+                    current.callback(value);
+                }
+                setSaving(false);
+            }, 1000);
+        } else {
+            setSaving(false);
+        }
+    }, [current]);
+
     useEffect(() => {
         const subscription = zzip(
             ...stack.map(item => item.title(item.value))
@@ -164,39 +196,17 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
     }, [stack.length]);
 
     useEffect(() => {
-        let subscription;
         if (saving) {
             setDone(false);
-            subscription = (current.viewport || of('{_id}')).pipe(
-                switchMap(viewport => current.dataType.post(current.value, {
-                    viewport,
-                    add_only: rootId,
-                    add_new: !rootId
-                })),
-                catchError(error => {
-                    setErrors(error.response.data);
-                    return of(null);
+            const subscription = (current.viewport || of('{_id}')).subscribe(
+                viewport => current.submitter.next({
+                    value: current.value,
+                    viewport
                 })
-            ).subscribe(response => {
-                if (response) {
-                    setDone(true);
-                    setValue({ ...current.value, ...response });
-                    setTimeout(() => {
-                        handleBack();
-                        if (current.callback) {
-                            current.callback(response);
-                        }
-                        setSaving(false);
-                    }, 1000);
-                } else {
-                    setSaving(false);
-                }
-            });
+            );
+            return () => subscription && subscription.unsubscribe();
         }
-        return () => subscription && subscription.unsubscribe();
     }, [saving]);
-
-    const current = stack[stack.length - 1];
 
     const updateCurrent = item => {
         const newStack = [...stack];
@@ -205,8 +215,6 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
     };
 
     const setValue = value => updateCurrent({ value });
-
-    const setErrors = errors => updateCurrent({ errors });
 
     const updateStack = stack => {
         setStack(stack);
@@ -220,8 +228,9 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
     const handleChange = value => setValue(value);
 
     const handleStack = item => {
+        console.log('S', item);
         current.scrollTop = ref.current.scrollTop;
-        updateStack([...stack, item]);
+        updateStack([...stack, withForm(item)]);
     };
 
     const save = () => {
@@ -339,15 +348,24 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
     );
 
     const forms = stack.map(
-        (item, index) => index ? <FormView key={`form_${index}`}
-                                           dataType={item.dataType}
-                                           value={item.value}
-                                           errors={item.errors}
-                                           onChange={handleChange}
-                                           disabled={saving}
-                                           readOnly={readOnly}
-                                           onStack={handleStack}
-                                           rootId={item.rootId}/> : successAlert
+        (item, index) => {
+            if (index) {
+                const Form = item.formComponent;
+                return <Form key={`form_${index}`}
+                             dataType={item.dataType}
+                             value={item.value}
+                             onChange={handleChange}
+                             disabled={saving}
+                             readOnly={readOnly}
+                             onStack={handleStack}
+                             rootId={item.rootId}
+                             max={item.max}
+                             submitter={item.submitter}
+                             onSubmitDone={onSubmitDone}/>
+            }
+
+            return successAlert;
+        }
     );
 
     return <div className={classes.root}>

@@ -14,13 +14,15 @@ import {
 import UploadIcon from "@material-ui/icons/CloudUpload";
 import ScheduleIcon from "@material-ui/icons/Schedule";
 import CancelIcon from "@material-ui/icons/Cancel";
+import DeleteIcon from "@material-ui/icons/Delete";
 import SuccessIcon from "@material-ui/icons/CheckCircle";
 import LaunchIcon from "@material-ui/icons/Launch";
-import RetryIcon from "@material-ui/icons/Refresh";
 import BanedIcon from "@material-ui/icons/Block";
 import clsx from "clsx";
 import axios, { CancelToken } from "axios";
 import { DataTypeId } from "../common/Symbols";
+import { catchError, switchMap } from "rxjs/operators";
+import { of } from "rxjs";
 
 const FileStatus = Object.freeze({
     waiting: 'waiting',
@@ -40,9 +42,11 @@ const dropStyles = theme => ({
     dropArea: {
         background: theme.palette.background.default,
         width: '100%',
+        minHeight: theme.spacing(40),
         height: ({ height }) => `calc(${height} - ${theme.spacing(9)}px)`,
         outline: 'transparent',
-        border: 'solid 2px transparent'
+        border: 'solid 2px transparent',
+        boxSizing: 'border-box'
     },
     emptyDropArea: {
         borderRadius: '25%',
@@ -78,12 +82,6 @@ const dropStyles = theme => ({
         position: 'absolute',
         left: theme.spacing(2),
         top: ({ height }) => `calc(${height} - ${theme.spacing(8)}px)`
-    },
-    goToList: {
-        position: 'absolute',
-        right: theme.spacing(2),
-        top: ({ height }) => `calc(${height} - ${theme.spacing(8)}px)`
-
     },
     fileItem: {
         marginTop: theme.spacing(1),
@@ -147,30 +145,30 @@ function MultiIconButton({
 }
 
 function uploaderReducer(state, action) {
+    state.filesUpdated = false;
     switch (action.type) {
         case 'add': {
+            state.filesUpdated = new Date().getTime();
             let { files } = action;
             files.forEach(file => file.status = FileStatus.waiting);
             files = [...state.files, ...files];
-            const dropOverflow = files.length > action.maxFiles;
+            const dropOverflow = files.length > action.max;
             if (dropOverflow) {
                 return { ...state, dropOverflow };
             }
-            return { ...state, files, dropOverflow, step: 1 };
-        }
-
-        case 'goto': {
-            return { ...state, step: action.step };
+            return { ...state, files, dropOverflow };
         }
 
         case 'next': {
+            state.filesUpdated = new Date().getTime();
+
             let { current, files } = state;
 
             if (!current || !FileStatus.isActive(current.status)) {
                 current = files.find(file => file.status === FileStatus.waiting);
             }
 
-            return { ...state, current };
+            return { ...state, current, done: !current };
         }
 
         case 'currentProgress': {
@@ -178,7 +176,18 @@ function uploaderReducer(state, action) {
         }
 
         case 'refresh': {
-            return { ...state };
+            return { ...state, filesUpdated: new Date().getTime() };
+        }
+
+        case 'delete': {
+            state.filesUpdated = new Date().getTime();
+            const index = state.files.indexOf(action.file);
+            if (index !== -1) {
+                const files = [...state.files];
+                files.splice(index, 1);
+                return { ...state, files };
+            }
+            return state;
         }
 
         default: {
@@ -205,10 +214,14 @@ function FileItem({ classes, file, status, launch, dispatch }) {
         dispatch({ type: 'refresh' });
     };
 
-    const handleRetry = e => {
+    const handleDelete = e => {
         e.stopPropagation();
-        file.status = FileStatus.waiting;
-        dispatch({ type: 'next' });
+        dispatch({ type: 'delete', file });
+    };
+
+    const handleChange = event => {
+        file.customName = event.target.value;
+        dispatch({ type: 'refresh' });
     };
 
     switch (status) {
@@ -252,8 +265,8 @@ function FileItem({ classes, file, status, launch, dispatch }) {
         default: {
             action = (
                 <MultiIconButton edge="end"
-                                 DefaultIcon={RetryIcon}
-                                 onClick={handleRetry}/>
+                                 DefaultIcon={DeleteIcon}
+                                 onClick={handleDelete}/>
             );
         }
     }
@@ -264,9 +277,11 @@ function FileItem({ classes, file, status, launch, dispatch }) {
                           <React.Fragment>
                               <TextField label="Name"
                                          variant="filled"
-                                         value={file.name}
+                                         value={file.customName || file.name}
                                          helperText={file.status}
-                                         style={{ width: '100%' }}/>
+                                         className="full-width"
+                                         onChange={handleChange}
+                                         onClick={e => e.stopPropagation()}/>
                           </React.Fragment>
                       }
                       secondaryTypographyProps={{ component: 'div' }}
@@ -281,25 +296,58 @@ function FileItem({ classes, file, status, launch, dispatch }) {
     </ListItem>;
 }
 
-function FileUploader({ dataType, multiple, maxFiles, onItemPickup, width, height, classes, theme }) {
+function computeFilesValue(files) {
+    let filesValue;
+
+    if (files.length) {
+        filesValue = files.map(file => {
+            const fileValue = { filename: file.customName || file.name };
+            if (file.id) {
+                fileValue.id = file.id;
+            }
+            return fileValue;
+        });
+        if (filesValue.length === 1) {
+            filesValue = filesValue[0];
+        }
+    } else {
+        filesValue = {};
+    }
+
+    return filesValue;
+}
+
+function FileUploader({ dataType, multiple, max, onItemPickup, width, height, classes, theme, onChange, value, submitter, onSubmitDone, rootId }) {
     const [state, dispatch] = useReducer(uploaderReducer, {
-        step: 0,
-        files: []
+        files: [],
+        done: false
     });
 
-    const { step, files, current, dropOverflow, currentProgress } = state;
+    const { files, current, dropOverflow, currentProgress, filesUpdated, done } = state;
 
-    maxFiles = Math.max(Number(maxFiles), 0) || Infinity;
-    multiple = ((multiple === undefined) || Boolean(multiple)) && maxFiles > files.length + 1;
-    if (maxFiles === Infinity && !multiple) {
-        maxFiles = files.length + 1;
+    useEffect(() => {
+        const subscription = submitter.subscribe(() => dispatch({ type: 'next' }));
+
+        return () => subscription.unsubscribe();
+    }, [submitter]);
+
+    useEffect(() => {
+        if (done) {
+            onSubmitDone(computeFilesValue(files));
+        }
+    }, [done, files]);
+
+    max = Math.max(Number(max), 0) || Infinity;
+    multiple = ((multiple === undefined) || Boolean(multiple)) && max > files.length + 1;
+    if (max === Infinity && !multiple) {
+        max = files.length + 1;
     }
 
     const onDrop = useCallback(files => {
-        dispatch({ type: 'add', files, maxFiles });
-    }, [maxFiles]);
+        dispatch({ type: 'add', files, max });
+    }, [max]);
 
-    const noClick = files.length === maxFiles;
+    const noClick = files.length === max;
 
     const { getRootProps, getInputProps, isDragActive, draggedFiles } = useDropzone({
         onDrop,
@@ -308,11 +356,21 @@ function FileUploader({ dataType, multiple, maxFiles, onItemPickup, width, heigh
     });
 
     useEffect(() => {
+        if (filesUpdated) {
+            const filesValue = computeFilesValue(files);
+
+            if (JSON.stringify(filesValue) !== JSON.stringify(value)) {
+                onChange(filesValue);
+            }
+        }
+    }, [filesUpdated, onChange, files, value])
+
+    useEffect(() => {
         if (current) {
             current.status = FileStatus.uploading;
             current.cancelToken = CancelToken.source();
             const subscription = dataType.upload(current, {
-                filename: current.name,
+                filename: current.customName || current.name,
                 onUploadProgress: event => {
                     current.progress = Math.round((event.loaded * 100) / event.total);
                     if (current.progress === 100) {
@@ -363,7 +421,7 @@ function FileUploader({ dataType, multiple, maxFiles, onItemPickup, width, heigh
                                    launch={launch}
                                    dispatch={dispatch}/>
     );
-    const remaining = maxFiles - files.length;
+    const remaining = max - files.length;
     let dropIt;
     let activeDropClass;
     if (isDragActive) {
@@ -404,7 +462,7 @@ function FileUploader({ dataType, multiple, maxFiles, onItemPickup, width, heigh
     }
 
     let dropInstructions;
-    if (files.length < maxFiles) {
+    if (files.length < max) {
         dropInstructions = (
             <ListItem component="div" className={classes.dropMsg}>
                 <UploadIcon fontSize='large'/>
@@ -425,26 +483,24 @@ function FileUploader({ dataType, multiple, maxFiles, onItemPickup, width, heigh
     }
 
     return (
-        <ResponsiveContainer>
-            <div key='drop'
-                 className={clsx(
-                     'relative', 'flex', 'justify-content-center', 'align-items-center', 'column',
-                     classes.dropArea,
-                     files.length === 0 && classes.emptyDropArea,
-                     activeDropClass
-                 )}
-                 {...getRootProps()}>
-                <input {...getInputProps()} />
-                <div key='list'
-                     className={classes.fileList}>
-                    <List>
-                        {fileList}
-                        {dropInstructions}
-                    </List>
-                </div>
-                {dropIt}
+        <div key='drop'
+             className={clsx(
+                 'relative', 'flex', 'justify-content-center', 'align-items-center', 'column',
+                 classes.dropArea,
+                 files.length === 0 && classes.emptyDropArea,
+                 activeDropClass
+             )}
+             {...getRootProps()}>
+            <input {...getInputProps()} />
+            <div key='list'
+                 className={classes.fileList}>
+                <List>
+                    {fileList}
+                    {dropInstructions}
+                </List>
             </div>
-        </ResponsiveContainer>
+            {dropIt}
+        </div>
     );
 }
 

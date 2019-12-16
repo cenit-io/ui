@@ -39,6 +39,12 @@ export const ApiResource = function () {
         headers = params = {};
     }
 
+    const config = {
+        params,
+        onUploadProgress,
+        cancelToken
+    };
+
     this.path = '/' + args.join('/');
 
     this.get = () => {
@@ -46,9 +52,7 @@ export const ApiResource = function () {
             switchMap(access_token => from(
                 apiGateway.get(this.path, {
                     headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                    params,
-                    onUploadProgress,
-                    cancelToken
+                    ...config
                 })).pipe(map(response => response.data))
             )
         );
@@ -59,9 +63,7 @@ export const ApiResource = function () {
             switchMap(access_token => from(
                 apiGateway.delete(this.path, {
                     headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                    params,
-                    onUploadProgress,
-                    cancelToken
+                    ...config
                 })).pipe(map(response => response && response.data))
             )
         );
@@ -72,9 +74,7 @@ export const ApiResource = function () {
             switchMap(access_token => from(
                 apiGateway.post(this.path, data, {
                     headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                    params,
-                    onUploadProgress,
-                    cancelToken
+                    ...config
                 })).pipe(map(response => response.data))
             )
         );
