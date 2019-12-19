@@ -361,7 +361,8 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
                              rootId={item.rootId}
                              max={item.max}
                              submitter={item.submitter}
-                             onSubmitDone={onSubmitDone}/>
+                             onSubmitDone={onSubmitDone}
+                             onItemPickup={onItemPickup}/>
             }
 
             return successAlert;

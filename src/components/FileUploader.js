@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useReducer, useState } from 'react';
-import ResponsiveContainer from "./ResponsiveContainer";
 import { useDropzone } from "react-dropzone";
 import '../common/FlexBox.css';
 import {
@@ -9,6 +8,7 @@ import {
     ListItem,
     ListItemText,
     IconButton,
+    Button,
     LinearProgress, ListItemSecondaryAction, TextField
 } from "@material-ui/core";
 import UploadIcon from "@material-ui/icons/CloudUpload";
@@ -21,8 +21,6 @@ import BanedIcon from "@material-ui/icons/Block";
 import clsx from "clsx";
 import axios, { CancelToken } from "axios";
 import { DataTypeId } from "../common/Symbols";
-import { catchError, switchMap } from "rxjs/operators";
-import { of } from "rxjs";
 
 const FileStatus = Object.freeze({
     waiting: 'waiting',
@@ -34,6 +32,10 @@ const FileStatus = Object.freeze({
 
     isActive: function (status) {
         return status === this.uploading || status === this.finishing;
+    },
+
+    isError: function (status) {
+        return status === this.cancelled || status === this.failed;
     }
 });
 
@@ -42,7 +44,6 @@ const dropStyles = theme => ({
     dropArea: {
         background: theme.palette.background.default,
         width: '100%',
-        minHeight: theme.spacing(40),
         height: ({ height }) => `calc(${height} - ${theme.spacing(9)}px)`,
         outline: 'transparent',
         border: 'solid 2px transparent',
@@ -50,6 +51,8 @@ const dropStyles = theme => ({
     },
     emptyDropArea: {
         borderRadius: '25%',
+        justifyContent: 'center',
+        minHeight: theme.spacing(40)
     },
     activeDropArea: {
         borderColor: theme.palette.primary.main,
@@ -85,7 +88,15 @@ const dropStyles = theme => ({
     },
     fileItem: {
         marginTop: theme.spacing(1),
-        border: 'solid 0px'
+        borderWidth: 0,
+        padding: 0
+    },
+    launchButton: {
+        width: `calc(100% - ${theme.spacing(7)}px)`,
+        '& .MuiButton-label': {
+            justifyContent: 'left',
+            wordBreak: 'break-word'
+        }
     },
     [FileStatus.waiting]: {
         borderColor: theme.palette.action.active,
@@ -146,6 +157,8 @@ function MultiIconButton({
 
 function uploaderReducer(state, action) {
     state.filesUpdated = false;
+    delete state.error;
+
     switch (action.type) {
         case 'add': {
             state.filesUpdated = new Date().getTime();
@@ -159,6 +172,15 @@ function uploaderReducer(state, action) {
             return { ...state, files, dropOverflow };
         }
 
+        case 'submit': {
+            state.files.forEach(file => {
+                if (FileStatus.isError(file.status)) {
+                    file.status = FileStatus.waiting;
+                }
+            });
+        }
+
+        // eslint-disable-next-line no-fallthrough
         case 'next': {
             state.filesUpdated = new Date().getTime();
 
@@ -190,13 +212,17 @@ function uploaderReducer(state, action) {
             return state;
         }
 
+        case 'error': {
+            return { ...state, error: true };
+        }
+
         default: {
             return state
         }
     }
 }
 
-function FileItem({ classes, file, status, launch, dispatch }) {
+function FileItem({ classes, file, status, launch, dispatch, disabled }) {
     let progress, action;
 
     const handleLaunch = e => {
@@ -255,8 +281,8 @@ function FileItem({ classes, file, status, launch, dispatch }) {
             action = (
                 <MultiIconButton edge="end"
                                  DefaultIcon={SuccessIcon}
-                                 OverIcon={LaunchIcon}
-                                 onClick={handleLaunch}
+                                 OverIcon={DeleteIcon}
+                                 onClick={handleDelete}
                                  defaultColor="primary"/>
             );
         }
@@ -270,20 +296,30 @@ function FileItem({ classes, file, status, launch, dispatch }) {
             );
         }
     }
+    let primary;
+    if (file.status === FileStatus.success) {
+        primary = <Button className={classes.launchButton}
+                          variant="outlined"
+                          color="primary"
+                          startIcon={<LaunchIcon/>}
+                          onClick={handleLaunch}>
+            {file.customName || file.name}
+        </Button>;
+    } else {
+        primary = <TextField label="Name"
+                             variant="filled"
+                             disabled={disabled}
+                             error={FileStatus.isError(file.status)}
+                             value={file.customName || file.name}
+                             helperText={file.status}
+                             className="full-width"
+                             onChange={handleChange}
+                             onClick={e => e.stopPropagation()}/>
+    }
 
     return <ListItem className={clsx(classes.fileItem, classes[status])}>
         <ListItemText primaryTypographyProps={{ component: 'div' }}
-                      primary={
-                          <React.Fragment>
-                              <TextField label="Name"
-                                         variant="filled"
-                                         value={file.customName || file.name}
-                                         helperText={file.status}
-                                         className="full-width"
-                                         onChange={handleChange}
-                                         onClick={e => e.stopPropagation()}/>
-                          </React.Fragment>
-                      }
+                      primary={primary}
                       secondaryTypographyProps={{ component: 'div' }}
                       secondary={
                           <React.Fragment>
@@ -317,23 +353,31 @@ function computeFilesValue(files) {
     return filesValue;
 }
 
-function FileUploader({ dataType, multiple, max, onItemPickup, width, height, classes, theme, onChange, value, submitter, onSubmitDone, rootId }) {
+function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, height, classes, theme, onChange, value, submitter, onSubmitDone, rootId }) {
     const [state, dispatch] = useReducer(uploaderReducer, {
         files: [],
         done: false
     });
 
-    const { files, current, dropOverflow, currentProgress, filesUpdated, done } = state;
+    const { files, current, dropOverflow, currentProgress, filesUpdated, done, error } = state;
 
     useEffect(() => {
-        const subscription = submitter.subscribe(() => dispatch({ type: 'next' }));
+        const subscription = submitter.subscribe(() => {
+            dispatch({ type: 'submit' });
+        });
 
         return () => subscription.unsubscribe();
     }, [submitter]);
 
     useEffect(() => {
         if (done) {
-            onSubmitDone(computeFilesValue(files));
+            let filesValue;
+            if (files.find(file => file.status !== FileStatus.success)) {
+                dispatch({ type: 'error' });
+            } else {
+                filesValue = computeFilesValue(files);
+            }
+            onSubmitDone(filesValue);
         }
     }, [done, files]);
 
@@ -352,7 +396,8 @@ function FileUploader({ dataType, multiple, max, onItemPickup, width, height, cl
     const { getRootProps, getInputProps, isDragActive, draggedFiles } = useDropzone({
         onDrop,
         multiple,
-        noClick
+        noClick,
+        disabled
     });
 
     useEffect(() => {
@@ -419,7 +464,8 @@ function FileUploader({ dataType, multiple, max, onItemPickup, width, height, cl
                                    file={file}
                                    classes={classes}
                                    launch={launch}
-                                   dispatch={dispatch}/>
+                                   dispatch={dispatch}
+                                   disabled={disabled}/>
     );
     const remaining = max - files.length;
     let dropIt;
@@ -462,7 +508,7 @@ function FileUploader({ dataType, multiple, max, onItemPickup, width, height, cl
     }
 
     let dropInstructions;
-    if (files.length < max) {
+    if (!disabled && files.length < max) {
         dropInstructions = (
             <ListItem component="div" className={classes.dropMsg}>
                 <UploadIcon fontSize='large'/>
@@ -485,13 +531,19 @@ function FileUploader({ dataType, multiple, max, onItemPickup, width, height, cl
     return (
         <div key='drop'
              className={clsx(
-                 'relative', 'flex', 'justify-content-center', 'align-items-center', 'column',
+                 'relative', 'flex', 'align-items-center', 'column',
                  classes.dropArea,
                  files.length === 0 && classes.emptyDropArea,
                  activeDropClass
              )}
              {...getRootProps()}>
             <input {...getInputProps()} />
+            {
+                error &&
+                <Typography variant='caption' color='error'>
+                    Some files weren't uploaded. Remove or try to upload them again.
+                </Typography>
+            }
             <div key='list'
                  className={classes.fileList}>
                 <List>
