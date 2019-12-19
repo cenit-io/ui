@@ -99,27 +99,22 @@ const dropStyles = theme => ({
         }
     },
     [FileStatus.waiting]: {
-        borderColor: theme.palette.action.active,
         background: theme.palette.background.default
     },
     [FileStatus.uploading]: {
         borderColor: theme.palette.primary.main,
-        background: theme.palette.primary.light
+        background: theme.palette.background.default
     },
     [FileStatus.finishing]: {
-        borderColor: theme.palette.primary.main,
-        background: theme.palette.primary.light
+        background: theme.palette.background.paper
     },
     [FileStatus.success]: {
-        borderColor: theme.palette.primary.light,
         background: theme.palette.background.paper
     },
     [FileStatus.cancelled]: {
-        borderColor: theme.palette.error.main,
         background: theme.palette.background.default
     },
     [FileStatus.failed]: {
-        borderColor: theme.palette.error.main,
         background: theme.palette.error.light
     }
 });
@@ -213,7 +208,7 @@ function uploaderReducer(state, action) {
         }
 
         case 'error': {
-            return { ...state, error: true };
+            return { ...state, error: true, done: false };
         }
 
         default: {
@@ -308,11 +303,12 @@ function FileItem({ classes, file, status, launch, dispatch, disabled }) {
     } else {
         primary = <TextField label="Name"
                              variant="filled"
+                             multiline
                              disabled={disabled}
                              error={FileStatus.isError(file.status)}
                              value={file.customName || file.name}
                              helperText={file.status}
-                             className="full-width"
+                             className={classes.launchButton}
                              onChange={handleChange}
                              onClick={e => e.stopPropagation()}/>
     }
