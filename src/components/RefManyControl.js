@@ -92,7 +92,7 @@ class RefManyControl extends React.Component {
 
     handleSelect = index => () => {
         const { onStack, property, value } = this.props;
-        onStack({
+        onStack({ // TODO Optimize by passing value with title props
             value: value[index],
             dataType: property.dataType,
             title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name} #${index}] ${title}`)),

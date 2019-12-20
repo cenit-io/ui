@@ -228,7 +228,6 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
     const handleChange = value => setValue(value);
 
     const handleStack = item => {
-        console.log('S', item);
         current.scrollTop = ref.current.scrollTop;
         updateStack([...stack, withForm(item)]);
     };

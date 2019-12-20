@@ -158,9 +158,17 @@ function uploaderReducer(state, action) {
         case 'add': {
             state.filesUpdated = new Date().getTime();
             let { files } = action;
+            const { max, rootId } = action;
             files.forEach(file => file.status = FileStatus.waiting);
-            files = [...state.files, ...files];
-            const dropOverflow = files.length > action.max;
+            if (rootId) {
+                if (!files[0].fake) {
+                    files[0].id = rootId;
+                    files[0].customName = state.files[0].customName;
+                }
+            } else {
+                files = [...state.files, ...files];
+            }
+            const dropOverflow = files.length > max;
             if (dropOverflow) {
                 return { ...state, dropOverflow };
             }
@@ -217,7 +225,7 @@ function uploaderReducer(state, action) {
     }
 }
 
-function FileItem({ classes, file, status, launch, dispatch, disabled }) {
+function FileItem({ file, rootId, status, launch, dispatch, disabled, classes }) {
     let progress, action;
 
     const handleLaunch = e => {
@@ -258,12 +266,14 @@ function FileItem({ classes, file, status, launch, dispatch, disabled }) {
             break;
 
         case FileStatus.waiting: {
-            action = (
-                <MultiIconButton edge="end"
-                                 DefaultIcon={ScheduleIcon}
-                                 OverIcon={CancelIcon}
-                                 onClick={cancel(file)}/>
-            );
+            if (!rootId) {
+                action = (
+                    <MultiIconButton edge="end"
+                                     DefaultIcon={ScheduleIcon}
+                                     OverIcon={CancelIcon}
+                                     onClick={cancel(file)}/>
+                );
+            }
         }
             break;
 
@@ -284,11 +294,13 @@ function FileItem({ classes, file, status, launch, dispatch, disabled }) {
             break;
 
         default: {
-            action = (
-                <MultiIconButton edge="end"
-                                 DefaultIcon={DeleteIcon}
-                                 onClick={handleDelete}/>
-            );
+            if (!rootId) {
+                action = (
+                    <MultiIconButton edge="end"
+                                     DefaultIcon={DeleteIcon}
+                                     onClick={handleDelete}/>
+                );
+            }
         }
     }
     let primary;
@@ -306,9 +318,11 @@ function FileItem({ classes, file, status, launch, dispatch, disabled }) {
                              multiline
                              disabled={disabled}
                              error={FileStatus.isError(file.status)}
-                             value={file.customName || file.name}
+                             value={file.customName || file.name || ''}
                              helperText={file.status}
-                             className={classes.launchButton}
+                             className={clsx(
+                                 (rootId && file.status !== FileStatus.uploading &&'full-width') || classes.launchButton
+                             )}
                              onChange={handleChange}
                              onClick={e => e.stopPropagation()}/>
     }
@@ -358,6 +372,25 @@ function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, 
     const { files, current, dropOverflow, currentProgress, filesUpdated, done, error } = state;
 
     useEffect(() => {
+        if (rootId) {
+            const file = { ...value, id: rootId, name: value.filename, customName: value.filename, fake: true };
+            const addFakeFile = { type: 'add', files: [file], max: 2, rootId };
+            dispatch(addFakeFile);
+            if (!file.customName) {
+                const subscription = dataType.get(rootId, { viewport: '{filename}' }).subscribe(
+                    ({ filename }) => {
+                        file.customName = filename;
+                        file.name = filename;
+                        dispatch(addFakeFile);
+                    }
+                );
+
+                return () => subscription.unsubscribe();
+            }
+        }
+    }, []);
+
+    useEffect(() => {
         const subscription = submitter.subscribe(() => {
             dispatch({ type: 'submit' });
         });
@@ -377,15 +410,15 @@ function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, 
         }
     }, [done, files]);
 
-    max = Math.max(Number(max), 0) || Infinity;
+    max = (rootId && 2) || Math.max(Number(max), 0) || Infinity;
     multiple = ((multiple === undefined) || Boolean(multiple)) && max > files.length + 1;
     if (max === Infinity && !multiple) {
         max = files.length + 1;
     }
 
     const onDrop = useCallback(files => {
-        dispatch({ type: 'add', files, max });
-    }, [max]);
+        dispatch({ type: 'add', files, max, rootId });
+    }, [max, rootId]);
 
     const noClick = files.length === max;
 
@@ -411,6 +444,7 @@ function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, 
             current.status = FileStatus.uploading;
             current.cancelToken = CancelToken.source();
             const subscription = dataType.upload(current, {
+                id: rootId,
                 filename: current.customName || current.name,
                 onUploadProgress: event => {
                     current.progress = Math.round((event.loaded * 100) / event.total);
@@ -450,7 +484,7 @@ function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, 
                 }
             };
         }
-    }, [current]);
+    }, [current, rootId]);
 
     const launch = id => onItemPickup({ [DataTypeId]: dataType.id, id });
 
@@ -461,7 +495,8 @@ function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, 
                                    classes={classes}
                                    launch={launch}
                                    dispatch={dispatch}
-                                   disabled={disabled}/>
+                                   disabled={disabled}
+                                   rootId={rootId}/>
     );
     const remaining = max - files.length;
     let dropIt;

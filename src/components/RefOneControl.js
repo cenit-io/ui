@@ -38,7 +38,7 @@ class RefOneControl extends React.Component {
         };
         //TODO this.state.value = value;
         this.props.onChange(value);
-        this.setState({ value, text: item.title });
+        this.setState({ value, text: item.title, item: item.record });
     };
 
     handleDelete = () => this.props.onDelete();
@@ -59,8 +59,9 @@ class RefOneControl extends React.Component {
 
     handleEdit = () => {
         const { onStack, property, onChange, value } = this.props;
+        const { item } = this.state;
         onStack({
-            value,
+            value: item || value,
             dataType: property.dataType,
             title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
             callback: newValue => onChange({

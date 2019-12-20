@@ -464,11 +464,18 @@ export class DataType {
 export class FileDataType extends DataType {
 
     upload(data, opts = {}) {
-        const { filename, onUploadProgress, cancelToken } = opts;
+        const { id, filename, onUploadProgress, cancelToken } = opts;
         opts = { headers: {}, onUploadProgress, cancelToken };
 
+        let digestOpts;
+        if (id) {
+            digestOpts = { id };
+        }
         if (filename) {
-            opts.headers['X-Digest-Options'] = JSON.stringify({ filename });
+            digestOpts = { ...digestOpts, filename };
+        }
+        if (digestOpts) {
+            opts.headers['X-Digest-Options'] = JSON.stringify(digestOpts);
         }
 
         const formData = new FormData();
