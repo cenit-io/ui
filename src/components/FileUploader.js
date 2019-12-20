@@ -163,6 +163,7 @@ function uploaderReducer(state, action) {
             if (rootId) {
                 if (!files[0].fake) {
                     files[0].id = rootId;
+                    files[0].filename = state.files[0].filename;
                     files[0].customName = state.files[0].customName;
                 }
             } else {
@@ -205,11 +206,21 @@ function uploaderReducer(state, action) {
         }
 
         case 'delete': {
+            const { file, rootId } = action;
             state.filesUpdated = new Date().getTime();
-            const index = state.files.indexOf(action.file);
+            const index = state.files.indexOf(file);
             if (index !== -1) {
                 const files = [...state.files];
                 files.splice(index, 1);
+                if (files.length === 0 && rootId) {
+                    files.push({
+                        id: rootId,
+                        filename: file.filename,
+                        name: file.filename,
+                        customName: file.filename,
+                        fake: true
+                    });
+                }
                 return { ...state, files };
             }
             return state;
@@ -233,7 +244,7 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
         launch(file.id)
     };
 
-    const cancel = (file, status = FileStatus.waiting) => e => {
+    const cancel = (status = FileStatus.waiting) => e => {
         e.stopPropagation();
         if (status === FileStatus.uploading) {
             file.cancelToken.cancel();
@@ -245,7 +256,7 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
 
     const handleDelete = e => {
         e.stopPropagation();
-        dispatch({ type: 'delete', file });
+        dispatch({ type: 'delete', file, rootId });
     };
 
     const handleChange = event => {
@@ -260,18 +271,18 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
                 <MultiIconButton edge="end"
                                  DefaultIcon={UploadIcon}
                                  OverIcon={CancelIcon}
-                                 onClick={cancel(file, FileStatus.uploading)}/>
+                                 onClick={cancel(FileStatus.uploading)}/>
             );
         }
             break;
 
         case FileStatus.waiting: {
-            if (!rootId) {
+            if (!file.fake) {
                 action = (
                     <MultiIconButton edge="end"
                                      DefaultIcon={ScheduleIcon}
-                                     OverIcon={CancelIcon}
-                                     onClick={cancel(file)}/>
+                                     OverIcon={rootId ? DeleteIcon : CancelIcon}
+                                     onClick={rootId ? handleDelete : cancel(file)}/>
                 );
             }
         }
@@ -294,7 +305,7 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
             break;
 
         default: {
-            if (!rootId) {
+            if (!file.fake) {
                 action = (
                     <MultiIconButton edge="end"
                                      DefaultIcon={DeleteIcon}
@@ -319,9 +330,9 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
                              disabled={disabled}
                              error={FileStatus.isError(file.status)}
                              value={file.customName || file.name || ''}
-                             helperText={file.status}
+                             helperText={!file.fake && file.status}
                              className={clsx(
-                                 (rootId && file.status !== FileStatus.uploading &&'full-width') || classes.launchButton
+                                 (file.fake && file.status !== FileStatus.uploading && 'full-width') || classes.launchButton
                              )}
                              onChange={handleChange}
                              onClick={e => e.stopPropagation()}/>
@@ -373,14 +384,22 @@ function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, 
 
     useEffect(() => {
         if (rootId) {
-            const file = { ...value, id: rootId, name: value.filename, customName: value.filename, fake: true };
+            const file = {
+                ...value,
+                id: rootId,
+                filename: value.filename,
+                name: value.filename,
+                customName: value.filename,
+                fake: true
+            };
             const addFakeFile = { type: 'add', files: [file], max: 2, rootId };
             dispatch(addFakeFile);
             if (!file.customName) {
                 const subscription = dataType.get(rootId, { viewport: '{filename}' }).subscribe(
                     ({ filename }) => {
-                        file.customName = filename;
-                        file.name = filename;
+                        file.filename =
+                            file.customName =
+                                file.name = filename;
                         dispatch(addFakeFile);
                     }
                 );
@@ -443,21 +462,30 @@ function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, 
         if (current) {
             current.status = FileStatus.uploading;
             current.cancelToken = CancelToken.source();
-            const subscription = dataType.upload(current, {
-                id: rootId,
-                filename: current.customName || current.name,
-                onUploadProgress: event => {
-                    current.progress = Math.round((event.loaded * 100) / event.total);
-                    if (current.progress === 100) {
-                        current.status = FileStatus.finishing;
-                    }
-                    dispatch({
-                        type: 'currentProgress',
-                        value: current.progress
-                    });
-                },
-                cancelToken: current.cancelToken.token
-            }).subscribe(
+            const filename = current.customName || current.name;
+            let submit;
+            if (current.fake) {
+                submit = dataType.post({ id: rootId, filename }, {
+                    viewport: '{_id}'
+                })
+            } else {
+                submit = dataType.upload(current, {
+                    id: rootId,
+                    filename,
+                    onUploadProgress: event => {
+                        current.progress = Math.round((event.loaded * 100) / event.total);
+                        if (current.progress === 100) {
+                            current.status = FileStatus.finishing;
+                        }
+                        dispatch({
+                            type: 'currentProgress',
+                            value: current.progress
+                        });
+                    },
+                    cancelToken: current.cancelToken.token
+                });
+            }
+            const subscription = submit.subscribe(
                 response => {
                     if (response) {
                         current.id = response.id;
@@ -540,14 +568,15 @@ function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, 
 
     let dropInstructions;
     if (!disabled && files.length < max) {
+        const dropFilesMsg = rootId ? 'Drop a file to update the content' : 'Drop files here'
         dropInstructions = (
             <ListItem component="div" className={classes.dropMsg}>
                 <UploadIcon fontSize='large'/>
                 <Typography color='textPrimary' variant='h6'>
-                    Drop files here
+                    {dropFilesMsg}
                 </Typography>
                 <Typography variant='caption' color='textSecondary'>
-                    Or click to select files
+                    Or click to select
                 </Typography>
                 {
                     dropOverflow &&
