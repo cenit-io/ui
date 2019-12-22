@@ -332,7 +332,7 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
                              value={file.customName || file.name || ''}
                              helperText={!file.fake && file.status}
                              className={clsx(
-                                 (file.fake && file.status !== FileStatus.uploading && 'full-width') || classes.launchButton
+                                 ((file.fake || file.status === FileStatus.finishing) && 'full-width') || classes.launchButton
                              )}
                              onChange={handleChange}
                              onClick={e => e.stopPropagation()}/>
