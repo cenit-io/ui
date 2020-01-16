@@ -24,3 +24,7 @@ Issues & next features
 ### Features
 
 - Add styles and navigation links to the editor breadcrumb.
+
+### Optimizations
+
+- Cache for Liquid templates
