@@ -1,58 +1,88 @@
-import React from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { FormControl, IconButton, InputAdornment, InputLabel } from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
 import Random from "../util/Random";
 import FilledInput from "@material-ui/core/FilledInput";
 
-class StringControl extends React.Component {
+const Actions = Object.freeze({
+    CheckValue: 'CheckValue',
+    UpdateValue: 'UpdateValue',
+    RefreshKey: 'RefreshKey'
+});
 
-    static getDerivedStateFromProps(props, state) {
-        const { value } = props;
-        if (value !== state.value) {
-            return { value, key: Random.string() };
+function reducer(state, { action, ...data }) {
+    switch (action) {
+        case Actions.CheckValue: {
+            const { value } = data;
+            if (state.value !== value) {
+                return { ...state, value, key: Random.string() }
+            }
         }
-        return null;
+            break;
+
+        case Actions.UpdateValue: {
+            return { ...state, value: data.value };
+        }
+
+        case Actions.RefreshKey: {
+            return { ...state, key: Random.string() };
+        }
     }
 
-    state = {};
+    return state;
+}
 
-    handleChange = e => {
-        this.state.value = e.target.value;
-        setTimeout(this.props.onChange(e.target.value));
+function StringControl({ title, value, errors, disabled, readOnly, onDelete, onChange }) {
+
+    const [state, dispatch] = useReducer(reducer, {});
+
+    useEffect(() => {
+        dispatch({
+            action: Actions.CheckValue,
+            value
+        });
+    }, [value]);
+
+    const handleChange = e => {
+        const { value } = e.target;
+        dispatch({
+            action: Actions.UpdateValue,
+            value
+        });
+        setTimeout(onChange(value));
     };
 
-    handleClear = () => {
-        this.props.onDelete();
-        setTimeout(() => this.setState({ key: Random.string() }));
+    const handleClear = () => {
+        onDelete();
+        setTimeout(() => dispatch({
+            action: Actions.RefreshKey
+        }));
     };
 
-    render() {
-        const { title, value, errors, disabled, readOnly } = this.props;
-        const { key } = this.state;
+    const { key } = state;
 
-        const error = Boolean(errors && errors.length);
+    const error = Boolean(errors && errors.length);
 
-        return (
-            <FormControl variant="filled" fullWidth={true} disabled={disabled}>
-                <InputLabel>{title}</InputLabel>
-                <FilledInput key={key}
-                             readOnly={readOnly}
-                             error={error}
-                             defaultValue={value}
-                             onChange={this.handleChange}
-                             endAdornment={
-                                 !readOnly && !disabled && value !== undefined && value !== null &&
-                                 <InputAdornment position="end">
-                                     <IconButton onClick={this.handleClear}>
-                                         <ClearIcon/>
-                                     </IconButton>
-                                 </InputAdornment>
-                             }
-                             variant='filled'
-                />
-            </FormControl>
-        );
-    }
+    return (
+        <FormControl variant="filled" fullWidth={true} disabled={disabled}>
+            <InputLabel>{title}</InputLabel>
+            <FilledInput key={key}
+                         readOnly={readOnly}
+                         error={error}
+                         defaultValue={value}
+                         onChange={handleChange}
+                         endAdornment={
+                             !readOnly && !disabled && value !== undefined && value !== null &&
+                             <InputAdornment position="end">
+                                 <IconButton onClick={handleClear}>
+                                     <ClearIcon/>
+                                 </IconButton>
+                             </InputAdornment>
+                         }
+                         variant='filled'
+            />
+        </FormControl>
+    );
 }
 
 export default StringControl;
