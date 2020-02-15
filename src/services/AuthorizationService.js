@@ -4,10 +4,10 @@ import { from, of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 
 export const Config = {
-    localhost: 'http://localhost:3000',
-    cenitHost: 'http://127.0.0.1:3001',
-    timeoutSpan: 300000,
-    appIdentifier: 'admin',
+    localhost: process.env.REACT_APP_LOCALHOST,
+    cenitHost: process.env.REACT_APP_CENIT_HOST,
+    timeoutSpan: +process.env.REACT_APP_TIMEOUT_SPAN,
+    appIdentifier: process.env.REACT_APP_APP_ID
 };
 
 const appGateway = axios.create({
