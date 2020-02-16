@@ -10,3 +10,5 @@ export const TabKey = Symbol.for('_tabKey');
 export const DataTypeId = Symbol.for('_dataTypeId');
 
 export const TitleSubject = Symbol.for('_titleSubject');
+
+export const Failed = Symbol.for('_failed');

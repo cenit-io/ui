@@ -8,6 +8,8 @@ import RefOneControl from "./RefOneControl";
 import RefManyControl from "./RefManyControl";
 import ErrorMessages from "./ErrorMessages";
 import zzip from "../util/zzip";
+import NumericControl from "./NumericControl";
+import IntegerControl from "./IntegerControl";
 
 function controlComponentFor(property) {
     switch (property.type) {
@@ -30,6 +32,14 @@ function controlComponentFor(property) {
 
         case 'refMany': {
             return RefManyControl;
+        }
+
+        case 'number': {
+            return NumericControl;
+        }
+
+        case 'integer': {
+            return IntegerControl;
         }
 
         default: {
