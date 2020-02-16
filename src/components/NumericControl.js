@@ -1,6 +1,6 @@
 import React from 'react';
-import StringControl from "./StringControl";
 import { Failed } from "../common/Symbols";
+import InputControl from "./InputControl";
 
 
 function parseNumber(value) {
@@ -17,7 +17,7 @@ function parseNumber(value) {
 
 function NumericControl(props) {
     return (
-        <StringControl parser={parseNumber} {...props}/>
+        <InputControl parser={parseNumber} {...props}/>
     );
 }
 
