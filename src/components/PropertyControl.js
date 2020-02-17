@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useReducer, useState } from 'react'
 import StringControl from './StringControl';
 import { LinearProgress, makeStyles } from '@material-ui/core';
 import EmbedsOneControl from "./EmbedsOneControl";
@@ -57,10 +57,16 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+
+function reducer(state, newState) {
+    return { ...state, ...newState };
+}
+
 function PropertyControl(props) {
-    const { errors, property } = props;
-    const [state, setState] = useState({});
-    const { schema } = state;
+    const [state, setState] = useReducer(reducer, {});
+
+    const { errors, property, onChange } = props;
+    const { schema, controlErrors } = state;
     const classes = useStyles();
 
     useEffect(() => {
@@ -71,14 +77,31 @@ function PropertyControl(props) {
         return () => subscription.unsubscribe();
     }, [property]);
 
+    useEffect(() => setState({ controlErrors: null }), [errors]);
+
+    const handleChange = value => {
+        if (errors && errors.length && !controlErrors) {
+            setErrors([]);
+        }
+        onChange(value);
+    };
+
+    const setErrors = controlErrors => setState({ controlErrors });
+
     if (schema) {
         const ControlComponent = controlComponentFor(property);
 
-        const control = <ControlComponent {...state} {...props}/>;
+        const currentErrors = ControlComponent.ownErrorMessages ? null : (controlErrors || errors);
+
+        const control = <ControlComponent {...state}
+                                          {...props}
+                                          errors={currentErrors}
+                                          onError={setErrors}
+                                          onChange={handleChange}/>;
 
         return (
             <div className={classes.control}>
-                <ErrorMessages errors={ControlComponent.ownErrorMessages ? null : errors}>
+                <ErrorMessages errors={currentErrors}>
                     {control}
                 </ErrorMessages>
             </div>

@@ -15,15 +15,42 @@ const Actions = Object.freeze({
 function reducer(state, { action, ...data }) {
     switch (action) {
         case Actions.CheckValue: {
-            const { value } = data;
-            if (state.value !== value) {
-                return { ...state, value, key: Random.string() }
+            const { value, validator, onError } = data;
+            if (
+                state.value !== value ||
+                state.validator !== validator ||
+                state.onError !== onError
+            ) {
+                return {
+                    ...state,
+                    value,
+                    validator,
+                    onError
+                }
             }
         }
             break;
 
         case Actions.UpdateValue: {
-            return { ...state, value: data.value };
+            const { validator, onError } = state;
+            const { value } = data;
+
+            const newState = { ...state, value: data.value };
+            if (validator) {
+                let errors = validator(value);
+                if (errors) {
+                    if (errors.constructor !== Array) {
+                        errors = [errors];
+                    }
+                    onError(errors);
+                    newState.hasErrors = true;
+                } else if (newState.hasErrors) {
+                    delete newState.hasErrors;
+                    onError(null);
+                }
+            }
+
+            return newState;
         }
 
         case Actions.RefreshKey: {
@@ -46,16 +73,18 @@ function reducer(state, { action, ...data }) {
     return state;
 }
 
-function InputControl({ title, value, errors, disabled, readOnly, onDelete, onChange, parser }) {
+function InputControl({ title, value, errors, disabled, readOnly, onDelete, onChange, parser, validator, onError }) {
 
     const [state, dispatch] = useReducer(reducer, {});
 
     useEffect(() => {
         dispatch({
             action: Actions.CheckValue,
-            value
+            value,
+            validator,
+            onError
         });
-    }, [value]);
+    }, [value, validator, onError]);
 
     const handleChange = e => {
         const { value } = e.target;
