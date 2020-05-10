@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react'
+import React, { useEffect, useReducer } from 'react'
 import StringControl from './StringControl';
 import { LinearProgress, makeStyles } from '@material-ui/core';
 import EmbedsOneControl from "./EmbedsOneControl";
@@ -10,6 +10,7 @@ import ErrorMessages from "./ErrorMessages";
 import zzip from "../util/zzip";
 import NumericControl from "./NumericControl";
 import IntegerControl from "./IntegerControl";
+import CodeMirrorControl from "./CodeMirrorControl";
 
 function controlComponentFor(property) {
     switch (property.type) {
@@ -40,6 +41,14 @@ function controlComponentFor(property) {
 
         case 'integer': {
             return IntegerControl;
+        }
+
+        case 'string': {
+            if (property.propertySchema.contentMediaType) {
+                return CodeMirrorControl
+            }
+
+            return StringControl;
         }
 
         default: {

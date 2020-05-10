@@ -1,142 +1,35 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React from 'react';
 import { FormControl, IconButton, InputAdornment, InputLabel } from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
-import Random from "../util/Random";
 import FilledInput from "@material-ui/core/FilledInput";
-import { Failed } from "../common/Symbols";
+import reactiveControlFor from "./reactiveControlFor";
 
-const Actions = Object.freeze({
-    CheckValue: 'CheckValue',
-    UpdateValue: 'UpdateValue',
-    RefreshKey: 'RefreshKey',
-    Blur: 'Blur'
-});
-
-function reducer(state, { action, ...data }) {
-    switch (action) {
-        case Actions.CheckValue: {
-            const { value, validator, onError } = data;
-            if (
-                state.value !== value ||
-                state.validator !== validator ||
-                state.onError !== onError
-            ) {
-                return {
-                    ...state,
-                    value,
-                    validator,
-                    onError
-                }
-            }
-        }
-            break;
-
-        case Actions.UpdateValue: {
-            const { validator, onError } = state;
-            const { value } = data;
-
-            const newState = { ...state, value: data.value };
-            if (validator) {
-                let errors = validator(value);
-                if (errors) {
-                    if (errors.constructor !== Array) {
-                        errors = [errors];
-                    }
-                    onError(errors);
-                    newState.hasErrors = true;
-                } else if (newState.hasErrors) {
-                    delete newState.hasErrors;
-                    onError(null);
-                }
-            }
-
-            return newState;
-        }
-
-        case Actions.RefreshKey: {
-            return {
-                ...state,
-                key: Random.string(),
-                autoFocus: data.autoFocus
-            };
-        }
-
-        case Actions.Blur: {
-            return {
-                ...state,
-                key: Random.string(),
-                autoFocus: false
-            };
-        }
-    }
-
-    return state;
-}
-
-function InputControl({ title, value, errors, disabled, readOnly, onDelete, onChange, parser, validator, onError }) {
-
-    const [state, dispatch] = useReducer(reducer, {});
-
-    useEffect(() => {
-        dispatch({
-            action: Actions.CheckValue,
-            value,
-            validator,
-            onError
-        });
-    }, [value, validator, onError]);
-
-    const handleChange = e => {
-        const { value } = e.target;
-        let parsedValue;
-        if (parser) {
-            parsedValue = parser(value);
-        } else {
-            parsedValue = value;
-        }
-        if (parsedValue === Failed) {
-            dispatch({
-                action: Actions.RefreshKey,
-                autoFocus: true
-            });
-        } else {
-            dispatch({
-                action: Actions.UpdateValue,
-                value: parsedValue
-            });
-            setTimeout(onChange(parsedValue));
-        }
-    };
-
-    const handleClear = () => {
-        onDelete();
-        setTimeout(() => dispatch({
-            action: Actions.RefreshKey
-        }));
-    };
-
-    const handleBlur = () => dispatch({
-        action: Actions.Blur
-    });
-
-    const { key, autoFocus } = state;
-
-    const error = Boolean(errors && errors.length);
-
-    return (
+const InputControl = reactiveControlFor(
+    ({
+         title,
+         value,
+         disabled,
+         readOnly,
+         dynamicKey,
+         error,
+         onChange,
+         onBlur,
+         autoFocus,
+         onClear
+     }) => (
         <FormControl variant="filled" fullWidth={true} disabled={disabled}>
             <InputLabel>{title}</InputLabel>
-            <FilledInput key={key}
+            <FilledInput key={dynamicKey}
                          readOnly={readOnly}
                          error={error}
                          defaultValue={value}
-                         onChange={handleChange}
-                         onBlur={handleBlur}
+                         onChange={e => onChange(e.target.value)}
+                         onBlur={onBlur}
                          autoFocus={autoFocus}
                          endAdornment={
                              !readOnly && !disabled && value !== undefined && value !== null &&
                              <InputAdornment position="end">
-                                 <IconButton onClick={handleClear}>
+                                 <IconButton onClick={onClear}>
                                      <ClearIcon/>
                                  </IconButton>
                              </InputAdornment>
@@ -144,7 +37,7 @@ function InputControl({ title, value, errors, disabled, readOnly, onDelete, onCh
                          variant='filled'
             />
         </FormControl>
-    );
-}
+    )
+);
 
 export default InputControl;
