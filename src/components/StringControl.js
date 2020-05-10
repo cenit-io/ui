@@ -1,11 +1,11 @@
 import React from 'react';
 import InputControl from "./InputControl";
 
-function StringControl(props) {
+export function StringValidator(schema) {
+    return function (str) {
 
-    const { minLength } = props.schema;
+        const { minLength } = schema;
 
-    const validator = str => {
         if (str) {
             const errors = [];
 
@@ -19,10 +19,13 @@ function StringControl(props) {
         }
 
         return null;
-    };
+    }
+}
+
+function StringControl(props) {
 
     return (
-        <InputControl {...props} validator={validator}/>
+        <InputControl {...props} validator={StringValidator(props.schema)}/>
     );
 }
 

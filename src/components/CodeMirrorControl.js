@@ -16,6 +16,9 @@ const useStyles = makeStyles(theme => ({
         borderTopRightRadius: theme.spacing(.5),
         alignItems: 'center',
         padding: theme.spacing(0, 2)
+    },
+    error: {
+        borderBottom: `solid 2px ${theme.palette.error.main}`
     }
 }));
 
@@ -92,7 +95,7 @@ const CodeMirrorControl = reactiveControlFor(
         }
 
         return (
-            <div>
+            <div className={clsx(error && classes.error)}>
                 <div className={clsx('flex', classes.header)}>
                     <Typography variant="subtitle2">
                         {title}

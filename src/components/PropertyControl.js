@@ -11,6 +11,7 @@ import zzip from "../util/zzip";
 import NumericControl from "./NumericControl";
 import IntegerControl from "./IntegerControl";
 import CodeMirrorControl from "./CodeMirrorControl";
+import StringCodeControl from "./StringCodeControl";
 
 function controlComponentFor(property) {
     switch (property.type) {
@@ -45,7 +46,7 @@ function controlComponentFor(property) {
 
         case 'string': {
             if (property.propertySchema.contentMediaType) {
-                return CodeMirrorControl
+                return StringCodeControl;
             }
 
             return StringControl;
