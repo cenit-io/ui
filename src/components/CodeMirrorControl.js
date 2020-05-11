@@ -34,12 +34,11 @@ const CodeMirrorControl = reactiveControlFor(
          readOnly,
          error,
          onChange,
-         onBlur,
          autoFocus,
          onClear
      }) => {
         const ref = useRef(null);
-        const [cm, setCM] = useState(null);
+        const [editor, setEditor] = useState(null);
 
         const classes = useStyles();
 
@@ -52,13 +51,16 @@ const CodeMirrorControl = reactiveControlFor(
                     theme: 'monokai'
                 });
 
-                editor.on('change', () => {
+                const handleChange = () => {
                     if (editor.__cleared__) {
                         editor.__cleared__ = false;
                     } else {
                         onChange(editor.getValue());
                     }
-                });
+                };
+
+                editor.on('change', handleChange);
+                editor.on('paste', handleChange);
 
                 const mime = property.propertySchema.contentMediaType;
                 const { mode } = CodeMirror.findModeByMIME(mime) || CodeMirror.findModeByMIME('text/plain');
@@ -67,7 +69,7 @@ const CodeMirrorControl = reactiveControlFor(
                     () => {
                         editor.setOption('mode', mime);
                         CodeMirror.autoLoadMode(editor, mode);
-                        setCM(editor);
+                        setEditor(editor);
                     }
                 );
 
@@ -76,23 +78,23 @@ const CodeMirrorControl = reactiveControlFor(
         }, [textEl, property]);
 
         useEffect(() => {
-            if (cm) {
-                cm.setOption('readOnly', disabled ? 'nocursor' : readOnly);
+            if (editor) {
+                editor.setOption('readOnly', disabled ? 'nocursor' : readOnly);
             }
-        }, [readOnly, disabled, cm]);
+        }, [readOnly, disabled, editor]);
 
         useEffect(() => {
-            if (cm) {
-                if (value) {
-                    if (value !== cm.getValue()) {
-                        cm.setValue(value);
+            if (editor) {
+                if (value || value === '') {
+                    if (value !== editor.getValue()) {
+                        editor.setValue(value);
                     }
                 } else {
-                    cm.__cleared__ = true;
-                    cm.setValue('');
+                    editor.__cleared__ = true;
+                    editor.setValue('');
                 }
             }
-        }, [cm, value]);
+        }, [editor, value]);
 
         let clear;
         if (!readOnly && !disabled && value !== undefined && value !== null) {
