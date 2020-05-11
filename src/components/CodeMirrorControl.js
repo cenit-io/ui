@@ -38,7 +38,9 @@ const CodeMirrorControl = reactiveControlFor(
          error,
          onChange,
          autoFocus,
-         onClear
+         onClear,
+         mime,
+         mode
      }) => {
         const ref = useRef(null);
         const [editor, setEditor] = useState(null);
@@ -65,20 +67,20 @@ const CodeMirrorControl = reactiveControlFor(
                 editor.on('change', handleChange);
                 editor.on('paste', handleChange);
 
-                const mime = property.propertySchema.contentMediaType;
-                const { mode } = CodeMirror.findModeByMIME(mime) || CodeMirror.findModeByMIME('text/plain');
+                const cmMime = mime || property.propertySchema.contentMediaType;
+                const cmMode = mode || (CodeMirror.findModeByMIME(cmMime) || CodeMirror.findModeByMIME('text/plain')).mode;
 
-                const subscription = from(import(`codemirror/mode/${mode}/${mode}`)).subscribe(
+                const subscription = from(import(`codemirror/mode/${cmMode}/${cmMode}`)).subscribe(
                     () => {
-                        editor.setOption('mode', mime);
-                        CodeMirror.autoLoadMode(editor, mode);
+                        editor.setOption('mode', cmMime);
+                        CodeMirror.autoLoadMode(editor, cmMode);
                         setEditor(editor);
                     }
                 );
 
                 return () => subscription.unsubscribe();
             }
-        }, [textEl, property]);
+        }, [textEl, property, mime, mode]);
 
         useEffect(() => {
             if (editor) {
