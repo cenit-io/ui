@@ -6,7 +6,10 @@ import { IconButton, makeStyles, Typography } from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
 import clsx from "clsx";
 
-require('codemirror/lib/codemirror.css');
+import 'codemirror/addon/mode/loadmode';
+import 'codemirror/mode/meta';
+import 'codemirror/lib/codemirror.css';
+import 'codemirror/theme/monokai.css';
 
 const useStyles = makeStyles(theme => ({
     header: {
@@ -44,24 +47,30 @@ const CodeMirrorControl = reactiveControlFor(
 
         useEffect(() => {
             if (textEl) {
-                const mode = property.propertySchema.contentMediaType;
+                const editor = CodeMirror.fromTextArea(textEl, {
+                    lineNumbers: true,
+                    theme: 'monokai'
+                });
+
+                editor.on('change', () => {
+                    if (editor.__cleared__) {
+                        editor.__cleared__ = false;
+                    } else {
+                        onChange(editor.getValue());
+                    }
+                });
+
+                const mime = property.propertySchema.contentMediaType;
+                const { mode } = CodeMirror.findModeByMIME(mime) || CodeMirror.findModeByMIME('text/plain');
+
                 const subscription = from(import(`codemirror/mode/${mode}/${mode}`)).subscribe(
                     () => {
-                        const cm = CodeMirror.fromTextArea(textEl, {
-                            lineNumbers: true,
-                            mode
-                        });
-                        cm.on('change', () => {
-                            if (cm.__cleared__) {
-                                cm.__cleared__ = false;
-                            } else {
-                                onChange(cm.getValue());
-                            }
-                        });
-                        cm.on('blur', onBlur);
-                        setCM(cm);
+                        editor.setOption('mode', mime);
+                        CodeMirror.autoLoadMode(editor, mode);
+                        setCM(editor);
                     }
                 );
+
                 return () => subscription.unsubscribe();
             }
         }, [textEl, property]);
@@ -83,7 +92,7 @@ const CodeMirrorControl = reactiveControlFor(
                     cm.setValue('');
                 }
             }
-        }, [value]);
+        }, [cm, value]);
 
         let clear;
         if (!readOnly && !disabled && value !== undefined && value !== null) {
