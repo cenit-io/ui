@@ -12,6 +12,9 @@ import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/monokai.css';
 
 const useStyles = makeStyles(theme => ({
+    root: {
+        paddingBottom: theme.spacing(.5)
+    },
     header: {
         minHeight: theme.spacing(7),
         background: theme.palette.background.default,
@@ -106,7 +109,7 @@ const CodeMirrorControl = reactiveControlFor(
         }
 
         return (
-            <div className={clsx(error && classes.error)}>
+            <div className={clsx(classes.root, error && classes.error)}>
                 <div className={clsx('flex', classes.header)}>
                     <Typography variant="subtitle2">
                         {title}
