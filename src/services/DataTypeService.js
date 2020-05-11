@@ -307,7 +307,7 @@ export class DataType {
                     schema => {
                         if (schema.label) {
                             this.__titleProps = LiquidEngine.parse(schema.label).map(
-                                template => template.token.value.split('|')[0].trim()
+                                template => (template.token.content || '').split('|')[0].trim()
                             ).filter(token => token.length);
                         } else {
                             this.__titleProps = ['id', 'name', 'title'];
