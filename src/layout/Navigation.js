@@ -6,13 +6,14 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
-import { makeStyles } from "@material-ui/core";
+import { makeStyles, useTheme } from "@material-ui/core";
 import Loading from "../components/Loading";
 import { DataTypeId } from "../common/Symbols";
 import zzip from "../util/zzip";
 import { of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 import { DataType } from "../services/DataTypeService";
+import Skeleton from "@material-ui/lab/Skeleton";
 
 export const navigationWidth = theme => `${theme.spacing(30)}px`;
 
@@ -59,6 +60,7 @@ const Navigation = ({ docked, setDocked, xs, config, dataTypeSubject, tabItemSub
     const [over, setOver] = useState(false);
     const [state, dispatch] = useReducer(navigationReducer, { titles: {} });
     const classes = useStyles();
+    const theme = useTheme();
     const navigation = config && config.navigation;
     const { titles } = state;
 
@@ -109,15 +111,29 @@ const Navigation = ({ docked, setDocked, xs, config, dataTypeSubject, tabItemSub
     let nav;
     if (navigation) {
         nav = Object.keys(navigation).map(
-            (id, index) => (
-                <ListItem button
-                          key={id}
-                          onClick={select(id)}
-                          disabled={!titles.hasOwnProperty(id)}>
-                    <ListItemIcon>{index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}</ListItemIcon>
-                    <ListItemText primary={titles[id] || id}/>
-                </ListItem>
-            )
+            (id, index) => {
+                const title = titles[id];
+                let icon, text;
+                if (title) {
+                    icon = index % 2 === 0 ? <InboxIcon/> : <MailIcon/>;
+                } else {
+                    icon = <Skeleton variant="circle"
+                                     width={theme.spacing(3)}
+                                     height={theme.spacing(3)}/>;
+                    text = <Skeleton variante="text"/>;
+                }
+                return (
+                    <ListItem button
+                              key={id}
+                              onClick={select(id)}
+                              disabled={!titles.hasOwnProperty(id)}>
+                        <ListItemIcon>{icon}</ListItemIcon>
+                        <ListItemText primary={title}>
+                            {text}
+                        </ListItemText>
+                    </ListItem>
+                );
+            }
         );
         nav = <List style={{ overflowX: 'hidden' }}> {nav} </List>;
     } else {
