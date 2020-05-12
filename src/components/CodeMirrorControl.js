@@ -119,9 +119,11 @@ const CodeMirrorControl = reactiveControlFor(
                     <div className="grow-1"/>
                     {clear}
                 </div>
-                <textarea ref={ref}
-                          defaultValue={value}
-                          autoFocus={autoFocus}/>
+                <input ref={ref}
+                       multiple={true}
+                       hidden={true}
+                       defaultValue={value}
+                       autoFocus={autoFocus}/>
             </div>
         );
     }
