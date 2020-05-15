@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useReducer, useRef, useEffect } from 'react';
 import {
     ClickAwayListener,
     InputBase,
@@ -11,79 +11,86 @@ import {
 } from "@material-ui/core";
 import Random from "../util/Random";
 import '../common/FlexBox.css';
+import reducer from "../common/reducer";
+import { switchMap, delay } from "rxjs/operators";
+import { of } from "rxjs";
 
-class RefPicker extends React.Component {
+function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder, dataType, onPick }) {
 
-    static getDerivedStateFromProps(props, state) {
-        let text = props.text;
+    const [state, setState] = useReducer(reducer, {
+        query: null,
+        key: Random.string()
+    });
+
+    const ref = useRef(null);
+
+    const stateText = state.text;
+
+    const { query, items, key, loading, itemsQuery, index } = state;
+
+    useEffect(() => {
         if (text !== state.text) {
-            return { text, key: Random.string() };
+            setState({ text, key: Random.string() });
         }
+    }, [text, stateText]);
 
-        return null;
-    }
-
-    state = { query: null, key: Random.string() };
-
-    ref = React.createRef();
-
-    activate = activated => () => {
-        if (activated && this.props.text !== null) {
-            this.ref.current.value = '';
-            this.setQuery('', { index: 0 });
-        } else {
-            this.setQuery(null, { key: Random.string(), itemsQuery: null, items: [] });
-        }
-    };
-
-    handleChange = e => this.setQuery(e.target.value);
-
-    setQuery = (query, additionalState = {}) => {
-        const { dataType } = this.props;
+    useEffect(() => {
         if (query !== null) {
-            clearTimeout(this.interval);
-            this.interval = setTimeout(
-                () => {
-                    this.setState({ loading: true });
-                    dataType
-                        .find(query, dataType.titleViewPort())
-                        .subscribe( //TODO sanitize with unsubscribe
-                            ({ items }) => {
-                                if (items) {
-                                    dataType.titlesFor(...items).subscribe(
-                                        titles => { //TODO sanitize with unsubscribe
-                                            items = titles.map((title, index) => ({ record: items[index], title }));
-                                            this.setState({ items, loading: false, itemsQuery: query });
-                                        })
-                                } else {
-                                    this.setState({ items, loading: false, itemsQuery: query });
-                                }
-                            });
-                }, 700);
+            setState({ loading: true });
+            const subscription = of(true).pipe(
+                delay(700),
+                switchMap(() => dataType.find(query, dataType.titleViewPort()))
+            ).subscribe(
+                ({ items }) => {
+                    if (items) {
+                        dataType.titlesFor(...items).subscribe(
+                            titles => {
+                                items = titles.map((title, itemIndex) => ({
+                                    record: items[itemIndex],
+                                    title
+                                }));
+                                setState({ items, loading: false, itemsQuery: query });
+                            })
+                    } else {
+                        setState({ items, loading: false, itemsQuery: query });
+                    }
+                });
+
+            return () => subscription.unsubscribe();
         }
-        this.setState({ ...additionalState, query });
+    }, [query]);
+
+    const activate = activated => () => {
+        if (activated && text !== null) {
+            ref.current.value = '';
+            setState({ query: '', index: 0 });
+        } else {
+            setState({ query: null, key: Random.string(), itemsQuery: null, items: [] });
+        }
     };
 
-    pick = index => {
-        const item = this.state.items[index];
-        this.props.onPick(item);
-        this.activate(false)();
+    const handleChange = e => setState({ query: e.target.value });
+
+    const pick = itemIndex => {
+        const item = items[itemIndex];
+        onPick(item);
+        activate(false)();
     };
 
-    handleKeyDown = (e) => {
+    const handleKeyDown = (e) => {
         let handled = true;
         switch (e.keyCode) {
             case 13:
-                this.pick(this.state.index);
+                pick(index);
                 break;
             case 27:
-                this.activate(false)();
+                activate(false)();
                 break;
             case 38:
-                this.setState(prev => ({ index: Math.max(0, prev.index - 1) }));
+                setState(prev => ({ index: Math.max(0, prev.index - 1) }));
                 break;
             case 40:
-                this.setState(prev => ({ index: Math.min(prev.items.length - 1, prev.index + 1) }));
+                setState(prev => ({ index: Math.min(prev.items.length - 1, prev.index + 1) }));
                 break;
             default:
                 handled = false;
@@ -94,82 +101,76 @@ class RefPicker extends React.Component {
         }
     };
 
-    handleClickAway = e => {
-        if (this.ref.current !== e.target) {
-            this.activate(false)();
+    const handleClickAway = e => {
+        if (ref.current !== e.target) {
+            activate(false)();
         }
     };
 
-    handleFocus = () => !this.props.readOnly && setTimeout(this.activate(true), 500);
+    const handleFocus = () => !readOnly && setTimeout(activate(true), 500);
 
-    render() {
-
-        const { query, items, key, loading, itemsQuery } = this.state,
-            { label, text, disabled, inputClasses, readOnly, placeholder } = this.props;
-
-        let list;
-        if (query !== null && items) {
-            if (items.length > 0) {
-                list = items.map(
-                    (item, index) => (
-                        <ListItem key={item.record.id} button onClick={() => this.pick(index)}
-                                  selected={index === this.state.index}>
-                            <ListItemText primary={item.title}/>
-                        </ListItem>
-                    )
-                );
-            } else if (itemsQuery && !loading) {
-                list = (
-                    <ListItem>
-                        <ListItemText primary={`No results for '${itemsQuery}'`}/>
+    let list;
+    if (query !== null && items) {
+        if (items.length > 0) {
+            list = items.map(
+                (item, itemIndex) => (
+                    <ListItem key={item.record.id} button onClick={() => pick(itemIndex)}
+                              selected={itemIndex === index}>
+                        <ListItemText primary={item.title}/>
                     </ListItem>
-                );
-            }
+                )
+            );
+        } else if (itemsQuery && !loading) {
             list = (
-                <ClickAwayListener onClickAway={this.handleClickAway}>
-                    <Paper style={{
-                        position: 'absolute',
-                        top: `${48}px`,
-                        background: 'white',
-                        border: 'gray',
-                        zIndex: 1
-                    }}>
-                        <List component="nav">
-                            {list}
-                        </List>
-                    </Paper>
-                </ClickAwayListener>
+                <ListItem>
+                    <ListItemText primary={`No results for '${itemsQuery}'`}/>
+                </ListItem>
             );
         }
-
-        const inputProps = {
-            key: key,
-            inputProps: { ref: this.ref, readOnly: Boolean(readOnly) },
-            editable: String(query !== null),
-            onFocus: this.handleFocus,
-            onChange: this.handleChange,
-            label: label,
-            placeholder: placeholder || label,
-            defaultValue: query !== null ? query : (text || ''),
-            onKeyDown: this.handleKeyDown,
-            disabled: disabled
-        };
-
-        let input;
-        if (inputClasses) {
-            input = <InputBase {...inputProps} classes={inputClasses} style={{ flexGrow: 1 }}/>;
-        } else {
-            input = <TextField {...inputProps} style={{ flexGrow: 1 }}/>;
-        }
-
-        return (
-            <div className='flex relative grow-1 column'>
-                {input}
-                {(loading || text === null) && <LinearProgress/>}
-                {list}
-            </div>
+        list = (
+            <ClickAwayListener onClickAway={handleClickAway}>
+                <Paper style={{
+                    position: 'absolute',
+                    top: `${48}px`,
+                    background: 'white',
+                    border: 'gray',
+                    zIndex: 2
+                }}>
+                    <List component="nav">
+                        {list}
+                    </List>
+                </Paper>
+            </ClickAwayListener>
         );
     }
+
+    const inputProps = {
+        key: key,
+        inputProps: { ref, readOnly: Boolean(readOnly) },
+        editable: String(query !== null),
+        onFocus: handleFocus,
+        onChange: handleChange,
+        label: label,
+        placeholder: placeholder || label,
+        defaultValue: query !== null ? query : (text || ''),
+        onKeyDown: handleKeyDown,
+        disabled: disabled
+    };
+
+    let input;
+    if (inputClasses) {
+        input = <InputBase {...inputProps} classes={inputClasses} style={{ flexGrow: 1 }}/>;
+    } else {
+        input = <TextField {...inputProps} style={{ flexGrow: 1 }}/>;
+    }
+
+    return (
+        <div className='flex relative grow-1 column'>
+            {input}
+            {(loading || text === null) && <LinearProgress/>}
+            {list}
+        </div>
+    );
 }
 
 export default RefPicker;

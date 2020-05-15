@@ -35,6 +35,14 @@
     position: absolute;
 }
 
+.top-0 {
+    top: 0
+}
+
+.left-0 {
+    left: 0;
+}
+
 .grow-1 {
     flex-grow: 1;
 }
@@ -53,4 +61,20 @@
 
 .align-items-center {
     align-items: center;
+}
+
+.flex-start {
+    align-items: flex-start;
+}
+
+.space-around {
+    justify-content: space-around;
+}
+
+.auto-scroll-x {
+    overflow-x: auto;
+}
+
+.row-reverse {
+    flex-direction: row-reverse;
 }

@@ -1,6 +1,6 @@
 import API from './ApiService';
 import { from, of } from "rxjs";
-import { map, switchMap } from "rxjs/operators";
+import { map, switchMap, tap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import FormContext from "./FormContext";
 import LiquidEngine from "./LiquidEngine";
@@ -436,7 +436,7 @@ export class DataType {
     shallowViewPort() {
         let properties;
         return this.getProps().pipe(
-            map(props => properties = props),
+            tap(props => properties = props),
             switchMap(
                 props => zzip(
                     ...props.map(
@@ -537,7 +537,7 @@ export class Property {
     }
 
     isReadOnly(context) {
-        return context === FormContext.edit && this.name === '_id';
+        return context === FormContext.edit && (this.name === '_id' || this.name === 'id');
     }
 }
 
