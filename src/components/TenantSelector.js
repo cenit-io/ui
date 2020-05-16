@@ -10,7 +10,7 @@ const TenantSelector = ({ inputClasses, onSelect, readOnly }) => {
 
     useEffect(() => {
         let subscription;
-        if (selection){
+        if (selection) {
             setTenant({ name: selection.record.name, disabled: true });
             subscription = API.post('setup', 'user', 'me', {
                 account: {
@@ -43,7 +43,8 @@ const TenantSelector = ({ inputClasses, onSelect, readOnly }) => {
                            text={tenant.name}
                            onSelect={handleSelect}
                            disabled={tenant.disabled}
-                           readOnly={readOnly}/>;
+                           readOnly={readOnly}
+                           anchor="right"/>;
 };
 
 export default TenantSelector;

@@ -14,19 +14,49 @@ import '../common/FlexBox.css';
 import reducer from "../common/reducer";
 import { switchMap, delay } from "rxjs/operators";
 import { of, zip } from "rxjs";
+import Pagination from "@material-ui/lab/Pagination";
+import Skeleton from "@material-ui/lab/Skeleton";
+import { makeStyles } from "@material-ui/core/styles";
+import clsx from "clsx";
 
-function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder, dataType, onPick }) {
+const useStyles = makeStyles(theme => ({
+    list: {
+        minWidth: theme.spacing(20),
+        position: 'absolute',
+        top: theme.spacing(6),
+        background: 'white',
+        border: 'gray',
+        zIndex: 2
+    },
+    pagination: {
+        padding: theme.spacing(1),
+        background: theme.palette.background.default
+    },
+    left: {
+        left: 0
+    },
+    right: {
+        right: 0
+    }
+}));
+
+function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder, dataType, onPick, anchor }) {
 
     const [state, setState] = useReducer(reducer, {
         query: null,
+        page: 1,
+        total_pages: 0,
+        queryOpts: {},
         key: Random.string()
     });
 
     const ref = useRef(null);
 
+    const classes = useStyles();
+
     const stateText = state.text;
 
-    const { query, items, key, loading, itemsQuery, index } = state;
+    const { query, items, key, loading, itemsQuery, index, page, total_pages } = state;
 
     useEffect(() => {
         if (text !== state.text) {
@@ -34,18 +64,21 @@ function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder,
         }
     }, [text, stateText]);
 
+    useEffect(() => setState({ page: 1 }), [query]);
+
     useEffect(() => {
         if (query !== null) {
             setState({ loading: true });
             const subscription = of(true).pipe(
                 delay(700),
-                switchMap(() => dataType.find(query, dataType.titleViewPort())),
+                switchMap(() => dataType.find(query, { page })),
                 switchMap(
-                    ({ items }) => {
+                    ({ items, total_pages }) => {
                         if (items) {
+                            setState({ total_pages });
                             return zip(of(items), dataType.titlesFor(...items));
                         } else {
-                            setState({ items, loading: false, itemsQuery: query });
+                            setState({ items, loading: false, itemsQuery: query, total_pages: 0 });
                             return of([null, null]);
                         }
                     }
@@ -63,14 +96,14 @@ function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder,
 
             return () => subscription.unsubscribe();
         }
-    }, [query]);
+    }, [query, page]);
 
     const activate = activated => () => {
         if (activated && text !== null) {
             ref.current.value = '';
             setState({ query: '', index: 0 });
         } else {
-            setState({ query: null, key: Random.string(), itemsQuery: null, items: [] });
+            setState({ query: null, key: Random.string(), itemsQuery: null, items: [], total_pages: 1 });
         }
     };
 
@@ -114,14 +147,19 @@ function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder,
 
     const handleFocus = () => !readOnly && setTimeout(activate(true), 500);
 
+    const handlePageChange = (_, page) => setState({ page });
+
     let list;
     if (query !== null && items) {
         if (items.length > 0) {
+            const skeleton = (loading && <Skeleton variant="text"/>) || null;
             list = items.map(
                 (item, itemIndex) => (
                     <ListItem key={item.record.id} button onClick={() => pick(itemIndex)}
                               selected={itemIndex === index}>
-                        <ListItemText primary={item.title}/>
+                        <ListItemText primary={(!loading && item.title) || null}>
+                            {skeleton}
+                        </ListItemText>
                     </ListItem>
                 )
             );
@@ -132,18 +170,26 @@ function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder,
                 </ListItem>
             );
         }
+        let pagination;
+        if (total_pages > 1) {
+            pagination = (
+                <div className={clsx('flex justify-content-center', classes.pagination)}>
+                    <Pagination count={total_pages}
+                                page={page}
+                                disabled={loading}
+                                onChange={handlePageChange}
+                                size="small"
+                                color="primary"/>
+                </div>
+            );
+        }
         list = (
             <ClickAwayListener onClickAway={handleClickAway}>
-                <Paper style={{
-                    position: 'absolute',
-                    top: `${48}px`,
-                    background: 'white',
-                    border: 'gray',
-                    zIndex: 2
-                }}>
+                <Paper className={clsx(classes.list, classes[anchor] || classes.left)}>
                     <List component="nav">
                         {list}
                     </List>
+                    {pagination}
                 </Paper>
             </ClickAwayListener>
         );
@@ -170,7 +216,7 @@ function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder,
     }
 
     return (
-        <div className='flex relative grow-1 column'>
+        <div className={clsx('flex relative grow-1 column')}>
             {input}
             {(loading || text === null) && <LinearProgress/>}
             {list}
