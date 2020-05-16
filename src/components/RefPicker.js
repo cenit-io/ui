@@ -13,7 +13,7 @@ import Random from "../util/Random";
 import '../common/FlexBox.css';
 import reducer from "../common/reducer";
 import { switchMap, delay } from "rxjs/operators";
-import { of } from "rxjs";
+import { of, zip } from "rxjs";
 
 function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder, dataType, onPick }) {
 
@@ -39,22 +39,27 @@ function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder,
             setState({ loading: true });
             const subscription = of(true).pipe(
                 delay(700),
-                switchMap(() => dataType.find(query, dataType.titleViewPort()))
-            ).subscribe(
-                ({ items }) => {
-                    if (items) {
-                        dataType.titlesFor(...items).subscribe(
-                            titles => {
-                                items = titles.map((title, itemIndex) => ({
-                                    record: items[itemIndex],
-                                    title
-                                }));
-                                setState({ items, loading: false, itemsQuery: query });
-                            })
-                    } else {
+                switchMap(() => dataType.find(query, dataType.titleViewPort())),
+                switchMap(
+                    ({ items }) => {
+                        if (items) {
+                            return zip(of(items), dataType.titlesFor(...items));
+                        } else {
+                            setState({ items, loading: false, itemsQuery: query });
+                            return of([null, null]);
+                        }
+                    }
+                )
+            ).subscribe(([items, titles]) => {
+                    if (items && titles) {
+                        items = titles.map((title, itemIndex) => ({
+                            record: items[itemIndex],
+                            title
+                        }));
                         setState({ items, loading: false, itemsQuery: query });
                     }
-                });
+                }
+            );
 
             return () => subscription.unsubscribe();
         }
