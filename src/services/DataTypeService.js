@@ -68,6 +68,16 @@ export class DataType {
         );
     }
 
+    type_name() {
+        if (this._type === CENIT_TYPE) {
+            if (this.namespace) {
+                return `${this.namespace}::${this.name}`;
+            }
+            return this.name;
+        }
+        return `Dt${this.id}`;
+    }
+
     getSchema() {
         if (this.schema) {
             return of(this.schema);
@@ -155,6 +165,29 @@ export class DataType {
 
     getSchemaEntry(key) {
         return this.getSchema().pipe(map(schema => schema[key]));
+    }
+
+    isAbstract() {
+        return this.getSchemaEntry('abstract');
+    }
+
+    descendantsCount() {
+        return this.getSchemaEntry('descendants').pipe(
+            map(
+                descendants => (descendants || []).length
+            )
+        );
+    }
+
+    descendants() {
+        return this.getSchemaEntry('descendants').pipe(
+            switchMap(
+                descendants => zzip(...(descendants || []).map(
+                    ({ id }) => DataType.getById(id)
+                    )
+                )
+            )
+        );
     }
 
     propertyFrom(name, schema) {
@@ -281,7 +314,8 @@ export class DataType {
                     params,
                     headers: {
                         'X-Template-Options': JSON.stringify({
-                            viewport: '{_id ' + queryProps.map(p => p.name).join(' ') + '}'
+                            viewport: '{_id ' + queryProps.map(p => p.name).join(' ') + '}',
+                            polymorphic: true
                         }),
                         'X-Query-Options': JSON.stringify({ sort })
                     }
@@ -391,10 +425,17 @@ export class DataType {
     }
 
     post(data, opts = {}) {
-        const { viewport, add_only, add_new } = opts;
+        const { viewport, add_only, add_new, polymorphic } = opts;
         opts = { headers: {} };
+        let templateOptions;
         if (viewport) {
-            opts.headers['X-Template-Options'] = JSON.stringify({ viewport });
+            templateOptions = { viewport };
+        }
+        if (polymorphic) {
+            templateOptions = { ...templateOptions, polymorphic };
+        }
+        if (templateOptions) {
+            opts.headers['X-Template-Options'] = JSON.stringify(templateOptions);
         }
         let parserOptions;
         if (add_only) {

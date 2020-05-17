@@ -31,11 +31,19 @@ class RefOneControl extends React.Component {
 
     state = { updateText: this.updateText };
 
-    handlePick = item => {
+    refValue = ({ id, _type }) => {
         const value = {
-            id: item.record.id,
+            id,
             _reference: true
         };
+        if (_type && _type !== this.props.property.dataType.type_name()) {
+            value._type = _type;
+        }
+        return value;
+    };
+
+    handlePick = item => {
+        const value = this.refValue(item.record);
         //TODO this.state.value = value;
         this.props.onChange(value);
         this.setState({ value, text: item.title, item: item.record });
@@ -49,10 +57,7 @@ class RefOneControl extends React.Component {
             value: {},
             dataType: property.dataType,
             title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
-            callback: newValue => onChange({
-                id: newValue.id,
-                _reference: true
-            }),
+            callback: newValue => onChange(this.refValue(newValue)),
             max: 1
         });
     };
@@ -64,10 +69,7 @@ class RefOneControl extends React.Component {
             value: item || value,
             dataType: property.dataType,
             title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
-            callback: newValue => onChange({
-                id: newValue.id,
-                _reference: true
-            }),
+            callback: newValue => onChange(this.refValue(newValue)),
             rootId: value.id
         });
     };

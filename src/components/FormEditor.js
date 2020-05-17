@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import BackIcon from '@material-ui/icons/ArrowBack';
 import FormView from "./FormView";
 import { useMediaQuery, withStyles, Fab } from "@material-ui/core/index";
@@ -161,7 +161,8 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
             rootId: value && value.id
         })
     ];
-    const [ref] = useState(React.createRef());
+    const ref = useRef(null);
+    const stackHeaderRef = useRef(null);
     const [stack, setStack] = useState(initialStack());
     const [stackTitles, setStackTitles] = useState([]);
     const [done, setDone] = useState(false);
@@ -248,6 +249,13 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
         updateStack(initialStack());
         setDone(false);
     };
+
+    let controlHeight = 0;
+    if (stackHeaderRef.current) {
+        controlHeight = stackHeaderRef.current.getBoundingClientRect().height
+    }
+
+    controlHeight = `${height} - ${controlHeight}px`;
 
     const actions = [];
 
@@ -353,12 +361,14 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
                 return <Form key={`form_${index}`}
                              dataType={item.dataType}
                              value={item.value}
+                             _type={item.value && item.value._type}
                              onChange={handleChange}
                              disabled={saving}
                              readOnly={readOnly}
                              onStack={handleStack}
                              rootId={item.rootId}
                              max={item.max}
+                             height={controlHeight}
                              submitter={item.submitter}
                              onSubmitDone={onSubmitDone}
                              onItemPickup={onItemPickup}/>
@@ -369,7 +379,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
     );
 
     return <div className={classes.root}>
-        <div className={classes.stackHeader}>
+        <div ref={stackHeaderRef} className={classes.stackHeader}>
             {stack.length > 1 && stackTitles.join(' ')}
         </div>
         <div style={{ display: 'flex', position: 'relative' }}>

@@ -31,7 +31,15 @@ class RefManyControl extends React.Component {
 
     handlePick = item => {
         const value = this.props.value || [];
-        value.push({ id: item.record.id, _reference: true });
+        const { id, _type } = item.record;
+        const itemValue = {
+            id,
+            _reference: true
+        };
+        if (_type && _type !== this.props.property.dataType.type_name()) {
+            itemValue._type = _type;
+        }
+        value.push(itemValue);
         this.props.onChange(value);
         this.setState(prev => ({
             items: [...(prev.items || []), { id: item.record.id, title: item.title }],
@@ -52,6 +60,7 @@ class RefManyControl extends React.Component {
                     if (itemValue.constructor !== Array) {
                         itemValue = [itemValue];
                     }
+                    itemValue.forEach(v => v._reference = true);
                     onChange([...value, ...itemValue]);
                     this.setOpen(true);
                 }
