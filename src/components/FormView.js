@@ -112,6 +112,8 @@ const FormView = ({ dataType, width, height, value, _type, onChange, disabled, o
         onChange && onChange(value);
     }
 
+    const formHeight = `${height} - ${theme.spacing(16)}px`;
+
     let control;
 
     if (dataType && formDataType) {
@@ -119,6 +121,7 @@ const FormView = ({ dataType, width, height, value, _type, onChange, disabled, o
                                  jsonPath='$'
                                  dataTypeId={formDataType.id}
                                  width={width}
+                                 height={formHeight}
                                  value={value}
                                  errors={errors}
                                  onChange={handleChange}
@@ -161,7 +164,7 @@ const FormView = ({ dataType, width, height, value, _type, onChange, disabled, o
         }
         control = (
             <div className="flex column full-width justify-content-center">
-                <List style={{ height: `calc(${height} - ${theme.spacing(16)}px)` }}>
+                <List style={{ height: `calc(${formHeight})` }}>
                     <ListSubheader className={classes.bgPaper}>
                         <Typography variant="h6">
                             {titles ? 'Pick a type' : textSkeleton}
@@ -173,7 +176,8 @@ const FormView = ({ dataType, width, height, value, _type, onChange, disabled, o
         );
     }
 
-    return <div className={classes.root}>
+    return <div className={classes.root}
+                style={{ minHeight: `calc(${formHeight})` }}>
         {control}
     </div>;
 };
