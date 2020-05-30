@@ -7,11 +7,12 @@ import PropertyControl from "./PropertyControl";
 import { FormGroup } from "./FormGroup";
 import ErrorMessages from "./ErrorMessages";
 import { LinearProgress } from "@material-ui/core";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer } from "react";
 import { FETCHED } from "../common/Symbols";
+import reducer from "../common/reducer";
 
 function ObjectControl(props) {
-    const [state, setState] = useState({});
+    const [state, setState] = useReducer(reducer, {});
     const { schemaResolver, properties, schema } = state;
     const {
         rootDataType, jsonPath, rootId, onChange, value, dataType,
@@ -24,10 +25,10 @@ function ObjectControl(props) {
             !schemaResolver || (resolver && schemaResolver !== resolver) || schemaResolver.id !== dataTypeId
         ) {
             if (resolver) {
-                doSetState({ schemaResolver: resolver });
+                setState({ schemaResolver: resolver });
             } else {
                 const subscription = DataType.getById(dataTypeId).subscribe(
-                    dataType => doSetState({ schemaResolver: dataType })
+                    dataType => setState({ schemaResolver: dataType })
                 );
 
                 return () => subscription.unsubscribe();
@@ -38,7 +39,7 @@ function ObjectControl(props) {
     useEffect(() => {
         if (schemaResolver) {
             const subscription = schemaResolver.getSchema().subscribe(
-                schema => doSetState({ schema })
+                schema => setState({ schema })
             );
             return () => subscription.unsubscribe();
         }
@@ -67,7 +68,7 @@ function ObjectControl(props) {
                                 ))
                         ) || of(prop))
                     )
-                )).subscribe(properties => doSetState({ properties }));
+                )).subscribe(properties => setState({ properties }));
             return () => subscription.unsubscribe();
         }
     }, [schema]);
@@ -93,8 +94,6 @@ function ObjectControl(props) {
             return () => subscription.unsubscribe();
         }
     }, [schemaResolver, properties]);
-
-    const doSetState = values => setState({ ...state, ...values });
 
     const getDataType = () => schemaResolver &&
         (schemaResolver.constructor === Property ? schemaResolver.dataType : schemaResolver);
