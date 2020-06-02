@@ -14,10 +14,16 @@ import { of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 import { DataType } from "../services/DataTypeService";
 import Skeleton from "@material-ui/lab/Skeleton";
+import ConfigService from "../services/ConfigService";
+import reducer from "../common/reducer";
+import Subjects, { TabsSubject } from "../services/subjects";
 
 export const navigationWidth = theme => `${theme.spacing(30)}px`;
 
 const useStyles = makeStyles(theme => ({
+    drawer: {
+        position: 'relative'
+    },
     navOpen: {
         width: navigationWidth(theme),
         transition: theme.transitions.create(['width'], {
@@ -35,84 +41,60 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-function navigationReducer(state, action) {
-    let { type, config, updateConfig } = action;
-    const navigation = config && config.navigation;
-    switch (type) {
-        case 'add': {
-            updateConfig({
-                navigation: {
-                    ...navigation,
-                    [action.dataType.id]: {}
-                }
-            });
-        }
-            break;
-        case 'update': {
-            return { ...state, ...action.state };
-        }
-    }
-    return state;
-}
-
-const Navigation = ({ docked, setDocked, xs, config, dataTypeSubject, tabItemSubject, updateConfig }) => {
+const Navigation = ({ docked, setDocked, xs }) => {
 
     const [over, setOver] = useState(false);
-    const [state, dispatch] = useReducer(navigationReducer, { titles: {} });
+    const [state, setState] = useReducer(reducer, {
+        navigation: ConfigService.state().navigation || [],
+        titles: []
+    });
     const classes = useStyles();
     const theme = useTheme();
-    const navigation = config && config.navigation;
-    const { titles } = state;
+
+    const { navigation, titles, disabled } = state;
 
     useEffect(() => {
-        const subscription = dataTypeSubject.subscribe(
-            dataType => dispatch({ type: 'add', config, updateConfig, dataType })
+        const subscription = ConfigService.tenantIdChanges().subscribe(
+            () => setState({ titles: [] })
         );
         return () => subscription.unsubscribe();
-    }, [config, updateConfig, dataTypeSubject]);
+    }, []);
+
+    useEffect(() => {
+        const subscription = ConfigService.navigationChanges().subscribe(
+            navigation => setState({
+                navigation: navigation || [],
+                disabled: true
+            })
+        );
+        return () => subscription.unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (navigation) {
             const subscription = zzip(
-                ...Object.keys(navigation).map(id => {
-                    if (titles[id]) {
-                        return of({ id, title: titles[id] });
-                    }
-                    return DataType.getById(id).pipe(
-                        switchMap(dataType => (dataType && dataType.getTitle()) || '404'),
-                        map(title => ({ id, title }))
-                    )
-                })
+                ...navigation.map(
+                    ({ key }) => Subjects[key].navTitle()
+                )
             ).subscribe(
-                titles => dispatch({
-                    type: 'update',
-                    state: {
-                        titles: titles.reduce(
-                            (prev, current) => ({ ...prev, [current.id]: current.title }), {}
-                        )
-                    }
-                })
+                titles => setState({ titles, disabled: false })
             );
             return () => subscription.unsubscribe();
-        } else {
-            updateConfig({
-                navigation: {}
-            });
         }
     }, [navigation]);
 
-    const select = id => () => {
+    const select = key => () => {
         if (xs) {
             setDocked(false);
         }
-        tabItemSubject.next({ [DataTypeId]: id });
+        TabsSubject.next(key);
     };
 
     let nav;
     if (navigation) {
-        nav = Object.keys(navigation).map(
-            (id, index) => {
-                const title = titles[id];
+        nav = navigation.map(
+            (nav, index) => {
+                const title = titles[index];
                 let icon, text;
                 if (title) {
                     icon = index % 2 === 0 ? <InboxIcon/> : <MailIcon/>;
@@ -124,12 +106,12 @@ const Navigation = ({ docked, setDocked, xs, config, dataTypeSubject, tabItemSub
                 }
                 return (
                     <ListItem button
-                              key={id}
-                              onClick={select(id)}
-                              disabled={!titles.hasOwnProperty(id)}>
+                              key={`nav_${index}`}
+                              onClick={select(navigation[index].key)}
+                              disabled={disabled}>
                         <ListItemIcon>{icon}</ListItemIcon>
-                        <ListItemText primary={title}>
-                            {text}
+                        <ListItemText>
+                            {title || text}
                         </ListItemText>
                     </ListItem>
                 );
@@ -141,6 +123,7 @@ const Navigation = ({ docked, setDocked, xs, config, dataTypeSubject, tabItemSub
     }
 
     const open = docked || over;
+
 
     return <div className={clsx(classes.drawer, { [classes.navOpen]: open, [classes.navClose]: !open })}
                 style={{

@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import API from "../services/ApiService";
 import RecordSelector from "./RecordSelector";
 import reducer from "../common/reducer";
@@ -7,34 +7,39 @@ const TenantTypeSelector = { namespace: '""', name: 'Account' };
 
 function TenantSelector({ inputClasses, onSelect, readOnly }) {
     const [state, setState] = useReducer(reducer, {
-        tenant: { name: 'Loading...' }
+        tenant: { name: 'Loading...' },
+        disabled: true
     });
 
     const { tenant, selection, disabled } = state;
 
-    const selectTenant = tenant => {
-        setState({ tenant });
-        onSelect(tenant);
-    };
-
     useEffect(() => {
         const subscription = API.get('setup', 'user', 'me').subscribe(
-            user => user && selectTenant(user.account)
+            user => {
+                if (user) {
+                    setState({ tenant: user.account, disabled: false });
+                    onSelect && onSelect(user.account);
+                }
+            }
         );
         return () => subscription && subscription.unsubscribe();
-    }, [tenant]);
+    }, []);
 
     useEffect(() => {
-        let subscription;
-        if (selection) {
+        if (selection && selection.record.id !== tenant.id) {
             setState({ tenant: selection.record, disabled: true });
-            subscription = API.post('setup', 'user', 'me', {
+
+            const subscription = API.post('setup', 'user', 'me', {
                 account: {
                     id: selection.record.id
                 }
-            }).subscribe(() => setState({ disabled: false }));
+            }).subscribe(() => {
+                setState({ disabled: false, selection: null });
+                onSelect && onSelect(selection.record);
+            });
+
+            return () => subscription && subscription.unsubscribe();
         }
-        return () => subscription && subscription.unsubscribe();
     }, [selection]);
 
     const handleSelect = selection => setState({ selection });

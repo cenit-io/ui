@@ -19,6 +19,7 @@ import { of, Subject } from "rxjs";
 import { DataTypeId } from "../common/Symbols";
 import { FileDataType } from "../services/DataTypeService";
 import FileUploader from "./FileUploader";
+import { RecordSubject } from "../services/subjects";
 
 function withForm(item) {
     item.formComponent = formComponentFor(item.dataType);
@@ -138,7 +139,7 @@ const styles = theme => ({
     }
 });
 
-const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, height, value, readOnly, onUpdate }) => {
+const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked, height, value, readOnly, onUpdate }) => {
 
     const [id, setId] = useState((value && value.id) || null);
     const initialStack = () => [
@@ -339,7 +340,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
                         color="primary"
                         startIcon={<EditIcon/>}
                         className={classes.actionButton}
-                        onClick={() => onItemPickup({ [DataTypeId]: dataType.id, id })}>
+                        onClick={() => onSubjectPicked(RecordSubject.for(dataType.id, id).key)}>
                     Edit
                 </Button>
             </div>
@@ -371,7 +372,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onItemPickup, he
                              height={controlHeight}
                              submitter={item.submitter}
                              onSubmitDone={onSubmitDone}
-                             onItemPickup={onItemPickup}/>
+                             onSubjectPicked={onSubjectPicked}/>
             }
 
             return successAlert;

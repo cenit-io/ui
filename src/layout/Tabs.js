@@ -8,22 +8,20 @@ import IconButton from '@material-ui/core/IconButton/index';
 import CloseIcon from '@material-ui/icons/Clear';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
-import MemberContainer from "../actions/MemberContainer";
-import CollectionContainer from "../actions/CollectionContainer";
-import { DataTypeId, TabIndex, TabKey, TitleSubject } from "../common/Symbols";
-import { Subject } from "rxjs";
+import reducer from "../common/reducer";
+import Subjects, { TabsSubject } from "../services/subjects";
+import ConfigService from "../services/ConfigService";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
-function ItemTab({ item, onClick, onClose }) {
+function ItemTab({ subject, onClick, onClose }) {
 
     const [title, setTitle] = useState('...');
-    const titleSubject = item[TitleSubject];
 
     useEffect(() => {
-        const subscription = titleSubject.subscribe(title => setTitle(title));
+        const subscription = subject.navTitle().subscribe(title => setTitle(title));
         return () => subscription.unsubscribe();
-    }, [titleSubject]);
+    }, [subject]);
 
     return (
         <Tab component={ClosableComponent}
@@ -64,168 +62,93 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-function reducer(state, action) {
-    switch (action.type) {
-
-        case 'selectItem': {
-            const { item, updateConfig } = action;
-            let { items } = state;
-
-            const itemKey = `${item[DataTypeId]}_${item.id}`;
-            const values = Object.values(items);
-
-            let index = values.length;
-
-            const existingItem = values.find(value => value[TabKey] === itemKey);
-
-            if (existingItem) {
-                index = existingItem[TabIndex];
-            } else {
-                index = values.length;
-                item[TabIndex] = index;
-                item[TabKey] = itemKey;
-                items = { ...items, [item[TabKey]]: item };
-            }
-
-            updateConfig({
-                tabs: {
-                    index,
-                    items: Object.values(items).sort(
-                        (a, b) => a[TabIndex] - b[TabIndex]
-                    ).map(
-                        item => ({ DataTypeId: item[DataTypeId], id: item.id })
-                    )
-                }
-            });
-
-            return { index, items };
-        }
-
-        case 'buildItems': {
-            const { config } = action;
-            let { items } = state;
-
-            let newItems = {};
-            let index = 0;
-
-            if (config) {
-                const tabs = config.tabs || {};
-                index = tabs.index || 0;
-                const tabItems = tabs.items || [];
-                tabItems.forEach(
-                    (item, index) => {
-                        const id = `${item.DataTypeId}_${item.id}`;
-                        if (items.hasOwnProperty(id)) {
-                            newItems[id] = items[id];
-                        } else {
-                            newItems[id] = {
-                                id: item.id,
-                                [DataTypeId]: item.DataTypeId
-                            }
-                        }
-                        newItems[id][TabIndex] = index;
-                        newItems[id][TabKey] = id;
-                    }
-                );
-            }
-
-            items = newItems;
-
-            return { index, items };
-        }
-
-        case 'closeItem': {
-            const { key, updateConfig } = action;
-            let { index, items } = state;
-
-            const removedItem = items[key];
-            if (removedItem) {
-                delete items[key];
-                const values = Object.values(items);
-                values.forEach(value => {
-                    if (value[TabIndex] > removedItem[TabIndex]) {
-                        value[TabIndex]--;
-                    }
-                });
-                if (index === values.length) {
-                    index--;
-                }
-
-                updateConfig({
-                    tabs: {
-                        index,
-                        items: Object.values(items).sort(
-                            (a, b) => a[TabIndex] - b[TabIndex]
-                        ).map(
-                            item => ({ DataTypeId: item[DataTypeId], id: item.id })
-                        )
-                    }
-                });
-            }
-
-            return { index, items };
-        }
-        case 'selectIndex':
-            return { ...state, index: action.index };
-
-        default:
-            throw new Error(`Action not supported: ${JSON.stringify(action)}`);
-    }
-}
-
-export default function NavTabs({ docked, config, updateConfig, width, tabItemSubject }) {
+export default function NavTabs({ docked, width }) {
     const classes = useStyles();
     const theme = useTheme();
-    const [state, dispatch] = useReducer(reducer, { index: 0, items: {} });
+    const [state, setState] = useReducer(reducer, {
+        tabs: [],
+        tabIndex: 0
+    });
 
-    const { items, index } = state;
+    const { tabs, tabIndex } = state;
+
+    const setTabIndex = tabIndex => {
+        setState({ tabIndex });
+        ConfigService.update({ tabIndex });
+    };
 
     useEffect(() => {
-        const subscription = tabItemSubject.subscribe(
-            item => dispatch({ type: 'selectItem', item, updateConfig })
+        const subscription = ConfigService.tenantIdChanges().subscribe(
+            () => {
+                const { tabs, tabIndex } = ConfigService.state();
+                setState({
+                    tabs: tabs || [],
+                    tabIndex: Math.max(0, Math.min(tabIndex || 0, (tabs && tabs.length - 1) || 0))
+                });
+            }
         );
         return () => subscription.unsubscribe();
-    }, [tabItemSubject, updateConfig]);
+    }, []);
 
-    useEffect(() => dispatch({ type: 'buildItems', config }), [config]);
-
-    const handleSelect = index => () => dispatch({ type: 'selectIndex', index });
-
-    const handleClose = key => () => dispatch({ type: 'closeItem', key, updateConfig });
-
-    const onItemPickup = item => tabItemSubject.next(item);
-
-    const sortedItems = Object.values(items).sort((a, b) => a[TabIndex] - b[TabIndex]);
-
-    const tabs = sortedItems.map(
-        (item, index) => {
-            const key = item[TabKey];
-            if (!item[TitleSubject]) {
-                item[TitleSubject] = new Subject();
+    useEffect(() => {
+        const subscription = TabsSubject.subscribe(
+            key => {
+                const tabIndex = tabs.indexOf(key);
+                let config;
+                if (tabIndex !== -1) {
+                    config = { tabIndex };
+                } else {
+                    config = {
+                        tabs: [...tabs, key],
+                        tabIndex: tabs.length
+                    };
+                }
+                setState(config);
+                ConfigService.update(config);
             }
-            return <ItemTab key={`tab_${key}`}
-                            docked={docked}
-                            item={item}
-                            onClick={handleSelect(index)}
-                            onClose={handleClose(key)}/>;
+        );
+        return () => subscription.unsubscribe();
+    }, [tabs]);
+
+    const handleSelect = tabIndex => () => setTabIndex(tabIndex);
+
+    const handleClose = index => () => {
+        let newIndex = tabIndex;
+        if (index <= newIndex) {
+            newIndex = Math.max(0, newIndex - 1);
         }
+        tabs.splice(index, 1);
+        const config = { tabs, tabIndex: newIndex };
+        setState(config);
+        ConfigService.update(config)
+    };
+
+    const onSubjectPicked = key => TabsSubject.next(key);
+
+    const itemTabs = tabs.map(
+        (key, index) => <ItemTab key={`tab_${key}`}
+                                 docked={docked}
+                                 subject={Subjects[key]}
+                                 onClick={handleSelect(index)}
+                                 onClose={handleClose(index)}/>
     );
 
     const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`;
 
-    const containers = sortedItems.map(
-        item => {
-            const ContainerComponent = item.id ? MemberContainer : CollectionContainer;
-            const key = item[TabKey];
-            return <div key={`container_${key}`}
-                        style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
-                <ContainerComponent docked={docked}
-                                    item={item}
-                                    height={containerHeight}
-                                    width={width}
-                                    onItemPickup={onItemPickup}
-                                    onClose={handleClose(key)}/>
-            </div>;
+    const containers = tabs.map(
+        key => {
+            const { TabComponent } = Subjects[key];
+            return (
+                <div key={`container_${key}`}
+                     style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
+                    <TabComponent docked={docked}
+                                  subject={Subjects[key]}
+                                  height={containerHeight}
+                                  width={width}
+                                  onSubjectPicked={onSubjectPicked}
+                                  onClose={handleClose(key)}/>
+                </div>
+            );
         }
     );
 
@@ -236,17 +159,18 @@ export default function NavTabs({ docked, config, updateConfig, width, tabItemSu
     return (
         <div className={classes.root}>
             <AppBar position="sticky" color="default">
-                <Tabs value={index}
+                <Tabs value={tabIndex}
                       onChange={handleChange}
                       variant="scrollable"
                       scrollButtons="on"
                       indicatorColor="primary"
                       style={{ minHeight: 'inherit' }}>
-                    {tabs}
+                    {itemTabs}
                 </Tabs>
             </AppBar>
             <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                            index={index < 0 ? 0 : index}>
+                            index={tabIndex}
+                            onChangeIndex={tabIndex => setTabIndex(tabIndex)}>
                 {containers}
             </SwipeableViews>
         </div>

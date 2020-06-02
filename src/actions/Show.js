@@ -4,17 +4,17 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import Loading from "../components/Loading";
 
 
-const Show = ({ docked, dataType, item, onItemPickup }) => {
+const Show = ({ docked, dataType, record, onSubjectPicked }) => {
 
     const [value, setValue] = useState(null);
-    const itemKey = JSON.stringify(item);
+    const itemKey = JSON.stringify(record);
 
     useEffect(() => {
-        const subscription = dataType.get(item.id).subscribe(
+        const subscription = dataType.get(record.id).subscribe(
             value => setValue(value)
         );
         return () => subscription.unsubscribe();
-    }, [dataType, item, itemKey]);
+    }, [dataType, record, itemKey]);
 
     if (value) {
         return <pre>

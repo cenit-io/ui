@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import { makeStyles, useMediaQuery } from "@material-ui/core";
 import AppBar, { appBarHeight } from './AppBar';
 import Navigation, { navigationWidth } from "./Navigation";
@@ -7,7 +7,10 @@ import AuthorizationService from "../services/AuthorizationService";
 import Drawer from "../components/Drawer";
 import clsx from "clsx";
 import Tabs from "./Tabs";
-import { Subject } from "rxjs";
+import reducer from "../common/reducer";
+import ConfigService from "../services/ConfigService";
+import Loading from "../components/Loading";
+import { DataTypeSubject } from "../services/subjects";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -21,21 +24,39 @@ const useStyles = makeStyles(theme => ({
     },
     contentMargin: {
         marginLeft: theme.spacing(7) + 1
+    },
+    drop: {
+        position: 'absolute',
+        opacity: 0.5,
+        zIndex: 1100, top: 0,
+        left: 0,
+        background: '#ffffff'
     }
 }));
 
 const Main = () => {
-    const [docked, setDocked] = useState(localStorage.getItem('docked') !== 'false');
     const [idToken, setIdToken] = useState(null);
-    const [config, setConfig] = useState(null);
-    const [resolvedConfig, setResolvedConfig] = useState(null);
-    const [dataTypeSubject] = useState(new Subject());
-    const [tabItemSubject] = useState(new Subject());
+    const [state, setState] = useReducer(reducer, {
+        docked: localStorage.getItem('docked') !== 'false',
+        disabled: ConfigService.isDisabled()
+    });
+    const [config, setConfig] = useReducer(reducer, {});
 
     const classes = useStyles();
 
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
+
+    const { docked, tenant_id, disabled } = state;
+
+    const setDocked = docked => setState({ docked });
+
+    useEffect(() => {
+        const subscription = ConfigService.onDisabled().subscribe(
+            disabled => setState({ disabled })
+        );
+        return () => subscription.unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (!idToken) {
@@ -48,31 +69,19 @@ const Main = () => {
     }, [idToken]);
 
     useEffect(() => {
-        if (config) {
-            const tenant_id = config.tenant_id || (resolvedConfig && resolvedConfig.tenant_id);
-            if (tenant_id) {
-                const subscription = AuthorizationService.config({ tenant_id, ...config }).subscribe(
-                    config => setResolvedConfig(config)
-                );
-                return () => subscription.unsubscribe();
-            } else {
-                setResolvedConfig(null);
-            }
+        if (tenant_id) {
+            ConfigService.update({ tenant_id });
         }
-    }, [config]);
+    }, [tenant_id]);
 
-    const { tenant_id } = resolvedConfig || {};
-
-    const updateConfig = partialConfig => setConfig(partialConfig);
-
-    const navigation = <Navigation key={tenant_id}
-                                   docked={docked}
-                                   setDocked={setDocked}
-                                   xs={xs}
-                                   config={resolvedConfig}
-                                   dataTypeSubject={dataTypeSubject}
-                                   tabItemSubject={tabItemSubject}
-                                   updateConfig={updateConfig}/>;
+    let navKey;
+    if (xs) {
+        navKey = tenant_id;
+    }
+    const navigationUI = <Navigation key={navKey}
+                                     docked={docked}
+                                     setDocked={setDocked}
+                                     xs={xs}/>;
 
     const switchNavigation = () => {
         localStorage.setItem('docked', String(!docked));
@@ -80,13 +89,29 @@ const Main = () => {
     };
 
     function handleTenantSelected(tenant) {
-        if (!config || tenant.id !== config.tenant_id) {
-            setConfig({ tenant_id: tenant.id })
+        if (tenant.id !== tenant_id) {
+            ConfigService.update({ tenant_id: tenant.id });
+            setState({ tenant_id: tenant.id });
         }
+    }
+
+    function handleDataTypeSelected(dataType) {
+        const { key } = DataTypeSubject.for(dataType.id);
+        ConfigService.update({
+            navigation: [
+                ...(ConfigService.state().navigation || []),
+                { key }
+            ]
+        });
     }
 
     const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`);
     const tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
+
+    let drop;
+    if (disabled) {
+        drop = <Loading className={classes.drop}/>;
+    }
 
     return <div className={classes.root}>
         <div className={classes.mainContainer}>
@@ -97,27 +122,27 @@ const Main = () => {
                      width: `calc(${tabsWidth})`
                  }}>
                 <Tabs docked={docked}
-                      config={resolvedConfig}
-                      tabItemSubject={tabItemSubject}
-                      width={tabsWidth}
-                      updateConfig={updateConfig}/>
+                      config={config}
+                      width={tabsWidth}/>
             </div>
             {
-                xs || navigation
+                xs || navigationUI
             }
             {
                 xs &&
                 <Drawer docked={docked}
                         onClose={switchNavigation}
-                        idToken={idToken}
-                        navigation={navigation}/>
+                        idToken={idToken}>
+                    {navigationUI}
+                </Drawer>
             }
         </div>
         <AppBar onToggle={switchNavigation}
+                onDataTypeSelected={handleDataTypeSelected}
                 onTenantSelected={handleTenantSelected}
-                dataTypeSelectorDisabled={resolvedConfig === null}
-                dataTypeSubject={dataTypeSubject}
+                disabled={disabled}
                 idToken={idToken}/>
+        {drop}
     </div>
 };
 

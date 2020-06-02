@@ -21,6 +21,7 @@ import BanedIcon from "@material-ui/icons/Block";
 import clsx from "clsx";
 import axios, { CancelToken } from "axios";
 import { DataTypeId } from "../common/Symbols";
+import { RecordSubject } from "../services/subjects";
 
 const FileStatus = Object.freeze({
     waiting: 'waiting',
@@ -374,7 +375,7 @@ function computeFilesValue(files) {
     return filesValue;
 }
 
-function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, height, classes, theme, onChange, value, submitter, onSubmitDone, rootId }) {
+function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, width, height, classes, theme, onChange, value, submitter, onSubmitDone, rootId }) {
     const [state, dispatch] = useReducer(uploaderReducer, {
         files: [],
         done: false
@@ -514,7 +515,7 @@ function FileUploader({ dataType, multiple, max, disabled, onItemPickup, width, 
         }
     }, [current, rootId]);
 
-    const launch = id => onItemPickup({ [DataTypeId]: dataType.id, id });
+    const launch = id => onSubjectPicked(RecordSubject.for(dataType.id, id).key);
 
     const fileList = files.map(
         (file, index) => <FileItem key={`file_${index}`}

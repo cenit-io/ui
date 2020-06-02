@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import Loading from '../components/Loading';
 import { Chip, Toolbar, Typography, useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
@@ -15,6 +15,8 @@ import copySymbols from "../util/cpSymbols";
 import ChevronRight from "@material-ui/core/SvgIcon/SvgIcon";
 import ActionPicker from "./ActionPicker";
 import Alert from "./Alert";
+import { DataTypeSubject } from "../services/subjects";
+import reducer from "../common/reducer";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -39,92 +41,91 @@ const actionContainerStyles = makeStyles(theme => ({
     }
 }));
 
-function MemberContainer({ docked, item, height, width, onItemPickup, onClose, updateItem }) {
-    const [memberItem, setMemberItem] = useState(null);
-    const [actionKey, setActionKey] = useState(Show.key);
-    const [dataType, setDataType] = useState(null);
-    const [disabled, setDisabled] = useState(false);
-    const [actionComponentKey, setActionComponentKey] = useState(Random.string());
-    const [dataTypeTitle, setDataTypeTitle] = useState(null);
-    const [itemTitle, setItemTitle] = useState(null);
-    const [error, setError] = useState(null);
+function MemberContainer({ docked, subject, height, width, onSubjectPicked, onClose, updateItem }) {
+    const [state, setState] = useReducer(reducer, {
+        actionKey: Show.key,
+        actionComponentKey: Random.string()
+    });
 
     const theme = useTheme();
     const classes = actionContainerStyles();
 
+    const {
+        dataType, record, dataTypeTitle, recordTitle,
+        error, actionComponentKey, actionKey, disabled
+    } = state;
+
+    const setError = error => setState({ error });
+
     useEffect(() => {
-        const subscription = DataType.getById(item[DataTypeId]).pipe(
+        const subscription = DataType.getById(subject.dataTypeId).pipe(
             switchMap(
                 dataType => {
-                    setDataType(dataType);
-                    setMemberItem(null);
+                    setState({ dataType, record: null });
                     if (dataType) {
                         return dataType.titleViewPort('_id').pipe(
                             switchMap(
                                 viewport => {
                                     return zzip(
                                         dataType.getTitle(),
-                                        dataType.get(item.id, { viewport })
+                                        dataType.get(subject.id, { viewport })
                                     )
                                 }
                             )
                         );
                     }
-                    setError(`Data type with ID ${item[DataTypeId]} not found!`);
+                    setError(`Data type with ID ${subject.dataTypeId} not found!`);
                     return of([null, null]);
                 }
             )
-        ).subscribe(([dataTypeTitle, titledItem]) => {
-            setDataTypeTitle(dataTypeTitle);
-            if (titledItem) {
-                setMemberItem(copySymbols(item, titledItem));
+        ).subscribe(([dataTypeTitle, record]) => {
+            setState({ dataTypeTitle });
+            if (record) {
+                setState({ record });
             } else {
-                setError(`${dataTypeTitle} record with ID ${item.id} not found!`);
+                setError(`${dataTypeTitle} record with ID ${subject.id} not found!`);
             }
         });
 
         return () => subscription.unsubscribe();
-    }, [item])
+    }, [subject])
 
     useEffect(() => {
-        if (dataType && memberItem) {
-            const subscription = dataType.titleFor(memberItem).subscribe(
-                itemTitle => {
-                    memberItem[TitleSubject].next(itemTitle);
-                    setItemTitle(itemTitle);
-                }
+        if (dataType && record) {
+            const subscription = dataType.titleFor(record).subscribe(
+                recordTitle => setState({ recordTitle })
             );
             return () => subscription.unsubscribe();
         }
-    }, [dataType, memberItem]);
+    }, [dataType, record]);
 
     if (error) {
         return <Alert message={error}/>;
     }
 
-    if (!memberItem) {
+    if (!record) {
         return <Loading/>;
     }
 
     const handleAction = actionKey => {
         const action = ActionRegistry.byKey(actionKey);
         if (action) {
-            setActionComponentKey(Random.string());
-            setActionKey(actionKey);
+            setState({
+                actionKey,
+                actionComponentKey: Random.string()
+            });
         }
     };
 
-    const handleUpdateItem = item => {
-        setMemberItem(copySymbols(memberItem, item));
-        updateItem && updateItem(item);
-    };
+    const handleUpdateItem = item => updateItem && updateItem(item);
 
-        const breadcumb = (
+    const breadcumb = (
         <div className={classes.breadcrumb}>
-            <Chip label={dataTypeTitle} onClick={() => onItemPickup({ [DataTypeId]: dataType.id })}/>
+            <Chip label={dataTypeTitle}
+                  onClick={() => onSubjectPicked(DataTypeSubject.for(subject.dataTypeId).key)}/>
             <ChevronRight/>
             <Typography variant="h6">
-                {itemTitle}
+                {recordTitle}
             </Typography>
         </div>
     );
@@ -136,13 +137,13 @@ function MemberContainer({ docked, item, height, width, onItemPickup, onClose, u
     const action = ActionComponent && <ActionComponent key={actionComponentKey}
                                                        docked={docked}
                                                        dataType={dataType}
-                                                       item={item}
+                                                       record={record}
                                                        updateItem={handleUpdateItem}
                                                        height={componentHeight}
                                                        width={width}
-                                                       onItemPickup={onItemPickup}
+                                                       onSubjectPicked={onSubjectPicked}
                                                        onCancel={() => handleAction(Show.key)}
-                                                       onDisable={disabled => setDisabled(disabled)}
+                                                       onDisable={disabled => setState({ disabled })}
                                                        onClose={onClose}/>;
 
     return <React.Fragment>

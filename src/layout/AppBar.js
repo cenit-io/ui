@@ -62,7 +62,7 @@ const useStyles = makeStyles(theme => ({
 
 const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
-const AdminAppBar = ({ onToggle, onTenantSelected, dataTypeSelectorDisabled, idToken, dataTypeSubject }) => {
+function AdminAppBar({ onToggle, onTenantSelected, onDataTypeSelected, idToken, disabled }) {
 
     const [open, setOpen] = useState(false);
 
@@ -117,7 +117,11 @@ const AdminAppBar = ({ onToggle, onTenantSelected, dataTypeSelectorDisabled, idT
 
     return <AppBar position="fixed">
         <Toolbar>
-            <IconButton edge="start" color="inherit" aria-label="Menu" onClick={onToggle}>
+            <IconButton edge="start"
+                        color="inherit"
+                        aria-label="Menu"
+                        onClick={onToggle}
+                        disabled={disabled}>
                 <MenuIcon/>
             </IconButton>
             {
@@ -131,16 +135,18 @@ const AdminAppBar = ({ onToggle, onTenantSelected, dataTypeSelectorDisabled, idT
                     <SearchIcon/>
                 </div>
                 <RecordSelector dataTypeSelector={DataTypeSelector}
-                                onSelect={selection => dataTypeSubject.next(selection.record)}
+                                onSelect={({ record }) => onDataTypeSelected(record)}
                                 inputClasses={inputClasses}
-                                disabled={dataTypeSelectorDisabled}/>
+                                disabled={disabled}/>
             </div>
             <div className={classes.grow}/>
             <div className={classes.search}>
                 <div className={classes.searchIcon}>
                     <HomeIcon/>
                 </div>
-                <TenantSelector inputClasses={inputClasses} onSelect={onTenantSelected}/>
+                <TenantSelector inputClasses={inputClasses}
+                                onSelect={onTenantSelected}
+                                disabled={disabled}/>
             </div>
             {avatar}
         </Toolbar>

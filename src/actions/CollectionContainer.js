@@ -15,6 +15,7 @@ import Random from "../util/Random";
 import { DataType } from "../services/DataTypeService";
 import { switchMap } from "rxjs/operators";
 import { DataTypeId, TitleSubject } from "../common/Symbols";
+import { RecordSubject } from "../services/subjects";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -26,7 +27,7 @@ const actionContainerStyles = makeStyles(theme => ({
     }
 }));
 
-function CollectionContainer({ docked, item, height, width, onItemPickup }) {
+function CollectionContainer({ docked, subject, height, width, onSubjectPicked }) {
     const [baseSelector, setBaseSelector] = useState({});
     const [filterSelector, setFilterSelector] = useState({});
     const [selectedItems, setSelectedItems] = useState([]);
@@ -38,20 +39,18 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
     const theme = useTheme();
     const classes = actionContainerStyles();
 
-    const itemKey = JSON.stringify(item);
+    const { key, dataTypeId } = subject;
 
     useEffect(() => {
-        const subscription = DataType.getById(item[DataTypeId]).pipe(
+        const subscription = DataType.getById(dataTypeId).pipe(
             switchMap(dataType => {
                     setDataType(dataType);
                     return dataType.getTitle();
                 }
-            )).subscribe(title => {
-                item[TitleSubject].next(title);
-                setTitle(title);
-            });
+            )
+        ).subscribe(title => setTitle(title));
         return () => subscription.unsubscribe();
-    }, [item, itemKey]);
+    }, [subject, key]);
 
     if (!title) {
         return <Loading/>;
@@ -67,7 +66,7 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
                 setActionComponentKey(Random.string());
             } else {
                 setSelectedItems([]);
-                onItemPickup({ [DataTypeId]: dataType.id, id: selectedItems[0].id });
+                onSubjectPicked(RecordSubject.for(dataType.id, selectedItems[0].id).key);
             }
         }
     };
@@ -79,12 +78,12 @@ function CollectionContainer({ docked, item, height, width, onItemPickup }) {
     const action = ActionComponent && <ActionComponent key={actionComponentKey}
                                                        docked={docked}
                                                        dataType={dataType}
-                                                       item={item}
+                                                       subject={subject}
                                                        selectedItems={selectedItems}
                                                        height={componentHeight}
                                                        width={width}
                                                        onSelect={handleSelect}
-                                                       onItemPickup={onItemPickup}/>;
+                                                       onSubjectPicked={onSubjectPicked}/>;
 
     return <React.Fragment>
         <CollectionActionsToolbar title={title}
