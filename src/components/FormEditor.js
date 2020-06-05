@@ -393,6 +393,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
                      )}>
 
                 <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+                                disabled={true}
                                 index={stack.length - 1}>
                     {forms}
                 </SwipeableViews>
