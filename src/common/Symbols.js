@@ -12,3 +12,7 @@ export const DataTypeId = Symbol.for('_dataTypeId');
 export const TitleSubject = Symbol.for('_titleSubject');
 
 export const Failed = Symbol.for('_failed');
+
+export const Subject = Symbol.for('_subject');
+
+export const Cache = Symbol.for('_cache');

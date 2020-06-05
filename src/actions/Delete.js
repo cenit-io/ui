@@ -69,32 +69,26 @@ const Status = Object.freeze({
     failed: 5
 });
 
-const Delete = ({ docked, dataType, onDisable, theme, onSubjectPicked, height, record, onCancel, onClose }) => {
+const Delete = ({ docked, dataType, onDisable, theme, onSubjectPicked, height, onCancel, onClose, subject }) => {
     const [status, setStatus] = useState(Status.loading);
     const [title, setTitle] = useState(null);
     const classes = useStyles();
 
     useEffect(() => {
-        if (record) {
-            const subscription = dataType.titleFor(record).subscribe(
-                title => {
-                    setStatus(Status.ready);
-                    setTitle(title);
-                }
-            );
-            return () => subscription.unsubscribe();
-        }
-    }, [dataType, record]);
+        const subscription = subject.titleCache().subscribe(
+            title => {
+                setStatus(Status.ready);
+                setTitle(title);
+            }
+        );
+        return () => subscription.unsubscribe();
+    }, [subject]);
 
     useEffect(() => {
         switch (status) {
             case Status.destroying: {
                 onDisable(true);
-                let selector;
-                if (record) {
-                    selector = { _id: record.id };
-                }
-                const subscription = dataType.delete(selector).subscribe(
+                const subscription = dataType.delete({ _id: subject.id }).subscribe(
                     () => setStatus(Status.destroyed)
                 );
                 return () => subscription.unsubscribe();

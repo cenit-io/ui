@@ -18,6 +18,44 @@ import ConfigService from "../services/ConfigService";
 import reducer from "../common/reducer";
 import Subjects, { TabsSubject } from "../services/subjects";
 
+function NavItem({ subject, onClick }) {
+    const [title, setTitle] = useState(null);
+    const theme = useTheme();
+
+    useEffect(() => {
+        const subscription = subject.title().subscribe(
+            title => setTitle(title)
+        );
+        subject.computeTitle();
+        return () => subscription.unsubscribe();
+    }, [subject]);
+
+    let text;
+    let icon;
+    if (title) {
+        icon = subject.navIcon();
+        text = title;
+    } else {
+        icon = <Skeleton variant="circle"
+                         width={theme.spacing(3)}
+                         height={theme.spacing(3)}/>;
+        text = <Skeleton variante="text"/>;
+    }
+
+    return (
+        <ListItem button
+                  disabled={!title}
+                  onClick={onClick}>
+            <ListItemIcon>
+                {icon}
+            </ListItemIcon>
+            <ListItemText>
+                {text}
+            </ListItemText>
+        </ListItem>
+    );
+}
+
 export const navigationWidth = theme => `${theme.spacing(30)}px`;
 
 const useStyles = makeStyles(theme => ({
@@ -45,20 +83,12 @@ const Navigation = ({ docked, setDocked, xs }) => {
 
     const [over, setOver] = useState(false);
     const [state, setState] = useReducer(reducer, {
-        navigation: ConfigService.state().navigation || [],
-        titles: []
+        navigation: ConfigService.state().navigation || []
     });
     const classes = useStyles();
     const theme = useTheme();
 
-    const { navigation, titles, disabled } = state;
-
-    useEffect(() => {
-        const subscription = ConfigService.tenantIdChanges().subscribe(
-            () => setState({ titles: [] })
-        );
-        return () => subscription.unsubscribe();
-    }, []);
+    const { navigation, disabled } = state;
 
     useEffect(() => {
         const subscription = ConfigService.navigationChanges().subscribe(
@@ -70,19 +100,6 @@ const Navigation = ({ docked, setDocked, xs }) => {
         return () => subscription.unsubscribe();
     }, []);
 
-    useEffect(() => {
-        if (navigation) {
-            const subscription = zzip(
-                ...navigation.map(
-                    ({ key }) => Subjects[key].navTitle()
-                )
-            ).subscribe(
-                titles => setState({ titles, disabled: false })
-            );
-            return () => subscription.unsubscribe();
-        }
-    }, [navigation]);
-
     const select = key => () => {
         if (xs) {
             setDocked(false);
@@ -93,29 +110,7 @@ const Navigation = ({ docked, setDocked, xs }) => {
     let nav;
     if (navigation) {
         nav = navigation.map(
-            (nav, index) => {
-                const title = titles[index];
-                let icon, text;
-                if (title) {
-                    icon = index % 2 === 0 ? <InboxIcon/> : <MailIcon/>;
-                } else {
-                    icon = <Skeleton variant="circle"
-                                     width={theme.spacing(3)}
-                                     height={theme.spacing(3)}/>;
-                    text = <Skeleton variante="text"/>;
-                }
-                return (
-                    <ListItem button
-                              key={`nav_${index}`}
-                              onClick={select(navigation[index].key)}
-                              disabled={disabled}>
-                        <ListItemIcon>{icon}</ListItemIcon>
-                        <ListItemText>
-                            {title || text}
-                        </ListItemText>
-                    </ListItem>
-                );
-            }
+            ({ key}) => <NavItem key={key} subject={Subjects[key]} onClick={select(key)}/>
         );
         nav = <List style={{ overflowX: 'hidden' }}> {nav} </List>;
     } else {

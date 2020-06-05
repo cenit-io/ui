@@ -39,20 +39,24 @@ function CollectionContainer({ docked, subject, height, width, onSubjectPicked }
     const theme = useTheme();
     const classes = actionContainerStyles();
 
-    const { key, dataTypeId } = subject;
+    const { dataTypeId } = subject;
 
     useEffect(() => {
-        const subscription = DataType.getById(dataTypeId).pipe(
-            switchMap(dataType => {
-                    setDataType(dataType);
-                    return dataType.getTitle();
-                }
-            )
-        ).subscribe(title => setTitle(title));
+        const subscription = subject.title().subscribe(
+            title => setTitle(title)
+        );
+        subject.computeTitle();
         return () => subscription.unsubscribe();
-    }, [subject, key]);
+    }, [subject]);
 
-    if (!title) {
+    useEffect(() => {
+        const subscription = DataType.getById(dataTypeId).subscribe(
+            dataType => setDataType(dataType)
+        );
+        return () => subscription.unsubscribe();
+    }, [dataTypeId]);
+
+    if (!dataType) {
         return <Loading/>;
     }
 

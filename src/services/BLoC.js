@@ -2,6 +2,12 @@ import { Subject } from "rxjs";
 import Random from "../util/Random";
 
 function eq(a, b) {
+    if (a === null) {
+        return b === null;
+    }
+    if (a === undefined) {
+        return b === undefined
+    }
     if ((typeof a === 'object') && (typeof b === 'object')) {
         if (a.constructor === b.constructor) {
             if (a.constructor === Array) {

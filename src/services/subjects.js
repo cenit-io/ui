@@ -1,5 +1,5 @@
 import { DataType } from "./DataTypeService";
-import { switchMap } from "rxjs/operators";
+import { filter, switchMap, map } from "rxjs/operators";
 import { of, Subject } from "rxjs";
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import React from "react";
@@ -8,12 +8,45 @@ import ConfigService from "./ConfigService";
 import CollectionContainer from "../actions/CollectionContainer";
 import MemberContainer from "../actions/MemberContainer";
 import zzip from "../util/zzip";
+import { Cache, Subject as subj } from '../common/Symbols'
 
 class BasicSubject {
     constructor(attrs) {
         Object.keys(attrs).forEach(
             attr => this[attr] = attrs[attr]
         );
+        this[subj] = new Subject();
+    }
+
+    title() {
+        return this.pipe(
+            filter(({ type }) => type === 'title'),
+            map(({ title }) => title)
+        )
+    }
+
+    subscribe(...args) {
+        return this[subj].subscribe(...args);
+    }
+
+    next(...args) {
+        return this[subj].next(...args);
+    }
+
+    pipe(...args) {
+        return this[subj].pipe(...args);
+    }
+
+    computeTitle(target) {
+        if (target || !this.titleObs) {
+            this.titleObs = this.titleObservable(target);
+        }
+        this.titleObs.subscribe(
+            title => {
+                this.next({ type: 'title', title });
+                delete this.titleObs;
+            }
+        )
     }
 }
 
@@ -40,8 +73,8 @@ export class DataTypeSubject extends BasicSubject {
         this.key = this.key || Random.string();
     }
 
-    navTitle() {
-        return DataType.getById(this.dataTypeId).pipe(
+    titleObservable() {
+        return this.dataType().pipe(
             switchMap(
                 dataType => (dataType && dataType.getTitle()) || of('404')
             )
@@ -50,6 +83,10 @@ export class DataTypeSubject extends BasicSubject {
 
     navIcon() {
         return <InboxIcon/>;
+    }
+
+    dataType() {
+        return DataType.getById(this.dataTypeId);
     }
 }
 
@@ -79,12 +116,12 @@ export class RecordSubject extends BasicSubject {
         this.key = this.key || Random.string();
     }
 
-    navTitle() {
+    titleObservable(record) {
         return DataType.getById(this.dataTypeId).pipe(
             switchMap(
                 dataType => zzip(
                     of(dataType),
-                    dataType.get(this.id)
+                    (record && of(record)) || dataType.get(this.id)
                 )
             ),
             switchMap(
@@ -97,6 +134,25 @@ export class RecordSubject extends BasicSubject {
 
     navIcon() {
         return <InboxIcon/>;
+    }
+
+    dataTypeSubject() {
+        return DataTypeSubject.for(this.dataTypeId);
+    }
+
+    updateCache(record) {
+        this[Cache] = record;
+        if (record) {
+            this.computeTitle(record);
+        }
+    }
+
+    cache() {
+        return this[Cache];
+    }
+
+    titleCache() {
+        return this.titleObservable(this.cache());
     }
 }
 
@@ -114,7 +170,8 @@ const Subjects = {
                 let s;
                 if (attrs.type === DataTypeSubject.type) {
                     s = new DataTypeSubject(attrs);
-                } if (attrs.type === RecordSubject.type) {
+                }
+                if (attrs.type === RecordSubject.type) {
                     s = new RecordSubject(attrs);
                 }
                 s.key = key;

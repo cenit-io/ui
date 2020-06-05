@@ -8,15 +8,16 @@ import Show from "./Show";
 import Random from "../util/Random";
 import { DataType } from "../services/DataTypeService";
 import { DataTypeId, TitleSubject } from "../common/Symbols";
-import { switchMap } from "rxjs/operators";
+import { switchMap, tap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import { of } from "rxjs";
 import copySymbols from "../util/cpSymbols";
-import ChevronRight from "@material-ui/core/SvgIcon/SvgIcon";
+import ChevronRight from "@material-ui/icons/ChevronRight";
 import ActionPicker from "./ActionPicker";
 import Alert from "./Alert";
 import { DataTypeSubject } from "../services/subjects";
 import reducer from "../common/reducer";
+import Skeleton from "@material-ui/lab/Skeleton";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -51,53 +52,49 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
     const classes = actionContainerStyles();
 
     const {
-        dataType, record, dataTypeTitle, recordTitle,
+        dataType, record, dataTypeTitle, title,
         error, actionComponentKey, actionKey, disabled
     } = state;
 
     const setError = error => setState({ error });
 
     useEffect(() => {
-        const subscription = DataType.getById(subject.dataTypeId).pipe(
+        const subscription = subject.dataTypeSubject().dataType().pipe(
+            tap(dataType => setState({ dataType, record: null })),
             switchMap(
                 dataType => {
-                    setState({ dataType, record: null });
                     if (dataType) {
-                        return dataType.titleViewPort('_id').pipe(
-                            switchMap(
-                                viewport => {
-                                    return zzip(
-                                        dataType.getTitle(),
-                                        dataType.get(subject.id, { viewport })
-                                    )
-                                }
-                            )
-                        );
+                        return dataType.get(subject.id);
                     }
                     setError(`Data type with ID ${subject.dataTypeId} not found!`);
-                    return of([null, null]);
+                    return of(null);
                 }
             )
-        ).subscribe(([dataTypeTitle, record]) => {
-            setState({ dataTypeTitle });
+        ).subscribe(record => {
             if (record) {
                 setState({ record });
+                subject.updateCache(record);
             } else {
-                setError(`${dataTypeTitle} record with ID ${subject.id} not found!`);
+                setError(`Record with ID ${subject.id} not found!`);
             }
         });
-
         return () => subscription.unsubscribe();
     }, [subject])
 
     useEffect(() => {
-        if (dataType && record) {
-            const subscription = dataType.titleFor(record).subscribe(
-                recordTitle => setState({ recordTitle })
-            );
-            return () => subscription.unsubscribe();
+        const s1 = subject.title().subscribe(
+            title => setState({ title })
+        );
+        const dataTypeSubject = subject.dataTypeSubject();
+        const s2 = dataTypeSubject.title().subscribe(
+            dataTypeTitle => setState({ dataTypeTitle })
+        );
+        dataTypeSubject.computeTitle();
+        return () => {
+            s1.unsubscribe();
+            s2.unsubscribe();
         }
-    }, [dataType, record]);
+    }, [subject]);
 
     if (error) {
         return <Alert message={error}/>;
@@ -117,15 +114,26 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
         }
     };
 
-    const handleUpdateItem = item => updateItem && updateItem(item);
+    const handleUpdateItem = item => {
+        subject.updateCache(item);
+        updateItem && updateItem(item)
+    };
 
+    let dataLink;
+    if (dataTypeTitle) {
+        dataLink = <Chip label={dataTypeTitle}
+                         onClick={() => onSubjectPicked(DataTypeSubject.for(subject.dataTypeId).key)}/>;
+    } else {
+        dataLink = <Skeleton variant="circle"
+                             width={theme.spacing(3)}
+                             height={theme.spacing(3)}/>;
+    }
     const breadcumb = (
         <div className={classes.breadcrumb}>
-            <Chip label={dataTypeTitle}
-                  onClick={() => onSubjectPicked(DataTypeSubject.for(subject.dataTypeId).key)}/>
+            {dataLink}
             <ChevronRight/>
             <Typography variant="h6">
-                {recordTitle}
+                {title || <Skeleton variant="text" width={theme.spacing(5)}/>}
             </Typography>
         </div>
     );
@@ -136,6 +144,7 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
 
     const action = ActionComponent && <ActionComponent key={actionComponentKey}
                                                        docked={docked}
+                                                       subject={subject}
                                                        dataType={dataType}
                                                        record={record}
                                                        updateItem={handleUpdateItem}

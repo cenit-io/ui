@@ -6,20 +6,8 @@ import Loading from "../components/Loading";
 
 const Show = ({ docked, dataType, record, onSubjectPicked }) => {
 
-    const [value, setValue] = useState(null);
-    const itemKey = JSON.stringify(record);
-
-    useEffect(() => {
-        const subscription = dataType.get(record.id).subscribe(
-            value => setValue(value)
-        );
-        return () => subscription.unsubscribe();
-    }, [dataType, record, itemKey]);
-
-    if (value) {
-        return <pre>
-        {JSON.stringify(value, null, 2)}
-    </pre>;
+    if (record) {
+        return <pre>{JSON.stringify(record, null, 2)}</pre>;
     }
 
     return <Loading/>;

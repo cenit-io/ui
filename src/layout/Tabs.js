@@ -19,7 +19,9 @@ function ItemTab({ subject, onClick, onClose }) {
     const [title, setTitle] = useState('...');
 
     useEffect(() => {
-        const subscription = subject.navTitle().subscribe(title => setTitle(title));
+        const subscription = subject.title().subscribe(
+            title => setTitle(title)
+        );
         return () => subscription.unsubscribe();
     }, [subject]);
 
@@ -136,7 +138,7 @@ export default function NavTabs({ docked, width }) {
     const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`;
 
     const containers = tabs.map(
-        key => {
+        (key, index) => {
             const { TabComponent } = Subjects[key];
             return (
                 <div key={`container_${key}`}
@@ -146,7 +148,7 @@ export default function NavTabs({ docked, width }) {
                                   height={containerHeight}
                                   width={width}
                                   onSubjectPicked={onSubjectPicked}
-                                  onClose={handleClose(key)}/>
+                                  onClose={handleClose(index)}/>
                 </div>
             );
         }
