@@ -15,6 +15,7 @@ const InputControl = reactiveControlFor(
          onChange,
          onBlur,
          autoFocus,
+         onFocus,
          onClear
      }) => (
         <FormControl variant="filled" fullWidth={true} disabled={disabled}>
@@ -26,6 +27,7 @@ const InputControl = reactiveControlFor(
                          onChange={e => onChange(e.target.value)}
                          onBlur={onBlur}
                          autoFocus={autoFocus}
+                         onFocus={onFocus}
                          endAdornment={
                              !readOnly && !disabled && value !== undefined && value !== null &&
                              <InputAdornment position="end">

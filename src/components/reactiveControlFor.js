@@ -9,7 +9,8 @@ const Actions = Object.freeze({
     CheckValue: 'CheckValue',
     UpdateValue: 'UpdateValue',
     RefreshKey: 'RefreshKey',
-    Blur: 'Blur'
+    Blur: 'Blur',
+    Focus: 'Focus'
 });
 
 function reducer(state, { action, ...data }) {
@@ -25,7 +26,8 @@ function reducer(state, { action, ...data }) {
                     ...state,
                     value,
                     validator,
-                    onError
+                    onError,
+                    key: Random.string()
                 }
             }
         }
@@ -66,6 +68,13 @@ function reducer(state, { action, ...data }) {
                 ...state,
                 key: Random.string(),
                 autoFocus: false
+            };
+        }
+
+        case Actions.Focus: {
+            return {
+                ...state,
+                autoFocus: true
             };
         }
     }
@@ -130,7 +139,10 @@ const reactiveControlFor = Control => function (props) {
                  onChange={handleChange}
                  onBlur={handleBlur}
                  autoFocus={autoFocus}
-                 onClear={handleClear}/>
+                 onClear={handleClear}
+                 onFocus={() => dispatch({
+                     action: Actions.Focus
+                 })}/>
     );
 }
 

@@ -13,7 +13,9 @@ import reducer from "../common/reducer";
 
 function ObjectControl(props) {
     const [state, setState] = useReducer(reducer, {});
+
     const { schemaResolver, properties, schema } = state;
+
     const {
         rootDataType, jsonPath, rootId, onChange, value, dataType,
         dataTypeId, property, width, disabled, onStack, readOnly
@@ -74,7 +76,7 @@ function ObjectControl(props) {
     }, [schema]);
 
     useEffect(() => {
-        if (schemaResolver && properties && !valueReady()) {
+        if (schemaResolver && properties && rootId && !(value && value[FETCHED])) {
             const subscription = getDataType().shallowViewPort().pipe(
                 switchMap(viewport => {
                     console.log('Fetching for editing', rootId, jsonPath, viewport);
@@ -93,7 +95,7 @@ function ObjectControl(props) {
             );
             return () => subscription.unsubscribe();
         }
-    }, [schemaResolver, properties]);
+    }, [schemaResolver, properties, rootId, value]);
 
     const getDataType = () => schemaResolver &&
         (schemaResolver.constructor === Property ? schemaResolver.dataType : schemaResolver);

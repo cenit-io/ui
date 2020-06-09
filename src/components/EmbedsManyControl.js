@@ -120,8 +120,7 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
                     };
                 }
                 itemControl = (
-                    <ObjectControl key={`ctrl_${selectedIndex}`}
-                                   property={controlProperty}
+                    <ObjectControl property={controlProperty}
                                    value={value[selectedIndex]}
                                    errors={errors && errors[String(selectedIndex)]}
                                    onChange={handleChange}

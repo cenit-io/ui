@@ -1,110 +1,106 @@
-import React from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { IconButton } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
 import EditIcon from '@material-ui/icons/Edit';
 import ClearIcon from '@material-ui/icons/Clear';
 import RefPicker from "./RefPicker";
 import { map } from "rxjs/operators";
+import reducer from "../common/reducer";
 
-class RefOneControl extends React.Component {
+function RefOneControl({ title, value, property, disabled, readOnly, onChange, onDelete, onStack }) {
 
-    static getDerivedStateFromProps(props, state) {
-        const { value } = props;
+    const [state, setState] = useReducer(reducer, {
+        text: null
+    });
+
+    const { text, item } = state;
+
+    useEffect(() => {
         if (value) {
-            if (value !== state.value) {
-                props.property.dataType.titleFor(value).subscribe( //TODO sanitize with unsubscribe
-                    text => {
-                        if (text !== state.text) {
-                            state.updateText(text);
-                        }
-                    });
-                return { value };
-            }
+            setState({ text: null });
+            const subscription = property.dataType.titleFor(value).subscribe(
+                text => setState({ text })
+            );
+            return () => subscription.unsubscribe();
         } else {
-            return { text: '' };
+            setState({ text: '' });
         }
+    }, [value, property]);
 
-        return null;
-    }
-
-    updateText = text => this.setState({ text });
-
-    state = { updateText: this.updateText };
-
-    refValue = ({ id, _type }) => {
+    const refValue = ({ id, _type }) => {
         const value = {
             id,
             _reference: true
         };
-        if (_type && _type !== this.props.property.dataType.type_name()) {
+        if (_type && _type !== property.dataType.type_name()) {
             value._type = _type;
         }
         return value;
     };
 
-    handlePick = item => {
-        const value = this.refValue(item.record);
-        //TODO this.state.value = value;
-        this.props.onChange(value);
-        this.setState({ value, text: item.title, item: item.record });
+    const handlePick = item => {
+        const value = refValue(item.record);
+        onChange(value);
+        setState({ value, text: item.title, item: item.record });
     };
 
-    handleDelete = () => this.props.onDelete();
+    const handleAddNew = () => onStack({
+        value: {},
+        dataType: property.dataType,
+        title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
+        callback: newValue => onChange(refValue(newValue)),
+        max: 1
+    });
 
-    handleAddNew = () => {
-        const { onStack, property, onChange } = this.props;
-        onStack({
-            value: {},
-            dataType: property.dataType,
-            title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
-            callback: newValue => onChange(this.refValue(newValue)),
-            max: 1
-        });
-    };
+    const handleEdit = () => onStack({
+        value: item || value,
+        dataType: property.dataType,
+        title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
+        callback: newValue => onChange(refValue(newValue)),
+        rootId: value.id
+    });
 
-    handleEdit = () => {
-        const { onStack, property, onChange, value } = this.props;
-        const { item } = this.state;
-        onStack({
-            value: item || value,
-            dataType: property.dataType,
-            title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
-            callback: newValue => onChange(this.refValue(newValue)),
-            rootId: value.id
-        });
-    };
+    let addButton, editButton, deleteButton;
 
-    render() {
-        const { title, value, property, disabled, readOnly } = this.props;
-        const { text } = this.state;
-
-        let addButton, editButton, deleteButton;
-
-        if (value) {
-            editButton = <IconButton onClick={this.handleEdit} disabled={disabled}><EditIcon/></IconButton>;
-            if (!readOnly) {
-                deleteButton = <IconButton onClick={this.handleDelete} disabled={disabled}><ClearIcon/></IconButton>;
-            }
-        }
-
+    if (value) {
+        editButton = (
+            <IconButton onClick={handleEdit}
+                        disabled={disabled}>
+                <EditIcon/>
+            </IconButton>
+        );
         if (!readOnly) {
-            addButton = <IconButton onClick={this.handleAddNew} disabled={disabled}><AddIcon/></IconButton>;
+            deleteButton = (
+                <IconButton onClick={onDelete}
+                            disabled={disabled}>
+                    <ClearIcon/>
+                </IconButton>
+            );
         }
+    }
 
-        return (
-            <div style={{ display: 'flex' }}>
-                <RefPicker dataType={property.dataType}
-                           label={title}
-                           onPick={this.handlePick}
-                           text={text}
-                           disabled={disabled || text === null}
-                           readOnly={readOnly}/>
-                {editButton}
-                {addButton}
-                {deleteButton}
-            </div>
+    if (!readOnly) {
+        addButton = (
+            <IconButton onClick={handleAddNew}
+                        disabled={disabled}>
+                <AddIcon/>
+            </IconButton>
         );
     }
+
+    return (
+        <div className="flex">
+            <RefPicker dataType={property.dataType}
+                       label={title}
+                       onPick={handlePick}
+                       text={text}
+                       disabled={disabled || text === null}
+                       readOnly={readOnly}/>
+            {editButton}
+            {addButton}
+            {deleteButton}
+        </div>
+    );
 }
 
 export default RefOneControl;
