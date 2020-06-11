@@ -16,3 +16,5 @@ export const Failed = Symbol.for('_failed');
 export const Subject = Symbol.for('_subject');
 
 export const Cache = Symbol.for('_cache');
+
+export const Key = Symbol.for('_key');

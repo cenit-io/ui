@@ -12,6 +12,7 @@ import NumericControl from "./NumericControl";
 import IntegerControl from "./IntegerControl";
 import CodeMirrorControl from "./CodeMirrorControl";
 import StringCodeControl from "./StringCodeControl";
+import JsonControl from "./JsonControl";
 
 function controlComponentFor(property) {
     switch (property.type) {
@@ -53,7 +54,7 @@ function controlComponentFor(property) {
         }
 
         default: {
-            return StringControl;
+            return JsonControl;
         }
     }
 }

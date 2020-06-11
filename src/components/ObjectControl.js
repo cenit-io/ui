@@ -95,7 +95,7 @@ function ObjectControl(props) {
             );
             return () => subscription.unsubscribe();
         }
-    }, [schemaResolver, properties, rootId, value]);
+    }, [schemaResolver, properties, rootId, value, onChange]);
 
     const getDataType = () => schemaResolver &&
         (schemaResolver.constructor === Property ? schemaResolver.dataType : schemaResolver);
@@ -117,7 +117,7 @@ function ObjectControl(props) {
         } else {
             delete value[prop.jsonKey];
         }
-        onChange({ ...value });
+        onChange(value);
     };
 
     const _update = (prop, value) => {

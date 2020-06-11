@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import CodeMirror from 'codemirror';
-import reactiveControlFor from "./reactiveControlFor";
-import { from } from "rxjs";
+import { from, of } from "rxjs";
 import { IconButton, makeStyles, Typography } from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
 import clsx from "clsx";
@@ -9,11 +8,14 @@ import clsx from "clsx";
 import 'codemirror/addon/mode/loadmode';
 import 'codemirror/mode/meta';
 import 'codemirror/lib/codemirror.css';
-import 'codemirror/theme/monokai.css';
+
+import zzip from "../util/zzip";
+import Random from "../util/Random";
 
 const useStyles = makeStyles(theme => ({
     root: {
-        paddingBottom: theme.spacing(.5)
+        paddingBottom: theme.spacing(.5),
+        borderBottom: `solid 2px ${theme.palette.background.default}`
     },
     header: {
         minHeight: theme.spacing(7),
@@ -28,90 +30,144 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const CodeMirrorControl = reactiveControlFor(
-    ({
-         property,
-         title,
-         value,
-         disabled,
-         readOnly,
-         error,
-         onChange,
-         autoFocus,
-         onClear,
-         mime,
-         mode
-     }) => {
-        const ref = useRef(null);
-        const [editor, setEditor] = useState(null);
+export default function CodeMirrorControl({
+                                              property,
+                                              title,
+                                              value,
+                                              disabled,
+                                              readOnly,
+                                              errors,
+                                              onChange,
+                                              onDelete,
+                                              mime,
+                                              mode,
+                                              theme,
+                                              lineNumbers,
+                                              viewportMargin,
+                                              gutters,
+                                              lint,
+                                              autoHeight,
+                                              addons,
+                                              customCSS
+                                          }) {
+    const textElRef = useRef(null);
+    const cleared = useRef(false);
+    const [editor, setEditor] = useState(null);
+    const classes = useStyles();
 
-        const classes = useStyles();
+    const customCssRef = useRef(`c${Random.string()}`);
 
-        const textEl = ref.current;
+    useEffect(() => {
+        if (textElRef.current) {
+            const opts = {};
 
-        useEffect(() => {
-            if (textEl) {
-                const editor = CodeMirror.fromTextArea(textEl, {
-                    lineNumbers: true,
-                    theme: 'monokai'
-                });
-
-                const handleChange = () => {
-                    if (editor.__cleared__) {
-                        editor.__cleared__ = false;
-                    } else {
-                        onChange(editor.getValue());
-                    }
-                };
-
-                editor.on('change', handleChange);
-                editor.on('paste', handleChange);
-
-                const cmMime = mime || property.propertySchema.contentMediaType;
-                const cmMode = mode || (CodeMirror.findModeByMIME(cmMime) || CodeMirror.findModeByMIME('text/plain')).mode;
-
-                const subscription = from(import(`codemirror/mode/${cmMode}/${cmMode}`)).subscribe(
-                    () => {
-                        editor.setOption('mode', cmMime);
-                        CodeMirror.autoLoadMode(editor, cmMode);
-                        setEditor(editor);
-                    }
-                );
-
-                return () => subscription.unsubscribe();
+            if (gutters) {
+                opts.gutters = gutters;
             }
-        }, [textEl, property, mime, mode]);
 
-        useEffect(() => {
-            if (editor) {
-                editor.setOption('readOnly', disabled ? 'nocursor' : readOnly);
-            }
-        }, [readOnly, disabled, editor]);
+            const editor = CodeMirror.fromTextArea(textElRef.current, opts);
 
-        useEffect(() => {
-            if (editor) {
-                if (value || value === '') {
-                    if (value !== editor.getValue()) {
-                        editor.setValue(value);
-                    }
+            const handleChange = () => {
+                if (cleared.current) {
+                    cleared.current = false;
+                    editor.save();
                 } else {
-                    editor.__cleared__ = true;
-                    editor.setValue('');
+                    onChange(editor.getValue())
                 }
-            }
-        }, [editor, value]);
+            };
 
-        let clear;
-        if (!readOnly && !disabled && value !== undefined && value !== null) {
-            clear = (
-                <IconButton onClick={onClear}>
-                    <ClearIcon/>
-                </IconButton>
+            editor.on('change', handleChange);
+            editor.on('paste', handleChange);
+
+            setEditor(editor);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (editor) {
+            const cmMime = mime || property.propertySchema.contentMediaType;
+            const cmMode = (
+                mode ||
+                (
+                    CodeMirror.findModeByMIME(cmMime) ||
+                    CodeMirror.findModeByMIME('text/plain')
+                ).mode
             );
+
+            const subscription = zzip(
+                (theme && from(import(`codemirror/theme/${theme || 'default'}.css`))) || of(true),
+                from(import(`codemirror/mode/${cmMode}/${cmMode}`)),
+                ...(addons || []).map(
+                    addon => from(import(`codemirror/addon/${addon[0]}/${addon[1]}`))
+                )
+            ).subscribe(
+                () => {
+                    const opts = {
+                        mode: cmMime,
+                        lineNumbers,
+                        lint
+                    };
+                    if (theme) {
+                        opts.theme = theme;
+                    }
+                    if (viewportMargin) {
+                        opts.viewportMargin = viewportMargin;
+                    }
+                    Object.keys(opts).forEach(
+                        opt => editor.setOption(opt, opts[opt])
+                    );
+                    CodeMirror.autoLoadMode(editor, cmMode);
+                }
+            );
+
+            return () => subscription.unsubscribe();
         }
 
-        return (
-            <div className={clsx(classes.root, error && classes.error)}>
+    }, [editor, property, mime, mode, addons, gutters, viewportMargin]);
+
+    useEffect(() => {
+        if (editor) {
+            editor.setOption('readOnly', disabled ? 'nocursor' : readOnly);
+        }
+    }, [readOnly, disabled, editor]);
+
+    useEffect(() => {
+        if (editor) {
+            const strValue = value || '';
+            if (strValue !== editor.getValue()) {
+                cleared.current = value === null || value === undefined;
+                editor.setValue(strValue);
+            }
+        }
+    }, [editor, value]);
+
+    let clear;
+    if (!readOnly && !disabled && value !== undefined && value !== null) {
+        clear = (
+            <IconButton onClick={onDelete}>
+                <ClearIcon/>
+            </IconButton>
+        );
+    }
+
+    let styles = '';
+    if (autoHeight) {
+        styles = 'height: auto;'
+    }
+
+    const error = Boolean(errors && errors.length);
+
+    const customStyles = ((editor && customCSS) || []).map(
+        cls => `.${customCssRef.current} ${cls}`
+    ).join(' ');
+
+    return (
+        <React.Fragment>
+            <style>
+                {`.${classes.root}.${customCssRef.current} .CodeMirror { resize: vertical; overflow: auto !important; ${styles} }`}
+                {customStyles}
+            </style>
+            <div className={clsx(classes.root, customCssRef.current, error && classes.error)}>
                 <div className={clsx('flex', classes.header)}>
                     <Typography variant="subtitle2">
                         {title}
@@ -119,14 +175,9 @@ const CodeMirrorControl = reactiveControlFor(
                     <div className="grow-1"/>
                     {clear}
                 </div>
-                <input ref={ref}
-                       multiple={true}
-                       hidden={true}
-                       defaultValue={value}
-                       autoFocus={autoFocus}/>
+                <textarea ref={textElRef}
+                          hidden={true}/>
             </div>
-        );
-    }
-);
-
-export default CodeMirrorControl;
+        </React.Fragment>
+    );
+}
