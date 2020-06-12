@@ -52,18 +52,23 @@ function ObjectControl(props) {
             const subscription = getDataType().visibleProps().pipe(
                 switchMap(visibleProps =>
                     zzip(...visibleProps.map(
-                        prop => (prop && zzip(prop.isReferenced(), prop.isMany(), prop.getSchema()).pipe(
+                        prop => (prop && zzip(prop.isReferenced(), prop.isMany(), prop.getSchema(), prop.isModel()).pipe(
                                 map(
-                                    fullfill => {
-                                        if (fullfill[0]) { // Referenced
-                                            if (fullfill[1]) { // Many
-                                                prop.type = 'refMany';
-                                            } else { // One
-                                                prop.type = 'refOne';
+                                    ([isRef, isMany, propSch, isModel]) => {
+                                        if (isModel) {
+                                            if (isRef) { // Referenced
+                                                if (isMany) { // Many
+                                                    prop.type = 'refMany';
+                                                } else { // One
+                                                    prop.type = 'refOne';
+                                                }
+                                            } else if (isMany) {
+                                                prop.type = 'embedsMany';
+                                            } else {
+                                                prop.type = 'embedsOne';
                                             }
                                         } else {
-                                            const schema = fullfill[2];
-                                            prop.type = schema['type'];
+                                            prop.type = propSch['type'];
                                         }
                                         return prop;
                                     }

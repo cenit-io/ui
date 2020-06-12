@@ -17,11 +17,11 @@ import JsonControl from "./JsonControl";
 function controlComponentFor(property) {
     switch (property.type) {
 
-        case 'object': {
+        case 'embedsOne': {
             return EmbedsOneControl;
         }
 
-        case 'array': {
+        case 'embedsMany': {
             return EmbedsManyControl;
         }
 

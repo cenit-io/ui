@@ -261,7 +261,7 @@ export class DataType {
 
     strip(schema) {
         let nakedSchema = null;
-        if (this.schema) {
+        if (schema) {
             nakedSchema = {};
             Object.keys(schema).forEach(key => {
                 if (DECORATOR_PROPS.indexOf(key) === -1) {
@@ -579,6 +579,28 @@ export class Property {
 
     isReadOnly(context) {
         return context === FormContext.edit && (this.name === '_id' || this.name === 'id');
+    }
+
+    isModel() {
+        return this.getSchema().pipe(
+            switchMap(
+                schema => {
+                    if (schema.type === 'object' && schema.properties) {
+                        return of(true);
+                    }
+
+                    if (schema.type === 'array' && schema.items) {
+                        return this.dataType.mergeSchema(schema.items).pipe(
+                            map(
+                                itemsSchema => itemsSchema.type === 'object' && itemsSchema.properties
+                            )
+                        );
+                    }
+
+                    return of(false);
+                }
+            )
+        );
     }
 }
 
