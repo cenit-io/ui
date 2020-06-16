@@ -75,7 +75,7 @@ const Delete = ({ docked, dataType, onDisable, theme, onSubjectPicked, height, o
     const classes = useStyles();
 
     useEffect(() => {
-        const subscription = subject.titleCache().subscribe(
+        const subscription = subject.quickTitle().subscribe(
             title => {
                 setStatus(Status.ready);
                 setTitle(title);
