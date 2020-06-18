@@ -16,6 +16,8 @@ import { fade } from '@material-ui/core/styles/colorManipulator';
 import TenantSelector from "../components/TenantSelector";
 import useTheme from "@material-ui/core/styles/useTheme";
 import UserCard from "../components/UserCard";
+import ConfigService from "../services/ConfigService";
+import { DataTypeSubject, TabsSubject } from "../services/subjects";
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
@@ -62,7 +64,7 @@ const useStyles = makeStyles(theme => ({
 
 const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
-function AdminAppBar({ onToggle, onTenantSelected, onDataTypeSelected, idToken, disabled }) {
+function AdminAppBar({ onToggle, idToken, disabled }) {
 
     const [open, setOpen] = useState(false);
 
@@ -90,6 +92,14 @@ function AdminAppBar({ onToggle, onTenantSelected, onDataTypeSelected, idToken, 
     if (!idToken) {
         return <CircularProgress/>
     }
+
+    const handleDataTypeSelected = ({ id }) => TabsSubject.next(DataTypeSubject.for(id).key);
+
+    const handleTenantSelected = ({ id }) => {
+        if (ConfigService.state().tenant_id !== id) {
+            ConfigService.update({ tenant_id: id });
+        }
+    };
 
     let menu;
 
@@ -135,7 +145,7 @@ function AdminAppBar({ onToggle, onTenantSelected, onDataTypeSelected, idToken, 
                     <SearchIcon/>
                 </div>
                 <RecordSelector dataTypeSelector={DataTypeSelector}
-                                onSelect={({ record }) => onDataTypeSelected(record)}
+                                onSelect={({ record }) => handleDataTypeSelected(record)}
                                 inputClasses={inputClasses}
                                 disabled={disabled}/>
             </div>
@@ -145,7 +155,7 @@ function AdminAppBar({ onToggle, onTenantSelected, onDataTypeSelected, idToken, 
                     <HomeIcon/>
                 </div>
                 <TenantSelector inputClasses={inputClasses}
-                                onSelect={onTenantSelected}
+                                onSelect={handleTenantSelected}
                                 disabled={disabled}/>
             </div>
             {avatar}

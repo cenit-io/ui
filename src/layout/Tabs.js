@@ -9,14 +9,14 @@ import CloseIcon from '@material-ui/icons/Clear';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
 import reducer from "../common/reducer";
-import Subjects, { TabsSubject } from "../services/subjects";
+import Subjects, { NavSubject, TabsSubject } from "../services/subjects";
 import ConfigService from "../services/ConfigService";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
 function ItemTab({ subject, onClick, onClose }) {
 
-    const [title, setTitle] = useState('...');
+    const [title, setTitle] = useState(subject.titleCache || '...');
 
     useEffect(() => {
         const subscription = subject.title().subscribe(
@@ -76,6 +76,7 @@ export default function NavTabs({ docked, width }) {
 
     const setTabIndex = tabIndex => {
         setState({ tabIndex });
+        NavSubject.next(tabs[tabIndex]);
         ConfigService.update({ tabIndex });
     };
 
@@ -107,6 +108,7 @@ export default function NavTabs({ docked, width }) {
                 }
                 setState(config);
                 ConfigService.update(config);
+                NavSubject.next(key); // TODO Notify Nav only if the subject is resolved
             }
         );
         return () => subscription.unsubscribe();

@@ -10,7 +10,7 @@ import Tabs from "./Tabs";
 import reducer from "../common/reducer";
 import ConfigService from "../services/ConfigService";
 import Loading from "../components/Loading";
-import { DataTypeSubject } from "../services/subjects";
+import { DataTypeSubject, TabsSubject } from "../services/subjects";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -35,19 +35,17 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Main = () => {
-    const [idToken, setIdToken] = useState(null);
     const [state, setState] = useReducer(reducer, {
         docked: localStorage.getItem('docked') !== 'false',
         disabled: ConfigService.isDisabled()
     });
-    const [config, setConfig] = useReducer(reducer, {});
 
     const classes = useStyles();
 
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
-    const { docked, tenant_id, disabled } = state;
+    const { idToken, docked, disabled } = state;
 
     const setDocked = docked => setState({ docked });
 
@@ -59,24 +57,16 @@ const Main = () => {
     }, []);
 
     useEffect(() => {
-        if (!idToken) {
-            const subscription = AuthorizationService.getIdToken().subscribe(
-                token => setIdToken(token)
-            );
+        const subscription = AuthorizationService.getIdToken().subscribe(
+            idToken => setState({ idToken })
+        );
 
-            return () => subscription.unsubscribe();
-        }
-    }, [idToken]);
-
-    useEffect(() => {
-        if (tenant_id) {
-            ConfigService.update({ tenant_id });
-        }
-    }, [tenant_id]);
+        return () => subscription.unsubscribe();
+    }, []);
 
     let navKey;
     if (xs) {
-        navKey = tenant_id;
+        navKey = `nav_${ConfigService.state().tenant_id}`;
     }
     const navigationUI = <Navigation key={navKey}
                                      docked={docked}
@@ -87,23 +77,6 @@ const Main = () => {
         localStorage.setItem('docked', String(!docked));
         setDocked(!docked);
     };
-
-    function handleTenantSelected(tenant) {
-        if (tenant.id !== tenant_id) {
-            ConfigService.update({ tenant_id: tenant.id });
-            setState({ tenant_id: tenant.id });
-        }
-    }
-
-    function handleDataTypeSelected(dataType) {
-        const { key } = DataTypeSubject.for(dataType.id);
-        ConfigService.update({
-            navigation: [
-                ...(ConfigService.state().navigation || []),
-                { key }
-            ]
-        });
-    }
 
     const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`);
     const tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
@@ -122,7 +95,6 @@ const Main = () => {
                      width: `calc(${tabsWidth})`
                  }}>
                 <Tabs docked={docked}
-                      config={config}
                       width={tabsWidth}/>
             </div>
             {
@@ -138,8 +110,6 @@ const Main = () => {
             }
         </div>
         <AppBar onToggle={switchNavigation}
-                onDataTypeSelected={handleDataTypeSelected}
-                onTenantSelected={handleTenantSelected}
                 disabled={disabled}
                 idToken={idToken}/>
         {drop}

@@ -8,7 +8,7 @@ import ConfigService from "./ConfigService";
 import CollectionContainer from "../actions/CollectionContainer";
 import MemberContainer from "../actions/MemberContainer";
 import zzip from "../util/zzip";
-import { Cache, Subject as subj } from '../common/Symbols'
+import { Cache, Subject as subj, TitlePipe as titlePipe } from '../common/Symbols'
 
 class BasicSubject {
     constructor(attrs) {
@@ -19,10 +19,13 @@ class BasicSubject {
     }
 
     title() {
-        return this.pipe(
-            filter(({ type }) => type === 'title'),
-            map(({ title }) => title)
-        )
+        if (!this[titlePipe]) {
+            this[titlePipe] = this.pipe(
+                filter(({ type }) => type === 'title'),
+                map(({ title }) => title)
+            );
+        }
+        return this[titlePipe];
     }
 
     subscribe(...args) {
@@ -43,10 +46,18 @@ class BasicSubject {
         }
         this.titleObs.subscribe(
             title => {
+                this.titleCache = title;
                 this.next({ type: 'title', title });
                 delete this.titleObs;
             }
         )
+    }
+
+    quickTitle() {
+        if (this.titleCache) {
+            return of(this.titleCache);
+        }
+        return this.titleObservable(this.cache());
     }
 }
 
@@ -88,6 +99,10 @@ export class DataTypeSubject extends BasicSubject {
     dataType() {
         return DataType.getById(this.dataTypeId);
     }
+
+    cache() {
+        return this[Cache];
+    }
 }
 
 export class RecordSubject extends BasicSubject {
@@ -119,15 +134,7 @@ export class RecordSubject extends BasicSubject {
     titleObservable(record) {
         return DataType.getById(this.dataTypeId).pipe(
             switchMap(
-                dataType => zzip(
-                    of(dataType),
-                    (record && of(record)) || dataType.get(this.id)
-                )
-            ),
-            switchMap(
-                ([dataType, record]) => (
-                    (dataType && record && dataType.titleFor(record)) || of('404')
-                )
+                dataType => dataType.titleFor(record || { id: this.id })
             )
         );
     }
@@ -145,14 +152,6 @@ export class RecordSubject extends BasicSubject {
         if (record) {
             this.computeTitle(record);
         }
-    }
-
-    cache() {
-        return this[Cache];
-    }
-
-    titleCache() {
-        return this.titleObservable(this.cache());
     }
 }
 
@@ -191,5 +190,7 @@ ConfigService.tenantIdChanges().subscribe(
 
 
 export const TabsSubject = new Subject();
+
+export const NavSubject = new Subject();
 
 export default Subjects;
