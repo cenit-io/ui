@@ -4,16 +4,10 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import MailIcon from '@material-ui/icons/Mail';
 import HistoryIcon from '@material-ui/icons/History';
 import { makeStyles, useTheme } from "@material-ui/core";
 import Loading from "../components/Loading";
-import { DataTypeId } from "../common/Symbols";
-import zzip from "../util/zzip";
-import { of } from "rxjs";
-import { map, switchMap, delay } from "rxjs/operators";
-import { DataType } from "../services/DataTypeService";
+import { delay } from "rxjs/operators";
 import Skeleton from "@material-ui/lab/Skeleton";
 import ConfigService from "../services/ConfigService";
 import reducer from "../common/reducer";
@@ -104,7 +98,6 @@ const Navigation = ({ docked, setDocked, xs }) => {
         history: true
     });
     const classes = useStyles();
-    const theme = useTheme();
 
     const { navigation, disabled, over, history } = state;
 

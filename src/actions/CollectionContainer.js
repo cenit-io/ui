@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import Loading from '../components/Loading';
 import { useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
@@ -10,40 +10,53 @@ import New from './New';
 import Show from "./Show";
 import Edit from './Edit';
 import Delete from './Delete';
+
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
 import Random from "../util/Random";
 import { DataType } from "../services/DataTypeService";
-import { switchMap } from "rxjs/operators";
-import { DataTypeId, TitleSubject } from "../common/Symbols";
 import { RecordSubject } from "../services/subjects";
+import { of } from "rxjs";
+import reducer from "../common/reducer";
 
 
 const actionContainerStyles = makeStyles(theme => ({
+    root: {
+        position: 'relative'
+    },
     actionContainer: {
         width: '100%',
         overflow: 'auto',
         position: 'relative',
         height: props => `calc(${props.height} - ${appBarHeight(theme)})`
+    },
+    loader: {
+        zIndex: 3,
+        opacity: 0.6,
+        top: 0,
+        left: 0,
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        background: theme.palette.background.paper
     }
 }));
 
 function CollectionContainer({ docked, subject, height, width, onSubjectPicked }) {
-    const [baseSelector, setBaseSelector] = useState({});
-    const [filterSelector, setFilterSelector] = useState({});
-    const [selectedItems, setSelectedItems] = useState([]);
-    const [actionKey, setActionKey] = useState(Index.key);
-    const [title, setTitle] = useState(null);
-    const [dataType, setDataType] = useState(null);
-    const [actionComponentKey, setActionComponentKey] = useState(Random.string());
+    const [state, setState] = useReducer(reducer, {
+        selectedItems: [],
+        actionKey: Index.key,
+        actionComponentKey: Random.string()
+    });
 
     const theme = useTheme();
     const classes = actionContainerStyles();
 
+    const { dataType, title, actionKey, selectedItems, actionComponentKey, loading } = state;
     const { dataTypeId } = subject;
 
     useEffect(() => {
         const subscription = subject.title().subscribe(
-            title => setTitle(title)
+            title => setState({ title })
         );
         subject.computeTitle();
         return () => subscription.unsubscribe();
@@ -51,7 +64,7 @@ function CollectionContainer({ docked, subject, height, width, onSubjectPicked }
 
     useEffect(() => {
         const subscription = DataType.getById(dataTypeId).subscribe(
-            dataType => setDataType(dataType)
+            dataType => setState({ dataType })
         );
         return () => subscription.unsubscribe();
     }, [dataTypeId]);
@@ -60,17 +73,30 @@ function CollectionContainer({ docked, subject, height, width, onSubjectPicked }
         return <Loading/>;
     }
 
-    const handleSelect = selection => setSelectedItems(selection);
+    const handleSelect = selectedItems => setState({ selectedItems });
 
     const handleAction = actionKey => {
         const action = ActionRegistry.byKey(actionKey);
         if (action) {
             if (action.kind === ActionKind.collection || action.kind === ActionKind.bulk) {
-                setActionKey(actionKey);
-                setActionComponentKey(Random.string());
+                setState({ actionKey, actionComponentKey: Random.string() });
             } else {
-                setSelectedItems([]);
-                onSubjectPicked(RecordSubject.for(dataType.id, selectedItems[0].id).key);
+                setState({ loading: true });
+                const { _type, id } = selectedItems[0];
+                (
+                    ((!_type || _type === dataType.type_name()) && of(dataType)) ||
+                    dataType.findByName(_type)
+                ).subscribe(
+                    dataType => {
+                        if (dataType) {
+                            onSubjectPicked(RecordSubject.for(dataType.id, id).key);
+                        }
+                        setState({
+                            selectedItems: [],
+                            loading: false
+                        });
+                    }
+                );
             }
         }
     };
@@ -89,17 +115,28 @@ function CollectionContainer({ docked, subject, height, width, onSubjectPicked }
                                                        onSelect={handleSelect}
                                                        onSubjectPicked={onSubjectPicked}/>;
 
-    return <React.Fragment>
-        <CollectionActionsToolbar title={title}
-                                  onAction={handleAction}
-                                  arity={selectedItems.length}
-                                  selectedKey={actionKey}
-                                  onRefresh={() => setActionComponentKey(Random.string())}/>
-        <div className={classes.actionContainer}
-             style={{ height: `calc(${componentHeight})` }}>
-            {action}
+    let loader;
+    if (loading) {
+        loader = (
+            <div className={classes.loader}>
+                <Loading/>
+            </div>
+        );
+    }
+    return (
+        <div className={classes.root}>
+            <CollectionActionsToolbar title={title}
+                                      onAction={handleAction}
+                                      arity={selectedItems.length}
+                                      selectedKey={actionKey}
+                                      onRefresh={() => setState({ actionComponentKey: Random.string() })}/>
+            <div className={classes.actionContainer}
+                 style={{ height: `calc(${componentHeight})` }}>
+                {action}
+            </div>
+            {loader}
         </div>
-    </React.Fragment>;
+    );
 }
 
 export default CollectionContainer;

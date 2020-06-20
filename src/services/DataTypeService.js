@@ -365,6 +365,24 @@ export class DataType {
         );
     }
 
+    findByName(name) {
+        let ns = null;
+        name = name.split('::');
+        if (name.length > 1) {
+            [name, ns] = [name.pop(), name];
+            ns = ns.join('::');
+        }
+        return this.find_data_type(name, ns).pipe(
+            switchMap(dataType => {
+                if (!dataType && name.startsWith('Dt')) {
+                    return DataType.getById(name.substring(3))
+                }
+
+                return of(dataType);
+            })
+        );
+    }
+
     find_data_type(ref, ns = this.namespace) {
         if (ref && typeof ref === 'object' && ref.constructor === Object) {
             ns = `${ref.namespace}`;
@@ -373,7 +391,7 @@ export class DataType {
         if (ref === this.name && (ns === null || ns === undefined || ns === this.namespace)) {
             return of(this);
         }
-        if (!this.nss) {
+        if (!this.nss) { // TODO Common cache for shared data types
             this.nss = {};
         }
         let ns_hash = this.nss[ns];
