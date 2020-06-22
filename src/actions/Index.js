@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import Loading from '../components/Loading';
-import { Checkbox, makeStyles, useTheme } from "@material-ui/core";
+import { Checkbox, makeStyles, useMediaQuery, useTheme } from "@material-ui/core";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
-import TablePagination from "@material-ui/core/TablePagination";
 import ListIcon from '@material-ui/icons/List';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { map, switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
+import Pagination from "@material-ui/lab/Pagination/Pagination";
+import Select from "@material-ui/core/Select";
+import MenuItem from "@material-ui/core/MenuItem";
+import Typography from "@material-ui/core/Typography";
+import clsx from "clsx";
 
 const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort }) => {
 
@@ -65,6 +69,12 @@ const useStyles = makeStyles(theme => ({
     root: {
         width: '100%',
         overflow: 'auto',
+    },
+    pagination: {
+        height: theme.spacing(7)
+    },
+    pageSize: {
+        margin: theme.spacing(0, 2)
     }
 }));
 
@@ -83,6 +93,8 @@ function Index({ dataType, height, selectedItems, onSelect }) {
     const [page, setPage] = useState(0);
     const classes = useStyles();
     const theme = useTheme();
+
+    const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
     useEffect(() => {
         const subscription = dataType.queryProps().pipe(
@@ -149,8 +161,7 @@ function Index({ dataType, height, selectedItems, onSelect }) {
         onSelect(newSelection);
     };
 
-    const handleChangePage = (event, page) => {
-        page++;
+    const handleChangePage = (_, page) => {
         setPage(page);
         setData(null);
         onSelect([]);
@@ -217,20 +228,36 @@ function Index({ dataType, height, selectedItems, onSelect }) {
 
     if (data.count > MinItemsPerPage) {
         tableHeight = `${tableHeight} - ${theme.spacing(7)}px`;
-        pagination = <TablePagination component='div'
-                                      rowsPerPageOptions={ItemsPerPage}
-                                      labelRowsPerPage='Page size'
-                                      count={data.count}
-                                      rowsPerPage={limit}
-                                      page={data.current_page - 1}
-                                      backIconButtonProps={{
-                                          'aria-label': 'Previous Page',
-                                      }}
-                                      nextIconButtonProps={{
-                                          'aria-label': 'Next Page',
-                                      }}
-                                      onChangePage={handleChangePage}
-                                      onChangeRowsPerPage={handleChangeRowsPerPage}/>;
+        const pagOpts = {};
+        if (xs) {
+            pagOpts.siblingCount = 0;
+        }
+        pagination = (
+            <div className={clsx('flex align-items-center', classes.pagination)}>
+                <div className="grow-1"/>
+                <Typography variant="subtitle2">
+                    Page size
+                </Typography>
+                <Select className={classes.pageSize}
+                        value={limit}
+                        onChange={handleChangeRowsPerPage}>
+                    {
+                        ItemsPerPage.map((c, index) => (
+                            <MenuItem key={`ipp_${index}_${c}`}
+                                      value={c}>
+                                {c}
+                            </MenuItem>
+                        ))
+                    }
+                </Select>
+                <Pagination count={data.total_pages}
+                            page={data.current_page}
+                            {...pagOpts}
+                            onChange={handleChangePage}
+                            size="small"
+                            color="primary"/>
+            </div>
+        );
     }
 
     return <React.Fragment>

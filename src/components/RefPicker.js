@@ -26,7 +26,7 @@ const useStyles = makeStyles(theme => ({
         top: theme.spacing(6),
         background: 'white',
         border: 'gray',
-        zIndex: 2
+        zIndex: 5
     },
     pagination: {
         padding: theme.spacing(1),
