@@ -22,3 +22,5 @@ export const Key = Symbol.for('_key');
 export const TitlePipe = Symbol.for('_titlePipe');
 
 export const Async = Symbol.for('_async');
+
+export const Config = Symbol.for('_config');

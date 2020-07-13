@@ -136,21 +136,34 @@ export class DataType {
         );
     }
 
-    getProps() {
-        if (this.properties) {
-            return of(this.properties);
+    properties() {
+        if (this.propertiesHash) {
+            return of(this.propertiesHash);
         }
         return this.propertiesSchema().pipe(
-            switchMap(propertiesSchemas => zzip(
-                ...Object.keys(propertiesSchemas).map(
-                    property => this.propertyFrom(property, propertiesSchemas[property])
+            switchMap(
+                propertiesSchemas => zzip(
+                    ...Object.keys(propertiesSchemas).map(
+                        property => this.propertyFrom(property, propertiesSchemas[property])
+                    )
                 )
-            ).pipe(map(properties => this.properties = properties)))
+            ),
+            map(
+                properties => this.propertiesHash = properties.reduce((hash, p) => (hash[p.name] = p) && hash, {})
+            )
         );
     }
 
+    allProperties() {
+        return this.properties().pipe(map(properties => Object.values(properties)));
+    }
+
+    getProperty(name) {
+        return this.properties().pipe(map(properties => properties[name]));
+    }
+
     queryProps() {
-        return this.getProps().pipe(
+        return this.allProperties().pipe(
             switchMap(props => zzip(...props.map(p => p.getSchema())).pipe(
                 map(
                     schemas => schemas.map(
@@ -162,7 +175,7 @@ export class DataType {
     }
 
     titleProps() {
-        return this.getProps().pipe(
+        return this.allProperties().pipe(
             switchMap(
                 props => this.titlePropNames().pipe(
                     map(titlePropNames => props.filter(p => titlePropNames.indexOf(p.name) > -1))
@@ -171,7 +184,7 @@ export class DataType {
     }
 
     visibleProps() {
-        return this.getProps().pipe(
+        return this.allProperties().pipe(
             switchMap(
                 props => zzip(...props.map(prop => prop.isVisible())).pipe(
                     map(visible => visible.map((v, index) => v ? props[index] : null).filter(p => p))
@@ -785,7 +798,7 @@ export class DataType {
 
     shallowViewPort() {
         let properties;
-        return this.getProps().pipe(
+        return this.allProperties().pipe(
             tap(props => properties = props),
             switchMap(
                 props => zzip(

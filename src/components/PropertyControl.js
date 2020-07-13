@@ -10,7 +10,6 @@ import ErrorMessages from "./ErrorMessages";
 import zzip from "../util/zzip";
 import NumericControl from "./NumericControl";
 import IntegerControl from "./IntegerControl";
-import CodeMirrorControl from "./CodeMirrorControl";
 import StringCodeControl from "./StringCodeControl";
 import JsonControl from "./JsonControl";
 

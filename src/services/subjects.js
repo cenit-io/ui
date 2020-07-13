@@ -1,14 +1,13 @@
 import { DataType } from "./DataTypeService";
-import { filter, switchMap, map } from "rxjs/operators";
-import { of, Subject } from "rxjs";
+import { filter, switchMap, map, catchError, tap } from "rxjs/operators";
+import { of, Subject, from } from "rxjs";
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import React from "react";
 import Random from "../util/Random";
 import ConfigService from "./ConfigService";
 import CollectionContainer from "../actions/CollectionContainer";
 import MemberContainer from "../actions/MemberContainer";
-import zzip from "../util/zzip";
-import { Cache, Subject as subj, TitlePipe as titlePipe } from '../common/Symbols'
+import { Cache, Config, Subject as subj, TitlePipe as titlePipe } from '../common/Symbols';
 
 class BasicSubject {
     constructor(attrs) {
@@ -85,10 +84,18 @@ export class DataTypeSubject extends BasicSubject {
     }
 
     titleObservable() {
-        return this.dataType().pipe(
-            switchMap(
-                dataType => (dataType && dataType.getTitle()) || of('404')
-            )
+        return this.config().pipe(
+            switchMap(config => {
+                if (config.title) {
+                    return of(config.title);
+                }
+
+                return this.dataType().pipe(
+                    switchMap(
+                        dataType => (dataType && dataType.getTitle()) || of('404')
+                    )
+                );
+            })
         );
     }
 
@@ -102,6 +109,35 @@ export class DataTypeSubject extends BasicSubject {
 
     cache() {
         return this[Cache];
+    }
+
+    config() {
+        return this.dataType().pipe(
+            switchMap(dt => {
+                if (dt) {
+                    let config = dt[Config];
+                    if (config) {
+                        config = of(config);
+                    } else {
+                        config = this[Config];
+                        if (!config) {
+                            this[Config] = config = from(
+                                import(`../config/dataTypes/${dt.namespace}/${dt.name}.js`)
+                            ).pipe(
+                                map(mod => mod.default),
+                                catchError(e => of({})),
+                                tap(config => {
+                                    dt[Config] = config;
+                                    delete this[Config];
+                                })
+                            );
+                        }
+                    }
+                    return config;
+                }
+                return of({});
+            })
+        );
     }
 }
 

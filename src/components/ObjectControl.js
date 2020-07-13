@@ -10,6 +10,7 @@ import { LinearProgress } from "@material-ui/core";
 import React, { useEffect, useReducer } from "react";
 import { FETCHED } from "../common/Symbols";
 import reducer from "../common/reducer";
+import { DataTypeSubject } from "../services/subjects";
 
 function ObjectControl(props) {
     const [state, setState] = useReducer(reducer, {});
@@ -49,7 +50,23 @@ function ObjectControl(props) {
 
     useEffect(() => {
         if (schema) {
-            const subscription = getDataType().visibleProps().pipe(
+            const subscription = DataTypeSubject.for(dataTypeId).config().pipe(
+                switchMap(config => {
+                    const configFields = rootId
+                        ? config.actions?.edit?.fields
+                        : config.actions?.new?.fields;
+                    if (configFields) {
+                        return getDataType().properties().pipe(
+                            map(
+                                properties => configFields.map(
+                                    field => properties[field]
+                                )
+                            )
+                        );
+                    }
+
+                    return getDataType().visibleProps();
+                }),
                 switchMap(visibleProps =>
                     zzip(...visibleProps.map(
                         prop => (prop && zzip(prop.isReferenced(), prop.isMany(), prop.getSchema(), prop.isModel()).pipe(
@@ -82,7 +99,18 @@ function ObjectControl(props) {
 
     useEffect(() => {
         if (schemaResolver && properties && rootId && !(value && value[FETCHED])) {
-            const subscription = getDataType().shallowViewPort().pipe(
+            const subscription = DataTypeSubject.for(dataTypeId).config().pipe(
+                switchMap(config => {
+                    const configViewport = rootId
+                        ? config.actions?.edit?.viewport
+                        : config.actions?.new?.viewport;
+
+                    if (configViewport) {
+                        return of(configViewport);
+                    }
+
+                    return getDataType().shallowViewPort();
+                }),
                 switchMap(viewport => {
                     console.log('Fetching for editing', rootId, jsonPath, viewport);
                     return rootDataType.get(rootId, {

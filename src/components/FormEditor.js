@@ -16,7 +16,6 @@ import ViewIcon from '@material-ui/icons/OpenInNew';
 import EditIcon from '@material-ui/icons/Edit';
 import zzip from "../util/zzip";
 import { of, Subject } from "rxjs";
-import { DataTypeId } from "../common/Symbols";
 import { FileDataType } from "../services/DataTypeService";
 import FileUploader from "./FileUploader";
 import { RecordSubject } from "../services/subjects";
