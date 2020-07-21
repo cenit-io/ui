@@ -1,3 +1,12 @@
+import { preprocess } from "../../config";
+
+const behaviorFields = [
+    'before_save_callbacks',
+    'after_save_callbacks',
+    'records_methods',
+    'data_type_methods'
+];
+
 const fields = [
     'namespace',
     'name',
@@ -5,16 +14,18 @@ const fields = [
     'discard_additional_properties',
     'title',
     'slug',
-    'before_save_callbacks',
-    'after_save_callbacks',
-    'records_methods',
-    'data_type_methods'
+    ...behaviorFields
 ];
 
 const viewport = `{${fields.join(' ')}}`;
 
 export default {
     title: 'JSON Data Type',
+    groups: {
+        behavior: {
+            fields: behaviorFields
+        }
+    },
     actions: {
         new: {
             fields,

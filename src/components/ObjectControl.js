@@ -11,11 +11,13 @@ import React, { useEffect, useReducer } from "react";
 import { FETCHED } from "../common/Symbols";
 import reducer from "../common/reducer";
 import { DataTypeSubject } from "../services/subjects";
+import { tap } from "rxjs/internal/operators/tap";
+import Group from "./Group";
 
 function ObjectControl(props) {
     const [state, setState] = useReducer(reducer, {});
 
-    const { schemaResolver, properties, schema } = state;
+    const { schemaResolver, properties, schema, config } = state;
 
     const {
         rootDataType, jsonPath, rootId, onChange, value, dataType,
@@ -51,6 +53,7 @@ function ObjectControl(props) {
     useEffect(() => {
         if (schema) {
             const subscription = DataTypeSubject.for(dataTypeId).config().pipe(
+                tap(config => setState({ config })),
                 switchMap(config => {
                     const configFields = rootId
                         ? config.actions?.edit?.fields
@@ -67,8 +70,8 @@ function ObjectControl(props) {
 
                     return getDataType().visibleProps();
                 }),
-                switchMap(visibleProps =>
-                    zzip(...visibleProps.map(
+                switchMap(props =>
+                    zzip(...props.map(
                         prop => (prop && zzip(prop.isReferenced(), prop.isMany(), prop.getSchema(), prop.isModel()).pipe(
                                 map(
                                     ([isRef, isMany, propSch, isModel]) => {
@@ -170,8 +173,21 @@ function ObjectControl(props) {
     const context = rootId ? FormContex.edit : FormContex.new;
 
     if (isReady()) {
-        const controls = properties.map(
-            prop => <PropertyControl rootDataType={rootDataType}
+        const controls = [];
+        const configFields = config.fields || {};
+        const groups = [];
+        const controlsGroups = { default: controls };
+        properties.forEach(
+            prop => {
+                const fieldConfig = configFields[prop.name];
+                const group = fieldConfig?.group || 'default';
+                let controlsGroup = controlsGroups[group];
+                if (!controlsGroup) {
+                    controlsGroups[group] = controlsGroup = [];
+                    groups.push(group);
+                }
+                controlsGroup.push(
+                    <PropertyControl rootDataType={rootDataType}
                                      jsonPath={`${jsonPath}.${prop.name}`}
                                      property={prop}
                                      key={prop.name}
@@ -184,7 +200,13 @@ function ObjectControl(props) {
                                      readOnly={readOnly || prop.isReadOnly(context)}
                                      onStack={onStack}
                                      rootId={rootId}/>
+                );
+            }
         );
+
+        groups.forEach(group => controls.push(
+            <Group key={`group_${group}`} name={group} children={controlsGroups[group]}/>
+        ));
 
         return <FormGroup error={Object.keys(errors).length > 0}>
             <ErrorMessages errors={errors.$}>

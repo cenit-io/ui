@@ -8,6 +8,7 @@ import ConfigService from "./ConfigService";
 import CollectionContainer from "../actions/CollectionContainer";
 import MemberContainer from "../actions/MemberContainer";
 import { Cache, Config, Subject as subj, TitlePipe as titlePipe } from '../common/Symbols';
+import { preprocess } from "../config/config";
 
 class BasicSubject {
     constructor(attrs) {
@@ -136,7 +137,8 @@ export class DataTypeSubject extends BasicSubject {
                     return config;
                 }
                 return of({});
-            })
+            }),
+            map(config => preprocess(config))
         );
     }
 }
