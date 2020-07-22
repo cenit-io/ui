@@ -19,20 +19,26 @@ const customCSS = ['.CodeMirror-lint-marker-error { display: none }'];
 
 const isObject = v => v && typeof v === 'object';
 
+const autoHeightFor = json => !json || json.split(/\r\n|\r|\n/).length < 20;
+
+const jsonStringify = value => JSON.stringify(value, null, 2);
+
 function JsonControl(props) {
     const [state, setState] = useReducer(reducer, {
-        json: '',
-        key: Random.string(),
-        css: customCSS,
-        errorDebounce: new Subject()
-    });
+            json: '',
+            key: Random.string(),
+            css: customCSS,
+            errorDebounce: new Subject(),
+            autoHeight: autoHeightFor(jsonStringify(props.value))
+        })
+    ;
 
     const { value, onChange, onError, errors } = props;
 
     const propValue = useRef(value);
     const error = useRef(null);
 
-    const { json, key, css, errorDebounce } = state;
+    const { json, key, css, errorDebounce, autoHeight } = state;
 
     useEffect(() => {
         const subscription = errorDebounce.pipe(
@@ -49,7 +55,12 @@ function JsonControl(props) {
             (isObj && value[Key] !== key) ||
             (!isObj && JSON.stringify(value) !== json)
         ) {
-            setState({ json: JSON.stringify(value, null, 2) });
+            const jsonValue = jsonStringify(value);
+
+            setState({
+                json: jsonValue,
+                autoHeight: autoHeightFor(jsonValue)
+            });
         }
     }, [value, json]);
 
@@ -98,7 +109,7 @@ function JsonControl(props) {
                            gutters={gutters}
                            lint={true}
                            onChange={handleChange}
-                           autoHeight={true}
+                           autoHeight={autoHeight}
                            viewportMargin={Infinity}
                            mime="application/json"
                            customCSS={css}/>
