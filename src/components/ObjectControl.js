@@ -177,15 +177,19 @@ function ObjectControl(props) {
         const configFields = config.fields || {};
         const groups = [];
         const controlsGroups = { default: controls };
+        const groupsProps = { default: [] };
         properties.forEach(
             prop => {
                 const fieldConfig = configFields[prop.name];
                 const group = fieldConfig?.group || 'default';
                 let controlsGroup = controlsGroups[group];
+                let groupProps = groupsProps[group];
                 if (!controlsGroup) {
                     controlsGroups[group] = controlsGroup = [];
+                    groupsProps[group] = groupProps = [];
                     groups.push(group);
                 }
+                groupProps.push(prop.name);
                 controlsGroup.push(
                     <PropertyControl rootDataType={rootDataType}
                                      jsonPath={`${jsonPath}.${prop.name}`}
@@ -205,7 +209,10 @@ function ObjectControl(props) {
         );
 
         groups.forEach(group => controls.push(
-            <Group key={`group_${group}`} name={group} children={controlsGroups[group]}/>
+            <Group key={`group_${group}`}
+                   name={group}
+                   children={controlsGroups[group]}
+                   error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}/>
         ));
 
         return <FormGroup error={Object.keys(errors).length > 0}>
