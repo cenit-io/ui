@@ -604,12 +604,13 @@ export class DataType {
     }
 
     find(query, opts = null) {
-        const limit = (opts && opts.limit) || 5;
-        const page = (opts && opts.page) || 1;
-        const sort = (opts && opts.sort) || {};
-        query = (query || '').toString().trim();
+        const limit = opts?.limit || 5;
+        const page = opts?.page || 1;
+        const sort = opts?.sort || {};
+        let selector = opts?.selector || {};
+        query = query?.toString()?.trim() || '';
         const params = { limit, page };
-        const props = (opts && opts.props) ||
+        const props = opts?.props ||
             this.titleProps().pipe(
                 switchMap(
                     titleProps => zzip(
@@ -627,10 +628,15 @@ export class DataType {
         return props.pipe(
             switchMap(queryProps => {
                 if (query.length > 0) {
-                    const orQuery = queryProps.map(
+                    const $or = queryProps.map(
                         prop => ({ [prop.name]: { '$regex': `(?i)${query}` } })
                     );
-                    params['$or'] = JSON.stringify(orQuery);
+                    selector = {
+                        $and: [
+                            { $or },
+                            selector
+                        ]
+                    };
                 }
                 return API.get('setup', 'data_type', this.id, 'digest', {
                     params,
@@ -639,7 +645,8 @@ export class DataType {
                             viewport: '{_id ' + queryProps.map(p => p.name).join(' ') + '}',
                             polymorphic: true
                         }),
-                        'X-Query-Options': JSON.stringify({ sort })
+                        'X-Query-Options': JSON.stringify({ sort }),
+                        'X-Query-Selector': JSON.stringify(selector)
                     }
                 }).pipe(map(response => response || { items: [] }));
             })

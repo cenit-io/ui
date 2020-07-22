@@ -7,7 +7,7 @@ import RefPicker from "./RefPicker";
 import { map } from "rxjs/operators";
 import reducer from "../common/reducer";
 
-function RefOneControl({ title, value, property, disabled, readOnly, onChange, onDelete, onStack }) {
+function RefOneControl({ title, value, property, disabled, readOnly, onChange, onDelete, onStack, config }) {
 
     const [state, setState] = useReducer(reducer, {
         text: null
@@ -95,7 +95,8 @@ function RefOneControl({ title, value, property, disabled, readOnly, onChange, o
                        onPick={handlePick}
                        text={text}
                        disabled={disabled || text === null}
-                       readOnly={readOnly}/>
+                       readOnly={readOnly}
+                       baseSelector={config?.selector}/>
             {editButton}
             {addButton}
             {deleteButton}

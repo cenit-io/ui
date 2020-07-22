@@ -40,7 +40,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder, dataType, onPick, anchor }) {
+function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder, dataType, onPick, anchor, baseSelector }) {
 
     const [state, setState] = useReducer(reducer, {
         query: null,
@@ -71,7 +71,7 @@ function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder,
             setState({ loading: true });
             const subscription = of(true).pipe(
                 delay(700),
-                switchMap(() => dataType.find(query, { page })),
+                switchMap(() => dataType.find(query, { page, selector: baseSelector })),
                 switchMap(
                     ({ items, total_pages }) => {
                         if (items) {

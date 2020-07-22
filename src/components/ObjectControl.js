@@ -203,7 +203,8 @@ function ObjectControl(props) {
                                      disabled={disabled}
                                      readOnly={readOnly || prop.isReadOnly(context)}
                                      onStack={onStack}
-                                     rootId={rootId}/>
+                                     rootId={rootId}
+                                     config={fieldConfig}/>
                 );
             }
         );

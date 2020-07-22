@@ -117,7 +117,7 @@ class RefManyControl extends React.Component {
     };
 
     render() {
-        const { title, value, property, onDelete, disabled, readOnly } = this.props;
+        const { title, value, property, onDelete, disabled, readOnly, config } = this.props;
         const { open, items } = this.state;
 
         let dropButton, deleteButton, itemsControls;
@@ -167,7 +167,8 @@ class RefManyControl extends React.Component {
                                text={itemsText}
                                placeholder={placeholder}
                                disabled={disabled}
-                               readOnly={readOnly || items === null}/>
+                               readOnly={readOnly || items === null}
+                               baseSelector={config?.selector}/>
                     {dropButton}
                     {addButton}
                     {deleteButton}
