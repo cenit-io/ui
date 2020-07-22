@@ -46,6 +46,7 @@ export default function CodeMirrorControl({
                                               viewportMargin,
                                               gutters,
                                               lint,
+                                              foldGutter,
                                               autoHeight,
                                               addons,
                                               customCSS
@@ -105,7 +106,8 @@ export default function CodeMirrorControl({
                     const opts = {
                         mode: cmMime,
                         lineNumbers,
-                        lint
+                        lint,
+                        foldGutter
                     };
                     if (theme) {
                         opts.theme = theme;

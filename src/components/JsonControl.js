@@ -11,10 +11,14 @@ import { debounce } from "rxjs/operators";
 const addons = [
     ['lint', 'lint.js'],
     ['lint', 'lint.css'],
-    ['lint', 'json-lint.js']
+    ['lint', 'json-lint.js'],
+    ['fold', 'foldcode.js'],
+    ['fold', 'foldgutter.js'],
+    ['fold', 'brace-fold.js'],
+    ['fold', 'foldgutter.css']
 ];
 
-const gutters = ["CodeMirror-lint-markers"];
+const gutters = ["CodeMirror-lint-markers", "CodeMirror-foldgutter"];
 const customCSS = ['.CodeMirror-lint-marker-error { display: none }'];
 
 const isObject = v => v && typeof v === 'object';
@@ -108,6 +112,7 @@ function JsonControl(props) {
                            value={json}
                            gutters={gutters}
                            lint={true}
+                           foldGutter={true}
                            onChange={handleChange}
                            autoHeight={autoHeight}
                            viewportMargin={Infinity}
