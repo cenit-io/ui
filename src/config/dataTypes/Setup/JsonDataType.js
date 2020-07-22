@@ -17,7 +17,7 @@ const fields = [
     ...behaviorFields
 ];
 
-const viewport = `{${fields.join(' ')}}`;
+const viewport = `{id ${fields.join(' ')}}`;
 
 export default {
     title: 'JSON Data Type',
@@ -42,7 +42,7 @@ export default {
             }
         },
         edit: {
-            fields,
+            fields: ['id', ...fields],
             viewport
         }
     }
