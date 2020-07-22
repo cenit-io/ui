@@ -46,7 +46,7 @@ export default function ({ name, children, error }) {
                     <Typography variant="h5" className={clsx(classes.title, errorClass)}>
                         {name}
                     </Typography>
-                    <Icon size="large" className={errorClass}/>
+                    <Icon size="large" className={clsx(errorClass)}/>
                 </HeaderButton>
             </div>
             <Collapse in={collapsed}>
