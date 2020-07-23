@@ -1,7 +1,9 @@
-import { DataType } from "./DataTypeService";
+import { DataType, FILE_TYPE } from "./DataTypeService";
 import { filter, switchMap, map, catchError, tap } from "rxjs/operators";
 import { of, Subject, from } from "rxjs";
-import InboxIcon from '@material-ui/icons/MoveToInbox';
+import ItemIcon from '@material-ui/icons/FiberManualRecord';
+import FileIcon from '@material-ui/icons/InsertDriveFile';
+import DataTypeIcon from '@material-ui/icons/Dns';
 import React from "react";
 import Random from "../util/Random";
 import ConfigService from "./ConfigService";
@@ -9,6 +11,18 @@ import CollectionContainer from "../actions/CollectionContainer";
 import MemberContainer from "../actions/MemberContainer";
 import { Cache, Config, Subject as subj, TitlePipe as titlePipe } from '../common/Symbols';
 import { preprocess } from "../config/config";
+import zzip from "../util/zzip";
+import SvgIcon from "@material-ui/core/SvgIcon";
+
+const fileIcon = <FileIcon/>;
+const itemIcon = <ItemIcon/>;
+const dataTypeIcon = <DataTypeIcon/>;
+const fileDataTypeIcon = (
+    <SvgIcon>
+        <path
+            d="M15.88,10.5l1.62,1.62v3.38l-3,0v-5H15.88z M22,8v10c0,1.1-0.9,2-2,2H4c-1.1,0-2-0.9-2-2L2.01,6C2.01,4.9,2.9,4,4,4h6l2,2 h8C21.1,6,22,6.9,22,8z M19,11.5L16.5,9H13v8l6,0V11.5z"/>
+    </SvgIcon>
+);
 
 class BasicSubject {
     constructor(attrs) {
@@ -101,7 +115,15 @@ export class DataTypeSubject extends BasicSubject {
     }
 
     navIcon() {
-        return <InboxIcon/>;
+        return zzip(
+            this.dataType(),
+            this.config()
+        ).pipe(
+            map(
+                ([dataType, config]) => config.icon || (
+                    dataType._type === FILE_TYPE ? fileDataTypeIcon : dataTypeIcon
+                ))
+        );
     }
 
     dataType() {
@@ -169,8 +191,12 @@ export class RecordSubject extends BasicSubject {
         this.key = this.key || Random.string();
     }
 
+    dataType() {
+        return DataType.getById(this.dataTypeId);
+    }
+
     titleObservable(record) {
-        return DataType.getById(this.dataTypeId).pipe(
+        return this.dataType().pipe(
             switchMap(
                 dataType => dataType.titleFor(record || { id: this.id })
             )
@@ -178,7 +204,15 @@ export class RecordSubject extends BasicSubject {
     }
 
     navIcon() {
-        return <InboxIcon/>;
+        return this.dataType().pipe(
+            map(dataType => {
+                if (dataType._type === FILE_TYPE) {
+                    return fileIcon;
+                }
+
+                return itemIcon;
+            })
+        );
     }
 
     dataTypeSubject() {

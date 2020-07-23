@@ -1,3 +1,6 @@
+import React from 'react';
+import Icon from '@material-ui/icons/Widgets';
+
 const behaviorFields = [
     'before_save_callbacks',
     'after_save_callbacks',
@@ -28,7 +31,7 @@ const atLeastOneParameterSelector = {
 };
 
 export default {
-    title: 'JSON Data Type',
+    title: 'JSON Type',
     groups: {
         behavior: {
             fields: behaviorFields
@@ -67,5 +70,6 @@ export default {
             fields: ['id', ...fields],
             viewport
         }
-    }
+    },
+    icon: <Icon/>
 };

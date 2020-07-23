@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import clsx from 'clsx';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -13,34 +13,40 @@ import ConfigService from "../services/ConfigService";
 import reducer from "../common/reducer";
 import Subjects, { NavSubject, TabsSubject } from "../services/subjects";
 import Collapse from "@material-ui/core/Collapse";
+import zzip from "../util/zzip";
 
 function NavItem({ subject, onClick }) {
-    const [title, setTitle] = useState(null);
+    const [state, setState] = useReducer(reducer, {});
     const theme = useTheme();
 
+    const { icon, title } = state;
+
     useEffect(() => {
-        const subscription = subject.quickTitle().subscribe(
-            title => setTitle(title)
+        const subscription = zzip(
+            subject.navIcon(),
+            subject.quickTitle()
+        ).subscribe(
+            ([icon, title]) => setState({ icon, title })
         );
         return () => subscription.unsubscribe();
     }, []);
 
     useEffect(() => {
         const subscription = subject.title().subscribe(
-            title => setTitle(title)
+            title => setState({ title })
         );
         return () => subscription.unsubscribe();
     }, [subject]);
 
     let text;
-    let icon;
+    let navIcon;
     if (title) {
-        icon = subject.navIcon();
+        navIcon = icon;
         text = title;
     } else {
-        icon = <Skeleton variant="circle"
-                         width={theme.spacing(3)}
-                         height={theme.spacing(3)}/>;
+        navIcon = <Skeleton variant="circle"
+                            width={theme.spacing(3)}
+                            height={theme.spacing(3)}/>;
         text = <Skeleton variante="text"/>;
     }
 
@@ -49,7 +55,7 @@ function NavItem({ subject, onClick }) {
                   disabled={!title}
                   onClick={onClick}>
             <ListItemIcon>
-                {icon}
+                {navIcon}
             </ListItemIcon>
             <ListItemText>
                 <div style={{
