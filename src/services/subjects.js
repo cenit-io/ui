@@ -13,6 +13,7 @@ import { Cache, Config, Subject as subj, TitlePipe as titlePipe } from '../commo
 import { preprocess } from "../config/config";
 import zzip from "../util/zzip";
 import SvgIcon from "@material-ui/core/SvgIcon";
+import pluralize from 'pluralize';
 
 const fileIcon = <FileIcon/>;
 const itemIcon = <ItemIcon/>;
@@ -32,11 +33,15 @@ class BasicSubject {
         this[subj] = new Subject();
     }
 
-    title() {
+    navTitle() {
+        return this.title();
+    }
+
+    title(arity = 1) {
         if (!this[titlePipe]) {
             this[titlePipe] = this.pipe(
                 filter(({ type }) => type === 'title'),
-                map(({ title }) => title)
+                map(({ title }) => pluralize(title, arity))
             );
         }
         return this[titlePipe];
@@ -67,11 +72,17 @@ class BasicSubject {
         )
     }
 
-    quickTitle() {
-        if (this.titleCache) {
-            return of(this.titleCache);
-        }
-        return this.titleObservable(this.cache());
+    quickNavTitle() {
+        return this.quickTitle();
+    }
+
+    quickTitle(arity = 1) {
+        return (
+            (this.titleCache && of(this.titleCache)) ||
+            this.titleObservable(this.cache())
+        ).pipe(
+            map(title => pluralize(title, arity))
+        );
     }
 }
 
@@ -96,6 +107,14 @@ export class DataTypeSubject extends BasicSubject {
         this.type = DataTypeSubject.type;
         this.key = Random.string();
         this.key = this.key || Random.string();
+    }
+
+    navTitle() {
+        return this.title(2);
+    }
+
+    quickNavTitle() {
+        return this.quickTitle(2);
     }
 
     titleObservable() {

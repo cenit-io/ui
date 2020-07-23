@@ -19,7 +19,7 @@ function ItemTab({ subject, onClick, onClose }) {
     const [title, setTitle] = useState(subject.titleCache || '...');
 
     useEffect(() => {
-        const subscription = subject.title().subscribe(
+        const subscription = subject.navTitle().subscribe(
             title => setTitle(title)
         );
         return () => subscription.unsubscribe();

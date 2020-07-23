@@ -24,7 +24,7 @@ function NavItem({ subject, onClick }) {
     useEffect(() => {
         const subscription = zzip(
             subject.navIcon(),
-            subject.quickTitle()
+            subject.quickNavTitle()
         ).subscribe(
             ([icon, title]) => setState({ icon, title })
         );
@@ -32,7 +32,7 @@ function NavItem({ subject, onClick }) {
     }, []);
 
     useEffect(() => {
-        const subscription = subject.title().subscribe(
+        const subscription = subject.navTitle().subscribe(
             title => setState({ title })
         );
         return () => subscription.unsubscribe();

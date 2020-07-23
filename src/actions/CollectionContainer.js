@@ -55,7 +55,7 @@ function CollectionContainer({ docked, subject, height, width, onSubjectPicked }
     const { dataTypeId } = subject;
 
     useEffect(() => {
-        const subscription = subject.title().subscribe(
+        const subscription = subject.title(2).subscribe(
             title => setState({ title })
         );
         subject.computeTitle();
