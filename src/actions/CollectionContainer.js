@@ -17,6 +17,7 @@ import { DataType } from "../services/DataTypeService";
 import { RecordSubject } from "../services/subjects";
 import { of } from "rxjs";
 import reducer from "../common/reducer";
+import FrezzerLoader from "../components/FrezzerLoader";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -28,16 +29,6 @@ const actionContainerStyles = makeStyles(theme => ({
         overflow: 'auto',
         position: 'relative',
         height: props => `calc(${props.height} - ${appBarHeight(theme)})`
-    },
-    loader: {
-        zIndex: 3,
-        opacity: 0.6,
-        top: 0,
-        left: 0,
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        background: theme.palette.background.paper
     }
 }));
 
@@ -117,11 +108,7 @@ function CollectionContainer({ docked, subject, height, width, onSubjectPicked }
 
     let loader;
     if (loading) {
-        loader = (
-            <div className={classes.loader}>
-                <Loading/>
-            </div>
-        );
+        loader = <FrezzerLoader/>;
     }
     return (
         <div className={classes.root}>

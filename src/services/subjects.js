@@ -4,6 +4,7 @@ import { of, Subject, from } from "rxjs";
 import ItemIcon from '@material-ui/icons/FiberManualRecord';
 import FileIcon from '@material-ui/icons/InsertDriveFile';
 import DataTypeIcon from '@material-ui/icons/Dns';
+import MenuBookIcon from '@material-ui/icons/MenuBook';
 import React from "react";
 import Random from "../util/Random";
 import ConfigService from "./ConfigService";
@@ -14,7 +15,9 @@ import { preprocess } from "../config/config";
 import zzip from "../util/zzip";
 import SvgIcon from "@material-ui/core/SvgIcon";
 import pluralize from 'pluralize';
+import Menu from "../components/Menu";
 
+const menuIcon = <MenuBookIcon/>;
 const fileIcon = <FileIcon/>;
 const itemIcon = <ItemIcon/>;
 const dataTypeIcon = <DataTypeIcon/>;
@@ -26,7 +29,7 @@ const fileDataTypeIcon = (
 );
 
 class BasicSubject {
-    constructor(attrs) {
+    constructor(attrs = {}) {
         Object.keys(attrs).forEach(
             attr => this[attr] = attrs[attr]
         );
@@ -83,6 +86,10 @@ class BasicSubject {
         ).pipe(
             map(title => pluralize(title, arity))
         );
+    }
+
+    cache() {
+        return null;
     }
 }
 
@@ -246,6 +253,54 @@ export class RecordSubject extends BasicSubject {
     }
 }
 
+export class MenuSubject extends BasicSubject {
+
+    static key = 'Menu';
+
+    static type = MenuSubject.key;
+
+    static instance() {
+        let s = Object.values(Subjects).find(
+            s => s.type === MenuSubject.type
+        );
+        if (!s) {
+            s = new MenuSubject();
+            Subjects.add(s);
+        }
+        return s;
+    }
+
+    constructor(attrs) {
+        super(attrs);
+        this.TabComponent = Menu;
+        this.type = MenuSubject.type;
+        this.key = MenuSubject.key;
+    }
+
+    titleObservable() {
+        return of('Menu');
+    }
+
+    navIcon() {
+        return of(menuIcon);
+    }
+
+
+    config() {
+        if (MenuSubject[Config]) {
+            return of(MenuSubject[Config]);
+        }
+
+        return from(
+            import(`../config/Menu.js`)
+        ).pipe(
+            map(mod => mod.default),
+            catchError(e => of({})),
+            tap(config => MenuSubject[Config] = config)
+        );
+    }
+}
+
 const Subjects = {
 
     add: function (subject) {
@@ -263,6 +318,9 @@ const Subjects = {
                 }
                 if (attrs.type === RecordSubject.type) {
                     s = new RecordSubject(attrs);
+                }
+                if (attrs.type === MenuSubject.type) {
+                    s = MenuSubject.instance();
                 }
                 s.key = key;
                 if (s) {

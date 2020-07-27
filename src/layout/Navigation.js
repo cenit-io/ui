@@ -108,39 +108,6 @@ const Navigation = ({ docked, setDocked, xs }) => {
     const { navigation, disabled, over, history } = state;
 
     useEffect(() => {
-        const subscription = NavSubject.pipe(
-            delay(3000)
-        ).subscribe(
-            key => {
-                const sub = Subjects[key];
-                if (sub) {
-                    let navigation = [...(ConfigService.state().navigation || [])];
-                    let notFound = true;
-                    navigation.forEach(
-                        e => {
-                            if (e.key === key) {
-                                notFound = false;
-                                e.hits = (e.hits || 0) - navigation.length;
-                            } else {
-                                e.hits = (e.hits || 0) + 1;
-                            }
-                        }
-                    );
-                    if (notFound) {
-                        const sort = [...navigation];
-                        sort.sort((s1, s2) => (s1.hits || 0) - (s2.hits || 0));
-                        sort.splice(10, navigation.length - 10);
-                        navigation = navigation.filter(s => sort.find(({ key }) => key === s.key));
-                        navigation.push({ key, hits: 0 });
-                    }
-                    ConfigService.update({ navigation });
-                }
-            }
-        );
-        return () => subscription.unsubscribe();
-    }, []);
-
-    useEffect(() => {
         const subscription = ConfigService.navigationChanges().subscribe(
             navigation => setState({
                 navigation: navigation || [],
@@ -162,8 +129,11 @@ const Navigation = ({ docked, setDocked, xs }) => {
     let nav;
     if (navigation) {
         nav = navigation.map(
-            ({ key }) => <NavItem key={key} subject={Subjects[key]} onClick={select(key)}/>
-        );
+            ({ key }) => {
+                const subject = Subjects[key];
+                return subject && <NavItem key={key} subject={Subjects[key]} onClick={select(key)}/>;
+            }
+        ).filter(item => item);
         nav = (
             <List style={{ overflowX: 'hidden' }}>
                 <ListItem button onClick={() => setState({ history: !history })}>

@@ -17,7 +17,9 @@ import TenantSelector from "../components/TenantSelector";
 import useTheme from "@material-ui/core/styles/useTheme";
 import UserCard from "../components/UserCard";
 import ConfigService from "../services/ConfigService";
-import { DataTypeSubject, TabsSubject } from "../services/subjects";
+import { DataTypeSubject, MenuSubject, TabsSubject } from "../services/subjects";
+import { MenuBook } from "@material-ui/icons";
+import Search from "../components/Search";
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
@@ -59,12 +61,15 @@ const useStyles = makeStyles(theme => ({
         [theme.breakpoints.up('md')]: {
             width: 200,
         },
+    },
+    menuBook: {
+        marginLeft: theme.spacing(2)
     }
 }));
 
-const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
+export const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
-function AdminAppBar({ onToggle, idToken, disabled }) {
+export default function ({ onToggle, idToken, disabled }) {
 
     const [open, setOpen] = useState(false);
 
@@ -100,6 +105,8 @@ function AdminAppBar({ onToggle, idToken, disabled }) {
             ConfigService.update({ tenant_id: id });
         }
     };
+
+    const handleMenuBook = () => TabsSubject.next(MenuSubject.instance().key);
 
     let menu;
 
@@ -140,27 +147,21 @@ function AdminAppBar({ onToggle, idToken, disabled }) {
                     Admin
                 </Typography>
             }
-            <div className={classes.search}>
-                <div className={classes.searchIcon}>
-                    <SearchIcon/>
-                </div>
-                <RecordSelector dataTypeSelector={DataTypeSelector}
-                                onSelect={({ record }) => handleDataTypeSelected(record)}
-                                inputClasses={inputClasses}
-                                disabled={disabled}/>
-            </div>
+            <IconButton className={classes.menuBook}
+                        color="inherit"
+                        disabled={disabled}
+                        onClick={handleMenuBook}>
+                <MenuBook/>
+            </IconButton>
+            <Search dataTypeSelector={DataTypeSelector}
+                    onSelect={({ record }) => handleDataTypeSelected(record)}
+                    disabled={disabled}/>
             <div className={classes.grow}/>
-            <div className={classes.search}>
-                <div className={classes.searchIcon}>
-                    <HomeIcon/>
-                </div>
-                <TenantSelector inputClasses={inputClasses}
-                                onSelect={handleTenantSelected}
-                                disabled={disabled}/>
-            </div>
+            <Search searchIcon={<HomeIcon/>}
+                    selectorComponent={TenantSelector}
+                    onSelect={handleTenantSelected}
+                    disabled={disabled}/>
             {avatar}
         </Toolbar>
     </AppBar>
 };
-
-export default AdminAppBar;

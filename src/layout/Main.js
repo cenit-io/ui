@@ -10,7 +10,8 @@ import Tabs from "./Tabs";
 import reducer from "../common/reducer";
 import ConfigService from "../services/ConfigService";
 import Loading from "../components/Loading";
-import { DataTypeSubject, TabsSubject } from "../services/subjects";
+import Subjects, { DataTypeSubject, NavSubject, TabsSubject } from "../services/subjects";
+import { delay } from "rxjs/operators";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -64,19 +65,62 @@ const Main = () => {
         return () => subscription.unsubscribe();
     }, []);
 
+    useEffect(() => {
+        const subscription = NavSubject.pipe(
+            delay(3000)
+        ).subscribe(
+            key => {
+                const sub = Subjects[key];
+                if (sub) {
+                    let navigation = [...(ConfigService.state().navigation || [])];
+                    let notFound = true;
+                    navigation.forEach(
+                        e => {
+                            if (e.key === key) {
+                                notFound = false;
+                                e.hits = (e.hits || 0) - navigation.length;
+                            } else {
+                                e.hits = (e.hits || 0) + 1;
+                            }
+                        }
+                    );
+                    if (notFound) {
+                        const sort = [...navigation];
+                        sort.sort((s1, s2) => (s1.hits || 0) - (s2.hits || 0));
+                        sort.splice(10, navigation.length - 10);
+                        navigation = navigation.filter(s => sort.find(({ key }) => key === s.key));
+                        navigation.push({ key, hits: 0 });
+                    }
+                    ConfigService.update({ navigation });
+                }
+            }
+        );
+        return () => subscription.unsubscribe();
+    }, []);
+
     let navKey;
     if (xs) {
         navKey = `nav_${ConfigService.state().tenant_id}`;
     }
-    const navigationUI = <Navigation key={navKey}
-                                     docked={docked}
-                                     setDocked={setDocked}
-                                     xs={xs}/>;
+    let navigationUI = <Navigation key={navKey}
+                                   docked={docked}
+                                   setDocked={setDocked}
+                                   xs={xs}/>;
 
     const switchNavigation = () => {
         localStorage.setItem('docked', String(!docked));
         setDocked(!docked);
     };
+
+    if (xs) {
+        navigationUI = (
+            <Drawer docked={docked}
+                    onClose={switchNavigation}
+                    idToken={idToken}>
+                {navigationUI}
+            </Drawer>
+        );
+    }
 
     const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`);
     const tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
@@ -98,15 +142,7 @@ const Main = () => {
                       width={tabsWidth}/>
             </div>
             {
-                xs || navigationUI
-            }
-            {
-                xs &&
-                <Drawer docked={docked}
-                        onClose={switchNavigation}
-                        idToken={idToken}>
-                    {navigationUI}
-                </Drawer>
+                navigationUI
             }
         </div>
         <AppBar onToggle={switchNavigation}

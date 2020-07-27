@@ -87,6 +87,10 @@
     overflow-x: auto;
 }
 
+.auto-scroll-y {
+    overflow-y: auto;
+}
+
 .row-reverse {
     flex-direction: row-reverse;
 }

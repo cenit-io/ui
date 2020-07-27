@@ -9,7 +9,7 @@ import clsx from "clsx";
 
 const useStyles = makeStyles(theme => ({
     header: {
-        padding: theme.spacing(0, 1)
+        padding: theme.spacing(1, 1, 1, 0)
     },
     title: {
         textAlign: 'left',
@@ -43,7 +43,7 @@ export default function ({ name, children, error }) {
         <div className="flex column">
             <div className={classes.header}>
                 <HeaderButton onClick={switchCollapsed}>
-                    <Typography variant="h5" className={clsx(classes.title, errorClass)}>
+                    <Typography variant="h6" className={clsx(classes.title, errorClass)}>
                         {name}
                     </Typography>
                     <Icon size="large" className={clsx(errorClass)}/>
