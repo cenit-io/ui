@@ -1,7 +1,7 @@
 import React, { useEffect, useReducer, useRef } from 'react';
 import reducer from "../common/reducer";
 import Loading from "./Loading";
-import { makeStyles, useTheme } from "@material-ui/core/styles";
+import { fade, makeStyles, useTheme } from "@material-ui/core/styles";
 import clsx from "clsx";
 import { DataTypeSubject, TabsSubject } from "../services/subjects";
 import { DataType } from "../services/DataTypeService";
@@ -39,27 +39,31 @@ const useStyles = makeStyles(theme => ({
     },
     group: {
         margin: theme.spacing(1),
-        padding: theme.spacing(1),
-        background: theme.palette.primary.light,
-        width: theme.spacing(30),
-        borderRadius: theme.spacing(1)
+        boxShadow: '0 4px 8px 0 rgba(55, 71, 79, .3)'
     },
     groupHeader: {
-        color: theme.palette.primary.contrastText,
-        marginBottom: theme.spacing(1)
+        padding: theme.spacing(1.5, 4, 1.5, 6),
+        borderTopLeftRadius: theme.spacing(1),
+        borderTopRightRadius: theme.spacing(1),
+        background: fade(theme.palette.primary.main, 0.85),
+        color: theme.palette.getContrastText(theme.palette.primary.main)
     },
     groupTitle: {
-        marginLeft: theme.spacing(2)
+        marginLeft: theme.spacing(4),
+        fontWeight: 'bold'
+    },
+    groupItems: {
+        padding: theme.spacing(1, 4, 0, 4),
+        borderBottomLeftRadius: theme.spacing(1),
+        borderBottomRightRadius: theme.spacing(1)
     },
     items: {
         background: theme.palette.background.paper,
         borderRadius: theme.spacing(1)
     },
     item: {
-        margin: theme.spacing(2, 0),
-        cursor: 'pointer',
-        '&:hover': {
-            background: theme.palette.background.default
+        '& + &': {
+            borderTop: `solid 1px ${theme.palette.text.disabled}`
         }
     }
 }));
@@ -111,8 +115,12 @@ export default function ({ subject, width, height }) {
             const items = group.items.map(
                 (item, iIndex) => (
                     <ListItem button
+                              className={classes.item}
                               key={`g_${gIndex}_${iIndex}`}
                               onClick={handleSelect(item)}>
+                        <ListItemIcon>
+                            {item.icon}
+                        </ListItemIcon>
                         <ListItemText primary={item.title}/>
                     </ListItem>
                 )
@@ -129,9 +137,11 @@ export default function ({ subject, width, height }) {
                                 {group.title}
                             </div>
                         </div>
-                        <List className={classes.items}>
-                            {items}
-                        </List>
+                        <div className={classes.groupItems}>
+                            <List className={classes.items}>
+                                {items}
+                            </List>
+                        </div>
                     </div>
                 </div>
             )

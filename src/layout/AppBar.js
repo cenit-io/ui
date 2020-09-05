@@ -8,9 +8,6 @@ import {
     Toolbar,
     Typography, useMediaQuery
 } from "@material-ui/core";
-import MenuIcon from "@material-ui/icons/Menu";
-import RecordSelector from "../components/RecordSelector";
-import SearchIcon from '@material-ui/icons/Search';
 import HomeIcon from '@material-ui/icons/Home';
 import { fade } from '@material-ui/core/styles/colorManipulator';
 import TenantSelector from "../components/TenantSelector";
@@ -20,6 +17,7 @@ import ConfigService from "../services/ConfigService";
 import { DataTypeSubject, MenuSubject, TabsSubject } from "../services/subjects";
 import { MenuBook } from "@material-ui/icons";
 import Search from "../components/Search";
+import MenuIcon from "../icons/MenuIcon";
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
@@ -74,10 +72,6 @@ export default function ({ onToggle, idToken, disabled }) {
     const [open, setOpen] = useState(false);
 
     const classes = useStyles();
-    const inputClasses = {
-        root: classes.inputRoot,
-        input: classes.inputInput,
-    };
 
     const theme = useTheme();
     const smUp = useMediaQuery(theme.breakpoints.up('sm'));

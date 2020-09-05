@@ -1,5 +1,5 @@
 import React from 'react';
-import Icon from '@material-ui/icons/Widgets';
+import DocumentTypesFilledIcon from "../../../icons/DocumentTypesFilledIcon";
 
 const behaviorFields = [
     'before_save_callbacks',
@@ -31,7 +31,7 @@ const atLeastOneParameterSelector = {
 };
 
 export default {
-    title: 'JSON Type',
+    title: 'Document Type',
     groups: {
         behavior: {
             fields: behaviorFields
@@ -71,5 +71,5 @@ export default {
             viewport
         }
     },
-    icon: <Icon/>
+    icon: <DocumentTypesFilledIcon/>
 };

@@ -1,20 +1,52 @@
+import React from 'react'
 import { DataTypeSubject } from "../services/subjects";
-import StorageIcon from "@material-ui/icons/Storage";
-import CodeIcon from "@material-ui/icons/Code";
+import DataIcon from "../icons/DataIcon";
+import WorkflowsIcon from "../icons/WorkflowsIcon";
+import ConfigurationIcon from "../icons/ConfigurationIcon";
+import FlowsIcon from "../icons/FlowsIcon";
+import NotificationsIcon from "../icons/NotificationsIcon";
+import DataEventsIcon from "../icons/DataEventsIcon";
+import EmailChannelsIcon from "../icons/EmailChannelsIcon";
+import SchedulersIcon from "../icons/SchedulersIcon";
+import TransformationIcon from "../icons/TransformationIcon";
+import TemplateIcon from "../icons/TemplateIcon";
+import ParserIcon from "../icons/ParserIcon";
+import UpdaterIcon from "../icons/UpdaterIcon";
+import ConnectorIcon from "../icons/ConnectorIcon";
+import ApiSpecsIcon from "../icons/ApiSpecsIcon";
+import GatewayIcon from "../icons/GatewayIcon";
+import ConverterIcon from "../icons/ConverterIcon";
+import AlgorithmIcon from "../icons/AlgorithmIcon";
+import ApplicationIcon from "../icons/ApplicationIcon";
+import SnippetIcon from "../icons/SnippetIcon";
+import FileTypesIcon from "../icons/FileTypesIcon";
+import DocumentTypesIcon from "../icons/DocumentTypesIcon";
+import MonitorIcon from "../icons/MonitorIcon";
+import CollectionIcon from "../icons/CollectionIcon";
+import SharedCollectionIcon from "../icons/SharedCollectionIcon";
+import IntegrationIcon from "../icons/IntegrationIcon";
+import SecurityIcon from "../icons/SecurityIcon";
+import ComputeIcon from "../icons/ComputeIcon";
+import AuthorizationClientsIcon from "../icons/AuthorizationClientsIcon";
+import AuthorizationIcon from "../icons/AuthorizationIcon";
+import AccessGrantIcon from "../icons/AccessGrantIcon";
+import ProviderIcon from "../icons/ProviderIcon";
+import OauthScopesIcon from "../icons/OauthScopesIcon";
 
 export default {
     groups: [
         {
             title: 'Data',
-            IconComponent: StorageIcon,
+            IconComponent: DataIcon,
             items: [
                 {
                     type: DataTypeSubject.type,
-                    title: 'JSON Types',
+                    title: 'Document Types',
                     $ref: {
                         namespace: 'Setup',
                         name: 'JsonDataType'
-                    }
+                    },
+                    icon: <DocumentTypesIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -22,13 +54,14 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'FileDataType'
-                    }
+                    },
+                    icon: <FileTypesIcon/>
                 }
             ]
         },
         {
             title: 'Workflow',
-            IconComponent: StorageIcon,
+            IconComponent: WorkflowsIcon,
             items: [
                 {
                     type: DataTypeSubject.type,
@@ -36,7 +69,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Flow'
-                    }
+                    },
+                    icon: <FlowsIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -44,7 +78,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'SystemNotification'
-                    }
+                    },
+                    icon: <NotificationsIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -52,7 +87,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Observer'
-                    }
+                    },
+                    icon: <DataEventsIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -60,13 +96,14 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Scheduler'
-                    }
+                    },
+                    icon: <SchedulersIcon/>
                 }
             ]
         },
         {
             title: 'Transformations',
-            IconComponent: StorageIcon,
+            IconComponent: TransformationIcon,
             items: [
                 {
                     type: DataTypeSubject.type,
@@ -74,7 +111,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Template'
-                    }
+                    },
+                    icon: <TemplateIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -82,7 +120,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'ParserTransformation'
-                    }
+                    },
+                    icon: <ParserIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -90,7 +129,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'ConverterTransformation'
-                    }
+                    },
+                    icon: <ConverterIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -98,13 +138,14 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'UpdaterTransformation'
-                    }
+                    },
+                    icon: <UpdaterIcon/>
                 }
             ]
         },
         {
             title: 'Gateway',
-            IconComponent: StorageIcon,
+            IconComponent: GatewayIcon,
             items: [
                 {
                     type: DataTypeSubject.type,
@@ -112,7 +153,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Connection'
-                    }
+                    },
+                    icon: <ConnectorIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -128,7 +170,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'EmailChannel'
-                    }
+                    },
+                    icon: <EmailChannelsIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -144,13 +187,14 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'ApiSpec'
-                    }
+                    },
+                    icon: <ApiSpecsIcon/>
                 }
             ]
         },
         {
             title: 'Compute',
-            IconComponent: StorageIcon,
+            IconComponent: ComputeIcon,
             items: [
                 {
                     type: DataTypeSubject.type,
@@ -158,7 +202,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Algorithm'
-                    }
+                    },
+                    icon: <AlgorithmIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -166,7 +211,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Application'
-                    }
+                    },
+                    icon: <ApplicationIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -174,13 +220,14 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Snippet'
-                    }
+                    },
+                    icon: <SnippetIcon/>
                 }
             ]
         },
         {
             title: 'Security',
-            IconComponent: StorageIcon,
+            IconComponent: SecurityIcon,
             items: [
                 {
                     type: DataTypeSubject.type,
@@ -188,7 +235,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'AuthorizationClient'
-                    }
+                    },
+                    icon: <AuthorizationClientsIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -196,7 +244,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'AuthorizationProvider'
-                    }
+                    },
+                    icon: <ProviderIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -204,7 +253,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Authorization'
-                    }
+                    },
+                    icon: <AuthorizationIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -212,7 +262,8 @@ export default {
                     $ref: {
                         namespace: 'Cenit',
                         name: 'OauthAccessGrant'
-                    }
+                    },
+                    icon: <AccessGrantIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -220,13 +271,14 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Oauth2Scope'
-                    }
+                    },
+                    icon: <OauthScopesIcon/>
                 }
             ]
         },
         {
             title: 'Integrations',
-            IconComponent: StorageIcon,
+            IconComponent: IntegrationIcon,
             items: [
                 {
                     type: DataTypeSubject.type,
@@ -234,7 +286,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Collection'
-                    }
+                    },
+                    icon: <CollectionIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -242,13 +295,14 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'CrossSharedCollection'
-                    }
+                    },
+                    icon: <SharedCollectionIcon/>
                 }
             ]
         },
         {
             title: 'Monitors',
-            IconComponent: StorageIcon,
+            IconComponent: MonitorIcon,
             items: [
                 {
                     type: DataTypeSubject.type,
@@ -264,7 +318,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'SystemNotification'
-                    }
+                    },
+                    icon: <NotificationsIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -286,7 +341,7 @@ export default {
         },
         {
             title: 'Configuration',
-            IconComponent: StorageIcon,
+            IconComponent: ConfigurationIcon,
             items: [
                 {
                     type: DataTypeSubject.type,

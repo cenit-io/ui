@@ -1,9 +1,6 @@
 import { DataType, FILE_TYPE } from "./DataTypeService";
 import { filter, switchMap, map, catchError, tap } from "rxjs/operators";
 import { of, Subject, from } from "rxjs";
-import ItemIcon from '@material-ui/icons/FiberManualRecord';
-import FileIcon from '@material-ui/icons/InsertDriveFile';
-import DataTypeIcon from '@material-ui/icons/Dns';
 import MenuBookIcon from '@material-ui/icons/MenuBook';
 import React from "react";
 import Random from "../util/Random";
@@ -16,17 +13,17 @@ import zzip from "../util/zzip";
 import SvgIcon from "@material-ui/core/SvgIcon";
 import pluralize from 'pluralize';
 import Menu from "../components/Menu";
+import DocumentTypeRecordsFilledIcon from "../icons/DocumentTypeRecordsFilledIcon";
+import FileTypesIcon from "../icons/FileTypesIcon";
+import FileTypeFilledIcon from "../icons/FileTypeFilledIcon";
+import FileFilledIcon from "../icons/FileFilledIcon";
+import DocumentTypeFilledIcon from "../icons/DocumentTypeFilledIcon";
 
 const menuIcon = <MenuBookIcon/>;
-const fileIcon = <FileIcon/>;
-const itemIcon = <ItemIcon/>;
-const dataTypeIcon = <DataTypeIcon/>;
-const fileDataTypeIcon = (
-    <SvgIcon>
-        <path
-            d="M15.88,10.5l1.62,1.62v3.38l-3,0v-5H15.88z M22,8v10c0,1.1-0.9,2-2,2H4c-1.1,0-2-0.9-2-2L2.01,6C2.01,4.9,2.9,4,4,4h6l2,2 h8C21.1,6,22,6.9,22,8z M19,11.5L16.5,9H13v8l6,0V11.5z"/>
-    </SvgIcon>
-);
+const fileIcon = <FileFilledIcon/>;
+const documentIcon = <DocumentTypeRecordsFilledIcon/>;
+const documentTypeIcon = <DocumentTypeFilledIcon/>;
+const fileTypeIcon = <FileTypeFilledIcon/>;
 
 class BasicSubject {
     constructor(attrs = {}) {
@@ -147,7 +144,7 @@ export class DataTypeSubject extends BasicSubject {
         ).pipe(
             map(
                 ([dataType, config]) => config.icon || (
-                    dataType._type === FILE_TYPE ? fileDataTypeIcon : dataTypeIcon
+                    dataType._type === FILE_TYPE ? fileTypeIcon : documentTypeIcon
                 ))
         );
     }
@@ -236,7 +233,7 @@ export class RecordSubject extends BasicSubject {
                     return fileIcon;
                 }
 
-                return itemIcon;
+                return documentIcon;
             })
         );
     }

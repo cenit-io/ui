@@ -24,6 +24,7 @@ const LogoutURL = `${Config.cenitHost}/users/sign_out`;
 const AuthorizationService = {
 
     authorize: () => {
+        localStorage.clear();
         const state = Random.string();
         localStorage.setItem(state, window.location);
         window.location = `${AuthorizeURL}&state=${state}`;
