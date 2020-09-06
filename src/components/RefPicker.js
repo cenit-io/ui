@@ -11,7 +11,7 @@ import {
 } from "@material-ui/core";
 import Random from "../util/Random";
 import '../common/FlexBox.css';
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 import { switchMap, delay } from "rxjs/operators";
 import { of, zip } from "rxjs";
 import Pagination from "@material-ui/lab/Pagination";
@@ -42,7 +42,7 @@ const useStyles = makeStyles(theme => ({
 
 function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder, dataType, onPick, anchor, baseSelector }) {
 
-    const [state, setState] = useReducer(reducer, {
+    const [state, setState] = useReducer(spreadReducer, {
         query: null,
         page: 1,
         total_pages: 0,

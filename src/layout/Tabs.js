@@ -8,7 +8,7 @@ import IconButton from '@material-ui/core/IconButton/index';
 import CloseIcon from '@material-ui/icons/Clear';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 import Subjects, { NavSubject, TabsSubject } from "../services/subjects";
 import ConfigService from "../services/ConfigService";
 
@@ -70,7 +70,7 @@ const useStyles = makeStyles(theme => ({
 export default function NavTabs({ docked, width }) {
     const classes = useStyles();
     const theme = useTheme();
-    const [state, setState] = useReducer(reducer, {
+    const [state, setState] = useReducer(spreadReducer, {
         tabs: [],
         tabIndex: 0
     });

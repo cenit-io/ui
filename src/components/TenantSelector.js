@@ -1,12 +1,12 @@
 import React, { useEffect, useReducer } from 'react';
 import API from "../services/ApiService";
 import RecordSelector from "./RecordSelector";
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 
 const TenantTypeSelector = { namespace: '""', name: 'Account' };
 
 function TenantSelector({ inputClasses, onSelect, readOnly }) {
-    const [state, setState] = useReducer(reducer, {
+    const [state, setState] = useReducer(spreadReducer, {
         tenant: { name: 'Loading...' },
         disabled: true
     });

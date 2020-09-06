@@ -1,8 +1,5 @@
-import React, { useEffect, useReducer, useState } from 'react';
-import { FormControl, IconButton, InputAdornment, InputLabel } from "@material-ui/core";
-import ClearIcon from "@material-ui/icons/Clear";
+import React, { useEffect, useReducer } from 'react';
 import Random from "../util/Random";
-import FilledInput from "@material-ui/core/FilledInput";
 import { Failed } from "../common/Symbols";
 
 const Actions = Object.freeze({
@@ -144,6 +141,6 @@ const reactiveControlFor = Control => function (props) {
                      action: Actions.Focus
                  })}/>
     );
-}
+};
 
 export default reactiveControlFor;

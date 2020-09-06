@@ -12,6 +12,7 @@ import NumericControl from "./NumericControl";
 import IntegerControl from "./IntegerControl";
 import StringCodeControl from "./StringCodeControl";
 import JsonControl from "./JsonControl";
+import spreadReducer from "../common/spreadReducer";
 
 function controlComponentFor(property) {
     switch (property.type) {
@@ -67,13 +68,8 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-
-function reducer(state, newState) {
-    return { ...state, ...newState };
-}
-
 function PropertyControl(props) {
-    const [state, setState] = useReducer(reducer, {});
+    const [state, setState] = useReducer(spreadReducer, {});
 
     const { errors, property, onChange } = props;
     const { schema, controlErrors } = state;

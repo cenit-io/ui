@@ -1,5 +1,5 @@
-import React, { useEffect, useReducer, useRef } from 'react';
-import reducer from "../common/reducer";
+import React, { useEffect, useReducer } from 'react';
+import spreadReducer from "../common/spreadReducer";
 import Loading from "./Loading";
 import { fade, makeStyles, useTheme } from "@material-ui/core/styles";
 import clsx from "clsx";
@@ -10,7 +10,6 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import List from "@material-ui/core/List";
 import Random from "../util/Random";
-import Particles from 'react-tsparticles';
 import Typography from "@material-ui/core/Typography";
 import Search from "./Search";
 import { DataTypeSelector } from "../layout/AppBar";
@@ -68,9 +67,9 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-export default function ({ subject, width, height }) {
+export default function ({ subject, height }) {
 
-    const [state, setState] = useReducer(reducer, {});
+    const [state, setState] = useReducer(spreadReducer, {});
     const classes = useStyles();
     const theme = useTheme();
 
@@ -102,7 +101,7 @@ export default function ({ subject, width, height }) {
         return <Loading/>;
     }
 
-    const subjectFor = ({ $ref }) => DataType.find($ref)
+    const subjectFor = ({ $ref }) => DataType.find($ref);
 
     const handleSelect = item => () => setState({ item });
 

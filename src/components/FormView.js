@@ -3,7 +3,7 @@ import ObjectControl from "./ObjectControl";
 import { makeStyles, useTheme } from "@material-ui/core";
 import { catchError, switchMap, tap, map } from "rxjs/operators";
 import { of } from "rxjs";
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 import zzip from "../util/zzip";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
@@ -29,7 +29,7 @@ const useStyles = makeStyles(theme => ({
 
 const FormView = ({ dataType, width, height, value, _type, onChange, disabled, onStack, rootId, readOnly, submitter, onSubmitDone }) => {
 
-    const [state, setState] = useReducer(reducer, {});
+    const [state, setState] = useReducer(spreadReducer, {});
     const classes = useStyles();
     const theme = useTheme();
 

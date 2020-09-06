@@ -5,11 +5,11 @@ import EditIcon from '@material-ui/icons/Edit';
 import ClearIcon from '@material-ui/icons/Clear';
 import RefPicker from "./RefPicker";
 import { map } from "rxjs/operators";
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 
 function RefOneControl({ title, value, property, disabled, readOnly, onChange, onDelete, onStack, config }) {
 
-    const [state, setState] = useReducer(reducer, {
+    const [state, setState] = useReducer(spreadReducer, {
         text: null
     });
 

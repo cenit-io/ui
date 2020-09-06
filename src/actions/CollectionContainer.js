@@ -16,7 +16,7 @@ import Random from "../util/Random";
 import { DataType } from "../services/DataTypeService";
 import { RecordSubject } from "../services/subjects";
 import { of } from "rxjs";
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 import FrezzerLoader from "../components/FrezzerLoader";
 
 
@@ -33,7 +33,7 @@ const actionContainerStyles = makeStyles(theme => ({
 }));
 
 function CollectionContainer({ docked, subject, height, width, onSubjectPicked }) {
-    const [state, setState] = useReducer(reducer, {
+    const [state, setState] = useReducer(spreadReducer, {
         selectedItems: [],
         actionKey: Index.key,
         actionComponentKey: Random.string()

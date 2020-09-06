@@ -1,7 +1,6 @@
 import React, { useEffect, useReducer, useRef } from 'react';
-import { StringValidator } from "./StringControl";
 import CodeMirrorControl from "./CodeMirrorControl";
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 import scriptLoader from 'react-async-script-loader';
 import { Key } from "../common/Symbols";
 import Random from "../util/Random";
@@ -28,7 +27,7 @@ const autoHeightFor = json => !json || json.split(/\r\n|\r|\n/).length < 20;
 const jsonStringify = value => JSON.stringify(value, null, 2);
 
 function JsonControl(props) {
-    const [state, setState] = useReducer(reducer, {
+    const [state, setState] = useReducer(spreadReducer, {
             json: '',
             key: Random.string(),
             css: customCSS,
@@ -37,7 +36,7 @@ function JsonControl(props) {
         })
     ;
 
-    const { value, onChange, onError, errors } = props;
+    const { value, onChange, onError } = props;
 
     const propValue = useRef(value);
     const error = useRef(null);

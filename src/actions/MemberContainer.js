@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import Loading from '../components/Loading';
 import { Chip, Toolbar, Typography, useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
@@ -6,17 +6,13 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
 import Show from "./Show";
 import Random from "../util/Random";
-import { DataType } from "../services/DataTypeService";
-import { DataTypeId, TitleSubject } from "../common/Symbols";
 import { switchMap, tap } from "rxjs/operators";
-import zzip from "../util/zzip";
 import { of } from "rxjs";
-import copySymbols from "../util/cpSymbols";
 import ChevronRight from "@material-ui/icons/ChevronRight";
 import ActionPicker from "./ActionPicker";
 import Alert from "./Alert";
 import { DataTypeSubject } from "../services/subjects";
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 import Skeleton from "@material-ui/lab/Skeleton";
 
 
@@ -43,7 +39,7 @@ const actionContainerStyles = makeStyles(theme => ({
 }));
 
 function MemberContainer({ docked, subject, height, width, onSubjectPicked, onClose, updateItem }) {
-    const [state, setState] = useReducer(reducer, {
+    const [state, setState] = useReducer(spreadReducer, {
         actionKey: Show.key,
         actionComponentKey: Random.string()
     });
@@ -79,7 +75,7 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
             }
         });
         return () => subscription.unsubscribe();
-    }, [subject])
+    }, [subject]);
 
     useEffect(() => {
         const s1 = subject.title().subscribe(

@@ -9,13 +9,13 @@ import ErrorMessages from "./ErrorMessages";
 import { LinearProgress } from "@material-ui/core";
 import React, { useEffect, useReducer } from "react";
 import { FETCHED } from "../common/Symbols";
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 import { DataTypeSubject } from "../services/subjects";
 import { tap } from "rxjs/internal/operators/tap";
 import Group from "./Group";
 
 function ObjectControl(props) {
-    const [state, setState] = useReducer(reducer, {});
+    const [state, setState] = useReducer(spreadReducer, {});
 
     const { schemaResolver, properties, schema, config } = state;
 

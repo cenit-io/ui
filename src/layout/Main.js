@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { makeStyles, useMediaQuery } from "@material-ui/core";
 import AppBar, { appBarHeight } from './AppBar';
 import Navigation, { navigationWidth } from "./Navigation";
@@ -7,10 +7,10 @@ import AuthorizationService from "../services/AuthorizationService";
 import Drawer from "../components/Drawer";
 import clsx from "clsx";
 import Tabs from "./Tabs";
-import reducer from "../common/reducer";
+import spreadReducer from "../common/spreadReducer";
 import ConfigService from "../services/ConfigService";
 import Loading from "../components/Loading";
-import Subjects, { DataTypeSubject, NavSubject, TabsSubject } from "../services/subjects";
+import Subjects, { NavSubject } from "../services/subjects";
 import { delay } from "rxjs/operators";
 
 const useStyles = makeStyles(theme => ({
@@ -36,7 +36,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Main = () => {
-    const [state, setState] = useReducer(reducer, {
+    const [state, setState] = useReducer(spreadReducer, {
         docked: localStorage.getItem('docked') !== 'false',
         disabled: ConfigService.isDisabled()
     });

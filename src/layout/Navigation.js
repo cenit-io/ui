@@ -7,16 +7,15 @@ import ListItemText from '@material-ui/core/ListItemText';
 import HistoryIcon from '@material-ui/icons/History';
 import { makeStyles, useTheme } from "@material-ui/core";
 import Loading from "../components/Loading";
-import { delay } from "rxjs/operators";
 import Skeleton from "@material-ui/lab/Skeleton";
 import ConfigService from "../services/ConfigService";
-import reducer from "../common/reducer";
-import Subjects, { NavSubject, TabsSubject } from "../services/subjects";
+import spreadReducer from "../common/spreadReducer";
+import Subjects, { TabsSubject } from "../services/subjects";
 import Collapse from "@material-ui/core/Collapse";
 import zzip from "../util/zzip";
 
 function NavItem({ subject, onClick }) {
-    const [state, setState] = useReducer(reducer, {});
+    const [state, setState] = useReducer(spreadReducer, {});
     const theme = useTheme();
 
     const { icon, title } = state;
@@ -99,13 +98,13 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Navigation = ({ docked, setDocked, xs }) => {
-    const [state, setState] = useReducer(reducer, {
+    const [state, setState] = useReducer(spreadReducer, {
         navigation: ConfigService.state().navigation || [],
         history: true
     });
     const classes = useStyles();
 
-    const { navigation, disabled, over, history } = state;
+    const { navigation, over, history } = state;
 
     useEffect(() => {
         const subscription = ConfigService.navigationChanges().subscribe(
