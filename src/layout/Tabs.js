@@ -44,15 +44,18 @@ class ClosableComponent extends React.Component {
 
             { over } = this.state;
 
-        return <div onMouseEnter={this.setOver(true)} onMouseLeave={this.setOver(false)}>
-            <Button onClick={onClick}>{children}</Button>
+        return (
+            <div onMouseMove={this.setOver(true)}
+                 onMouseLeave={this.setOver(false)}>
+                <Button onClick={onClick}>{children}</Button>
 
-            <IconButton aria-label="Close" size="small"
-                        style={{ visibility: over ? 'visible' : 'hidden' }}
-                        onClick={onClose}>
-                <CloseIcon fontSize="inherit"/>
-            </IconButton>
-        </div>;
+                <IconButton aria-label="Close" size="small"
+                            style={{ visibility: over ? 'visible' : 'hidden' }}
+                            onClick={onClose}>
+                    <CloseIcon fontSize="inherit"/>
+                </IconButton>
+            </div>
+        );
     }
 }
 
