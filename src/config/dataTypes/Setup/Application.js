@@ -3,5 +3,10 @@ import ApplicationFilledIcon from "../../../icons/ApplicationFilledIcon";
 
 export default {
     title: 'Application',
-    icon: <ApplicationFilledIcon/>
+    icon: <ApplicationFilledIcon/>,
+    actions: {
+        index: {
+            fields: ['namespace', 'name', 'updated_at']
+        }
+    }
 };

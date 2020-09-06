@@ -69,6 +69,9 @@ export default {
         edit: {
             fields: ['id', ...fields],
             viewport
+        },
+        index: {
+            fields: ['namespace', 'name', 'slug', 'discard_additional_properties', 'updated_at']
         }
     },
     icon: <DocumentTypesFilledIcon/>

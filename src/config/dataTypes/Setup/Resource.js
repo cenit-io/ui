@@ -2,11 +2,10 @@ import React from 'react';
 import ConnectorFilledIcon from "../../../icons/ConnectorFilledIcon";
 
 export default {
-    title: 'Connection',
-    icon: <ConnectorFilledIcon/>,
+    title: 'Resource',
     actions: {
         index: {
-            fields: ['namespace', 'name', 'url', 'authorization', 'number', 'token', 'updated_at']
+            fields: ['namespace', 'name', 'path', 'description', 'operations', 'updated_at']
         }
     }
 };

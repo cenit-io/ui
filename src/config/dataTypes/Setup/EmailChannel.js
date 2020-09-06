@@ -3,5 +3,10 @@ import EmailChannelsFilledIcon from "../../../icons/EmailChannelsFilledIcon";
 
 export default {
     title: 'EMail Channel',
-    icon: <EmailChannelsFilledIcon/>
+    icon: <EmailChannelsFilledIcon/>,
+    actions: {
+        index: {
+            fields: ['namespace', 'name', 'updated_at']
+        }
+    }
 };

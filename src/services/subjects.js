@@ -168,7 +168,7 @@ export class DataTypeSubject extends BasicSubject {
                         config = this[Config];
                         if (!config) {
                             this[Config] = config = from(
-                                import(`../config/dataTypes/${dt.namespace}/${dt.name}.js`)
+                                import(`../config/dataTypes/${dt.namespace.split('::').join('/')}/${dt.name}.js`)
                             ).pipe(
                                 map(mod => mod.default),
                                 catchError(e => of({})),

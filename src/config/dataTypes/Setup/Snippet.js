@@ -3,5 +3,10 @@ import SnippetFilledIcon from "../../../icons/SnippetFilledIcon";
 
 export default {
     title: 'Snippet',
-    icon: <SnippetFilledIcon/>
+    icon: <SnippetFilledIcon/>,
+    actions: {
+        index: {
+            fields: ['namespace', 'name', 'description', 'type', 'updated_at']
+        }
+    }
 };

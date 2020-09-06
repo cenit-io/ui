@@ -12,6 +12,30 @@ import Hash from 'object-hash';
 
 const isSimpleSchema = schema => ['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1;
 
+function injectCommonProperties(schema) {
+    const properties = schema?.properties;
+    if (properties) {
+        if (!properties.created_at) {
+            properties.created_at = {
+                type: 'string',
+                format: 'date-time',
+                edi: {
+                    discard: true
+                }
+            }
+        }
+        if (!properties.updated_at) {
+            properties.updated_at = {
+                type: 'string',
+                format: 'date-time',
+                edi: {
+                    discard: true
+                }
+            }
+        }
+    }
+}
+
 export class DataType {
 
     static dataTypes = {}; // TODO Store data types cache using a pair key tenant.id -> dataType.id
@@ -30,7 +54,11 @@ export class DataType {
             }).pipe(
                 tap(dataType => {
                     if (dataType) {
-                        if (dataType._type === JSON_TYPE) delete dataType.schema;
+                        if (dataType._type === JSON_TYPE) {
+                            delete dataType.schema;
+                        } else {
+                            injectCommonProperties(dataType.schema);
+                        }
                         if (dataType._type === FILE_TYPE) {
                             dataType.__proto__ = new FileDataType();
                         } else {
@@ -113,6 +141,7 @@ export class DataType {
         if (!this.gettingSchema) {
             this.gettingSchema = API.get('setup', 'data_type', this.id, 'digest', 'schema').pipe(
                 tap(schema => {
+                    injectCommonProperties(schema);
                     this.schema = schema;
                     delete this.gettingSchema;
                 }),
@@ -642,7 +671,9 @@ export class DataType {
                     params,
                     headers: {
                         'X-Template-Options': JSON.stringify({
-                            viewport: '{_id ' + queryProps.map(p => p.name).join(' ') + '}',
+                            viewport: opts.viewport || (
+                                '{_id ' + (opts.viewportProps || queryProps).map(p => p.name).join(' ') + '}'
+                            ),
                             polymorphic: true
                         }),
                         'X-Query-Options': JSON.stringify({ sort }),
@@ -861,6 +892,19 @@ export class Property {
 
     constructor(attrs = {}) {
         Object.keys(attrs).forEach(attr => this[attr] = attrs[attr]);
+    }
+
+    viewportToken() {
+        return this.isSimple().pipe(
+            switchMap(simple => {
+                if (simple) {
+                    return of(this.name);
+                }
+                return this.dataType.titleViewPort('_id').pipe(
+                    map(viewport => `${this.name} ${viewport}`)
+                );
+            })
+        );
     }
 
     getSchema = () => {

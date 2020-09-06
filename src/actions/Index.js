@@ -82,9 +82,10 @@ const MinItemsPerPage = 5;
 
 const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
-function Index({ dataType, height, selectedItems, onSelect }) {
+function Index({ dataType, subject, height, selectedItems, onSelect }) {
 
     const [props, setProps] = useState(null);
+    const [itemsViewport, setItemsViewport] = useState(null);
     const [data, setData] = useState(null);
     const [dense, setDense] = useState(false);
     const [limit, setLimit] = useState(MinItemsPerPage);
@@ -97,12 +98,28 @@ function Index({ dataType, height, selectedItems, onSelect }) {
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
     useEffect(() => {
-        const subscription = dataType.queryProps().pipe(
+        const subscription = subject.config().pipe(
             switchMap(
-                queryProps => zzip(...queryProps.map(prop => prop.getTitle())).pipe(
+                config => {
+                    const configFields = config.actions?.index?.fields;
+                    if (configFields) {
+                        return dataType.properties().pipe(
+                            map(
+                                properties => configFields.map(
+                                    field => properties[field]
+                                )
+                            )
+                        );
+                    }
+
+                    return dataType.queryProps();
+                }
+            ),
+            switchMap(
+                props => zzip(...props.map(prop => prop.getTitle())).pipe(
                     map(
                         titles => titles.map(
-                            (title, index) => ({ title, prop: queryProps[index] })
+                            (title, index) => ({ title, prop: props[index] })
                         )
                     )
                 )
@@ -113,15 +130,29 @@ function Index({ dataType, height, selectedItems, onSelect }) {
     }, [dataType]);
 
     useEffect(() => {
-        const subscription = dataType.find('', {
-            limit: limit,
-            page: page,
-            sort: { _id: -1 },
-            props: dataType.queryProps()
-        }).subscribe(data => setData(data));
+        if (props) {
+            const subscription = zzip(
+                ...props.map(({ prop }) => prop.viewportToken())
+            ).subscribe(
+                tokens => setItemsViewport(`{_id ${tokens.join(' ')}}`)
+            );
+            return () => subscription.unsubscribe();
+        }
+    }, [props]);
 
-        return () => subscription.unsubscribe();
-    }, [limit, page, dataType]);
+    useEffect(() => {
+        if (itemsViewport) {
+            const subscription = dataType.find('', {
+                limit: limit,
+                page: page,
+                sort: { _id: -1 },
+                props: dataType.queryProps(),
+                viewport: itemsViewport
+            }).subscribe(data => setData(data));
+
+            return () => subscription.unsubscribe();
+        }
+    }, [limit, page, dataType, itemsViewport]);
 
     const handleRequestSort = (event, property) => {
         const isDesc = orderBy === property && order === 'desc';
@@ -184,7 +215,7 @@ function Index({ dataType, height, selectedItems, onSelect }) {
 
     let tableHeight = height;
 
-    if (!props || !data) {
+    if (!props || !data || !itemsViewport) {
         return <Loading height={`calc(${tableHeight})`}/>;
     }
 
