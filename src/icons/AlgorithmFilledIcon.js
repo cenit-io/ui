@@ -1,14 +1,14 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function AlgorithmFilledIcon() {
+export default function AlgorithmFilledIcon(props) {
   return (
-    <SvgIcon>
-      <rect x="8.64" y="0.8" width="6.71" height="6.71" rx="0.74"/>
-      <path d="M3.52,17.75v-3.9A1.44,1.44,0,0,1,5,12.41h14.1a1.44,1.44,0,0,1,1.43,1.44v3.9"/>
-      <rect x="9.31" y="18" width="5.34" height="5.23" rx="0.79"/>
-      <rect x="17.91" y="18" width="5.34" height="5.23" rx="0.79"/>
-      <rect x="0.75" y="18" width="5.34" height="5.23" rx="0.79"/>
+    <SvgIcon {...props}>
+      <rect x="2" y="15.78" width="8.22" height="8.22" rx="1.22"/>
+      <rect x="13.78" y="15.78" width="8.22" height="8.22" rx="1.22"/>
+      <path d="M12,13.16a.75.75,0,0,1-.75-.75V7.79a.75.75,0,1,1,1.5,0v4.62A.75.75,0,0,1,12,13.16Z"/>
+      <rect x="7.9" y="0.06" width="8.21" height="8.21" rx="1.22"/>
+      <path d="M17.89,17.28a.75.75,0,0,1-.75-.75V14a.85.85,0,0,0-.85-.85H7.71a.85.85,0,0,0-.85.85v2.52a.75.75,0,0,1-1.5,0V14a2.35,2.35,0,0,1,2.35-2.35h8.58A2.35,2.35,0,0,1,18.64,14v2.52A.74.74,0,0,1,17.89,17.28Z"/>
     </SvgIcon>
   );
 }

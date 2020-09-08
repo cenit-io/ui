@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function WebhookIcon() {
+export default function WebhookIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <path d="M12,7.59a2.51,2.51,0,1,1,2.51-2.5A2.5,2.5,0,0,1,12,7.59Zm0-3.51a1,1,0,1,0,1,1A1,1,0,0,0,12,4.08Z"/>
       <path d="M5,21.42a2.51,2.51,0,1,1,2.51-2.5A2.51,2.51,0,0,1,5,21.42Zm0-3.51a1,1,0,1,0,1,1A1,1,0,0,0,5,17.91Z"/>
       <path d="M19,21.42a2.51,2.51,0,1,1,2.51-2.5A2.51,2.51,0,0,1,19,21.42Zm0-3.51a1,1,0,1,0,1,1A1,1,0,0,0,19,17.91Z"/>

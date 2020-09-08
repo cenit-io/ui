@@ -1,7 +1,6 @@
 import React from 'react'
 import { DataTypeSubject } from "../services/subjects";
 import DataIcon from "../icons/DataIcon";
-import WorkflowsIcon from "../icons/WorkflowsIcon";
 import ConfigurationIcon from "../icons/ConfigurationIcon";
 import FlowsIcon from "../icons/FlowsIcon";
 import NotificationsIcon from "../icons/NotificationsIcon";
@@ -32,6 +31,7 @@ import AuthorizationIcon from "../icons/AuthorizationIcon";
 import AccessGrantIcon from "../icons/AccessGrantIcon";
 import ProviderIcon from "../icons/ProviderIcon";
 import OauthScopesIcon from "../icons/OauthScopesIcon";
+import WorkflowIcon from "../icons/WorkflowIcon";
 
 export default {
     groups: [
@@ -61,7 +61,7 @@ export default {
         },
         {
             title: 'Workflow',
-            IconComponent: WorkflowsIcon,
+            IconComponent: WorkflowIcon,
             items: [
                 {
                     type: DataTypeSubject.type,

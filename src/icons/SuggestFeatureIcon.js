@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function SuggestFeatureIcon() {
+export default function SuggestFeatureIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <path d="M18.15,24H5.82a3.38,3.38,0,0,1-3.37-3.38V8.27A3.38,3.38,0,0,1,5.82,4.89H8.28V3.75a3.72,3.72,0,0,1,7.44,0V4.89h2.43a3.39,3.39,0,0,1,3.38,3.38v3.19a.75.75,0,0,1-.75.75h-1.9a2.22,2.22,0,0,0,0,4.44h1.9a.75.75,0,0,1,.75.75v3.19A3.39,3.39,0,0,1,18.15,24ZM5.82,6.39A1.88,1.88,0,0,0,4,8.27V20.59a1.88,1.88,0,0,0,1.87,1.88H18.15A1.88,1.88,0,0,0,20,20.59V18.15H18.88a3.72,3.72,0,0,1,0-7.44H20V8.27a1.88,1.88,0,0,0-1.88-1.88H15a.74.74,0,0,1-.75-.75V3.75a2.22,2.22,0,1,0-4.44,0V5.64A.74.74,0,0,1,9,6.39Z"/>
     </SvgIcon>
   );

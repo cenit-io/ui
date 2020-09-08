@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function TransformationFilledIcon() {
+export default function TransformationFilledIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <path d="M.75,9.86H13.12a1.22,1.22,0,0,1,1.22,1.22V23.25a0,0,0,0,1,0,0H2A1.22,1.22,0,0,1,.75,22V9.86A0,0,0,0,1,.75,9.86Z"/>
       <path d="M14.34,24H2a2,2,0,0,1-2-2V9.86a.76.76,0,0,1,.75-.75H13.12a2,2,0,0,1,2,2V23.25A.76.76,0,0,1,14.34,24ZM1.5,10.61V22A.47.47,0,0,0,2,22.5H13.59V11.08a.47.47,0,0,0-.47-.47Z"/>
       <path d="M14.33,1.5H9.38a.75.75,0,0,1,0-1.5h4.95a.75.75,0,0,1,.75.75A.74.74,0,0,1,14.33,1.5Z"/>

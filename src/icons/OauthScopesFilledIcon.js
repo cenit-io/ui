@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function OauthScopesFilledIcon() {
+export default function OauthScopesFilledIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <path d="M12,7.93a.76.76,0,0,1-.75-.75V.75a.75.75,0,0,1,1.5,0V7.18A.76.76,0,0,1,12,7.93Z"/>
       <path d="M21.75,12.75c0-.25,0-.5,0-.75s0-.5,0-.75H17a4.65,4.65,0,0,1,.08.75,4.65,4.65,0,0,1-.08.75Z"/>
       <path d="M6.94,12A4.65,4.65,0,0,1,7,11.25H2.25c0,.25,0,.5,0,.76s0,.5,0,.75H7A4.65,4.65,0,0,1,6.94,12Z"/>

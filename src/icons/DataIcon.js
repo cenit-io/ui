@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function DataIcon() {
+export default function DataIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <circle cx="5.9" cy="4.66" r="1.25"/>
       <circle cx="5.9" cy="12.01" r="1.25"/>
       <circle cx="5.9" cy="19.35" r="1.25"/>

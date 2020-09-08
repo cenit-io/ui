@@ -15,9 +15,9 @@ import useTheme from "@material-ui/core/styles/useTheme";
 import UserCard from "../components/UserCard";
 import ConfigService from "../services/ConfigService";
 import { DataTypeSubject, MenuSubject, TabsSubject } from "../services/subjects";
-import { MenuBook } from "@material-ui/icons";
 import Search from "../components/Search";
 import MenuIcon from "../icons/MenuIcon";
+import QuickAccessIcon from "../icons/QuickAccessIcon";
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
@@ -60,7 +60,7 @@ const useStyles = makeStyles(theme => ({
             width: 200,
         },
     },
-    menuBook: {
+    quickAccess: {
         marginLeft: theme.spacing(2)
     }
 }));
@@ -100,7 +100,7 @@ export default function ({ onToggle, idToken, disabled }) {
         }
     };
 
-    const handleMenuBook = () => TabsSubject.next(MenuSubject.instance().key);
+    const handleQuickAccess = () => TabsSubject.next(MenuSubject.instance().key);
 
     let menu;
 
@@ -141,11 +141,11 @@ export default function ({ onToggle, idToken, disabled }) {
                     Admin
                 </Typography>
             }
-            <IconButton className={classes.menuBook}
+            <IconButton className={classes.quickAccess}
                         color="inherit"
                         disabled={disabled}
-                        onClick={handleMenuBook}>
-                <MenuBook/>
+                        onClick={handleQuickAccess}>
+                <QuickAccessIcon/>
             </IconButton>
             <Search dataTypeSelector={DataTypeSelector}
                     onSelect={({ record }) => handleDataTypeSelected(record)}

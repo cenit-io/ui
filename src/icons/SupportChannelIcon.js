@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function SupportChannelIcon() {
+export default function SupportChannelIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <path d="M12,24A12,12,0,1,1,24,12,12,12,0,0,1,12,24ZM12,1.53A10.47,10.47,0,1,0,22.46,12,10.48,10.48,0,0,0,12,1.53Z"/>
       <circle cx="11.99" cy="12" r="4.62"/>
       <path d="M12,17.37A5.37,5.37,0,1,1,17.36,12,5.38,5.38,0,0,1,12,17.37Zm0-9.24A3.87,3.87,0,1,0,15.86,12,3.88,3.88,0,0,0,12,8.13Z"/>

@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function GatewayFilledIcon() {
+export default function GatewayFilledIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <path d="M21.71,0H2.29A2.3,2.3,0,0,0,0,2.29V8.1a2.29,2.29,0,0,0,2.29,2.29H21.71A2.29,2.29,0,0,0,24,8.1V2.29A2.3,2.3,0,0,0,21.71,0ZM6.06,7A1.75,1.75,0,1,1,7.81,5.2,1.76,1.76,0,0,1,6.06,7Z"/>
       <rect x="9.25" y="17.71" width="5.51" height="5.51" rx="2.75"/>
       <path d="M12,24a3.51,3.51,0,1,1,3.5-3.51A3.51,3.51,0,0,1,12,24Zm0-5.51a2,2,0,1,0,2,2A2,2,0,0,0,12,18.46Z"/>

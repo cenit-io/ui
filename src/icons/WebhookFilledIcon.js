@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function WebhookFilledIcon() {
+export default function WebhookFilledIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <circle cx="12" cy="5.06" r="1.76"/>
       <circle cx="5.04" cy="18.97" r="1.76"/>
       <circle cx="18.96" cy="18.97" r="1.76"/>

@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function ConfigurationIcon() {
+export default function ConfigurationIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <path d="M23.23,4.58H19.11a.75.75,0,0,1,0-1.5h4.12a.75.75,0,0,1,0,1.5Z"/>
       <path d="M13.88,4.58H.77a.75.75,0,1,1,0-1.5H13.88a.75.75,0,0,1,0,1.5Z"/>
       <path d="M23.23,20.92H19.11a.75.75,0,0,1,0-1.5h4.12a.75.75,0,1,1,0,1.5Z"/>

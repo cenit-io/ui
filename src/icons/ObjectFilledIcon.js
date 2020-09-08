@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function ObjectFilledIcon() {
+export default function ObjectFilledIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <ellipse cx="12" cy="3.17" rx="9.47" ry="3.11"/>
       <path d="M21.47,6a.26.26,0,0,0-.4-.23c-1.35.83-4.38,1.94-9.07,1.94S4.28,6.64,2.93,5.81a.26.26,0,0,0-.4.23v3c0,1.72,4.24,3.11,9.47,3.11s9.47-1.39,9.47-3.11Z"/>
       <path d="M21.47,11.93a.26.26,0,0,0-.4-.23c-1.35.83-4.38,1.94-9.07,1.94S4.28,12.53,2.93,11.7a.26.26,0,0,0-.4.23v3c0,1.72,4.24,3.11,9.47,3.11s9.47-1.39,9.47-3.11Z"/>

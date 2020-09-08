@@ -1,9 +1,9 @@
 import React from 'react';
 import SvgIcon from "@material-ui/core/SvgIcon";
 
-export default function DashboardIcon() {
+export default function DashboardIcon(props) {
   return (
-    <SvgIcon>
+    <SvgIcon {...props}>
       <path d="M23.24,17.39a.74.74,0,0,1-.75-.75,10.49,10.49,0,0,0-21,0,.74.74,0,0,1-.75.75A.75.75,0,0,1,0,16.64a12,12,0,0,1,24,0A.75.75,0,0,1,23.24,17.39Z"/>
       <circle cx="12" cy="16.64" r="1.95"/>
       <path d="M12,19.34a2.7,2.7,0,1,1,2.7-2.7A2.7,2.7,0,0,1,12,19.34Zm0-3.9a1.2,1.2,0,1,0,1.2,1.2A1.2,1.2,0,0,0,12,15.44Z"/>
