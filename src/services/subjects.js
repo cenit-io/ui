@@ -1,7 +1,6 @@
 import { DataType, FILE_TYPE } from "./DataTypeService";
 import { filter, switchMap, map, catchError, tap } from "rxjs/operators";
 import { of, Subject, from } from "rxjs";
-import MenuBookIcon from '@material-ui/icons/MenuBook';
 import React from "react";
 import Random from "../util/Random";
 import ConfigService from "./ConfigService";
@@ -18,8 +17,9 @@ import FileTypesIcon from "../icons/FileTypesIcon";
 import FileTypeFilledIcon from "../icons/FileTypeFilledIcon";
 import FileFilledIcon from "../icons/FileFilledIcon";
 import DocumentTypeFilledIcon from "../icons/DocumentTypeFilledIcon";
+import QuickAccessFilledIcon from "../icons/QuickAccessFilledIcon";
 
-const menuIcon = <MenuBookIcon/>;
+const menuIcon = <QuickAccessFilledIcon/>;
 const fileIcon = <FileFilledIcon/>;
 const documentIcon = <DocumentTypeRecordsFilledIcon/>;
 const documentTypeIcon = <DocumentTypeFilledIcon/>;
@@ -168,7 +168,7 @@ export class DataTypeSubject extends BasicSubject {
                         config = this[Config];
                         if (!config) {
                             this[Config] = config = from(
-                                import(`../config/dataTypes/${dt.namespace.split('::').join('/')}/${dt.name}.js`)
+                                import(`../config/dataTypes/${(dt.namespace || '').split('::').join('/')}/${dt.name}.js`)
                             ).pipe(
                                 map(mod => mod.default),
                                 catchError(e => of({})),
@@ -275,7 +275,7 @@ export class MenuSubject extends BasicSubject {
     }
 
     titleObservable() {
-        return of('Menu');
+        return of('Quick Access');
     }
 
     navIcon() {
