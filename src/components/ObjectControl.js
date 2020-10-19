@@ -69,33 +69,8 @@ function ObjectControl(props) {
                     }
 
                     return getDataType().visibleProps();
-                }),
-                switchMap(props =>
-                    zzip(...props.map(
-                        prop => (prop && zzip(prop.isReferenced(), prop.isMany(), prop.getSchema(), prop.isModel()).pipe(
-                                map(
-                                    ([isRef, isMany, propSch, isModel]) => {
-                                        if (isModel) {
-                                            if (isRef) { // Referenced
-                                                if (isMany) { // Many
-                                                    prop.type = 'refMany';
-                                                } else { // One
-                                                    prop.type = 'refOne';
-                                                }
-                                            } else if (isMany) {
-                                                prop.type = 'embedsMany';
-                                            } else {
-                                                prop.type = 'embedsOne';
-                                            }
-                                        } else {
-                                            prop.type = propSch['type'];
-                                        }
-                                        return prop;
-                                    }
-                                ))
-                        ) || of(prop))
-                    )
-                )).subscribe(properties => setState({ properties }));
+                })
+            ).subscribe(properties => setState({ properties }));
             return () => subscription.unsubscribe();
         }
     }, [schema]);

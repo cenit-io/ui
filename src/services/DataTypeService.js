@@ -177,6 +177,34 @@ export class DataType {
                     )
                 )
             ),
+            switchMap(props => zzip(
+                ...props.map(prop => (
+                    prop && zzip(
+                        prop.isReferenced(),
+                        prop.isMany(),
+                        prop.getSchema(),
+                        prop.isModel()
+                    ).pipe(map(([isRef, isMany, propSch, isModel]) => {
+                            if (isModel) {
+                                if (isRef) { // Referenced
+                                    if (isMany) { // Many
+                                        prop.type = 'refMany';
+                                    } else { // One
+                                        prop.type = 'refOne';
+                                    }
+                                } else if (isMany) {
+                                    prop.type = 'embedsMany';
+                                } else {
+                                    prop.type = 'embedsOne';
+                                }
+                            } else {
+                                prop.type = propSch['type'];
+                            }
+                            return prop;
+                        }
+                    ))
+                ) || of(prop))
+            )),
             map(
                 properties => this.propertiesHash = properties.reduce((hash, p) => (hash[p.name] = p) && hash, {})
             )
@@ -461,6 +489,7 @@ export class DataType {
                 }
             ),
             tap(dt => {
+                console.log('->', criteria);
                 ns_hash[ref] = dt;
                 if (dt.namespace !== ns) {
                     ns_hash = this.nss[dt.namespace];

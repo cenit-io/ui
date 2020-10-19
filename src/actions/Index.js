@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import Loading from '../components/Loading';
-import { Checkbox, makeStyles, useMediaQuery, useTheme } from "@material-ui/core";
+import { Checkbox, fade, makeStyles, useMediaQuery, useTheme, withStyles } from "@material-ui/core";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -16,6 +16,89 @@ import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 import Typography from "@material-ui/core/Typography";
 import clsx from "clsx";
+import spreadReducer from "../common/spreadReducer";
+import StringViewer from "../viewers/StringViewer";
+import BooleanViewer from "../viewers/BooleanViewer";
+import DateTimeViewer from "../viewers/DateTimeViewer";
+import RefOneViewer from "../viewers/RefOneViewer";
+import RefManyViewer from "../viewers/RefManyViewer";
+import EmbedsOneViewer from "../viewers/EmbedsOneViewer";
+import EmbedsManyViewer from "../viewers/EmbedsManyViewer";
+
+function viewerComponentFor(property, config) {
+    switch (property.type) {
+
+        case 'refOne': return RefOneViewer;
+
+        case 'refMany': return RefManyViewer;
+
+        case 'embedsOne': return EmbedsOneViewer;
+
+        case 'embedsMany': return EmbedsManyViewer;
+
+        case 'boolean':
+            return BooleanViewer;
+
+        case 'string': {
+            switch (property.propertySchema.format) {
+                case 'date-time':
+                case 'time':
+                case 'date':
+                    return DateTimeViewer
+
+                default:
+                    return StringViewer;
+            }
+        }
+
+        default:
+            return StringViewer;
+    }
+}
+
+const StyledTableCell = withStyles((theme) => ({
+    head: {
+        fontWeight: 700,
+        backgroundColor: theme.palette.background.paper
+    },
+    body: {
+        fontSize: 14,
+    },
+}))(TableCell);
+
+const StyledTableRow = withStyles((theme) => ({
+    root: {
+        height: '100%',
+        '& th:first-child': {
+            padding: 0
+        },
+        '& td:first-child': {
+            height: '100%',
+            backgroundColor: theme.palette.background.paper,
+            padding: 0,
+            '& div': {
+                height: '100%',
+                display: 'flex'
+            }
+        },
+        '&:nth-of-type(odd)': {
+            backgroundColor: fade(theme.palette.action.hover, 0.02),
+            '& td:first-child': {
+                '& div': {
+                    backgroundColor: fade(theme.palette.action.hover, 0.02),
+                }
+            }
+        },
+        '&:hover': {
+            '& td:first-child': {
+                '& div': {
+                    background: `${theme.palette.action.hover} !important`
+                }
+            }
+        }
+    },
+}))(TableRow);
+
 
 const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort }) => {
 
@@ -25,42 +108,41 @@ const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelecte
 
     return (
         <TableHead>
-            <TableRow>
-                <TableCell padding="checkbox"
-                           style={{
-                               backgroundColor: "#fff",
-                               position: "sticky",
-                               top: 0,
-                               left: 0,
-                               zIndex: 3
-                           }}>
+            <StyledTableRow>
+                <StyledTableCell padding="checkbox"
+                                 style={{
+                                     backgroundColor: "#fff",
+                                     position: "sticky",
+                                     top: 0,
+                                     left: 0,
+                                     zIndex: 3
+                                 }}>
                     <Checkbox indeterminate={numSelected > 0 && numSelected < rowCount}
                               checked={numSelected === rowCount}
                               onChange={onSelectAllClick}
                               inputProps={{ 'aria-label': 'Select all' }}
                     />
-                </TableCell>
+                </StyledTableCell>
                 {
                     props.map(prop => (
-                        <TableCell key={prop.prop.name}
-                                   align={prop.numeric ? 'right' : 'left'}
-                                   padding={prop.disablePadding ? 'none' : 'default'}
-                                   sortDirection={orderBy === prop.prop.name ? order : false}
-                                   style={{
-                                       backgroundColor: "#fff",
-                                       position: "sticky",
-                                       top: 0,
-                                       zIndex: 1
-                                   }}>
+                        <StyledTableCell key={prop.prop.name}
+                                         align={prop.numeric ? 'right' : 'left'}
+                                         padding={prop.disablePadding ? 'none' : 'default'}
+                                         sortDirection={orderBy === prop.prop.name ? order : false}
+                                         style={{
+                                             position: "sticky",
+                                             top: 0,
+                                             zIndex: 1
+                                         }}>
                             <TableSortLabel active={orderBy === prop.prop.name}
                                             direction={order}
                                             onClick={createSortHandler(prop.prop.name)}>
                                 {prop.title}
                             </TableSortLabel>
-                        </TableCell>
+                        </StyledTableCell>
                     ))
                 }
-            </TableRow>
+            </StyledTableRow>
         </TableHead>
     );
 }
@@ -69,6 +151,9 @@ const useStyles = makeStyles(theme => ({
     root: {
         width: '100%',
         overflow: 'auto',
+    },
+    table: {
+        height: 1
     },
     pagination: {
         height: theme.spacing(7)
@@ -84,23 +169,24 @@ const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
 function Index({ dataType, subject, height, selectedItems, onSelect }) {
 
-    const [props, setProps] = useState(null);
-    const [itemsViewport, setItemsViewport] = useState(null);
-    const [data, setData] = useState(null);
-    const [dense, setDense] = useState(false);
-    const [limit, setLimit] = useState(MinItemsPerPage);
-    const [order, setOrder] = useState('asc');
-    const [orderBy, setOrderBy] = useState('_id');
-    const [page, setPage] = useState(0);
+    const [state, setState] = useReducer(spreadReducer, {
+        limit: MinItemsPerPage,
+        order: 'asc',
+        orderBy: '_id',
+        page: 0
+    });
+
     const classes = useStyles();
     const theme = useTheme();
-
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
+
+    const { props, itemsViewport, data, dense, limit, order, orderBy, page, config } = state;
 
     useEffect(() => {
         const subscription = subject.config().pipe(
             switchMap(
                 config => {
+                    setState({ config });
                     const configFields = config.actions?.index?.fields;
                     if (configFields) {
                         return dataType.properties().pipe(
@@ -112,7 +198,7 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
                         );
                     }
 
-                    return dataType.queryProps();
+                    return dataType.allProperties();
                 }
             ),
             switchMap(
@@ -124,7 +210,7 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
                     )
                 )
             )
-        ).subscribe(props => setProps(props));
+        ).subscribe(props => setState({ props }));
 
         return () => subscription.unsubscribe();
     }, [dataType]);
@@ -134,7 +220,7 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
             const subscription = zzip(
                 ...props.map(({ prop }) => prop.viewportToken())
             ).subscribe(
-                tokens => setItemsViewport(`{_id ${tokens.join(' ')}}`)
+                tokens => setState({ itemsViewport: `{_id ${tokens.join(' ')}}` })
             );
             return () => subscription.unsubscribe();
         }
@@ -148,7 +234,7 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
                 sort: { _id: -1 },
                 props: dataType.queryProps(),
                 viewport: itemsViewport
-            }).subscribe(data => setData(data));
+            }).subscribe(data => setState({ data }));
 
             return () => subscription.unsubscribe();
         }
@@ -156,9 +242,10 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
 
     const handleRequestSort = (event, property) => {
         const isDesc = orderBy === property && order === 'desc';
-
-        setOrder(isDesc ? 'asc' : 'desc');
-        setOrderBy(property);
+        setState({
+            order: isDesc ? 'asc' : 'desc',
+            orderBy: property
+        });
     }
 
     const handleSelectAllClick = event => {
@@ -193,21 +280,20 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
     };
 
     const handleChangePage = (_, page) => {
-        setPage(page);
-        setData(null);
+        setState({ data: null, page });
         onSelect([]);
     };
 
     const handleChangeRowsPerPage = event => {
-        setLimit(+event.target.value);
-        setPage(0);
-        setData(null);
+        setState({
+            data: null,
+            limit: +event.target.value,
+            page: 0
+        });
         onSelect([]);
     };
 
-    const handleChangeDense = event => {
-        setDense(event.target.checked);
-    };
+    const handleChangeDense = event => setState({ dense: event.target.checked });
 
     //const { order, orderBy, page} = this.state;
 
@@ -219,40 +305,47 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
         return <Loading height={`calc(${tableHeight})`}/>;
     }
 
-    /*const headCells = props.map(prop => <TableCell key={prop.prop.name}
+    /*const headCells = props.map(prop => <StyledTableCell key={prop.prop.name}
                                                    style={{
                                                        backgroundColor: "#fff",
                                                        position: "sticky",
                                                        top: 0
-                                                   }}>{prop.title}</TableCell>);*/
+                                                   }}>{prop.title}</StyledTableCell>);*/
 
     const rows = data.items.map(item => {
         let isSelected = selectedItems.findIndex(i => i.id === item.id) !== -1;
-        return <TableRow hover
-                         key={item.id}
-                         onClick={handleSelectOne(item)}
-                         role="checkbox"
-                         aria-checked={isSelected}
-                         tabIndex={-1}>
-            <TableCell padding="checkbox"
-                       style={{
-                           backgroundColor: "#fff",
-                           position: "sticky",
-                           left: 0,
-                           zIndex: 2
-                       }}>
-                <Checkbox checked={isSelected}
-                          inputProps={{ 'aria-labelledby': item.id }}
-                          onChange={handleSelect(item)}/>
-            </TableCell>
-            {
-                props.map(prop => (
-                    <TableCell key={`${item.id}.${prop.prop.name}`}>
-                        {String(item[prop.prop.jsonKey])}
-                    </TableCell>
-                ))
-            }
-        </TableRow>
+        return (
+            <StyledTableRow hover
+                            key={item.id}
+                            onClick={handleSelectOne(item)}
+                            role="checkbox"
+                            aria-checked={isSelected}
+                            tabIndex={-1}>
+                <StyledTableCell padding="checkbox"
+                                 style={{
+                                     color: '#fff',
+                                     position: "sticky",
+                                     left: 0,
+                                     zIndex: 2
+                                 }}>
+                    <div>
+                        <Checkbox checked={isSelected}
+                                  inputProps={{ 'aria-labelledby': item.id }}
+                                  onChange={handleSelect(item)}/>
+                    </div>
+                </StyledTableCell>
+                {
+                    props.map(({ prop }) => {
+                        const Viewer = viewerComponentFor(prop, config);
+                        return (
+                            <StyledTableCell key={`${item.id}.${prop.name}`}>
+                                <Viewer prop={prop} value={item[prop.jsonKey]}/>
+                            </StyledTableCell>
+                        );
+                    })
+                }
+            </StyledTableRow>
+        );
     });
 
     let pagination;
