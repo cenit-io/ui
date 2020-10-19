@@ -3,12 +3,16 @@ import Random from "../util/Random";
 import { from, of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 
-export const Config = {
+const AppConfig = window.appConfig;
+
+const EnvironmentConfig = {
     localhost: process.env.REACT_APP_LOCALHOST,
     cenitHost: process.env.REACT_APP_CENIT_HOST,
     timeoutSpan: +process.env.REACT_APP_TIMEOUT_SPAN,
     appIdentifier: process.env.REACT_APP_APP_ID
 };
+
+export const Config = AppConfig.useEnvironmentConfig ? EnvironmentConfig : AppConfig;
 
 const appGateway = axios.create({
     baseURL: `${Config.cenitHost}/app/${Config.appIdentifier}`,

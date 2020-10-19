@@ -1,36 +1,28 @@
 
 ## Cenit Admin
 
-This is a React application for the administration of a Cenit Platform istance. The current state is very early.
+This is a React application for the administration of a Cenit Platform istance. The current state is developing.
 Fallow these instructions to configure a local instance of Cenit and connect it as a backend for the app.
 
-### Configuring the Backed
+### Configuring the Backend
 
 1. Make sure the Cenit **local repository is upto date with the remote**. The develop branch of Cenit
 to support the Admin Backed is `admin_backend`.
 
-2. **Configure the Cenit HOMEPAGE URL.** Make sure that Cenit HOMEPAGE URL is sync with the listening port by including
-   in the `config/application.yml` the entry `HOMEPAGE: http://127.0.0.1:3001`.
+2. The `admin_backend` development branch includes features which are not yet sync with the `develop` and `master`
+branches (for example the support of buil-in apps). For this reason is strongly recommended to **use a dedicated
+data base.** To define a custom data base just include in the `config/application.yml` file an entry
+`DB_DEV: custom_db_name`.    
 
-3. **Configure the Cenit listening port.** By default the Admin App runs listening the port `3000` therefore the local instance of Cenit should runs listening a different one.
-   By default the App expect Cenit is listening the port `3001`, so launch Cenit listening the port `3001`.
+2. **Configure the Cenit listening port.** By default the Admin App runs listening to the port `3000` therefore the local
+instance of Cenit should runs listening to a different one. By default the App expect Cenit being listening to the port
+`3001`, so launch Cenit listening the port `3001`.
 
-4. **Import the Admin Collection**. The React Admin App has a backend app in Cenit that should be configured. To do that just import
-the `adminCollection.json` file content as a **collection** by using the **pull import** action.
+3. **Configure the Cenit HOMEPAGE URL.** Make sure that Cenit HOMEPAGE URL is sync with the listening port by including
+in the `config/application.yml` file the entry `HOMEPAGE: http://127.0.0.1:3001`.
 
-5. **Configure the backend app**. Once the Admin Collection is successfully pulled into a Cenit tenant go to the **Application** model
-and make sure to configure the backend app (**Admin | App**) as fallows.
-
-    - Execute the **Configure** action for the app and add the React Admin App URI `http://localhost:3000` in the `redirect_uris`.
-    This configuration is also included in the `adminCollection.json` file but make sure it's configured properly.
-    
-    - Execute the **Regist** action for the app and assign it the slug `admin`. The values for the rest of the fields are not important
-    but the default configuration of the React Admin App expect the slug of the backed app to be `admin`.
-    
-    - **Trust** the backend app by executing the **Trust** action at **Administration -> Application IDs**.
-    
-6. **Check the OAuth 2 Scopes**. Go to **Security -> OAuth 2.0 Scopes** and check that the scope **Cenit | OAuth [Build-In]	| {{scope}}**
-is in the `cenit` origin and if not then **cross** it to the `cenit` origin.  
+4. **Configure the default URI for the admin app.** By default the Admin App runs listening to the port `3000`.
+Include in the `config/application.yml` file the entry `'Cenit::Admin:default_uri': http://localhost:3000`.
 
 And that's all!
 
