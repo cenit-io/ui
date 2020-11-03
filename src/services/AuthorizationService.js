@@ -25,12 +25,22 @@ const AuthorizeURL = `${Config.cenitHost}/app/${Config.appIdentifier}/authorize?
 
 const LogoutURL = `${Config.cenitHost}/users/sign_out`;
 
+const StateKeyPrefix = 'state-';
+
+const stateKey = state => `${StateKeyPrefix}${state}`;
+
+const isStateKey = key => key.startsWith(StateKeyPrefix);
+
 const AuthorizationService = {
 
     authorize: () => {
-        localStorage.clear();
+        Object.keys(localStorage).forEach(key => {
+            if (isStateKey(key)) {
+                localStorage.removeItem(key);
+            }
+        });
         const state = Random.string();
-        localStorage.setItem(state, window.location);
+        localStorage.setItem(stateKey(state), window.location);
         window.location = `${AuthorizeURL}&state=${state}`;
     },
 
@@ -66,9 +76,10 @@ const AuthorizationService = {
 
                 localStorage.setItem(ACCESS_KEY, JSON.stringify(access));
 
-                const prevLocation = localStorage.getItem(params.state);
+                const key = stateKey(params.state);
+                const prevLocation = localStorage.getItem(key);
 
-                localStorage.removeItem(params.state);
+                localStorage.removeItem(key);
 
                 if (prevLocation) {
                     window.location = prevLocation;
