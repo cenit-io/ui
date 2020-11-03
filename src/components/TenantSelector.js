@@ -3,7 +3,7 @@ import API from "../services/ApiService";
 import RecordSelector from "./RecordSelector";
 import spreadReducer from "../common/spreadReducer";
 
-const TenantTypeSelector = { namespace: '""', name: 'Account' };
+const TenantTypeSelector = { namespace: '', name: 'Account' };
 
 function TenantSelector({ inputClasses, onSelect, readOnly }) {
     const [state, setState] = useReducer(spreadReducer, {
