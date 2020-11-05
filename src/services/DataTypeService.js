@@ -428,7 +428,7 @@ export class DataType {
         return sch.pipe(
             tap(sch => {
                     if (sch) {
-                        sch.id = `${Config.cenitHost}/data_type/${data_type.id}${fragment}`;
+                        sch.id = `${Config.getCenitHost()}/data_type/${data_type.id}${fragment}`;
                     }
                 }
             )

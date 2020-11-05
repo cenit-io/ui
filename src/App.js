@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import QueryString from 'querystring';
-import AuthorizationService from "./services/AuthorizationService";
+import AuthorizationService, { AccessKey, CenitHostKey } from "./services/AuthorizationService";
 import { CircularProgress } from "@material-ui/core";
 import Main from "./layout/Main";
 import API from "./services/ApiService";
@@ -21,6 +21,10 @@ function App() {
             API.onError(e => setError(true));
 
             const params = QueryString.parse(window.location.search.slice(1, window.location.search.length));
+
+            if (params.cenitHost) {
+                localStorage.setItem(CenitHostKey, params.cenitHost);
+            }
 
             let authorize;
             if (params.code) {

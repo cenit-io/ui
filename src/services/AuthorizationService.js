@@ -3,7 +3,7 @@ import Random from "../util/Random";
 import { from, of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 
-const AppConfig = window.appConfig;
+export const AppConfig = window.appConfig;
 
 const EnvironmentConfig = {
     localhost: process.env.REACT_APP_LOCALHOST,
@@ -14,16 +14,22 @@ const EnvironmentConfig = {
 
 export const Config = AppConfig.useEnvironmentConfig ? EnvironmentConfig : AppConfig;
 
+export const CenitHostKey = 'cenitHost';
+
+Config.getCenitHost = function () {
+    return localStorage.getItem(CenitHostKey) || this.cenitHost;
+}
+
 const appGateway = axios.create({
-    baseURL: `${Config.cenitHost}/app/${Config.appIdentifier}`,
+    baseURL: `${Config.getCenitHost()}/app/${Config.appIdentifier}`,
     timeout: Config.timeoutSpan,
 });
 
-const ACCESS_KEY = 'access';
+export const AccessKey = 'access';
 
-const AuthorizeURL = `${Config.cenitHost}/app/${Config.appIdentifier}/authorize?redirect_uri=${Config.localhost}`;
+const AuthorizeURL = `${Config.getCenitHost()}/app/${Config.appIdentifier}/authorize?redirect_uri=${Config.localhost}`;
 
-const LogoutURL = `${Config.cenitHost}/users/sign_out`;
+const LogoutURL = `${Config.getCenitHost()}/users/sign_out`;
 
 const StateKeyPrefix = 'state-';
 
@@ -47,7 +53,7 @@ const AuthorizationService = {
     getAccess: function () {
         let access;
         try {
-            access = JSON.parse(localStorage.getItem(ACCESS_KEY));
+            access = JSON.parse(localStorage.getItem(AccessKey));
             let expirationDate = new Date(access.created_at + access.expires_in + Config.timeoutSpan);
             if (expirationDate < new Date()) {
                 access = null;
@@ -74,7 +80,7 @@ const AuthorizationService = {
             map(response => {
                 const access = response.data;
 
-                localStorage.setItem(ACCESS_KEY, JSON.stringify(access));
+                localStorage.setItem(AccessKey, JSON.stringify(access));
 
                 const key = stateKey(params.state);
                 const prevLocation = localStorage.getItem(key);
@@ -82,7 +88,16 @@ const AuthorizationService = {
                 localStorage.removeItem(key);
 
                 if (prevLocation) {
-                    window.location = prevLocation;
+                    let [url, ...query] = prevLocation.split('?');
+                    query = query
+                        .join('?')
+                        .split('&')
+                        .filter(param => !param.startsWith('cenitHost'))
+                        .join('&');
+                    if (query) {
+                        url = `${url}?${query}`;
+                    }
+                    window.location = url;
                 }
 
                 return access;
@@ -109,7 +124,7 @@ const AuthorizationService = {
     },
 
     logout: function () {
-        localStorage.removeItem(ACCESS_KEY);
+        localStorage.removeItem(AccessKey);
         window.location = LogoutURL;
     },
 

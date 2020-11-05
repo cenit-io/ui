@@ -4,7 +4,7 @@ import { catchError, map, switchMap } from "rxjs/operators";
 import { from, of } from "rxjs";
 
 const apiGateway = axios.create({
-    baseURL: `${Config.cenitHost}/api/v3`,
+    baseURL: `${Config.getCenitHost()}/api/v3`,
     timeout: Config.timeoutSpan
 });
 
