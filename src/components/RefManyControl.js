@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Chip, IconButton, LinearProgress } from "@material-ui/core";
 import ClearIcon from '@material-ui/icons/Clear';
 import AddIcon from '@material-ui/icons/Add';
@@ -8,177 +8,161 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import RefPicker from "./RefPicker";
 import '../common/FlexBox.css';
 import { map } from "rxjs/operators";
+import { useSpreadState } from "../common/hooks";
+import { FormRootValue } from "../services/FormValue";
+import { FETCHED, Title } from "../common/Symbols";
+import { ItemChip } from "./ItemChip";
+import { useFormContext } from "./FormContext";
 
 
-class RefManyControl extends React.Component {
+export default function RefManyControl({ title, property, value, onChange, onStack, onDelete, disabled, readOnly, config }) {
 
-    static getDerivedStateFromProps(props, state) {
-        const { value } = props;
-        if (value !== state.value) {
-            return {
-                value: value,
-                items: (value && value.length === 0) ? [] : null,
-                open: false
-            };
-        }
+    const [state, setState] = useSpreadState();
 
-        return null;
-    }
+    const { initialFormValue } = useFormContext();
 
-    state = { items: null };
+    const { open } = state;
 
-    setFocused = focused => this.setState({ focused });
+    const setFocused = focused => setState({ focused });
 
-    handlePick = item => {
-        const value = this.props.value || [];
-        const { id, _type } = item.record;
+    const handlePick = ({ record, title }) => {
+        const aValue = [...(value.get() || [])];
+        const { id, _type } = record;
         const itemValue = {
             id,
-            _reference: true
+            _reference: true,
+            [Title]: title
         };
-        if (_type && _type !== this.props.property.dataType.type_name()) {
+        if (_type && _type !== property.dataType.type_name()) {
             itemValue._type = _type;
         }
-        value.push(itemValue);
-        this.props.onChange(value);
-        this.setState(prev => ({
-            items: [...(prev.items || []), { id: item.record.id, title: item.title }],
-            open: value.length > 0 || prev.open
-        }));
+        aValue.push(itemValue);
+        onChange(aValue);
+        value.set(aValue);
+        value.checkPid();
+        setState({ open: aValue.length > 0 || open });
     };
 
-    addNew = () => {
-        let { value, onChange, onStack, property } = this.props;
-        if (value) {
+    const addNew = () => {
+        if (value.get()) {
             onStack({
-                value: {},
+                value: new FormRootValue({ [FETCHED]: true }),
                 dataType: property.dataType,
                 title: itemValue => property.dataType.titleFor(itemValue).pipe(
                     map(itemTitle => `[${property.name} #${value.length}] ${itemTitle}`)
                 ),
-                callback: itemValue => {
-                    if (itemValue.constructor !== Array) {
-                        itemValue = [itemValue];
+                callback: v => {
+                    if (v.constructor !== Array) {
+                        v = [v];
                     }
-                    itemValue.forEach(v => v._reference = true);
-                    onChange([...value, ...itemValue]);
-                    this.setOpen(true);
+                    v.forEach(v => v._reference = true);
+                    v = [...value.get(), ...v];
+                    onChange(v);
+                    value.set(v);
+                    setOpen(true);
                 }
             });
         } else {
-            value = [];
-            onChange(value);
+            value.set([]);
+            onChange(value.cache);
         }
-        if (value && value.length > 0) {
-            this.setOpen(true);
+        if (value.get() && value.cache.length > 0) {
+            setOpen(true);
         }
+        setState({}); // to refresh
     };
 
-    setOpen = open => {
-        const { property } = this.props;
-        const value = this.props.value || [];
-        if (open && !this.state.items) {
-            property.dataType.titlesFor(...value).subscribe(titles => { //TODO sanitize with unsubscribe
-                    this.setState({ items: titles.map((title, index) => ({ title, id: value[index].id })) })
-                }
-            );
+    const setOpen = open => setState({ open });
+
+    const handleDelete = index => () => {
+        const v = [...value.get()];
+        v.splice(index, 1);
+        value.set(v);
+        onChange(v);
+        setState({}); // to refresh
+    };
+
+    const handleClear = () => {
+        const initialValue = value.valueFrom(initialFormValue);
+        if (initialValue) {
+            value.set(null);
+        } else {
+            value.delete();
         }
-
-        this.setState({ open });
+        onDelete();
+        setState({}); // to refresh
     };
 
-    handleDelete = index => () => {
-        const { value, onChange } = this.props;
-        value.splice(index, 1);
-        onChange(value);
-        this.setState(prev => {
-            const items = [...prev.items];
-            items.splice(index, 1);
-            return { items };
-        })
-
-    };
-
-    handleSelect = index => () => {
-        const { onStack, property, value } = this.props;
+    const handleSelect = index => () => {
         onStack({ // TODO Optimize by passing value with title props
-            value: value[index],
+            value: new FormRootValue(value.indexValue(index).get()),
             dataType: property.dataType,
-            title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name} #${index}] ${title}`)),
+            title: v => property.dataType.titleFor(v).pipe(map(title => `[${property.name} #${index}] ${title}`)),
             callback: item => property.dataType.titleFor(item).subscribe( //TODO sanitize with unsubscribe
-                title => this.setState(prev => {
-                    const items = [...prev.items];
-                    items[index] = { ...items[index], title };
-                    return { items };
-                })
+                title => {
+                    item[Title] = title;
+                    value.indexValue(index).set(item);
+                    value.indexValue(index).checkPid();
+                }
             ),
-            rootId: value[index].id
+            rootId: value.get()[index].id
         });
     };
 
-    render() {
-        const { title, value, property, onDelete, disabled, readOnly, config } = this.props;
-        const { open, items } = this.state;
+    let dropButton, deleteButton, itemsControls;
 
-        let dropButton, deleteButton, itemsControls;
-
-        if (value) {
-            if (open) {
-                dropButton = value.length > 0 &&
-                    <IconButton onClick={() => this.setOpen(false)} disabled={disabled}><ArrowDropUpIcon/></IconButton>;
-                if (items) {
-                    itemsControls = items.map(
-                        (item, index) => <Chip key={`item_${index}`}
-                                               label={item.title}
-                                               onClick={this.handleSelect(index)}
-                                               onDelete={(!readOnly && this.handleDelete(index)) || null}
-                                               style={{ margin: '4px' }}
-                                               disabled={disabled}/>
-                    );
-                } else {
-                    itemsControls = <LinearProgress className='grow-1'/>;
-                }
-            } else {
-                dropButton = value.length > 0 &&
-                    <IconButton onClick={() => this.setOpen(true)}
-                                disabled={disabled}><ArrowDropDownIcon/></IconButton>;
-            }
-            if (!readOnly) {
-                deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
-            }
+    const aValue = value.get();
+    if (aValue) {
+        if (open) {
+            dropButton = aValue.length > 0 &&
+                <IconButton onClick={() => setOpen(false)} disabled={disabled}><ArrowDropUpIcon/></IconButton>;
+            itemsControls = aValue.map(
+                (_, index) => <ItemChip key={`item_${index}`}
+                                        dataType={property.dataType}
+                                        item={value.indexValue(index)}
+                                        onSelect={handleSelect(index)}
+                                        onDelete={(!readOnly && handleDelete(index)) || null}
+                                        disabled={disabled}
+                                        readOnly={readOnly}/>
+            );
+        } else {
+            dropButton = aValue.length > 0 &&
+                <IconButton onClick={() => setOpen(true)}
+                            disabled={disabled}><ArrowDropDownIcon/></IconButton>;
         }
-
-        let addButton;
         if (!readOnly) {
-            const AddNewIcon = value ? AddIcon : CreateIcon;
-            addButton = <IconButton onClick={this.addNew} disabled={disabled}><AddNewIcon/></IconButton>;
+            deleteButton = <IconButton onClick={handleClear} disabled={disabled}><ClearIcon/></IconButton>;
         }
-
-        const itemsText = value ? `${value.length} items` : '';
-
-        const placeholder = itemsText || String(value);
-
-        return (
-            <div className='flex column'>
-                <div className='flex'>
-                    <RefPicker dataType={property.dataType}
-                               label={title}
-                               onPick={this.handlePick}
-                               text={itemsText}
-                               placeholder={placeholder}
-                               disabled={disabled}
-                               readOnly={readOnly || items === null}
-                               baseSelector={config?.selector}/>
-                    {dropButton}
-                    {addButton}
-                    {deleteButton}
-                </div>
-                <div className='flex wrap' style={{ paddingTop: '10px' }}>
-                    {itemsControls}
-                </div>
-            </div>
-        );
     }
-}
 
-export default RefManyControl;
+    let addButton;
+    if (!readOnly) {
+        const AddNewIcon = aValue ? AddIcon : CreateIcon;
+        addButton = <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>;
+    }
+
+    const itemsText = aValue ? `${aValue.length} items` : '';
+
+    const placeholder = itemsText || String(aValue);
+
+    return (
+        <div className='flex column'>
+            <div className='flex'>
+                <RefPicker dataType={property.dataType}
+                           label={title}
+                           onPick={handlePick}
+                           text={itemsText}
+                           placeholder={placeholder}
+                           disabled={disabled}
+                           readOnly={readOnly || !aValue}
+                           baseSelector={config?.selector}/>
+                {dropButton}
+                {addButton}
+                {deleteButton}
+            </div>
+            <div className='flex wrap' style={{ paddingTop: '10px' }}>
+                {itemsControls}
+            </div>
+        </div>
+    );
+}

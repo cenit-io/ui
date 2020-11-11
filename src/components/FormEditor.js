@@ -19,6 +19,10 @@ import { of, Subject } from "rxjs";
 import { FileDataType } from "../services/DataTypeService";
 import FileUploader from "./FileUploader";
 import { RecordSubject } from "../services/subjects";
+import { FormRootValue } from "../services/FormValue";
+import JsonViewer from "./JsonViewer";
+import FormContext from './FormContext';
+import { FETCHED } from "../common/Symbols";
 
 function withForm(item) {
     item.formComponent = formComponentFor(item.dataType);
@@ -143,12 +147,12 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
     const [id, setId] = useState((value && value.id) || null);
     const initialStack = () => [
         withForm({
-            value: { ...value },
+            value: new FormRootValue({ ...value }),
             dataType,
             title: () => of('')
         }),
         withForm({
-            value: { ...value },
+            value: new FormRootValue({ ...value }),
             dataType,
             title: value => dataType.titleFor(value),
             viewport: dataType.titleViewPort('_id'),
@@ -173,14 +177,29 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
 
     const current = stack[stack.length - 1];
 
-    const onSubmitDone = useCallback(value => {
-        if (value) {
+    const updateStack = stack => {
+        setStack(stack);
+        setTimeout(() => {
+            if (stack.length && ref.current) {
+                ref.current.scrollTop = (stack[stack.length - 1].scrollTop || 0)
+            }
+        });
+    };
+
+    const handleBack = useCallback(() => {
+        const newStack = [...stack];
+        newStack.pop();
+        updateStack(newStack);
+        setDone(false);
+    }, [stack]);
+
+    const onSubmitDone = useCallback(response => {
+        if (response) {
             setDone(true);
-            setValue({ ...current.value, ...value });
             setTimeout(() => {
                 handleBack();
                 if (current.callback) {
-                    current.callback(value);
+                    current.callback(response);
                 }
                 setSaving(false);
             }, 1000);
@@ -191,42 +210,10 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
 
     useEffect(() => {
         const subscription = zzip(
-            ...stack.map(item => item.title(item.value))
+            ...stack.map(item => item.title(item.value.get()))
         ).subscribe(titles => setStackTitles(titles));
         return () => subscription.unsubscribe();
     }, [stack.length]);
-
-    useEffect(() => {
-        if (saving) {
-            setDone(false);
-            const subscription = (current.viewport || of('{_id}')).subscribe(
-                viewport => current.submitter.next({
-                    value: current.value,
-                    viewport
-                })
-            );
-            return () => subscription && subscription.unsubscribe();
-        }
-    }, [saving]);
-
-    const updateCurrent = item => {
-        const newStack = [...stack];
-        newStack.push({ ...newStack.pop(), ...item });
-        setStack(newStack);
-    };
-
-    const setValue = value => updateCurrent({ value });
-
-    const updateStack = stack => {
-        setStack(stack);
-        setTimeout(() => {
-            if (stack.length && ref.current) {
-                ref.current.scrollTop = (stack[stack.length - 1].scrollTop || 0)
-            }
-        });
-    };
-
-    const handleChange = value => setValue(value);
 
     const handleStack = item => {
         current.scrollTop = ref.current.scrollTop;
@@ -235,14 +222,8 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
 
     const save = () => {
         setSaving(true);
-
-    };
-
-    const handleBack = () => {
-        const newStack = [...stack];
-        newStack.pop();
-        updateStack(newStack);
         setDone(false);
+        current.submitter.next();
     };
 
     const handleAddAnother = () => {
@@ -296,18 +277,18 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
         }
 
         if (md && jsonMode) {
-            jsonView = <div className={clsx(classes.jsonContainer, classes.jsonBox)}>
-                <pre>
-                    {JSON.stringify(current.value, null, 2)}
-                </pre>
-            </div>;
+            jsonView = (
+                <FormContext.Provider value={{value: current.value}}>
+                    <JsonViewer className={clsx(classes.jsonContainer, classes.jsonBox)}/>
+                </FormContext.Provider>
+            );
 
             actions.push(
                 <Fab key='copy'
                      size='small'
                      aria-label="JSON"
                      className={classes.fabCopy}
-                     onClick={() => copy(JSON.stringify(current.value, null, 2))}>
+                     onClick={() => copy(JSON.stringify(current.value.get(), null, 2))}>
                     <CopyIcon/>
                 </Fab>
             );
@@ -362,7 +343,6 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
                              dataType={item.dataType}
                              value={item.value}
                              _type={item.value && item.value._type}
-                             onChange={handleChange}
                              disabled={saving}
                              readOnly={readOnly}
                              onStack={handleStack}
@@ -371,37 +351,40 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
                              height={controlHeight}
                              submitter={item.submitter}
                              onSubmitDone={onSubmitDone}
-                             onSubjectPicked={onSubjectPicked}/>
+                             onSubjectPicked={onSubjectPicked}
+                             viewport={item.viewport}/>
             }
 
             return successAlert;
         }
     );
 
-    return <div className={classes.root}>
-        <div ref={stackHeaderRef} className={classes.stackHeader}>
-            {stack.length > 1 && stackTitles.join(' ')}
-        </div>
-        <div style={{ display: 'flex', position: 'relative' }}>
-            <div ref={ref}
-                 className={
-                     clsx(
-                         classes.formContainer,
-                         !xs && !jsonView && (docked || !md) && classes.smFormContainer,
-                         md && ((jsonMode && classes.jsonBox) || classes.mdFormContainer)
-                     )}>
-
-                <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                                disabled={true}
-                                index={stack.length - 1}>
-                    {forms}
-                </SwipeableViews>
-                <div className={classes.trailing}/>
-                {actions}
+    return (
+        <div className={classes.root}>
+            <div ref={stackHeaderRef} className={classes.stackHeader}>
+                {stack.length > 1 && stackTitles.join(' ')}
             </div>
-            {jsonView}
+            <div style={{ display: 'flex', position: 'relative' }}>
+                <div ref={ref}
+                     className={
+                         clsx(
+                             classes.formContainer,
+                             !xs && !jsonView && (docked || !md) && classes.smFormContainer,
+                             md && ((jsonMode && classes.jsonBox) || classes.mdFormContainer)
+                         )}>
+
+                    <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+                                    disabled={true}
+                                    index={stack.length - 1}>
+                        {forms}
+                    </SwipeableViews>
+                    <div className={classes.trailing}/>
+                    {actions}
+                </div>
+                {jsonView}
+            </div>
         </div>
-    </div>;
+    );
 };
 
 export default withStyles(styles, { withTheme: true })(FormEditor);

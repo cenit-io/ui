@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { IconButton, TextField } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
 import CreateIcon from '@material-ui/icons/AddCircleOutline';
@@ -10,41 +10,67 @@ import { Property } from "../services/DataTypeService";
 import '../common/FlexBox.css';
 import { ItemChip } from "./ItemChip";
 import { map, switchMap } from "rxjs/operators";
-import { INDEX } from "../common/Symbols";
+import { FETCHED, INDEX, Key, NEW } from "../common/Symbols";
+import { useSpreadState } from "../common/hooks";
+import Random from "../util/Random";
+import { useFormContext } from "./FormContext";
 
 
+function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema, disabled, onStack, readOnly }) {
 
-function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, errors, onDelete, onChange, schema, disabled, onStack, rootId, readOnly }) {
+    const [state, setState] = useSpreadState({
+        open: false,
+        selectedIndex: -1
+    });
+    const indexed = useRef(false);
 
-    const [open, setOpen] = useState(false);
-    const [controlProperty] = useState(new Property({
+    const { ready, initialFormValue } = useFormContext();
+
+    const setOpen = open => setState({ open });
+    const setSelectedIndex = selectedIndex => setState({ selectedIndex });
+
+    const controlPropertyRef = useRef(new Property({
         dataType: property.dataType,
         propertySchema: schema
     }));
-    const [selectedIndex, setSelectedIndex] = useState(-1);
 
-    if (rootId && value && !value.indexed) {
-        value.forEach((item, index) => item[INDEX] = index);
-        value.indexed = true;
-    }
+    const { open, selectedIndex } = state;
+
+    const eValue = value.get();
+    const controlProperty = controlPropertyRef.current;
+
+    useEffect(() => {
+        if (ready && !indexed.current) {
+            indexed.current = true;
+            if (eValue) {
+                eValue.forEach((item, index) => item[INDEX] = index);
+            }
+        }
+    }, [eValue, ready]);
+
 
     const addNew = () => {
-        if (value) {
-            value.push({});
+        let eValue = value.get();
+        if (eValue) {
+            value.set(eValue = [...eValue, {
+                [NEW]: true,
+                [FETCHED]: true
+            }]);
         } else {
-            value = [];
+            eValue = [];
         }
-        setSelectedIndex(value.length - 1);
-        if (value.length > 0) {
+        setSelectedIndex(eValue.length - 1);
+        if (eValue.length > 0) {
             setOpen(true);
         }
-        onChange(value);
+        value.set(eValue);
+        setState({}); // to refresh
+        onChange(eValue);
     };
 
     const deleteIndex = index => {
-        const newValue = [...value];
-        newValue.indexed = value.indexed;
-        newValue.splice(index, 1);
+        value.indexValue(index).delete();
+        const newValue = value.get();
         if (newValue.length === 0) {
             setOpen(false);
         } else if (selectedIndex === index) {
@@ -52,6 +78,7 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
         } else if (selectedIndex === newValue.length) {
             setSelectedIndex(newValue.length - 1);
         }
+        setState({}); // for refresh
         onChange(newValue);
     };
 
@@ -64,8 +91,20 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
     }; */
 
     const handleChange = item => {
-        value[selectedIndex] = item;
-        onChange(value);
+        value.indexValue(selectedIndex).set(item);
+        const newValue = value.get();
+        onChange(newValue);
+    };
+
+    const handleClear = () => {
+        const initialValue = value.valueFrom(initialFormValue);
+        if (initialValue) {
+            value.set(null);
+        } else {
+            value.delete();
+        }
+        onDelete();
+        setState({}); // to refresh
     };
 
     const selectItem = index => () => setSelectedIndex(index);
@@ -76,7 +115,7 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
 
     const handleStack = item => onStack({
         ...item,
-        title: itemValue => property.dataType.titleFor(value[selectedIndex]).pipe(
+        title: itemValue => property.dataType.titleFor(value.get()[selectedIndex]).pipe(
             switchMap(
                 selectedTitle => item.title(itemValue).pipe(
                     map(
@@ -87,21 +126,26 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
         )
     });
 
-    if (value) {
+    if (eValue) {
         if (open) {
-            itemChips = value.map(
-                (item, index) => <ItemChip key={`item_${index}`}
-                                           dataType={property.dataType}
-                                           item={item}
-                                           error={errors && errors.hasOwnProperty(String(index))}
-                                           onSelect={selectItem(index)}
-                                           onDelete={deleteItem(index)}
-                                           selected={selectedIndex === index}
-                                           disabled={disabled}
-                                           readOnly={readOnly}/>
+            itemChips = eValue.map(
+                (item, index) => {
+                    if (!item[Key]) {
+                        item[Key] = Random.string();
+                    }
+
+                    return <ItemChip key={`item_${index}`}
+                                     dataType={property.dataType}
+                                     item={value.indexValue(index)}
+                                     onSelect={selectItem(index)}
+                                     onDelete={deleteItem(index)}
+                                     selected={selectedIndex === index}
+                                     disabled={disabled}
+                                     readOnly={readOnly}/>;
+                }
             );
 
-            dropButton = !readOnly && value.length > 0 &&
+            dropButton = !readOnly && eValue.length > 0 &&
                 <IconButton onClick={() => setOpen(false)} disabled={disabled}>
                     <ArrowDropUpIcon/>
                 </IconButton>;
@@ -110,24 +154,15 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
 
             if (selectedIndex !== -1) {
                 controlProperty.jsonKey = controlProperty.name = selectedIndex;
-                let editProps;
-                const index = value[selectedIndex][INDEX];
-                if (typeof index === 'number') {
-                    editProps = {
-                        rootId,
-                        rootDataType,
-                        jsonPath: `${jsonPath}[${index}]`
-                    };
-                }
                 itemControl = (
                     <ObjectControl property={controlProperty}
-                                   value={value[selectedIndex]}
+                                   fetchPath={`${value.jsonPath()}[${eValue[selectedIndex][INDEX]}]`}
+                                   value={value.indexValue(selectedIndex)}
                                    errors={errors && errors[String(selectedIndex)]}
                                    onChange={handleChange}
                                    disabled={disabled}
                                    readOnly={readOnly}
-                                   onStack={handleStack}
-                                   {...editProps}/>
+                                   onStack={handleStack}/>
                 );
             }
 
@@ -140,25 +175,25 @@ function EmbedsManyControl({ rootDataType, jsonPath, title, value, property, err
                 </div>
             );
         } else {
-            dropButton = value.length > 0 &&
+            dropButton = eValue.length > 0 &&
                 <IconButton onClick={() => setOpen(true)} disabled={disabled}>
                     <ArrowDropDownIcon/>
                 </IconButton>;
         }
         if (!readOnly) {
-            deleteButton = <IconButton onClick={onDelete} disabled={disabled}><ClearIcon/></IconButton>;
+            deleteButton = <IconButton onClick={handleClear} disabled={disabled}><ClearIcon/></IconButton>;
         }
     }
 
     let addButton;
     if (!readOnly) {
-        const AddNewIcon = value ? AddIcon : CreateIcon;
+        const AddNewIcon = eValue ? AddIcon : CreateIcon;
         addButton = <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>;
     }
 
-    const itemsCount = value ? `${value.length} items` : '';
+    const itemsCount = eValue ? `${eValue.length} items` : '';
 
-    const placeholder = itemsCount || String(value) || itemsCount;
+    const placeholder = itemsCount || String(eValue) || itemsCount;
 
     return (
         <div className='flex full-width column'>

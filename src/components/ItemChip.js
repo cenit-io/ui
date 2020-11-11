@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Chip, CircularProgress, makeStyles, useTheme } from "@material-ui/core";
+import React, { useEffect, useRef, useState } from 'react';
+import { Chip, makeStyles, useTheme } from "@material-ui/core";
 import Skeleton from "@material-ui/lab/Skeleton";
+import { switchMap } from "rxjs/operators";
+import { of } from "rxjs";
+import { Title } from "../common/Symbols";
 
 const useStyles = makeStyles(theme => ({
     chip: {
@@ -11,14 +14,30 @@ const useStyles = makeStyles(theme => ({
 export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, disabled, readOnly }) => {
     const classes = useStyles();
     const [title, setTitle] = useState(null);
-    const itemKey = JSON.stringify(item);
+    const flag = useRef(true);
 
     const theme = useTheme();
 
     useEffect(() => {
-        const subscription = dataType.titleFor(item).subscribe(t => setTitle(t));
+        const subscription = item.changed().pipe(
+            switchMap(v => {
+                    if (v) {
+                        const title = v[Title];
+                        if (title) {
+                            return of(title);
+                        }
+                        return dataType.straightTitleFor(v);
+                    }
+                    return of('');
+                }
+            )
+        ).subscribe(t => setTitle(t));
+        if (flag.current) {
+            flag.current = false;
+            item.changed().next(item.get());
+        }
         return () => subscription.unsubscribe();
-    }, [dataType, item, itemKey]);
+    }, [dataType, item]);
 
     if (title) {
         return <Chip label={title}

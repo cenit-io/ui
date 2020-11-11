@@ -1,6 +1,5 @@
 import { map, switchMap } from "rxjs/operators";
 import { of } from "rxjs";
-import zzip from "../util/zzip";
 import { DataType, Property } from "../services/DataTypeService";
 import FormContex from "../services/FormContext";
 import PropertyControl from "./PropertyControl";
@@ -8,21 +7,27 @@ import { FormGroup } from "./FormGroup";
 import ErrorMessages from "./ErrorMessages";
 import { LinearProgress } from "@material-ui/core";
 import React, { useEffect, useReducer } from "react";
-import { FETCHED } from "../common/Symbols";
+import { FETCHED, NEW } from "../common/Symbols";
 import spreadReducer from "../common/spreadReducer";
 import { DataTypeSubject } from "../services/subjects";
 import { tap } from "rxjs/internal/operators/tap";
 import Group from "./Group";
+import { useFormContext } from "./FormContext";
+import FrezzerLoader from "./FrezzerLoader";
 
 function ObjectControl(props) {
     const [state, setState] = useReducer(spreadReducer, {});
 
+    const { initialFormValue } = useFormContext();
+
     const { schemaResolver, properties, schema, config } = state;
 
     const {
-        rootDataType, jsonPath, rootId, onChange, value, dataType,
+        onChange, value, dataType, fetchPath, onFetched,
         dataTypeId, property, width, disabled, onStack, readOnly
     } = props;
+
+    const { rootId, rootDataType } = useFormContext();
 
     useEffect(() => {
         const resolver = dataType || property;
@@ -76,78 +81,76 @@ function ObjectControl(props) {
     }, [schema]);
 
     useEffect(() => {
-        if (schemaResolver && properties && rootId && !(value && value[FETCHED])) {
-            const subscription = DataTypeSubject.for(dataTypeId).config().pipe(
-                switchMap(config => {
-                    const configViewport = rootId
-                        ? config.actions?.edit?.viewport
-                        : config.actions?.new?.viewport;
+        if (schemaResolver && properties && rootId) {
+            const v = value.get();
+            if (!(v && v[FETCHED])) {
+                const subscription = DataTypeSubject.for(dataTypeId).config().pipe(
+                    switchMap(config => {
+                        const configViewport = v[NEW]
+                            ? config.actions?.new?.viewport
+                            : config.actions?.edit?.viewport;
 
-                    if (configViewport) {
-                        return of(configViewport);
+                        if (configViewport) {
+                            return of(configViewport);
+                        }
+
+                        return getDataType().shallowViewPort();
+                    }),
+                    switchMap(viewport => {
+                        const jsonPath = fetchPath || value.jsonPath();
+                        console.log('Fetching for editing', rootId, jsonPath, viewport);
+                        return rootDataType.get(rootId, {
+                            viewport,
+                            jsonPath,
+                            with_references: true
+                        });
+                    })
+                ).subscribe(
+                    fetchedValue => {
+                        (fetchedValue = fetchedValue || {})[FETCHED] = true;
+                        Object.getOwnPropertySymbols(v).forEach(symbol => fetchedValue[symbol] = v[symbol]);
+                        value.set(fetchedValue, true);
+                        onFetched && onFetched(fetchedValue);
+                        value.setOn(initialFormValue, fetchedValue);
+                        setState({}); // for refresh
                     }
-
-                    return getDataType().shallowViewPort();
-                }),
-                switchMap(viewport => {
-                    console.log('Fetching for editing', rootId, jsonPath, viewport);
-                    return rootDataType.get(rootId, {
-                        viewport,
-                        jsonPath,
-                        with_references: true
-                    });
-                })
-            ).subscribe(
-                v => {
-                    (v = v || {})[FETCHED] = true;
-                    Object.getOwnPropertySymbols(value).forEach(symbol => v[symbol] = value[symbol]);
-                    onChange(v);
-                }
-            );
-            return () => subscription.unsubscribe();
+                );
+                return () => subscription.unsubscribe();
+            }
         }
-    }, [schemaResolver, properties, rootId, value, onChange]);
+    }, [schemaResolver, properties, rootId, value, onChange, onFetched, initialFormValue]);
 
     const getDataType = () => schemaResolver &&
         (schemaResolver.constructor === Property ? schemaResolver.dataType : schemaResolver);
 
-    const handleChange = prop => v => {
-        value[prop.jsonKey] = v;
-        if (prop.type === 'refMany' || prop.type === 'array') {
-            _update(prop.name, value);
-        }
-        onChange(value);
+    const handleChange = prop => () => {
+        _update(prop);
+        onChange && onChange(value.get());
     };
 
     const handleDelete = prop => () => {
-        if (rootId) {
-            if (prop.type === 'refMany' || prop.type === 'array') {
-                _update(prop.name, value);
-            }
-            value[prop.jsonKey] = null;
-        } else {
-            delete value[prop.jsonKey];
-        }
-        onChange(value);
+        _update(prop.name);
+        onChange && onChange(value.get());
     };
 
-    const _update = (prop, value) => {
-        const resetProps = value._update || [];
-        const index = resetProps.indexOf(prop);
-        if (index === -1) {
-            resetProps.push(prop);
+    const _update = prop => {
+        if (rootId && (prop.type === 'refMany' || prop.type === 'embedsMany' || prop.type === 'array')) {
+            value.set(({ _update, ...coreValue }) => {
+                _update = _update || [];
+                const index = _update.indexOf(prop.name);
+                if (index === -1) {
+                    _update.push(prop.name);
+                }
+                return { ...coreValue, _update };
+            })
         }
-        value._update = resetProps;
     };
-
-    const isReady = () => properties && valueReady();
-
-    const valueReady = () => !rootId || (value && value[FETCHED]);
 
     const errors = props.errors || {};
     const context = rootId ? FormContex.edit : FormContex.new;
 
-    if (isReady()) {
+    if (properties) {
+        const fetching = value.get() && !value.cache[FETCHED];
         const controls = [];
         const configFields = config.fields || {};
         const groups = [];
@@ -166,19 +169,16 @@ function ObjectControl(props) {
                 }
                 groupProps.push(prop.name);
                 controlsGroup.push(
-                    <PropertyControl rootDataType={rootDataType}
-                                     jsonPath={`${jsonPath}.${prop.name}`}
+                    <PropertyControl key={prop.name}
                                      property={prop}
-                                     key={prop.name}
-                                     value={value[prop.jsonKey]}
+                                     value={value.propertyValue(prop.jsonKey)}
                                      errors={errors[prop.name]}
                                      width={width}
                                      onChange={handleChange(prop)}
                                      onDelete={handleDelete(prop)}
-                                     disabled={disabled}
+                                     disabled={fetching || disabled}
                                      readOnly={readOnly || prop.isReadOnly(context)}
                                      onStack={onStack}
-                                     rootId={rootId}
                                      config={fieldConfig}/>
                 );
             }
@@ -195,6 +195,7 @@ function ObjectControl(props) {
             <ErrorMessages errors={errors.$}>
                 {controls}
             </ErrorMessages>
+            {fetching && <FrezzerLoader/>}
         </FormGroup>;
     }
 

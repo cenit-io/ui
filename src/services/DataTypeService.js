@@ -489,7 +489,6 @@ export class DataType {
                 }
             ),
             tap(dt => {
-                console.log('->', criteria);
                 ns_hash[ref] = dt;
                 if (dt.namespace !== ns) {
                     ns_hash = this.nss[dt.namespace];
@@ -745,6 +744,22 @@ export class DataType {
 
     titleFor(item) {
         return this.titlesFor(item).pipe(map(titles => titles[0]));
+    }
+
+    straightTitleFor(item) {
+        return zzip(this.getSchema(), this.getTitle()).pipe(
+            switchMap(
+                ([schema, dtTitle]) => {
+                    if (schema.label) {
+                        return from(LiquidEngine.parseAndRender(schema.label, item));
+                    }
+                    let title = item.title || item.name;
+                    if (title) {
+                        return of(title);
+                    }
+                    return of(`${dtTitle} ${item.id || '(blank)'}`);
+                })
+        );
     }
 
     titlesFor(...items) {

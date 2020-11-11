@@ -8,7 +8,7 @@ function eq(a, b) {
     if (a === undefined) {
         return b === undefined
     }
-    if ((typeof a === 'object') && (typeof b === 'object')) {
+    if (a && b && (typeof a === 'object') && (typeof b === 'object')) {
         if (a.constructor === b.constructor) {
             if (a.constructor === Array) {
                 if (a.length === b.length) {
@@ -46,53 +46,66 @@ function eq(a, b) {
     return a === b;
 }
 
-const key = Symbol.for('_projection');
+const Pid = Symbol.for('_projection');
 
 class BLoC {
 
     listeners = {};
     projections = {};
     states = {};
-    state = {};
+
+    constructor(defaultState = {}) {
+        this.state = defaultState || {};
+    }
 
     nextOn(pid) {
-        const prevState = this.states[pid];
-        const newState = this.projections[pid](this.state);
-        if (!eq(prevState, newState)) {
-            this.states[pid] = newState;
-            const listener = this.listeners[pid];
-            if (listener) {
-                listener.next(newState);
+        const projection = this.projections[pid];
+        if (projection) {
+            const prevState = this.states[pid];
+            const newState = projection(this.state);
+            if (!eq(prevState, newState)) {
+                this.states[pid] = newState;
+                const listener = this.listeners[pid];
+                if (listener) {
+                    listener.next(newState);
+                }
             }
         }
     }
 
-    on(projection) {
-        let pid = projection[key];
-        if (!pid) {
-            pid = projection[key] = Random.string();
+    on(projection, pid = null) {
+        pid = pid || projection[Pid] || Random.string();
+        if (projection[Pid] !== pid) {
+            projection[Pid] = pid;
         }
         this.projections[pid] = projection;
         let listener = this.listeners[pid];
-        if (!listener) {
+        if (!listener) { // TODO complete listener if already exists
             listener = this.listeners[pid] = new Subject();
             this.nextOn(pid);
         }
         return listener;
     }
 
-    checkPids() {
-        Object.keys(this.projections).forEach(pid => this.nextOn(pid));
+    checkPids(...pids) {
+        if (!pids.length) {
+            pids = Object.keys(this.projections);
+        }
+        pids.forEach(pid => this.nextOn(pid));
     }
 
-    update(state) {
+    update(state, checkPids = true) {
         this.state = { ...this.state, ...state };
-        this.checkPids();
+        if (checkPids) {
+            this.checkPids();
+        }
     }
 
-    set(state) {
+    set(state, checkPids = true) {
         this.state = state;
-        this.checkPids();
+        if (checkPids) {
+            this.checkPids();
+        }
     }
 }
 

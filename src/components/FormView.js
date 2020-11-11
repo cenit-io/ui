@@ -1,9 +1,8 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect } from 'react';
 import ObjectControl from "./ObjectControl";
 import { makeStyles, useTheme } from "@material-ui/core";
 import { catchError, switchMap, tap, map } from "rxjs/operators";
 import { of } from "rxjs";
-import spreadReducer from "../common/spreadReducer";
 import zzip from "../util/zzip";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
@@ -14,6 +13,8 @@ import MailIcon from '@material-ui/icons/Mail';
 import Typography from "@material-ui/core/Typography";
 import { Skeleton } from "@material-ui/lab";
 import ListSubheader from "@material-ui/core/ListSubheader";
+import FormContext from "./FormContext";
+import { useSpreadState } from "../common/hooks";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -27,13 +28,15 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const FormView = ({ dataType, width, height, value, _type, onChange, disabled, onStack, rootId, readOnly, submitter, onSubmitDone }) => {
+const FormView = ({ rootId, submitter, viewport, dataType, width, height, value, _type, disabled, onStack, readOnly, onSubmitDone }) => {
 
-    const [state, setState] = useReducer(spreadReducer, {});
+    const [state, setState] = useSpreadState({
+        initialFormValue: {}
+    });
     const classes = useStyles();
     const theme = useTheme();
 
-    const { formDataType, errors, descendants, titles, descendantsCount } = state;
+    const { formDataType, errors, descendants, titles, descendantsCount, initialFormValue, ready } = state;
 
     useEffect(() => {
         let subscription;
@@ -89,46 +92,43 @@ const FormView = ({ dataType, width, height, value, _type, onChange, disabled, o
     }, [dataType, rootId, _type]);
 
     useEffect(() => {
-        const subscription = submitter.pipe(
-            switchMap(
-                ({ value, viewport }) =>
-                    formDataType.post(value, {
-                        viewport,
-                        add_only: rootId,
-                        add_new: !rootId,
-                        polymorphic: true
-                    })
-            ),
-            catchError(error => {
-                setState({ errors: error.response.data });
-                return of(null);
-            })
-        ).subscribe(value => onSubmitDone(value));
+        if (formDataType) {
+            const subscription = submitter.pipe(
+                switchMap(() => viewport || formDataType.titleViewPort('_id')),
+                switchMap(viewport => formDataType.post(value.get(), {
+                    viewport,
+                    add_only: rootId,
+                    add_new: !rootId,
+                    polymorphic: true
+                })),
+                tap(response => value.set({ ...value.get(), ...response })),
+                catchError(error => {
+                    console.error(error);
+                    setState({ errors: error.response.data });
+                    return of(null);
+                })
+            ).subscribe(response => onSubmitDone(response));
 
-        return () => subscription.unsubscribe();
-    }, [submitter, dataType, onSubmitDone, rootId]);
+            return () => subscription.unsubscribe();
+        }
+    }, [value, submitter, viewport, formDataType, onSubmitDone, rootId]);
 
-    function handleChange(value) {
-        onChange && onChange(value);
-    }
+    const handleFetched = initialFormValue => setState({ ready: true, initialFormValue });
 
     const formHeight = `${height} - ${theme.spacing(16)}px`;
 
     let control;
 
     if (dataType && formDataType) {
-        control = <ObjectControl rootDataType={dataType}
-                                 jsonPath='$'
-                                 dataTypeId={formDataType.id}
+        control = <ObjectControl dataTypeId={formDataType.id}
                                  width={width}
                                  height={formHeight}
                                  value={value}
                                  errors={errors}
-                                 onChange={handleChange}
                                  disabled={disabled}
                                  readOnly={readOnly}
                                  onStack={onStack}
-                                 rootId={rootId}/>;
+                                 onFetched={handleFetched}/>;
     } else {
         const textSkeleton = <Skeleton variant="text"/>;
         if (titles) {
@@ -176,10 +176,24 @@ const FormView = ({ dataType, width, height, value, _type, onChange, disabled, o
         );
     }
 
-    return <div className={classes.root}
-                style={{ minHeight: `calc(${formHeight})` }}>
-        {control}
-    </div>;
+    const formContext = {
+        rootId,
+        rootDataType: dataType,
+        value,
+        viewport,
+        submitter,
+        initialFormValue,
+        ready
+    };
+
+    return (
+        <FormContext.Provider value={formContext}>
+            <div className={classes.root}
+                 style={{ minHeight: `calc(${formHeight})` }}>
+                {control}
+            </div>
+        </FormContext.Provider>
+    );
 };
 
 export default FormView;

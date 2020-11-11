@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { IconButton, TextField } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
 import ArrowDropUpIcon from '@material-ui/icons/ArrowDropUp';
@@ -7,58 +7,102 @@ import ClearIcon from '@material-ui/icons/Clear';
 import ObjectControl from "./ObjectControl";
 import '../common/FlexBox.css';
 import { map, switchMap } from "rxjs/operators";
-import { FETCHED } from "../common/Symbols";
+import { FETCHED, NEW } from "../common/Symbols";
+import { of } from "rxjs";
+import Random from "../util/Random";
+import { useSpreadState } from "../common/hooks";
+import { useFormContext } from "./FormContext";
 
-function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, property, onDelete, onChange, width, disabled, onStack, rootId, readOnly }) {
+function PlaceHolder({ value, property, label, error, className }) {
+    const [state, setState] = useSpreadState({
+        key: Random.string(),
+        valueTitle: ''
+    });
 
-    const [isEdit, setEdit] = useState(value);
-    const [valueTitle, setValueTitle] = useState('');
-    const [open, setOpen] = useState(false);
-    const valueKey = JSON.stringify(value);
+    const { valueTitle, key } = state;
 
     useEffect(() => {
-        let subscription;
-        if (value) {
-            subscription = property.dataType.titleFor(value).subscribe(title => setValueTitle(title));
-        } else {
-            setValueTitle('');
+        setState({ key: Random.string() });
+
+        let obs = value.changed().pipe(
+            switchMap(
+                v => (v && property.dataType.straightTitleFor(v)) || of('')
+            )
+        );
+
+        const subscription = obs.subscribe(valueTitle => setState({ valueTitle }));
+
+        obs.next(value.get());
+
+        return () => subscription.unsubscribe();
+    }, [value, property]);
+
+    return (
+        <TextField key={key}
+                   label={label}
+                   readOnly
+                   className={className}
+                   value={valueTitle}
+                   placeholder={valueTitle || (!value.get() && String(value.cache)) || valueTitle}
+                   error={error}/>
+    );
+}
+
+function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, width, disabled, onStack, readOnly }) {
+
+    const [state, setState] = useSpreadState();
+
+    const { initialFormValue } = useFormContext();
+
+    const { open } = state;
+
+    const setOpen = open => setState({ open });
+
+    useEffect(() => {
+        if (!value.get()) {
+            setState({ open: false });
         }
-        return () => subscription && subscription.unsubscribe();
-    }, [value, property, valueKey]);
+    }, [value]);
 
     const addNew = () => {
-        onChange({ [FETCHED]: true });
+        const v = { [FETCHED]: true, [NEW]: true };
+        value.set(v);
+        onChange(v);
         setTimeout(() => setOpen(true));
     };
 
     const handleStack = item => onStack({
         ...item,
         title: itemValue => item.title(itemValue).pipe(
-            switchMap(itemTitle => property.dataType.titleFor(value).pipe(
+            switchMap(itemTitle => property.dataType.titleFor(value.get()).pipe(
                 map(title => `[${property.name}] ${title} ${itemTitle}`)
             )))
     });
 
     const handleDelete = () => {
-        setEdit(false);
+        const initialValue = value.valueFrom(initialFormValue);
+        if (initialValue !== null && initialValue !== undefined) {
+            value.set(null);
+        } else {
+            value.delete();
+        }
+        value.checkPid();
+        setOpen(false);
         onDelete();
     };
 
     let objectControl, actionButton, deleteButton;
 
-    if (value) {
+    if (value.get()) {
         if (open) {
-            objectControl = <ObjectControl rootDataType={rootDataType}
-                                           jsonPath={jsonPath}
-                                           property={property}
+            objectControl = <ObjectControl property={property}
                                            value={value}
                                            errors={errors}
                                            onChange={onChange}
                                            width={width}
                                            disabled={disabled}
                                            readOnly={readOnly}
-                                           onStack={handleStack}
-                                           rootId={isEdit ? rootId : null}/>;
+                                           onStack={handleStack}/>;
             actionButton =
                 <IconButton onClick={() => setOpen(false)} disabled={disabled}><ArrowDropUpIcon/></IconButton>;
         } else {
@@ -68,22 +112,18 @@ function EmbedsOneControl({ rootDataType, jsonPath, title, value, errors, proper
         if (!readOnly) {
             deleteButton = <IconButton onClick={handleDelete} disabled={disabled}><ClearIcon/></IconButton>;
         }
-    } else {
-        valueTitle.length && setValueTitle('');
-        if (!readOnly) {
-            actionButton = <IconButton onClick={addNew} disabled={disabled}><AddIcon/></IconButton>;
-        }
+    } else if (!readOnly) {
+        actionButton = <IconButton onClick={addNew} disabled={disabled}><AddIcon/></IconButton>;
     }
 
     return (
         <div className='flex full-width column'>
             <div className='flex full-width'>
-                <TextField label={title}
-                           readOnly
-                           className='grow-1'
-                           value={valueTitle}
-                           placeholder={valueTitle || (!value && String(value)) || valueTitle}
-                           error={(errors && Object.keys(errors).length > 0) || false}/>
+                <PlaceHolder value={value}
+                             property={property}
+                             label={title}
+                             className='grow-1'
+                             error={(errors && Object.keys(errors).length > 0) || false}/>
                 {actionButton}
                 {deleteButton}
             </div>

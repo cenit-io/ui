@@ -159,22 +159,27 @@ function uploaderReducer(state, action) {
         case 'add': {
             state.filesUpdated = new Date().getTime();
             let { files } = action;
-            const { max, rootId } = action;
-            files.forEach(file => file.status = FileStatus.waiting);
-            if (rootId) {
-                if (!files[0].fake) {
-                    files[0].id = rootId;
-                    files[0].filename = state.files[0].filename;
-                    files[0].customName = state.files[0].customName;
+            if (files?.length) {
+                const { max, rootId } = action;
+                files.forEach(file => file.status = FileStatus.waiting);
+                if (rootId) {
+                    if (!files[0].fake) {
+                        files[0].id = rootId;
+                        files[0].filename = state.files[0].filename;
+                        files[0].customName = state.files[0].customName;
+                    }
+                } else {
+                    files = [...state.files, ...files];
                 }
-            } else {
-                files = [...state.files, ...files];
+                const dropOverflow = files.length > max;
+                if (dropOverflow) {
+                    return { ...state, dropOverflow };
+                }
+
+                return { ...state, files, dropOverflow };
             }
-            const dropOverflow = files.length > max;
-            if (dropOverflow) {
-                return { ...state, dropOverflow };
-            }
-            return { ...state, files, dropOverflow };
+
+            return { ...state };
         }
 
         case 'submit': {
@@ -200,6 +205,16 @@ function uploaderReducer(state, action) {
 
         case 'currentProgress': {
             return { ...state, currentProgress: action.value };
+        }
+
+        case 'cancel': {
+            if (state.current) {
+                return { ...state, filesUpdated: new Date().getTime() };
+            }
+
+            const files = state.files.filter(file => file.status !== FileStatus.cancelled);
+
+            return { ...state, files };
         }
 
         case 'refresh': {
@@ -252,7 +267,7 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
         } else {
             file.status = FileStatus.cancelled;
         }
-        dispatch({ type: 'refresh' });
+        dispatch({ type: 'cancel' });
     };
 
     const handleDelete = e => {
@@ -385,12 +400,13 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
 
     useEffect(() => {
         if (rootId) {
+            const fValue = value.get();
             const file = {
-                ...value,
+                ...fValue,
                 id: rootId,
-                filename: value.filename,
-                name: value.filename,
-                customName: value.filename,
+                filename: fValue.filename,
+                name: fValue.filename,
+                customName: fValue.filename,
                 fake: true
             };
             const addFakeFile = { type: 'add', files: [file], max: 2, rootId };
@@ -453,11 +469,11 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
         if (filesUpdated) {
             const filesValue = computeFilesValue(files);
 
-            if (JSON.stringify(filesValue) !== JSON.stringify(value)) {
-                onChange(filesValue);
+            if (JSON.stringify(filesValue) !== JSON.stringify(value.get())) {
+                value.set(filesValue);
             }
         }
-    }, [filesUpdated, onChange, files, value])
+    }, [filesUpdated, files, value])
 
     useEffect(() => {
         if (current) {

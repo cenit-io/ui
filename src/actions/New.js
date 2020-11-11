@@ -4,6 +4,7 @@ import FormEditor from "../components/FormEditor";
 import NewIcon from '@material-ui/icons/Add';
 import { DataTypeSubject } from "../services/subjects";
 import Loading from "../components/Loading";
+import { FETCHED } from "../common/Symbols";
 
 const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
 
@@ -11,7 +12,11 @@ const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
 
     useEffect(() => {
         DataTypeSubject.for(dataType.id).config().subscribe(
-            config => setSeed((config.actions?.new?.seed) || {})
+            config => {
+                const seed = (config.actions?.new?.seed) || {};
+                seed[FETCHED] = true;
+                setSeed(seed);
+            }
         )
     }, [dataType]);
 

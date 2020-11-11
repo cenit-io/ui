@@ -6,6 +6,7 @@ import { Key } from "../common/Symbols";
 import Random from "../util/Random";
 import { interval, Subject } from "rxjs";
 import { debounce } from "rxjs/operators";
+import { useFormContext } from "./FormContext";
 
 const addons = [
     ['lint', 'lint.js'],
@@ -27,18 +28,17 @@ const autoHeightFor = json => !json || json.split(/\r\n|\r|\n/).length < 20;
 const jsonStringify = value => JSON.stringify(value, null, 2);
 
 function JsonControl(props) {
+    const { onChange, onError, value } = props;
+
     const [state, setState] = useReducer(spreadReducer, {
             json: '',
             key: Random.string(),
             css: customCSS,
             errorDebounce: new Subject(),
-            autoHeight: autoHeightFor(jsonStringify(props.value))
-        })
-    ;
+            autoHeight: autoHeightFor(jsonStringify(value.get()))
+        });
 
-    const { value, onChange, onError } = props;
-
-    const propValue = useRef(value);
+    const propValue = useRef(value.get());
     const error = useRef(null);
 
     const { json, key, css, errorDebounce, autoHeight } = state;
@@ -52,13 +52,13 @@ function JsonControl(props) {
     }, [errorDebounce, onError]);
 
     useEffect(() => {
-        propValue.current = value;
-        const isObj = isObject(value);
+        propValue.current = value.get();
+        const isObj = isObject(propValue.current);
         if (
-            (isObj && value[Key] !== key) ||
-            (!isObj && JSON.stringify(value) !== json)
+            (isObj && propValue.current[Key] !== key) ||
+            (!isObj && JSON.stringify(propValue.current) !== json)
         ) {
-            const jsonValue = jsonStringify(value);
+            const jsonValue = jsonStringify(propValue.current);
 
             setState({
                 json: jsonValue,
@@ -98,6 +98,7 @@ function JsonControl(props) {
             if (isObject(v)) {
                 v[Key] = key;
             }
+            value.set(v);
             onChange(v);
             errorDebounce.next(null);
             onError([]);

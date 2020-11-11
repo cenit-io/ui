@@ -18,7 +18,7 @@ const useStyles = makeStyles(theme => ({
 export const FormGroup = ({ children, error }) => {
 
     const classes = useStyles();
-    const className = clsx('flex column full-width', (error && classes.errorStyle) || classes.defaultStyle);
+    const className = clsx('flex column full-width relative', (error && classes.errorStyle) || classes.defaultStyle);
 
     return <div className={className}>
         {children}

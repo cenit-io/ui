@@ -1,42 +1,46 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import Random from "../util/Random";
 import { Failed } from "../common/Symbols";
+import spreadReducer from "../common/spreadReducer";
+import { useSpreadState } from "../common/hooks";
+import { useFormContext } from "./FormContext";
 
-const Actions = Object.freeze({
-    CheckValue: 'CheckValue',
-    UpdateValue: 'UpdateValue',
-    RefreshKey: 'RefreshKey',
-    Blur: 'Blur',
-    Focus: 'Focus'
-});
+const reactiveControlFor = Control => function (props) {
 
-function reducer(state, { action, ...data }) {
-    switch (action) {
-        case Actions.CheckValue: {
-            const { value, validator, onError } = data;
-            if (
-                state.value !== value ||
-                state.validator !== validator ||
-                state.onError !== onError
-            ) {
-                return {
-                    ...state,
-                    value,
-                    validator,
-                    onError,
-                    key: Random.string()
-                }
-            }
+    const { value, errors, onDelete, onChange, parser, validator, onError } = props;
+
+    const [state, setState] = useSpreadState({
+        key: Random.string()
+    });
+
+    const { initialFormValue } = useFormContext();
+
+    const { key, autoFocus } = state;
+
+    useEffect(() => {
+        setState({ key: Random.string() });
+        const subscription = value.changed().subscribe(
+            v => setState({ key: Random.string() })
+        );
+        return () => subscription.unsubscribe();
+    }, [value]);
+
+    const handleChange = v => {
+        let parsedValue;
+        if (parser) {
+            parsedValue = parser(v);
+        } else {
+            parsedValue = v;
         }
-            break;
-
-        case Actions.UpdateValue: {
-            const { validator, onError } = state;
-            const { value } = data;
-
-            const newState = { ...state, value: data.value };
+        if (parsedValue === Failed) {
+            setState({
+                key: Random.string(),
+                autoFocus: true
+            });
+        } else {
+            const newState = {};
             if (validator) {
-                let errors = validator(value);
+                let errors = validator(parsedValue);
                 if (errors) {
                     if (errors.constructor !== Array) {
                         errors = [errors];
@@ -48,97 +52,44 @@ function reducer(state, { action, ...data }) {
                     onError(null);
                 }
             }
-
-            return newState;
-        }
-
-        case Actions.RefreshKey: {
-            return {
-                ...state,
-                key: Random.string(),
-                autoFocus: data.autoFocus
-            };
-        }
-
-        case Actions.Blur: {
-            return {
-                ...state,
-                key: Random.string(),
-                autoFocus: false
-            };
-        }
-
-        case Actions.Focus: {
-            return {
-                ...state,
-                autoFocus: true
-            };
-        }
-    }
-
-    return state;
-}
-
-const reactiveControlFor = Control => function (props) {
-
-    const [state, dispatch] = useReducer(reducer, {});
-    const { value, errors, onDelete, onChange, parser, validator, onError } = props;
-
-    useEffect(() => {
-        dispatch({
-            action: Actions.CheckValue,
-            value,
-            validator,
-            onError
-        });
-    }, [value, validator, onError]);
-
-    const handleChange = value => {
-        let parsedValue;
-        if (parser) {
-            parsedValue = parser(value);
-        } else {
-            parsedValue = value;
-        }
-        if (parsedValue === Failed) {
-            dispatch({
-                action: Actions.RefreshKey,
-                autoFocus: true
-            });
-        } else {
-            dispatch({
-                action: Actions.UpdateValue,
-                value: parsedValue
-            });
-            setTimeout(onChange(parsedValue));
+            value.set(parsedValue);
+            setState(newState);
+            onChange && onChange(parsedValue);
         }
     };
 
     const handleClear = () => {
+        const initialValue = value.valueFrom(initialFormValue);
+        if (initialValue !== undefined && initialValue !== null) {
+            value.set(null);
+        } else {
+            value.delete();
+        }
         onDelete();
-        setTimeout(() => dispatch({
-            action: Actions.RefreshKey
-        }));
+        setState({
+            key: Random.string(),
+            autoFocus: false
+        })
     };
 
-    const handleBlur = () => dispatch({
-        action: Actions.Blur
+    const handleBlur = () => setState({
+        key: Random.string(),
+        autoFocus: false
     });
-
-    const { key, autoFocus } = state;
 
     const error = Boolean(errors && errors.length);
 
     return (
         <Control {...props}
+                 value={value.get()}
                  dynamicKey={key}
                  error={error}
                  onChange={handleChange}
                  onBlur={handleBlur}
                  autoFocus={autoFocus}
                  onClear={handleClear}
-                 onFocus={() => dispatch({
-                     action: Actions.Focus
+                 onFocus={() => setState({
+                     autoFocus: true
                  })}/>
     );
 };

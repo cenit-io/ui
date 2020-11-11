@@ -1,30 +1,44 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect } from 'react';
 import { IconButton } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
 import EditIcon from '@material-ui/icons/Edit';
 import ClearIcon from '@material-ui/icons/Clear';
 import RefPicker from "./RefPicker";
-import { map } from "rxjs/operators";
-import spreadReducer from "../common/spreadReducer";
+import { map, switchMap } from "rxjs/operators";
+import { useSpreadState } from "../common/hooks";
+import { FormRootValue } from "../services/FormValue";
+import { of } from "rxjs";
+import { FETCHED, Title } from "../common/Symbols";
+import { useFormContext } from "./FormContext";
 
 function RefOneControl({ title, value, property, disabled, readOnly, onChange, onDelete, onStack, config }) {
 
-    const [state, setState] = useReducer(spreadReducer, {
+    const [state, setState] = useSpreadState({
         text: null
     });
 
-    const { text, item } = state;
+    const { initialFormValue } = useFormContext();
+
+    const { text } = state;
 
     useEffect(() => {
-        if (value) {
-            setState({ text: null });
-            const subscription = property.dataType.titleFor(value).subscribe(
-                text => setState({ text })
-            );
-            return () => subscription.unsubscribe();
-        } else {
-            setState({ text: '' });
-        }
+        const obs = value.changed();
+        const subscription = obs.pipe(
+            switchMap(v => {
+                if (v) {
+                    const title = v[Title];
+                    if (title) {
+                        return of(title);
+                    }
+                    return property.dataType.titleFor(v);
+                }
+                return of('');
+            })
+        ).subscribe(
+            text => setState({ text })
+        );
+        obs.next(value.get());
+        return () => subscription.unsubscribe();
     }, [value, property]);
 
     const refValue = ({ id, _type }) => {
@@ -38,31 +52,64 @@ function RefOneControl({ title, value, property, disabled, readOnly, onChange, o
         return value;
     };
 
-    const handlePick = item => {
-        const value = refValue(item.record);
-        onChange(value);
-        setState({ value, text: item.title, item: item.record });
+    const handlePick = ({ record, title }) => {
+        record = refValue(record);
+        record[Title] = title;
+        value.set(record);
+        value.changed().next(record);
+        onChange(record);
     };
 
     const handleAddNew = () => onStack({
-        value: {},
+        value: new FormRootValue({ [FETCHED]: true }),
         dataType: property.dataType,
         title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
-        callback: newValue => onChange(refValue(newValue)),
+        callback: newValue => {
+            property.dataType.titleFor(newValue).subscribe(
+                title => {
+                    newValue = refValue(newValue);
+                    newValue[Title] = title;
+                    value.set(newValue);
+                    value.changed().next(newValue);
+                    onChange(newValue);
+                }
+            );
+        },
         max: 1
     });
 
     const handleEdit = () => onStack({
-        value: item || value,
+        value: new FormRootValue(value.get()),
         dataType: property.dataType,
         title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
-        callback: newValue => onChange(refValue(newValue)),
-        rootId: value.id
+        callback: newValue => {
+            property.dataType.titleFor(newValue).subscribe(
+                title => {
+                    newValue = refValue(newValue);
+                    newValue[Title] = title;
+                    value.set(newValue);
+                    value.changed().next(newValue);
+                    onChange(newValue);
+                }
+            );
+        },
+        rootId: value.cache.id
     });
+
+    const handleClear = () => {
+        const initialValue = value.valueFrom(initialFormValue);
+        if (initialValue) {
+            value.set(null);
+        } else {
+            value.delete();
+        }
+        onDelete();
+        setState({}); // to refresh
+    };
 
     let addButton, editButton, deleteButton;
 
-    if (value) {
+    if (value.get()) {
         editButton = (
             <IconButton onClick={handleEdit}
                         disabled={disabled}>
@@ -71,7 +118,7 @@ function RefOneControl({ title, value, property, disabled, readOnly, onChange, o
         );
         if (!readOnly) {
             deleteButton = (
-                <IconButton onClick={onDelete}
+                <IconButton onClick={handleClear}
                             disabled={disabled}>
                     <ClearIcon/>
                 </IconButton>

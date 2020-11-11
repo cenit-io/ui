@@ -1,4 +1,6 @@
 
+export const NEW = Symbol.for('_new');
+
 export const FETCHED = Symbol.for('_fetched');
 
 export const INDEX = Symbol.for('_index');
@@ -24,3 +26,5 @@ export const TitlePipe = Symbol.for('_titlePipe');
 export const Async = Symbol.for('_async');
 
 export const Config = Symbol.for('_config');
+
+export const Title = Symbol.for('_title');
