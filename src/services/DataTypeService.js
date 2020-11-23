@@ -880,7 +880,7 @@ export class DataType {
 
     shallowViewPort() {
         let properties;
-        return this.allProperties().pipe(
+        return this.visibleProps().pipe(
             tap(props => properties = props),
             switchMap(
                 props => zzip(
