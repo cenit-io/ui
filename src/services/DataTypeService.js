@@ -240,11 +240,13 @@ export class DataType {
             ));
     }
 
-    visibleProps() {
+    visibleProps(...plus) {
         return this.allProperties().pipe(
             switchMap(
                 props => zzip(...props.map(prop => prop.isVisible())).pipe(
-                    map(visible => visible.map((v, index) => v ? props[index] : null).filter(p => p))
+                    map(visible => visible.map(
+                        (v, index) => (v || plus.indexOf(props[index].name) !== -1) ? props[index] : null
+                    ).filter(p => p))
                 )
             ));
     }
@@ -880,7 +882,7 @@ export class DataType {
 
     shallowViewPort() {
         let properties;
-        return this.visibleProps().pipe(
+        return this.visibleProps('_id').pipe(
             tap(props => properties = props),
             switchMap(
                 props => zzip(

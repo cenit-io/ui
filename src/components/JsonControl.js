@@ -89,6 +89,7 @@ function JsonControl({ onChange, onError, value, ...otherProps }) {
                         } else {
                             value.delete();
                         }
+                        valueProxy.current.set(null);
                     } else {
                         value.set(v);
                     }
