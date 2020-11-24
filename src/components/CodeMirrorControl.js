@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import CodeMirror from 'codemirror';
 import { from, of } from "rxjs";
 import { IconButton, makeStyles, Typography } from "@material-ui/core";
@@ -11,6 +11,8 @@ import 'codemirror/lib/codemirror.css';
 
 import zzip from "../util/zzip";
 import Random from "../util/Random";
+import { useFormContext } from "./FormContext";
+import { useSpreadState } from "../common/hooks";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -53,8 +55,13 @@ export default function CodeMirrorControl({
                                           }) {
     const textElRef = useRef(null);
     const cleared = useRef(false);
-    const [editor, setEditor] = useState(null);
+    const [state, setState] = useSpreadState();
     const classes = useStyles();
+
+    const { editor } = state;
+    const setEditor = editor => setState({ editor });
+
+    const { initialFormValue } = useFormContext();
 
     const customCssRef = useRef(`c${Random.string()}`);
 
@@ -67,18 +74,6 @@ export default function CodeMirrorControl({
             }
 
             const editor = CodeMirror.fromTextArea(textElRef.current, opts);
-
-            const handleChange = () => {
-                if (cleared.current) {
-                    cleared.current = false;
-                    editor.save();
-                } else {
-                    onChange(editor.getValue())
-                }
-            };
-
-            editor.on('change', handleChange);
-            editor.on('paste', handleChange);
 
             setEditor(editor);
         }
@@ -135,18 +130,53 @@ export default function CodeMirrorControl({
 
     useEffect(() => {
         if (editor) {
-            const strValue = value || '';
-            if (strValue !== editor.getValue()) {
-                cleared.current = value === null || value === undefined;
-                editor.setValue(strValue);
-            }
+            const handleChange = () => {
+                if (cleared.current) {
+                    cleared.current = false;
+                    editor.save();
+                } else {
+                    value.set(editor.getValue());
+                    onChange && onChange(editor.getValue());
+                }
+                setState({}); // to refresh
+            };
+
+            editor.on('change', handleChange);
+            editor.on('paste', handleChange);
         }
+
+        const subscription = value.changed().subscribe(
+            v => {
+                if (editor) {
+                    const strValue = v || '';
+                    if (strValue !== editor.getValue()) {
+                        cleared.current = v === null || v === undefined;
+                        editor.setValue(strValue);
+                    }
+                }
+            }
+        );
+        value.changed().next(value.get());
+        return () => subscription.unsubscribe();
     }, [editor, value]);
 
+    const handleDelete = () => {
+        const initialValue = value.valueFrom(initialFormValue);
+        if (initialValue !== undefined && initialValue !== null) {
+            value.set(null);
+        } else {
+            value.delete();
+        }
+        cleared.current = true;
+        editor.setValue('');
+        onDelete && onDelete();
+        setState({}); // to refresh
+    };
+
     let clear;
-    if (!readOnly && !disabled && value !== undefined && value !== null) {
+    if (!readOnly && !disabled && value.get() !== undefined && value.cache !== null) {
         clear = (
-            <IconButton onClick={onDelete}>
+            <IconButton onClick={handleDelete}>
                 <ClearIcon/>
             </IconButton>
         );
@@ -166,7 +196,7 @@ export default function CodeMirrorControl({
     return (
         <React.Fragment>
             <style>
-                {`.${classes.root}.${customCssRef.current} .CodeMirror { resize: vertical; overflow: auto !important; ${styles} }`}
+                {`.${classes.root}.${customCssRef.current} .CodeMirror { ${styles} }`}
                 {customStyles}
             </style>
             <div className={clsx(classes.root, customCssRef.current, error && classes.error)}>

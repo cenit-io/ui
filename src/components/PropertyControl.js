@@ -54,6 +54,11 @@ function controlComponentFor(property) {
         }
 
         default: {
+
+            if (property.name === '_id' || property.name === 'id') {
+                return StringControl;
+            }
+
             return JsonControl;
         }
     }

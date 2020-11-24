@@ -2,10 +2,9 @@ import React, { useEffect, useReducer, useRef } from 'react';
 import CodeMirrorControl from "./CodeMirrorControl";
 import spreadReducer from "../common/spreadReducer";
 import scriptLoader from 'react-async-script-loader';
-import { Key } from "../common/Symbols";
-import Random from "../util/Random";
 import { interval, Subject } from "rxjs";
 import { debounce } from "rxjs/operators";
+import { FormRootValue } from "../services/FormValue";
 import { useFormContext } from "./FormContext";
 
 const addons = [
@@ -21,27 +20,33 @@ const addons = [
 const gutters = ["CodeMirror-lint-markers", "CodeMirror-foldgutter"];
 const customCSS = ['.CodeMirror-lint-marker-error { display: none }'];
 
-const isObject = v => v && typeof v === 'object';
-
 const autoHeightFor = json => !json || json.split(/\r\n|\r|\n/).length < 20;
 
 const jsonStringify = value => JSON.stringify(value, null, 2);
 
-function JsonControl(props) {
-    const { onChange, onError, value } = props;
+function JsonControl({ onChange, onError, value, ...otherProps }) {
 
     const [state, setState] = useReducer(spreadReducer, {
-            json: '',
-            key: Random.string(),
-            css: customCSS,
-            errorDebounce: new Subject(),
-            autoHeight: autoHeightFor(jsonStringify(value.get()))
-        });
+        css: customCSS,
+        errorDebounce: new Subject(),
+        autoHeight: autoHeightFor(jsonStringify(value.get()))
+    });
 
-    const propValue = useRef(value.get());
+    const { initialFormValue } = useFormContext();
+
+    const valueProxy = useRef(new FormRootValue(''));
+
     const error = useRef(null);
 
-    const { json, key, css, errorDebounce, autoHeight } = state;
+    const { css, errorDebounce, autoHeight } = state;
+
+    useEffect(() => {
+        const subscription = value.changed().subscribe(
+            v => valueProxy.current.set(jsonStringify(v))
+        );
+        value.changed().next(value.get());
+        return () => subscription.unsubscribe();
+    }, [value]);
 
     useEffect(() => {
         const subscription = errorDebounce.pipe(
@@ -52,68 +57,61 @@ function JsonControl(props) {
     }, [errorDebounce, onError]);
 
     useEffect(() => {
-        propValue.current = value.get();
-        const isObj = isObject(propValue.current);
-        if (
-            (isObj && propValue.current[Key] !== key) ||
-            (!isObj && JSON.stringify(propValue.current) !== json)
-        ) {
-            const jsonValue = jsonStringify(propValue.current);
-
-            setState({
-                json: jsonValue,
-                autoHeight: autoHeightFor(jsonValue)
-            });
-        }
-    }, [value, json]);
-
-    const clearCss = () => {
-        if (css && css.length) {
-            setState({ css: null });
-        }
-    };
-
-    const handleChange = json => {
-        const errorBeforeChange = error.current;
-        let v;
-        try {
-            v = JSON.parse(json);
-            error.current = null;
-        } catch (e) {
-            error.current = e.message;
-        }
-        if (error.current) {
-            if (json === '' && (propValue.current === null || propValue.current === undefined)) {
-                setState({ css: customCSS });
-            } else {
-                clearCss();
-                if (errorBeforeChange) {
-                    errorDebounce.next(error.current);
+        const subscription = valueProxy.current.changed().subscribe(
+            json => {
+                const blank = json === '' || json === undefined || json === null;
+                const errorBeforeChange = error.current;
+                let v;
+                try {
+                    v = JSON.parse(json);
+                    error.current = null;
+                } catch (e) {
+                    error.current = blank ? null : e.message;
+                }
+                if (error.current) {
+                    clearCss();
+                    if (errorBeforeChange) {
+                        errorDebounce.next(error.current);
+                    } else {
+                        onError([error.current]);
+                    }
                 } else {
-                    onError([error.current]);
+                    if (blank) {
+                        setState({ css: customCSS });
+                        v = null;
+                    } else {
+                        clearCss();
+                    }
+                    if (v === null || v === undefined) {
+                        const initialValue = value.valueFrom(initialFormValue);
+                        if (initialValue !== undefined && initialValue !== null) {
+                            value.set(null);
+                        } else {
+                            value.delete();
+                        }
+                    } else {
+                        value.set(v);
+                    }
+                    onChange(v);
+                    errorDebounce.next(null);
+                    onError([]);
                 }
             }
-        } else {
-            clearCss();
-            if (isObject(v)) {
-                v[Key] = key;
-            }
-            value.set(v);
-            onChange(v);
-            errorDebounce.next(null);
-            onError([]);
-        }
-    };
+        );
+
+        return () => subscription.unsubscribe();
+    }, [value, errorDebounce, onError, onChange, initialFormValue]);
+
+    const clearCss = () => css?.length && setState({ css: null });
 
     return (
-        <CodeMirrorControl {...props}
+        <CodeMirrorControl {...otherProps}
                            lineNumbers={true}
                            addons={addons}
-                           value={json}
+                           value={valueProxy.current}
                            gutters={gutters}
                            lint={true}
                            foldGutter={true}
-                           onChange={handleChange}
                            autoHeight={autoHeight}
                            viewportMargin={Infinity}
                            mime="application/json"
