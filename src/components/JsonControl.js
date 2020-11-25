@@ -93,6 +93,7 @@ function JsonControl({ onChange, onError, value, ...otherProps }) {
                     } else {
                         value.set(v);
                     }
+                    setState({autoHeight: autoHeightFor(json)});
                     onChange(v);
                     errorDebounce.next(null);
                     onError([]);
