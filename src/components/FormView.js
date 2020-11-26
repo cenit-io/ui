@@ -103,7 +103,6 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
                 })),
                 tap(response => value.set({ ...value.get(), ...response })),
                 catchError(error => {
-                    console.error(error);
                     setState({ errors: error.response.data });
                     return of(null);
                 })

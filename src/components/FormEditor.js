@@ -204,6 +204,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
                 setSaving(false);
             }, 1000);
         } else {
+            current.submitter = new Subject();
             setSaving(false);
         }
     }, [current]);
