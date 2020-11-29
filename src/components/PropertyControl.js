@@ -13,8 +13,13 @@ import IntegerControl from "./IntegerControl";
 import StringCodeControl from "./StringCodeControl";
 import JsonControl from "./JsonControl";
 import spreadReducer from "../common/spreadReducer";
+import EnumControl from "./EnumControl";
 
 function controlComponentFor(property) {
+    if (property.propertySchema.enum) {
+        return EnumControl;
+    }
+
     switch (property.type) {
 
         case 'embedsOne': {

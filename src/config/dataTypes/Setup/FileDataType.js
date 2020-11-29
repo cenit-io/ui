@@ -38,7 +38,10 @@ export default {
     actions: {
         new: {
             fields,
-            viewport
+            viewport,
+            seed: {
+                id_type: 'default'
+            }
         },
         edit: {
             fields: ['id', ...fields],
