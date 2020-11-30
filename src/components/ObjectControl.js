@@ -20,7 +20,7 @@ function ObjectControl(props) {
 
     const { initialFormValue } = useFormContext();
 
-    const { schemaResolver, properties, schema, config } = state;
+    const { schemaResolver, properties, schema, config, ready } = state;
 
     const {
         onChange, value, dataType, fetchPath, onFetched,
@@ -44,7 +44,7 @@ function ObjectControl(props) {
                 return () => subscription.unsubscribe();
             }
         }
-    }, [dataType, property]);
+    }, [dataTypeId, dataType, property]);
 
     useEffect(() => {
         if (schemaResolver) {
@@ -112,7 +112,7 @@ function ObjectControl(props) {
                         value.set(fetchedValue, true);
                         onFetched && onFetched(fetchedValue);
                         value.setOn(initialFormValue, fetchedValue);
-                        setState({}); // for refresh
+                        setState({ ready: true }); // for refresh
                     }
                 );
                 return () => subscription.unsubscribe();
@@ -179,7 +179,8 @@ function ObjectControl(props) {
                                      disabled={fetching || disabled}
                                      readOnly={readOnly || prop.isReadOnly(context)}
                                      onStack={onStack}
-                                     config={fieldConfig}/>
+                                     config={fieldConfig}
+                                     ready={ready}/>
                 );
             }
         );

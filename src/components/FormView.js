@@ -112,7 +112,7 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
         }
     }, [value, submitter, viewport, formDataType, onSubmitDone, rootId]);
 
-    const handleFetched = initialFormValue => setState({ ready: true, initialFormValue });
+    const handleFetched = initialFormValue => setState({ initialFormValue });
 
     const formHeight = `${height} - ${theme.spacing(16)}px`;
 
@@ -181,8 +181,7 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
         value,
         viewport,
         submitter,
-        initialFormValue,
-        ready
+        initialFormValue
     };
 
     return (

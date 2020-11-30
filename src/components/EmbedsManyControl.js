@@ -16,7 +16,7 @@ import Random from "../util/Random";
 import { useFormContext } from "./FormContext";
 
 
-function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema, disabled, onStack, readOnly }) {
+function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema, disabled, onStack, readOnly, ready }) {
 
     const [state, setState] = useSpreadState({
         open: false,
@@ -24,7 +24,7 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
     });
     const indexed = useRef(false);
 
-    const { ready, initialFormValue } = useFormContext();
+    const { initialFormValue } = useFormContext();
 
     const setOpen = open => setState({ open });
     const setSelectedIndex = selectedIndex => setState({ selectedIndex });
