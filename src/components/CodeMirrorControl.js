@@ -81,7 +81,7 @@ export default function CodeMirrorControl({
 
     useEffect(() => {
         if (editor) {
-            const cmMime = mime || property.propertySchema.contentMediaType;
+            const cmMime = mime || property.propertySchema.contentMediaType || 'text/plain';
             const cmMode = (
                 mode ||
                 (
