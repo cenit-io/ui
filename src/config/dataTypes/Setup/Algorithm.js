@@ -10,7 +10,8 @@ function orchestrator({ language }, state) {
         },
         call_links: {
             addDisabled: true,
-            deleteDisabled: true
+            deleteDisabled: true,
+            sortDisabled: true
         }
     }
 }

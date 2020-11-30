@@ -14,12 +14,14 @@ import { FETCHED, INDEX, Key, NEW } from "../common/Symbols";
 import { useSpreadState } from "../common/hooks";
 import Random from "../util/Random";
 import { useFormContext } from "./FormContext";
+import { ReactSortable } from "react-sortablejs";
 
 
 function EmbedsManyControl({
                                title, value, property, errors, onDelete, onChange,
-                               schema, disabled, onStack, readOnly, ready, addDisabled, deleteDisabled
-}) {
+                               schema, disabled, onStack, readOnly, ready,
+                               addDisabled, deleteDisabled, sortDisabled
+                           }) {
 
     const [state, setState] = useSpreadState({
         open: false,
@@ -129,6 +131,27 @@ function EmbedsManyControl({
         )
     });
 
+    const sort = indices => {
+        indices = indices.map(({id}) => parseInt(id));
+        const newValue = new Array(value.get());
+        let newSelectedIndex = selectedIndex;
+        let modified = false;
+        indices.forEach((oldIndex, index) => {
+            modified =  modified || oldIndex !== index;
+            if (selectedIndex === oldIndex) {
+                newSelectedIndex = index;
+            }
+            newValue[index] = value.cache[oldIndex];
+        });
+        if (modified) {
+            value.set(newValue);
+            onChange(newValue);
+            if (newSelectedIndex !== selectedIndex) {
+                setState({ selectedIndex: newSelectedIndex });
+            }
+        }
+    };
+
     if (eValue) {
         if (open) {
             itemChips = eValue.map(
@@ -147,6 +170,15 @@ function EmbedsManyControl({
                                      readOnly={readOnly || deleteDisabled}/>;
                 }
             );
+
+            if (!sortDisabled) {
+                itemChips = (
+                    <ReactSortable list={Object.keys(eValue).map(id => ({ id }))}
+                                   setList={sort}>
+                        {itemChips}
+                    </ReactSortable>
+                );
+            }
 
             dropButton = eValue.length > 0 && (
                 <IconButton onClick={() => setOpen(false)} disabled={disabled}>

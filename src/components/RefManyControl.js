@@ -13,6 +13,7 @@ import { FormRootValue } from "../services/FormValue";
 import { FETCHED, Title } from "../common/Symbols";
 import { ItemChip } from "./ItemChip";
 import { useFormContext } from "./FormContext";
+import { ReactSortable } from "react-sortablejs";
 
 
 export default function RefManyControl({ title, property, value, onChange, onStack, onDelete, disabled, readOnly, config }) {
@@ -109,6 +110,20 @@ export default function RefManyControl({ title, property, value, onChange, onSta
         });
     };
 
+    const sort = indices => {
+        indices = indices.map(({id}) => parseInt(id));
+        const newValue = new Array(value.get());
+        let modified = false;
+        indices.forEach((oldIndex, index) => {
+            modified =  modified || oldIndex !== index;
+            newValue[index] = value.cache[oldIndex];
+        });
+        if (modified) {
+            value.set(newValue);
+            onChange(newValue);
+        }
+    };
+
     let dropButton, deleteButton, itemsControls;
 
     const aValue = value.get();
@@ -124,6 +139,12 @@ export default function RefManyControl({ title, property, value, onChange, onSta
                                         onDelete={(!readOnly && handleDelete(index)) || null}
                                         disabled={disabled}
                                         readOnly={readOnly}/>
+            );
+            itemsControls = (
+                <ReactSortable list={Object.keys(aValue).map(id => ({id}))}
+                               setList={sort}>
+                    {itemsControls}
+                </ReactSortable>
             );
         } else {
             dropButton = aValue.length > 0 &&
