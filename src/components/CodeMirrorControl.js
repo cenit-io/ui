@@ -92,7 +92,7 @@ export default function CodeMirrorControl({
 
             const subscription = zzip(
                 (theme && from(import(`codemirror/theme/${theme || 'default'}.css`))) || of(true),
-                from(import(`codemirror/mode/${cmMode}/${cmMode}`)),
+                (cmMode === 'null' && of(true)) || from(import(`codemirror/mode/${cmMode}/${cmMode}`)),
                 ...(addons || []).map(
                     addon => from(import(`codemirror/addon/${addon[0]}/${addon[1]}`))
                 )
