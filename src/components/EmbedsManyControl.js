@@ -16,7 +16,10 @@ import Random from "../util/Random";
 import { useFormContext } from "./FormContext";
 
 
-function EmbedsManyControl({ title, value, property, errors, onDelete, onChange, schema, disabled, onStack, readOnly, ready }) {
+function EmbedsManyControl({
+                               title, value, property, errors, onDelete, onChange,
+                               schema, disabled, onStack, readOnly, ready, addDisabled, deleteDisabled
+}) {
 
     const [state, setState] = useSpreadState({
         open: false,
@@ -141,14 +144,15 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
                                      onDelete={deleteItem(index)}
                                      selected={selectedIndex === index}
                                      disabled={disabled}
-                                     readOnly={readOnly}/>;
+                                     readOnly={readOnly || deleteDisabled}/>;
                 }
             );
 
-            dropButton = !readOnly && eValue.length > 0 &&
+            dropButton = eValue.length > 0 && (
                 <IconButton onClick={() => setOpen(false)} disabled={disabled}>
                     <ArrowDropUpIcon/>
-                </IconButton>;
+                </IconButton>
+            );
 
             let itemControl;
 
@@ -180,13 +184,13 @@ function EmbedsManyControl({ title, value, property, errors, onDelete, onChange,
                     <ArrowDropDownIcon/>
                 </IconButton>;
         }
-        if (!readOnly) {
+        if (!readOnly && !deleteDisabled) {
             deleteButton = <IconButton onClick={handleClear} disabled={disabled}><ClearIcon/></IconButton>;
         }
     }
 
     let addButton;
-    if (!readOnly) {
+    if (!readOnly && !addDisabled) {
         const AddNewIcon = eValue ? AddIcon : CreateIcon;
         addButton = <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>;
     }

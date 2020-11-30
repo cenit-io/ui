@@ -1,12 +1,16 @@
+const fields = ['name', 'type', 'many', 'required'];
 
 export default {
     title: 'Algorithm Parameter',
     actions: {
         new: {
-            fields: ['name', 'type', 'many', 'required'],
+            fields,
             seed: {
                 language: 'ruby'
             }
+        },
+        edit: {
+            fields
         }
     }
 };

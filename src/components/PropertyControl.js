@@ -69,6 +69,19 @@ function controlComponentFor(property) {
     }
 }
 
+const configurableProps = ['readOnly'];
+
+function configProps(config, value) {
+    return config && configurableProps.reduce((prev, prop) => {
+        let fieldConfig = config[prop];
+        if (typeof fieldConfig === 'function') {
+            fieldConfig = fieldConfig(value);
+        }
+        prev[prop] = fieldConfig;
+        return prev;
+    }, {});
+}
+
 const useStyles = makeStyles(theme => ({
     control: {
         padding: theme.spacing(1)
@@ -111,6 +124,7 @@ function PropertyControl(props) {
 
         const control = <ControlComponent {...state}
                                           {...props}
+                                          {...configProps(config)}
                                           errors={currentErrors}
                                           onError={setErrors}
                                           onChange={handleChange}/>;

@@ -9,7 +9,8 @@ function orchestrator({ language }, state) {
             mime: language === 'ruby' ? 'text/x-ruby' : 'text/javascript'
         },
         call_links: {
-            readOnly: true
+            addDisabled: true,
+            deleteDisabled: true
         }
     }
 }
