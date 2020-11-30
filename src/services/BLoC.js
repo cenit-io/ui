@@ -1,7 +1,7 @@
 import { Subject } from "rxjs";
 import Random from "../util/Random";
 
-function eq(a, b) {
+export function eq(a, b) {
     if (a === null) {
         return b === null;
     }

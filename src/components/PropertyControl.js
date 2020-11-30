@@ -81,7 +81,7 @@ const useStyles = makeStyles(theme => ({
 function PropertyControl(props) {
     const [state, setState] = useReducer(spreadReducer, {});
 
-    const { errors, property, onChange } = props;
+    const { errors, property, onChange, config } = props;
     const { schema, controlErrors } = state;
     const classes = useStyles();
 
@@ -105,7 +105,7 @@ function PropertyControl(props) {
     const setErrors = controlErrors => setState({ controlErrors });
 
     if (schema) {
-        const ControlComponent = controlComponentFor(property);
+        const ControlComponent = config?.control || controlComponentFor(property);
 
         const currentErrors = ControlComponent.ownErrorMessages ? null : (controlErrors || errors);
 

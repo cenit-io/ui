@@ -14,13 +14,14 @@ import { tap } from "rxjs/internal/operators/tap";
 import Group from "./Group";
 import { useFormContext } from "./FormContext";
 import FrezzerLoader from "./FrezzerLoader";
+import { eq } from "../services/BLoC";
 
 function ObjectControl(props) {
     const [state, setState] = useReducer(spreadReducer, {});
 
     const { initialFormValue } = useFormContext();
 
-    const { schemaResolver, properties, schema, config, ready } = state;
+    const { schemaResolver, properties, schema, config, orchestrator, orchestratorState, ready } = state;
 
     const {
         onChange, value, dataType, fetchPath, onFetched,
@@ -57,8 +58,19 @@ function ObjectControl(props) {
 
     useEffect(() => {
         if (schema) {
-            const subscription = DataTypeSubject.for(dataTypeId).config().pipe(
-                tap(config => setState({ config })),
+            const subscription = DataTypeSubject.for(
+                dataTypeId || dataType?.id || property?.dataType?.id
+            ).config().pipe(
+                tap(
+                    config => setState({
+                        config,
+                        orchestrator: (
+                            rootId
+                                ? config?.actions?.edit?.orchestrator
+                                : config?.actions?.new?.orchestrator
+                        ) || config?.orchestrator
+                    })
+                ),
                 switchMap(config => {
                     const configFields = rootId
                         ? config.actions?.edit?.fields
@@ -78,7 +90,7 @@ function ObjectControl(props) {
             ).subscribe(properties => setState({ properties }));
             return () => subscription.unsubscribe();
         }
-    }, [schema]);
+    }, [schema, dataType, dataTypeId, property]);
 
     useEffect(() => {
         if (schemaResolver && properties && rootId) {
@@ -119,6 +131,20 @@ function ObjectControl(props) {
             }
         }
     }, [schemaResolver, properties, rootId, value, onChange, onFetched, initialFormValue]);
+
+    useEffect(() => {
+        if (orchestrator) {
+            const subscription = value.changed().subscribe(
+                v => {
+                    const newState = orchestrator(v, orchestratorState);
+                    if (!eq(newState, orchestratorState)) {
+                        setState({ orchestratorState: newState });
+                    }
+                }
+            );
+            return () => subscription.unsubscribe();
+        }
+    }, [orchestrator, orchestratorState, value]);
 
     const getDataType = () => schemaResolver &&
         (schemaResolver.constructor === Property ? schemaResolver.dataType : schemaResolver);
@@ -180,7 +206,8 @@ function ObjectControl(props) {
                                      readOnly={readOnly || prop.isReadOnly(context)}
                                      onStack={onStack}
                                      config={fieldConfig}
-                                     ready={ready}/>
+                                     ready={ready}
+                                     {...(orchestratorState && orchestratorState[prop.name])}/>
                 );
             }
         );
