@@ -32,6 +32,30 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+const ExtraModeTypes = {
+    Java: ['text/x-java-source']
+};
+
+Object.keys(ExtraModeTypes).forEach(
+    mode => {
+        const cmode = CodeMirror.modeInfo.find(({ name }) => name === mode);
+        if (cmode) {
+            const mimes = [
+                ExtraModeTypes[mode],
+                cmode.mime,
+                cmode.mimes
+            ].flat()
+                .filter((v, i, a) => a.indexOf(v) === i)
+                .filter(v => v);
+            if (mimes.length > 1) {
+                cmode.mimes = mimes;
+            } else {
+                cmode.mime = mimes;
+            }
+        }
+    }
+);
+
 export default function CodeMirrorControl({
                                               property,
                                               title,
@@ -81,12 +105,14 @@ export default function CodeMirrorControl({
 
     useEffect(() => {
         if (editor) {
-            const cmMime = mime || property.propertySchema.contentMediaType || 'text/plain';
+            let cmMime = mime || property.propertySchema.contentMediaType || 'text/plain';
+            const modeInfo = CodeMirror.findModeByMIME(cmMime);
+            if (modeInfo) {
+                cmMime = modeInfo.mime || cmMime;
+            }
             const cmMode = (
-                mode ||
-                (
-                    CodeMirror.findModeByMIME(cmMime) ||
-                    CodeMirror.findModeByMIME('text/plain')
+                mode || (
+                    modeInfo || CodeMirror.findModeByMIME('text/plain')
                 ).mode
             );
 
