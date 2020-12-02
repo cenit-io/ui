@@ -13,6 +13,7 @@
     "deepmerge": "^4.2.2",
     "htmlhint": "^0.14.2",
     "liquidjs": "^9.16.1",
+    "mime-types": "^2.1.27",
     "object-hash": "^2.0.3",
     "pluralize": "^8.0.0",
     "query-string": "^6.13.7",
