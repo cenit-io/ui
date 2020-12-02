@@ -16,6 +16,32 @@ import { useFormContext } from "./FormContext";
 import FrezzerLoader from "./FrezzerLoader";
 import { eq } from "../services/BLoC";
 
+function editFields(config) {
+    const editConfig = config.actions?.edit;
+    const newConfig = config.actions?.new;
+    if (editConfig?.fields) {
+        return editConfig.fields;
+    }
+    let fields = newConfig?.fields
+    if (fields) {
+        if (fields.indexOf('id') === -1) {
+            fields = ['id', ...fields];
+        }
+        return fields;
+    }
+}
+
+function editViewport(config) {
+    const editConfig = config.actions?.edit;
+    if (editConfig?.viewport) {
+        return editConfig.viewport;
+    }
+    const fields = editFields(config);
+    if (fields) {
+        return `{${fields.join(' ')}}`;
+    }
+}
+
 function ObjectControl(props) {
     const [state, setState] = useReducer(spreadReducer, {});
 
@@ -73,7 +99,7 @@ function ObjectControl(props) {
                 ),
                 switchMap(config => {
                     const configFields = rootId
-                        ? config.actions?.edit?.fields
+                        ? editFields(config)
                         : config.actions?.new?.fields;
                     if (configFields) {
                         return getDataType().properties().pipe(
@@ -100,7 +126,7 @@ function ObjectControl(props) {
                     switchMap(config => {
                         const configViewport = v[NEW]
                             ? config.actions?.new?.viewport
-                            : config.actions?.edit?.viewport;
+                            : editViewport(config);
 
                         if (configViewport) {
                             return of(configViewport);
@@ -136,8 +162,8 @@ function ObjectControl(props) {
         if (orchestrator) {
             const subscription = value.changed().subscribe(
                 v => {
-                    const newState = orchestrator(v, orchestratorState);
-                    if (!eq(newState, orchestratorState)) {
+                    const newState = orchestrator(v, orchestratorState || {}, value);
+                    if (newState && !eq(newState, orchestratorState)) {
                         setState({ orchestratorState: newState });
                     }
                 }

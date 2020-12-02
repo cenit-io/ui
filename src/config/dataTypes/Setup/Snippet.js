@@ -9,9 +9,11 @@ const Types = {
 };
 
 function orchestrator({ type }, state) {
-    return {
-        code: {
-            mime: Types[type]
+    if (state.code?.mime !== type) {
+        return {
+            code: {
+                mime: Types[type]
+            }
         }
     }
 }
@@ -24,17 +26,13 @@ export default {
             fields: ['namespace', 'name', 'description', 'type', 'updated_at']
         },
         new: {
-            fields: ['namespace', 'name', 'description', 'type', 'code'],
-            orchestrator
-        },
-        edit: {
-            fields: ['id', 'namespace', 'name', 'description', 'type', 'code'],
-            orchestrator
+            fields: ['namespace', 'name', 'description', 'type', 'code']
         }
     },
     fields: {
         code: {
             control: StringCodeControl
         }
-    }
+    },
+    orchestrator
 };
