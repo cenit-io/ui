@@ -750,17 +750,18 @@ export class DataType {
 
     straightTitleFor(item) {
         return zzip(this.getSchema(), this.getTitle()).pipe(
-            switchMap(
-                ([schema, dtTitle]) => {
-                    if (schema.label) {
-                        return from(LiquidEngine.parseAndRender(schema.label, item));
-                    }
-                    let title = item.title || item.name;
-                    if (title) {
-                        return of(title);
-                    }
-                    return of(`${dtTitle} ${item.id || '(blank)'}`);
-                })
+            switchMap(([schema, dtTitle]) => {
+                if (schema.label) {
+                    return from(LiquidEngine.parseAndRender(schema.label, item)).pipe(
+                        map(
+                            title => title || `${dtTitle} ${item.id || '(blank)'}`
+                        )
+                    );
+                }
+                return of(
+                    item.title || item.name || `${dtTitle} ${item.id || '(blank)'}`
+                );
+            })
         );
     }
 
