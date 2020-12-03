@@ -186,7 +186,7 @@ export class DataType {
                         prop.isModel()
                     ).pipe(map(([isRef, isMany, propSch, isModel]) => {
                             if (isModel) {
-                                if (isRef) { // Referenced
+                                if (isRef && !propSch.export_embedded) { // Referenced
                                     if (isMany) { // Many
                                         prop.type = 'refMany';
                                     } else { // One
