@@ -7,7 +7,7 @@ import { templateMimeOrchestrator } from "./Template";
 const orchestrator = templateMimeOrchestrator();
 
 export default {
-    title: 'ERB Template',
+    title: 'Handlebars Template',
     icon: <TemplateFilledIcon/>,
     actions: {
         index: {

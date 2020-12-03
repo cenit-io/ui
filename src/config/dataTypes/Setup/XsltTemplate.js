@@ -4,17 +4,21 @@ import StringCodeControl from "../../../components/StringCodeControl";
 import AutocompleteControl from "../../../components/AutocompleteControl";
 import { templateMimeOrchestrator } from "./Template";
 
-const orchestrator = templateMimeOrchestrator();
+const orchestrator = templateMimeOrchestrator('application/xml', [
+    'application/xml',
+    'text/html',
+    'text/plain'
+]);
 
 export default {
-    title: 'ERB Template',
+    title: 'XSLT Template',
     icon: <TemplateFilledIcon/>,
     actions: {
         index: {
-            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'bulk_source', 'updated_at']
+            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'updated_at']
         },
         new: {
-            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'bulk_source', 'code']
+            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'code']
         }
     },
     fields: {

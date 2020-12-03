@@ -4,10 +4,10 @@ import StringCodeControl from "../../../components/StringCodeControl";
 import AutocompleteControl from "../../../components/AutocompleteControl";
 import { templateMimeOrchestrator } from "./Template";
 
-const orchestrator = templateMimeOrchestrator();
+const orchestrator = templateMimeOrchestrator('text/x-ruby');
 
 export default {
-    title: 'ERB Template',
+    title: 'Ruby Template',
     icon: <TemplateFilledIcon/>,
     actions: {
         index: {

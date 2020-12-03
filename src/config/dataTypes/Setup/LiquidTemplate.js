@@ -7,14 +7,14 @@ import { templateMimeOrchestrator } from "./Template";
 const orchestrator = templateMimeOrchestrator();
 
 export default {
-    title: 'ERB Template',
+    title: 'Liquid Template',
     icon: <TemplateFilledIcon/>,
     actions: {
         index: {
-            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'bulk_source', 'updated_at']
+            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'updated_at']
         },
         new: {
-            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'bulk_source', 'code']
+            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'code']
         }
     },
     fields: {
