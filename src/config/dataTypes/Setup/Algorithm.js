@@ -8,11 +8,6 @@ function orchestrator({ language }, state) {
         return {
             code: {
                 mime
-            },
-            call_links: { // TODO Move to call_links field config
-                addDisabled: true,
-                deleteDisabled: true,
-                sortDisabled: true
             }
         }
     }
@@ -32,14 +27,19 @@ export default {
             }
         },
         edit: {
-            seed: {
-                language: 'ruby'
-            }
+            fields: ['namespace', 'name', 'description', 'parameters', 'language', 'code', 'call_links']
         }
     },
     fields: {
         code: {
             control: StringCodeControl
+        },
+        call_links: {
+            controlProps: {
+                addDisabled: true,
+                deleteDisabled: true,
+                sortDisabled: true
+            }
         }
     },
     orchestrator

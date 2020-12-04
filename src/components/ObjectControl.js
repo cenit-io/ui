@@ -233,6 +233,7 @@ function ObjectControl(props) {
                                      onStack={onStack}
                                      config={fieldConfig}
                                      ready={ready}
+                                     {...fieldConfig?.controlProps}
                                      {...(orchestratorState && orchestratorState[prop.name])}/>
                 );
             }

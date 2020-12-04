@@ -1,16 +1,16 @@
 import React from "react";
-import TemplateFilledIcon from "../../../icons/TemplateFilledIcon";
+import UpdaterFilledIcon from "../../../icons/UpdaterFilledIcon";
 import StringCodeControl from "../../../components/StringCodeControl";
 
 export default {
-    title: 'Prawn Template',
-    icon: <TemplateFilledIcon/>,
+    title: 'Ruby Updater',
+    icon: <UpdaterFilledIcon/>,
     actions: {
         index: {
-            fields: ['namespace', 'name', 'source_data_type', 'bulk_source', 'updated_at']
+            fields: ['namespace', 'name', 'target_data_type', 'discard_events', 'source_handler', 'updated_at']
         },
         new: {
-            fields: ['namespace', 'name', 'source_data_type', 'bulk_source', 'code']
+            fields: ['namespace', 'name', 'target_data_type', 'discard_events', 'source_handler', 'code']
         }
     },
     fields: {
