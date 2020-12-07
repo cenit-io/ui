@@ -42,6 +42,20 @@ export class DataType {
     static criteria = {};
     static gets = {};
 
+    static from(spec) {
+        if (spec._type === JSON_TYPE) {
+            delete spec.schema;
+        } else {
+            injectCommonProperties(spec.schema);
+        }
+        if (spec._type === FILE_TYPE) {
+            spec.__proto__ = new FileDataType();
+        } else {
+            spec.__proto__ = new DataType();
+        }
+        return spec;
+    }
+
     static getById(id) {
         let dataType = DataType.dataTypes[id];
         if (dataType) {
@@ -54,17 +68,7 @@ export class DataType {
             }).pipe(
                 tap(dataType => {
                     if (dataType) {
-                        if (dataType._type === JSON_TYPE) {
-                            delete dataType.schema;
-                        } else {
-                            injectCommonProperties(dataType.schema);
-                        }
-                        if (dataType._type === FILE_TYPE) {
-                            dataType.__proto__ = new FileDataType();
-                        } else {
-                            dataType.__proto__ = new DataType();
-                        }
-                        DataType.dataTypes[id] = dataType;
+                        DataType.dataTypes[id] = DataType.from(dataType);
                     }
                     delete DataType.gets[id];
                     return dataType;
@@ -892,12 +896,13 @@ export class DataType {
                             switchMap(simple => (simple && of('')) || p.dataType.titleViewPort('_id'))
                         )
                     )
+                ).pipe(
+                    map(
+                        childViewports => '{' + props.map(
+                            (prop, index) => `${prop.name} ${childViewports[index]}`
+                        ).join('') + '}'
+                    )
                 )
-            ),
-            map(
-                childViewports => '{' + properties.map(
-                    (prop, index) => `${prop.name} ${childViewports[index]}`
-                ).join('') + '}'
             )
         );
     }
