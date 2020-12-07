@@ -13,7 +13,7 @@ import Random from "../util/Random";
 import { useSpreadState } from "../common/hooks";
 import { useFormContext } from "./FormContext";
 
-function PlaceHolder({ value, property, label, error, className }) {
+function PlaceHolder({ value, dataType, label, error, className }) {
     const [state, setState] = useSpreadState({
         key: Random.string(),
         valueTitle: ''
@@ -26,7 +26,7 @@ function PlaceHolder({ value, property, label, error, className }) {
 
         let obs = value.changed().pipe(
             switchMap(
-                v => (v && property.dataType.straightTitleFor(v)) || of('')
+                v => (v && dataType.straightTitleFor(v)) || of('')
             )
         );
 
@@ -35,7 +35,7 @@ function PlaceHolder({ value, property, label, error, className }) {
         obs.next(value.get());
 
         return () => subscription.unsubscribe();
-    }, [value, property]);
+    }, [value, dataType]);
 
     return (
         <TextField key={key}
@@ -48,7 +48,7 @@ function PlaceHolder({ value, property, label, error, className }) {
     );
 }
 
-function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, width, disabled, onStack, readOnly }) {
+function EmbedsOneControl({ title, value, errors, property, dataType, onDelete, onChange, width, disabled, onStack, readOnly }) {
 
     const [state, setState] = useSpreadState();
 
@@ -74,7 +74,7 @@ function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, 
     const handleStack = item => onStack({
         ...item,
         title: itemValue => item.title(itemValue).pipe(
-            switchMap(itemTitle => property.dataType.titleFor(value.get()).pipe(
+            switchMap(itemTitle => (dataType || property.dataType).titleFor(value.get()).pipe(
                 map(title => `[${property.name}] ${title} ${itemTitle}`)
             )))
     });
@@ -95,7 +95,8 @@ function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, 
 
     if (value.get()) {
         if (open) {
-            objectControl = <ObjectControl property={property}
+            objectControl = <ObjectControl dataType={dataType}
+                                           property={property}
                                            value={value}
                                            errors={errors}
                                            onChange={onChange}
@@ -120,7 +121,7 @@ function EmbedsOneControl({ title, value, errors, property, onDelete, onChange, 
         <div className='flex full-width column'>
             <div className='flex full-width'>
                 <PlaceHolder value={value}
-                             property={property}
+                             dataType={dataType || property.dataType}
                              label={title}
                              className='grow-1'
                              error={(errors && Object.keys(errors).length > 0) || false}/>
