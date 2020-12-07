@@ -885,10 +885,19 @@ export class DataType {
         });
     }
 
-    shallowViewPort() {
-        let properties;
-        return this.visibleProps('_id').pipe(
-            tap(props => properties = props),
+    shallowViewPort(...properties) {
+        let viewportProps;
+        if (properties.length) {
+            if (properties.indexOf('_id') !== -1) {
+                properties = ['_id', ...properties];
+            }
+            viewportProps = this.allProperties().pipe(
+              map(props => props.filter(p => properties.indexOf(p.name) !== -1))
+            );
+        } else {
+            viewportProps = this.visibleProps('_id');
+        }
+        return viewportProps.pipe(
             switchMap(
                 props => zzip(
                     ...props.map(
