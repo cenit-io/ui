@@ -95,14 +95,16 @@ export class DataTypeSubject extends BasicSubject {
     static type = 'DataType';
 
     static for(dataTypeId) {
-        let s = Object.values(Subjects).find(
-            s => s.type === DataTypeSubject.type && s.dataTypeId === dataTypeId
-        );
-        if (!s) {
-            s = new DataTypeSubject({ dataTypeId });
-            Subjects.add(s);
+        if (dataTypeId) {
+            let s = Object.values(Subjects).find(
+                s => s.type === DataTypeSubject.type && s.dataTypeId === dataTypeId
+            );
+            if (!s) {
+                s = new DataTypeSubject({ dataTypeId });
+                Subjects.add(s);
+            }
+            return s;
         }
-        return s;
     }
 
     constructor(attrs) {
