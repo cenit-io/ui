@@ -119,7 +119,7 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
     let control;
 
     if (dataType && formDataType) {
-        control = <ObjectControl dataTypeId={formDataType.id}
+        control = <ObjectControl dataType={formDataType}
                                  width={width}
                                  height={formHeight}
                                  value={value}

@@ -1,12 +1,12 @@
 import { map, switchMap } from "rxjs/operators";
-import { of } from "rxjs";
+import { isObservable, of } from "rxjs";
 import { DataType, Property } from "../services/DataTypeService";
 import FormContex from "../services/FormContext";
 import PropertyControl from "./PropertyControl";
 import { FormGroup } from "./FormGroup";
 import ErrorMessages from "./ErrorMessages";
 import { LinearProgress } from "@material-ui/core";
-import React, { useEffect, useReducer } from "react";
+import React, { useCallback, useEffect, useReducer } from "react";
 import { FETCHED, NEW } from "../common/Symbols";
 import spreadReducer from "../common/spreadReducer";
 import { DataTypeSubject } from "../services/subjects";
@@ -15,6 +15,7 @@ import Group from "./Group";
 import { useFormContext } from "./FormContext";
 import FrezzerLoader from "./FrezzerLoader";
 import { eq } from "../services/BLoC";
+import zzip from "../util/zzip";
 
 function editFields(config) {
     const editConfig = config.actions?.edit;
@@ -22,7 +23,7 @@ function editFields(config) {
     if (editConfig?.fields) {
         return editConfig.fields;
     }
-    let fields = newConfig?.fields
+    let fields = newConfig?.fields;
     if (fields) {
         if (fields.indexOf('id') === -1) {
             fields = ['id', ...fields];
@@ -31,15 +32,39 @@ function editFields(config) {
     }
 }
 
-function editViewport(config) {
+function editViewport(config, dataType) {
     const editConfig = config.actions?.edit;
     if (editConfig?.viewport) {
         return editConfig.viewport;
     }
     const fields = editFields(config);
     if (fields) {
-        return `{${fields.join(' ')}}`;
+        return dataType.shallowViewPort(...fields);
     }
+}
+
+export function formConfigProperties(dataType, editMode = false) {
+    const subject = DataTypeSubject.for(dataType?.id);
+    return (subject?.config() || of({})).pipe(
+        switchMap(config => {
+            let propsObservable;
+            const configFields = editMode
+                ? editFields(config)
+                : config.actions?.new?.fields;
+            if (configFields) {
+                propsObservable = dataType.properties().pipe(
+                    map(
+                        properties => configFields.map(
+                            field => properties[field]
+                        )
+                    )
+                );
+            } else {
+                propsObservable = dataType.visibleProps();
+            }
+            return zzip(of(config), propsObservable);
+        })
+    )
 }
 
 function ObjectControl(props) {
@@ -47,89 +72,60 @@ function ObjectControl(props) {
 
     const { initialFormValue } = useFormContext();
 
-    const { schemaResolver, properties, schema, config, orchestrator, orchestratorState, ready } = state;
+    const {
+        properties, controlConfig, ready,
+        orchestrator, orchestratorState, dynamicConfig, dynamicConfigState
+    } = state;
 
     const {
-        onChange, value, dataType, fetchPath, onFetched,
-        dataTypeId, property, width, disabled, onStack, readOnly
+        onChange, value, dataType, fetchPath, onFetched, config,
+        property, width, disabled, onStack, readOnly
     } = props;
 
     const { rootId, rootDataType } = useFormContext();
 
-    useEffect(() => {
-        const resolver = dataType || property;
-        if (
-            !schemaResolver || (resolver && schemaResolver !== resolver) || schemaResolver.id !== dataTypeId
-        ) {
-            if (resolver) {
-                setState({ schemaResolver: resolver });
-            } else {
-                const subscription = DataType.getById(dataTypeId).subscribe(
-                    dataType => setState({ schemaResolver: dataType })
-                );
-
-                return () => subscription.unsubscribe();
-            }
-        }
-    }, [dataTypeId, dataType, property]);
+    const getDataType = useCallback(() => dataType || property?.dataType, [dataType, property]);
 
     useEffect(() => {
-        if (schemaResolver) {
-            const subscription = schemaResolver.getSchema().subscribe(
-                schema => setState({ schema })
-            );
-            return () => subscription.unsubscribe();
-        }
-    }, [schemaResolver]);
+        const editMode = rootId;
+        const subscription = formConfigProperties(
+            getDataType(),
+            rootId
+        ).subscribe(([sConfig, properties]) => {
+            setState({
+                properties,
+                controlConfig: { ...sConfig, ...config },
+                orchestrator: ( // TODO can be new with rootId in EmbedsManyControl
+                    editMode
+                        ? sConfig?.actions?.edit?.orchestrator
+                        : sConfig?.actions?.new?.orchestrator
+                ) || sConfig?.orchestrator,
+                dynamicConfig: ( // TODO can be new with rootId in EmbedsManyControl
+                    editMode
+                        ? sConfig?.actions?.edit?.dynamicConfig
+                        : sConfig?.actions?.new?.dynamicConfig
+                ) || sConfig?.dynamicConfig
+            });
+        });
+        return () => subscription.unsubscribe();
+    }, [dataType, property, config]);
 
     useEffect(() => {
-        if (schema) {
-            const subscription = DataTypeSubject.for(
-                dataTypeId || dataType?.id || property?.dataType?.id
-            ).config().pipe(
-                tap(
-                    config => setState({
-                        config,
-                        orchestrator: (
-                            rootId
-                                ? config?.actions?.edit?.orchestrator
-                                : config?.actions?.new?.orchestrator
-                        ) || config?.orchestrator
-                    })
-                ),
-                switchMap(config => {
-                    const configFields = rootId
-                        ? editFields(config)
-                        : config.actions?.new?.fields;
-                    if (configFields) {
-                        return getDataType().properties().pipe(
-                            map(
-                                properties => configFields.map(
-                                    field => properties[field]
-                                )
-                            )
-                        );
-                    }
-
-                    return getDataType().visibleProps();
-                })
-            ).subscribe(properties => setState({ properties }));
-            return () => subscription.unsubscribe();
-        }
-    }, [schema, dataType, dataTypeId, property]);
-
-    useEffect(() => {
-        if (schemaResolver && properties && rootId) {
+        if (rootId) {
             const v = value.get();
             if (!(v && v[FETCHED])) {
-                const subscription = DataTypeSubject.for(dataTypeId).config().pipe(
+                const subject = DataTypeSubject.for(getDataType().id);
+                const subscription = (subject?.config() || of({})).pipe(
                     switchMap(config => {
                         const configViewport = v[NEW]
                             ? config.actions?.new?.viewport
-                            : editViewport(config);
+                            : editViewport(config, getDataType());
 
                         if (configViewport) {
-                            return of(configViewport);
+                            if (typeof configViewport === 'string') {
+                                return of(configViewport);
+                            }
+                            return configViewport;
                         }
 
                         return getDataType().shallowViewPort();
@@ -150,21 +146,31 @@ function ObjectControl(props) {
                         value.set(fetchedValue, true);
                         onFetched && onFetched(fetchedValue);
                         value.setOn(initialFormValue, fetchedValue);
-                        setState({ ready: true }); // for refresh
+                        setState({ ready: true });
                     }
                 );
                 return () => subscription.unsubscribe();
             }
+        } else if (value.get() && !value.cache[FETCHED]) {
+            value.set({ ...value.cache, [FETCHED]: true });
+            setState({ ready: true });
         }
-    }, [schemaResolver, properties, rootId, value, onChange, onFetched, initialFormValue]);
+    }, [getDataType, rootId, value, initialFormValue]);
 
     useEffect(() => {
         if (orchestrator) {
             const subscription = value.changed().subscribe(
                 v => {
-                    const newState = orchestrator(v, orchestratorState || {}, value);
-                    if (newState && !eq(newState, orchestratorState)) {
-                        setState({ orchestratorState: newState });
+                    let newState = orchestrator(v, orchestratorState || {}, value);
+                    if (newState) {
+                        if (!isObservable(newState)) {
+                            newState = of(newState);
+                        }
+                        newState.subscribe(s => { // TODO unsubscribe
+                            if (s) {
+                                setState({ orchestratorState: s });
+                            }
+                        });
                     }
                 }
             );
@@ -172,8 +178,26 @@ function ObjectControl(props) {
         }
     }, [orchestrator, orchestratorState, value]);
 
-    const getDataType = () => schemaResolver &&
-        (schemaResolver.constructor === Property ? schemaResolver.dataType : schemaResolver);
+    useEffect(() => {
+        if (dynamicConfig) {
+            const subscription = value.changed().subscribe(
+                v => {
+                    let newState = dynamicConfig(v, dynamicConfigState || {}, value);
+                    if (newState) {
+                        if (!isObservable(newState)) {
+                            newState = of(newState);
+                        }
+                        newState.subscribe(s => { // TODO unsubscribe
+                            if (s) {
+                                setState({ dynamicConfigState: s });
+                            }
+                        });
+                    }
+                }
+            );
+            return () => subscription.unsubscribe();
+        }
+    }, [dynamicConfig, dynamicConfigState, value]);
 
     const handleChange = prop => () => {
         _update(prop);
@@ -204,14 +228,17 @@ function ObjectControl(props) {
     if (properties) {
         const fetching = value.get() && !value.cache[FETCHED];
         const controls = [];
-        const configFields = config.fields || {};
+        const configFields = controlConfig?.fields || {};
         const groups = [];
         const controlsGroups = { default: controls };
         const groupsProps = { default: [] };
         properties.forEach(
             prop => {
-                const fieldConfig = configFields[prop.name];
-                const group = fieldConfig?.group || 'default';
+                const fieldConfig = {
+                    ...configFields[prop.name],
+                    ...(dynamicConfigState && dynamicConfigState[prop.name])
+                };
+                const group = fieldConfig.group || 'default';
                 let controlsGroup = controlsGroups[group];
                 let groupProps = groupsProps[group];
                 if (!controlsGroup) {
@@ -221,7 +248,7 @@ function ObjectControl(props) {
                 }
                 groupProps.push(prop.name);
                 controlsGroup.push(
-                    <PropertyControl key={prop.name}
+                    <PropertyControl key={prop.name + (fieldConfig.key || '')}
                                      property={prop}
                                      value={value.propertyValue(prop.jsonKey)}
                                      errors={errors[prop.name]}
@@ -233,7 +260,7 @@ function ObjectControl(props) {
                                      onStack={onStack}
                                      config={fieldConfig}
                                      ready={ready}
-                                     {...fieldConfig?.controlProps}
+                                     {...fieldConfig.controlProps}
                                      {...(orchestratorState && orchestratorState[prop.name])}/>
                 );
             }
