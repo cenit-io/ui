@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Config } from "../common/Symbols";
 import AutocompleteControl from "./AutocompleteControl";
 
@@ -11,18 +11,19 @@ export default function EnumControl({
                                         onChange,
                                         property
                                     }) {
+    const [options, setOptions] = useState({});
+
     useEffect(() => {
         const enumOptions = property.propertySchema.enum;
-        if (!enumOptions[Config]) {
-            const config = enumOptions[Config] = {};
-            const { enumNames } = property.propertySchema;
-            enumOptions.forEach(
-                (option, index) => config[option] = (enumNames && enumNames[index]) || `${option}`
-            );
-        }
+        const options = {};
+        const { enumNames } = property.propertySchema;
+        enumOptions.forEach(
+            (option, index) => options[option] = (enumNames && enumNames[index]) || `${option}`
+        );
+        setOptions(options);
     }, [property]);
 
-    return <AutocompleteControl options={property.propertySchema.enum[Config]}
+    return <AutocompleteControl options={options}
                                 title={title}
                                 value={value}
                                 disabled={disabled}
