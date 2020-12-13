@@ -835,7 +835,9 @@ export class DataType {
         )
     }
 
-    post(data, opts = {}) {
+    post(...args) {
+        let opts = args.pop();
+        const data = args.pop();
         const { viewport, add_only, add_new, polymorphic } = opts;
         opts = { headers: {} };
         let templateOptions;
@@ -858,7 +860,7 @@ export class DataType {
         if (parserOptions) {
             opts.headers['X-Parser-Options'] = JSON.stringify(parserOptions);
         }
-        return API.post(this.ns_slug, this.slug, opts, data);
+        return API.post(this.ns_slug, this.slug, ...args, opts, data);
     }
 
     get(id, opts = {}) {
