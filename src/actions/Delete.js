@@ -88,7 +88,7 @@ const Delete = ({ docked, dataType, onDisable, theme, onSubjectPicked, height, o
         switch (status) {
             case Status.destroying: {
                 onDisable(true);
-                const subscription = dataType.delete({ _id: subject.id }).subscribe(
+                const subscription = dataType.delete(subject.id).subscribe(
                     () => setStatus(Status.destroyed)
                 );
                 return () => subscription.unsubscribe();

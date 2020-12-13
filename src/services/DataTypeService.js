@@ -64,7 +64,7 @@ export class DataType {
         dataType = DataType.gets[id];
         if (!dataType) {
             dataType = API.get('setup', 'data_type', id, {
-                headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
+                headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name ns_slug slug title _type schema}' }) }
             }).pipe(
                 tap(dataType => {
                     if (dataType) {
@@ -701,7 +701,7 @@ export class DataType {
                         ]
                     };
                 }
-                return API.get('setup', 'data_type', this.id, 'digest', {
+                return API.get(this.ns_slug, this.slug, {
                     params,
                     headers: {
                         'X-Template-Options': JSON.stringify({
@@ -719,7 +719,7 @@ export class DataType {
     }
 
     list(opts = {}) {
-        return API.get('setup', 'data_type', this.id, 'digest', opts);
+        return API.get(this.ns_slug, this.slug, opts);
     }
 
     titleViewPort(...plus) {
@@ -858,7 +858,7 @@ export class DataType {
         if (parserOptions) {
             opts.headers['X-Parser-Options'] = JSON.stringify(parserOptions);
         }
-        return API.post('setup', 'data_type', this.id, 'digest', opts, data);
+        return API.post(this.ns_slug, this.slug, opts, data);
     }
 
     get(id, opts = {}) {
@@ -876,10 +876,14 @@ export class DataType {
         if (jsonPath) {
             opts.headers['X-JSON-Path'] = jsonPath;
         }
-        return API.get('setup', 'data_type', this.id, 'digest', opts);
+        return API.get(this.ns_slug, this.slug, id,  opts);
     }
 
-    delete(selector) {
+    delete(id) {
+        return API.delete(this.ns_slug, this.slug, id);
+    }
+
+    bulkDelete(selector) {
         return API.delete('setup', 'data_type', this.id, 'digest', {
             headers: { 'X-Query-Selector': JSON.stringify(selector) }
         });
@@ -892,7 +896,7 @@ export class DataType {
                 properties = ['_id', ...properties];
             }
             viewportProps = this.allProperties().pipe(
-              map(props => props.filter(p => properties.indexOf(p.name) !== -1))
+                map(props => props.filter(p => properties.indexOf(p.name) !== -1))
             );
         } else {
             viewportProps = this.visibleProps('_id');
