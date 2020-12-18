@@ -74,10 +74,12 @@ const configurableProps = ['readOnly'];
 function configProps(config, value) {
     return config && configurableProps.reduce((prev, prop) => {
         let fieldConfig = config[prop];
-        if (typeof fieldConfig === 'function') {
-            fieldConfig = fieldConfig(value);
+        if (fieldConfig !== undefined) {
+            if (typeof fieldConfig === 'function') {
+                fieldConfig = fieldConfig(value);
+            }
+            prev[prop] = fieldConfig;
         }
-        prev[prop] = fieldConfig;
         return prev;
     }, {});
 }
