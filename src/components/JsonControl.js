@@ -20,16 +20,13 @@ const addons = [
 const gutters = ["CodeMirror-lint-markers", "CodeMirror-foldgutter"];
 const customCSS = ['.CodeMirror-lint-marker-error { display: none }'];
 
-const autoHeightFor = json => !json || json.split(/\r\n|\r|\n/).length < 20;
-
 const jsonStringify = value => JSON.stringify(value, null, 2);
 
 function JsonControl({ onChange, onError, value, ...otherProps }) {
 
     const [state, setState] = useReducer(spreadReducer, {
         css: customCSS,
-        errorDebounce: new Subject(),
-        autoHeight: autoHeightFor(jsonStringify(value.get()))
+        errorDebounce: new Subject()
     });
 
     const { initialFormValue } = useFormContext();
@@ -93,7 +90,6 @@ function JsonControl({ onChange, onError, value, ...otherProps }) {
                     } else {
                         value.set(v);
                     }
-                    setState({autoHeight: autoHeightFor(json)});
                     onChange(v);
                     errorDebounce.next(null);
                     onError([]);

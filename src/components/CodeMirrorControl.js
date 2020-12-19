@@ -56,6 +56,8 @@ Object.keys(ExtraModeTypes).forEach(
     }
 );
 
+const autoHeightFor = json => !json || json.split(/\r\n|\r|\n/).length < 20;
+
 export default function CodeMirrorControl({
                                               property,
                                               title,
@@ -79,7 +81,9 @@ export default function CodeMirrorControl({
                                           }) {
     const textElRef = useRef(null);
     const cleared = useRef(false);
-    const [state, setState] = useSpreadState();
+    const [state, setState] = useSpreadState({
+        autoHeight: value.get()
+    });
     const classes = useStyles();
 
     const { editor } = state;
@@ -162,6 +166,7 @@ export default function CodeMirrorControl({
                     editor.save();
                 } else {
                     value.set(editor.getValue());
+                    setState({autoHeight: autoHeightFor(editor.getValue())});
                     onChange && onChange(editor.getValue());
                 }
                 setState({}); // to refresh
@@ -178,6 +183,7 @@ export default function CodeMirrorControl({
                     if (strValue !== editor.getValue()) {
                         cleared.current = v === null || v === undefined;
                         editor.setValue(strValue);
+                        setState({autoHeight: autoHeightFor(strValue)});
                     }
                 }
             }
@@ -209,7 +215,7 @@ export default function CodeMirrorControl({
     }
 
     let styles = '';
-    if (autoHeight) {
+    if (autoHeight || (autoHeight === undefined && state.autoHeight)) {
         styles = 'height: auto;'
     }
 
