@@ -1,21 +1,27 @@
 import React, { useEffect, useRef } from 'react';
 import CodeMirror from 'codemirror';
-import { from, of } from "rxjs";
-import { IconButton, makeStyles, Typography } from "@material-ui/core";
+import { Subject } from "rxjs";
+import { IconButton, makeStyles, Typography, useMediaQuery } from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
+import OpenInIcon from "@material-ui/icons/OpenInNew";
+import OpenInOffIcon from "@material-ui/icons/Close";
 import clsx from "clsx";
 
 import 'codemirror/addon/mode/loadmode';
 import 'codemirror/mode/meta';
 import 'codemirror/lib/codemirror.css';
 
-import zzip from "../util/zzip";
-import Random from "../util/Random";
 import { useFormContext } from "./FormContext";
 import { useSpreadState } from "../common/hooks";
+import CodeMirrorEditor from "./CodeMirrorEditor";
+import Dialog from "@material-ui/core/Dialog";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogTitle from '@material-ui/core/DialogTitle';
+import useTheme from "@material-ui/core/styles/useTheme";
+import ErrorMessages from "./ErrorMessages";
 
 const useStyles = makeStyles(theme => ({
-    root: {
+    editor: {
         paddingBottom: theme.spacing(.5),
         borderBottom: `solid 2px ${theme.palette.background.default}`
     },
@@ -29,6 +35,11 @@ const useStyles = makeStyles(theme => ({
     },
     error: {
         borderBottom: `solid 2px ${theme.palette.error.main}`
+    },
+    closeDialogButton: {
+        marginBottom: 'auto',
+        paddingTop: theme.spacing(1),
+        paddingRight: theme.spacing(1)
     }
 }));
 
@@ -56,141 +67,37 @@ Object.keys(ExtraModeTypes).forEach(
     }
 );
 
-const autoHeightFor = json => !json || json.split(/\r\n|\r|\n/).length < 20;
-
 export default function CodeMirrorControl({
-                                              property,
-                                              title,
-                                              value,
-                                              disabled,
-                                              readOnly,
-                                              errors,
-                                              onChange,
-                                              onDelete,
-                                              mime,
-                                              mode,
-                                              theme,
-                                              lineNumbers,
-                                              viewportMargin,
-                                              gutters,
-                                              lint,
-                                              foldGutter,
-                                              autoHeight,
-                                              addons,
-                                              customCSS
+                                              property, title, value, disabled, readOnly, errors, onChange, onDelete,
+                                              mime, mode, theme, lineNumbers, viewportMargin, gutters, lint, foldGutter,
+                                              autoHeight, addons, customCSS
                                           }) {
-    const textElRef = useRef(null);
-    const cleared = useRef(false);
+    const { initialFormValue } = useFormContext();
     const [state, setState] = useSpreadState({
-        autoHeight: value.get()
+        controlValue: value.get(),
+        open: false
     });
+
     const classes = useStyles();
 
-    const { editor } = state;
-    const setEditor = editor => setState({ editor });
+    const eraser = useRef(new Subject());
 
-    const { initialFormValue } = useFormContext();
+    const muiTheme = useTheme();
+    const xs = useMediaQuery(muiTheme.breakpoints.down('sm'));
 
-    const customCssRef = useRef(`c${Random.string()}`);
+    const { controlValue, open } = state;
 
-    useEffect(() => {
-        if (textElRef.current) {
-            const opts = {};
+    const setOpen = open => setState({ open });
 
-            if (gutters) {
-                opts.gutters = gutters;
-            }
-
-            const editor = CodeMirror.fromTextArea(textElRef.current, opts);
-
-            setEditor(editor);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (editor) {
-            let cmMime = mime || property.propertySchema.contentMediaType || 'text/plain';
-            const modeInfo = CodeMirror.findModeByMIME(cmMime);
-            if (modeInfo) {
-                cmMime = modeInfo.mime || cmMime;
-            }
-            const cmMode = (
-                mode || (
-                    modeInfo || CodeMirror.findModeByMIME('text/plain')
-                ).mode
-            );
-
-            const subscription = zzip(
-                (theme && from(import(`codemirror/theme/${theme || 'default'}.css`))) || of(true),
-                (cmMode === 'null' && of(true)) || from(import(`codemirror/mode/${cmMode}/${cmMode}`)),
-                ...(addons || []).map(
-                    addon => from(import(`codemirror/addon/${addon[0]}/${addon[1]}`))
-                )
-            ).subscribe(
-                () => {
-                    const opts = {
-                        mode: cmMime,
-                        lineNumbers,
-                        lint,
-                        foldGutter
-                    };
-                    if (theme) {
-                        opts.theme = theme;
-                    }
-                    if (viewportMargin) {
-                        opts.viewportMargin = viewportMargin;
-                    }
-                    Object.keys(opts).forEach(
-                        opt => editor.setOption(opt, opts[opt])
-                    );
-                    CodeMirror.autoLoadMode(editor, cmMode);
-                }
-            );
-
-            return () => subscription.unsubscribe();
-        }
-
-    }, [editor, property, mime, mode, addons, gutters, viewportMargin]);
-
-    useEffect(() => {
-        if (editor) {
-            editor.setOption('readOnly', disabled ? 'nocursor' : readOnly);
-        }
-    }, [readOnly, disabled, editor]);
-
-    useEffect(() => {
-        if (editor) {
-            const handleChange = () => {
-                if (cleared.current) {
-                    cleared.current = false;
-                    editor.save();
-                } else {
-                    value.set(editor.getValue());
-                    setState({autoHeight: autoHeightFor(editor.getValue())});
-                    onChange && onChange(editor.getValue());
-                }
-                setState({}); // to refresh
-            };
-
-            editor.on('change', handleChange);
-            editor.on('paste', handleChange);
-        }
-
-        const subscription = value.changed().subscribe(
-            v => {
-                if (editor) {
-                    const strValue = v || '';
-                    if (strValue !== editor.getValue()) {
-                        cleared.current = v === null || v === undefined;
-                        editor.setValue(strValue);
-                        setState({autoHeight: autoHeightFor(strValue)});
-                    }
-                }
-            }
-        );
+    const handleClose = () => {
+        setOpen(false);
         value.changed().next(value.get());
+    };
+
+    useEffect(() => {
+        const subscription = value.changed().subscribe(controlValue => setState({ controlValue }));
         return () => subscription.unsubscribe();
-    }, [editor, value]);
+    }, [value]);
 
     const handleDelete = () => {
         const initialValue = value.valueFrom(initialFormValue);
@@ -199,14 +106,21 @@ export default function CodeMirrorControl({
         } else {
             value.delete();
         }
-        cleared.current = true;
-        editor.setValue('');
+        setState({ controlValue: value.cache });
         onDelete && onDelete();
-        setState({}); // to refresh
+        eraser.current.next();
     };
 
+    let openInDialog;
+    if (controlValue !== undefined && controlValue !== null) {
+        openInDialog = (
+            <IconButton onClick={() => setState({ open: true })}>
+                <OpenInIcon/>
+            </IconButton>
+        );
+    }
     let clear;
-    if (!readOnly && !disabled && value.get() !== undefined && value.cache !== null) {
+    if (!readOnly && !disabled && controlValue !== undefined && controlValue !== null) {
         clear = (
             <IconButton onClick={handleDelete}>
                 <ClearIcon/>
@@ -214,34 +128,78 @@ export default function CodeMirrorControl({
         );
     }
 
-    let styles = '';
-    if (autoHeight || (autoHeight === undefined && state.autoHeight)) {
-        styles = 'height: auto;'
-    }
-
-    const error = Boolean(errors && errors.length);
-
-    const customStyles = ((editor && customCSS) || []).map(
-        cls => `.${customCssRef.current} ${cls}`
-    ).join(' ');
-
     return (
-        <React.Fragment>
-            <style>
-                {`.${classes.root}.${customCssRef.current} .CodeMirror { ${styles} }`}
-                {customStyles}
-            </style>
-            <div className={clsx(classes.root, customCssRef.current, error && classes.error)}>
+        <>
+            <CodeMirrorEditor value={value}
+                              onChange={onChange}
+                              mime={mime}
+                              readOnly={readOnly}
+                              disabled={disabled}
+                              property={property}
+                              customCSS={customCSS}
+                              classes={classes}
+                              mode={mode}
+                              theme={theme}
+                              errors={errors}
+                              addons={addons}
+                              autoHeight={autoHeight}
+                              foldGutter={foldGutter}
+                              gutters={gutters}
+                              lint={lint}
+                              viewportMargin={viewportMargin}
+                              lineNumbers={lineNumbers}
+                              eraser={eraser.current}>
+
                 <div className={clsx('flex', classes.header)}>
                     <Typography variant="subtitle2">
                         {title}
                     </Typography>
                     <div className="grow-1"/>
+                    {openInDialog}
                     {clear}
                 </div>
-                <textarea ref={textElRef}
-                          hidden={true}/>
-            </div>
-        </React.Fragment>
+            </CodeMirrorEditor>
+            <Dialog open={open}
+                    onClose={handleClose}
+                    fullWidth={true}
+                    maxWidth="lg"
+                    fullScreen={xs}>
+                <div className="flex">
+                    <DialogTitle className="flex">
+                        {title}
+                    </DialogTitle>
+                    <div className="grow-1"/>
+                    <div className={classes.closeDialogButton}>
+                        <IconButton aria-label="close" onClick={handleClose}>
+                            <OpenInOffIcon/>
+                        </IconButton>
+                    </div>
+                </div>
+                <DialogContent>
+                    <ErrorMessages errors={errors}>
+                        <CodeMirrorEditor value={value}
+                                          onChange={onChange}
+                                          mime={mime}
+                                          readOnly={readOnly}
+                                          disabled={disabled}
+                                          property={property}
+                                          customCSS={customCSS}
+                                          classes={classes}
+                                          mode={mode}
+                                          theme={theme}
+                                          errors={errors}
+                                          addons={addons}
+                                          autoHeight={autoHeight}
+                                          customHeight="70vh"
+                                          foldGutter={foldGutter}
+                                          gutters={gutters}
+                                          lint={lint}
+                                          viewportMargin={viewportMargin}
+                                          lineNumbers={lineNumbers}
+                                          eraser={eraser.current}/>
+                    </ErrorMessages>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }

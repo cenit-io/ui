@@ -94,3 +94,7 @@
 .row-reverse {
     flex-direction: row-reverse;
 }
+
+.margin-auto {
+    margin: auto;
+}
