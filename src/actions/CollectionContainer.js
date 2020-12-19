@@ -8,7 +8,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import Index from "./Index";
 import New from './New';
 import Show from "./Show";
-import Edit from './Edit';
 import Delete from './Delete';
 
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
