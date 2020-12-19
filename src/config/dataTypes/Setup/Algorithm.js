@@ -27,7 +27,7 @@ export default {
             }
         },
         edit: {
-            fields: ['namespace', 'name', 'description', 'parameters', 'language', 'code', 'call_links']
+            fields: ['id', 'namespace', 'name', 'description', 'parameters', 'language', 'code', 'call_links']
         }
     },
     fields: {
