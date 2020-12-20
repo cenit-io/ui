@@ -32,14 +32,21 @@ function editFields(config) {
     }
 }
 
-function editViewport(config, dataType) {
+function editViewport(config, dataType, ...plus) {
     const editConfig = config.actions?.edit;
     if (editConfig?.viewport) {
+        if (plus.length) {
+            let viewport = editConfig.viewport.trim();
+            if (viewport.endsWith('}')) {
+                viewport = viewport.substring(0, viewport.length - 1);
+            }
+            return `${viewport} ${plus.join(' ')}}`;
+        }
         return editConfig.viewport;
     }
     const fields = editFields(config);
     if (fields) {
-        return dataType.shallowViewPort(...fields);
+        return dataType.shallowViewPort(...fields, ...plus);
     }
 }
 
@@ -119,7 +126,7 @@ function ObjectControl(props) {
                     switchMap(config => {
                         const configViewport = v[NEW]
                             ? config.actions?.new?.viewport
-                            : editViewport(config, getDataType());
+                            : editViewport(config, getDataType(), 'id');
 
                         if (configViewport) {
                             if (typeof configViewport === 'string') {
