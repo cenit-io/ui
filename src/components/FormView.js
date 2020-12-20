@@ -95,21 +95,12 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
         if (formDataType) {
             const subscription = submitter.pipe(
                 switchMap(() => viewport || formDataType.titleViewPort('_id')),
-                switchMap(viewport => {
-                    const args = [
-                        value.get(),
-                        {
-                            viewport,
-                            add_only: rootId,
-                            add_new: !rootId,
-                            polymorphic: true
-                        }
-                    ];
-                    if (rootId) {
-                        args.unshift(rootId);
-                    }
-                    return formDataType.post(...args);
-                }),
+                switchMap(viewport => formDataType.post(value.get(), {
+                    viewport,
+                    add_only: rootId,
+                    add_new: !rootId,
+                    polymorphic: true
+                })),
                 tap(response => value.set({ ...value.get(), ...response })),
                 catchError(error => {
                     setState({ errors: error.response.data });

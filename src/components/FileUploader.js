@@ -482,7 +482,7 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
             const filename = current.customName || current.name;
             let submit;
             if (current.fake) {
-                submit = dataType.post(rootId, { filename }, {
+                submit = dataType.post({ id: rootId, filename }, {
                     viewport: '{_id}'
                 })
             } else {

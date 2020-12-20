@@ -64,7 +64,7 @@ export class DataType {
         dataType = DataType.gets[id];
         if (!dataType) {
             dataType = API.get('setup', 'data_type', id, {
-                headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name ns_slug slug title _type schema}' }) }
+                headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
             }).pipe(
                 tap(dataType => {
                     if (dataType) {
@@ -701,7 +701,7 @@ export class DataType {
                         ]
                     };
                 }
-                return API.get(this.ns_slug, this.slug, {
+                return API.get('setup', 'data_type', this.id, 'digest', {
                     params,
                     headers: {
                         'X-Template-Options': JSON.stringify({
@@ -719,7 +719,7 @@ export class DataType {
     }
 
     list(opts = {}) {
-        return API.get(this.ns_slug, this.slug, opts);
+        return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
 
     titleViewPort(...plus) {
@@ -835,9 +835,7 @@ export class DataType {
         )
     }
 
-    post(...args) {
-        let opts = args.pop();
-        const data = args.pop();
+    post(data, opts = {}) {
         const { viewport, add_only, add_new, polymorphic } = opts;
         opts = { headers: {} };
         let templateOptions;
@@ -860,7 +858,7 @@ export class DataType {
         if (parserOptions) {
             opts.headers['X-Parser-Options'] = JSON.stringify(parserOptions);
         }
-        return API.post(this.ns_slug, this.slug, ...args, opts, data);
+        return API.post('setup', 'data_type', this.id, 'digest', opts, data);
     }
 
     get(id, opts = {}) {
@@ -878,11 +876,11 @@ export class DataType {
         if (jsonPath) {
             opts.headers['X-JSON-Path'] = jsonPath;
         }
-        return API.get(this.ns_slug, this.slug, id,  opts);
+        return API.get('setup', 'data_type', this.id, 'digest',  opts);
     }
 
-    delete(id) {
-        return API.delete(this.ns_slug, this.slug, id);
+    delete(_id) {
+        return this.bulkDelete({ _id });
     }
 
     bulkDelete(selector) {
