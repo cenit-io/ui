@@ -3,8 +3,6 @@ import CodeMirror from 'codemirror';
 import { Subject } from "rxjs";
 import { IconButton, makeStyles, Typography, useMediaQuery } from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
-import OpenInIcon from "@material-ui/icons/OpenInNew";
-import OpenInOffIcon from "@material-ui/icons/Close";
 import clsx from "clsx";
 
 import 'codemirror/addon/mode/loadmode';
@@ -19,6 +17,7 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from '@material-ui/core/DialogTitle';
 import useTheme from "@material-ui/core/styles/useTheme";
 import ErrorMessages from "./ErrorMessages";
+import SvgIcon from "@material-ui/core/SvgIcon";
 
 const useStyles = makeStyles(theme => ({
     editor: {
@@ -65,6 +64,19 @@ Object.keys(ExtraModeTypes).forEach(
             }
         }
     }
+);
+
+
+const OpenInIcon = () => (
+    <SvgIcon>
+        <polygon points="21,11 21,3 13,3 16.29,6.29 6.29,16.29 3,13 3,21 11,21 7.71,17.71 17.71,7.71"/>
+    </SvgIcon>
+);
+
+const OpenInOffIcon = () => (
+    <SvgIcon>
+        <path d="M22,3.41l-5.29,5.29L20,12h-8V4l3.29,3.29L20.59,2L22,3.41z M3.41,22l5.29-5.29L12,20v-8H4l3.29,3.29L2,20.59L3.41,22z"/>
+    </SvgIcon>
 );
 
 export default function CodeMirrorControl({
