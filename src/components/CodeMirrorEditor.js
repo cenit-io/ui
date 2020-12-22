@@ -125,7 +125,7 @@ export default function CodeMirrorEditor({
 
     useEffect(() => {
         if (editor) {
-            editor.setOption('readOnly', disabled ? 'nocursor' : readOnly);
+            editor.setOption('readOnly', (readOnly || disabled) && 'nocursor');
         }
     }, [readOnly, disabled, editor]);
 
