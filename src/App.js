@@ -8,6 +8,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { catchError } from "rxjs/operators";
 import { of } from "rxjs";
 import './common/FlexBox.css';
+import { MuiPickersUtilsProvider } from '@material-ui/pickers';
+import DateFnsUtils from '@date-io/date-fns';
 
 API.onError(e => AuthorizationService.authorize());
 
@@ -57,9 +59,13 @@ function App() {
         </div>;
     }
 
-    return <ErrorBoundary>
-        <Main/>
-    </ErrorBoundary>;
+    return (
+        <ErrorBoundary>
+            <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                <Main/>
+            </MuiPickersUtilsProvider>
+        </ErrorBoundary>
+    );
 }
 
 export default App;
