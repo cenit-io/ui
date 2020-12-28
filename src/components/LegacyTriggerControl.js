@@ -514,7 +514,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-export default function LegacyTriggerControl({ title, property, value, disable, readOnly, onChange, errors }) {
+export default function LegacyTriggerControl({ title, property, value, disabled, readOnly, onChange, errors }) {
 
     const [state, setState] = useSpreadState({
         triggers: {}
@@ -622,7 +622,7 @@ export default function LegacyTriggerControl({ title, property, value, disable, 
                 return <PropertySelector key={cond[Key]}
                                          property={prop}
                                          value={cond}
-                                         disabled={disable || readOnly}
+                                         disabled={disabled || readOnly}
                                          onDelete={deleteSelector(prop.name, index)}
                                          onChange={changeSelector(prop.name, index)}/>
             });
@@ -635,7 +635,7 @@ export default function LegacyTriggerControl({ title, property, value, disable, 
                 {selectors}
             </div>
             <Button className={clsx(errors?.length && classes.error)} startIcon={<AddIcon/>}
-                    disabled={disable || readOnly || !props}
+                    disabled={disabled || readOnly || !props}
                     onClick={handleAdd}>
                 Add trigger
             </Button>
