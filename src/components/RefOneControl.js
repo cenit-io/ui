@@ -11,7 +11,11 @@ import { of } from "rxjs";
 import { FETCHED, Title } from "../common/Symbols";
 import { useFormContext } from "./FormContext";
 
-function RefOneControl({ title, value, property, disabled, readOnly, onChange, onDelete, onStack, config }) {
+function RefOneControl({
+                           title, value, property, disabled, readOnly,
+                           onChange, onDelete, onStack, config,
+                           editDisabled, deleteDisabled
+                       }) {
 
     const [state, setState] = useSpreadState({
         text: null
@@ -110,13 +114,13 @@ function RefOneControl({ title, value, property, disabled, readOnly, onChange, o
     let addButton, editButton, deleteButton;
 
     if (value.get()) {
-        editButton = (
+        editButton = !editDisabled && (
             <IconButton onClick={handleEdit}
                         disabled={disabled}>
                 <EditIcon/>
             </IconButton>
         );
-        if (!readOnly) {
+        if (!deleteDisabled && !readOnly) {
             deleteButton = (
                 <IconButton onClick={handleClear}
                             disabled={disabled}>

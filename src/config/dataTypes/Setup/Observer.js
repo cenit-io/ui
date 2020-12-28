@@ -15,6 +15,11 @@ export default {
         }
     },
     fields: {
+        data_type: {
+            controlProps: {
+                editDisabled: true
+            }
+        },
         triggers: {
             control: LegacyTriggerControl
         }
