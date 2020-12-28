@@ -113,30 +113,32 @@ function RefOneControl({
 
     let addButton, editButton, deleteButton;
 
-    if (value.get()) {
-        editButton = !editDisabled && (
-            <IconButton onClick={handleEdit}
-                        disabled={disabled}>
-                <EditIcon/>
-            </IconButton>
-        );
-        if (!deleteDisabled && !readOnly) {
-            deleteButton = (
-                <IconButton onClick={handleClear}
+    if (!disabled) {
+        if (value.get()) {
+            editButton = !editDisabled && (
+                <IconButton onClick={handleEdit}
                             disabled={disabled}>
-                    <ClearIcon/>
+                    <EditIcon/>
+                </IconButton>
+            );
+            if (!deleteDisabled && !readOnly) {
+                deleteButton = (
+                    <IconButton onClick={handleClear}
+                                disabled={disabled}>
+                        <ClearIcon/>
+                    </IconButton>
+                );
+            }
+        }
+
+        if (!readOnly) {
+            addButton = (
+                <IconButton onClick={handleAddNew}
+                            disabled={disabled}>
+                    <AddIcon/>
                 </IconButton>
             );
         }
-    }
-
-    if (!readOnly) {
-        addButton = (
-            <IconButton onClick={handleAddNew}
-                        disabled={disabled}>
-                <AddIcon/>
-            </IconButton>
-        );
     }
 
     return (
