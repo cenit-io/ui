@@ -1,4 +1,6 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
+import { debounce } from "rxjs/operators";
+import { interval } from "rxjs";
 
 const FormContext = React.createContext({});
 
@@ -13,11 +15,12 @@ export function useFormObjectValue() {
     const [json, setJSON] = useState(value.get());
 
     useEffect(() => {
-        const obs = value.changed();
-        const subscription = obs.subscribe(
+        const subscription = value.changed().pipe(
+            debounce(() => interval(200))
+        ).subscribe(
             value => setJSON(value)
         );
-        obs.next(value.get());
+        value.changed().next(value.get());
         return () => subscription.unsubscribe();
     }, [value]);
 

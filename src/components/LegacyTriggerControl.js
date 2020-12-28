@@ -80,7 +80,7 @@ function StringCondition({ value, disabled, onChange }) {
 
     let input;
     if (StringOperations.indexOf(condition.o) !== -1) {
-        input = <AutosizeInput value={condition.v}
+        input = <AutosizeInput value={condition.v || ''}
                                placeholder="?"
                                onChange={({ target }) => setValue(target.value)}
                                disabled={disabled}/>;
@@ -213,7 +213,7 @@ function BooleanCondition({ value, disabled, onChange }) {
     return (
         <>
             <Button onClick={handleClick} disabled={disabled}>
-                {Operation[condition.o] || condition.v}
+                {Operation[condition.o] || `Is ${condition.v}`}
             </Button>
             <Menu open={Boolean(menuAnchor)}
                   anchorEl={menuAnchor}
@@ -271,7 +271,7 @@ function NumberCondition({ value, disabled, onChange }) {
 
     let inputs;
     if (condition.o === 'default') {
-        inputs = <AutosizeInput value={condition.v[0]}
+        inputs = <AutosizeInput value={condition.v[0] || ''}
                                 placeholder="?"
                                 onChange={({ target }) => setValue([target.value, '', ''])}
                                 disabled={disabled}
@@ -279,13 +279,13 @@ function NumberCondition({ value, disabled, onChange }) {
     } else if (condition.o === 'between') {
         inputs = (
             <>
-                <AutosizeInput value={condition.v[1]}
+                <AutosizeInput value={condition.v[1] || ''}
                                placeholder="-∞"
                                onChange={({ target }) => setValue(['', target.value, undefined])}
                                disabled={disabled}
                                type="number"/>
                 <span className={clsx(classes.and, disabled && classes.disabled)}>AND</span>
-                <AutosizeInput value={condition.v[2]}
+                <AutosizeInput value={condition.v[2] || ''}
                                placeholder="∞"
                                onChange={({ target }) => setValue(['', undefined, target.value])}
                                disabled={disabled}
@@ -485,6 +485,32 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+function defaultConditionFor(property) {
+    switch (property.type) {
+        case 'integer':
+        case 'number':
+            return { o: 'default', v: ['', '', ''] };
+        case 'boolean':
+            return { v: 'true' };
+        case 'string': {
+            if (property.propertySchema.enum) {
+                return {};
+            }
+            if (
+                property.propertySchema.format === 'date' ||
+                property.propertySchema.format === 'date-time' ||
+                property.propertySchema.format === 'time'
+            ) {
+                return { o: 'default', v: ['', '', ''] };
+            }
+
+            return { o: 'like' };
+        }
+        default:
+            return {};
+    }
+}
+
 export default function LegacyTriggerControl({ title, property, value, disable, readOnly }) {
 
     const [state, setState] = useSpreadState({
@@ -515,6 +541,12 @@ export default function LegacyTriggerControl({ title, property, value, disable, 
         const subscription = value.parent.changed().pipe(
             switchMap(({ data_type }) => {
                 if (data_type?.id !== dataTypeId.current) {
+                    if (dataTypeId.current) {
+                        setTimeout(() => {
+                            value.set('{}', true);
+                            setState({ triggers: {} });
+                        });
+                    }
                     dataTypeId.current = data_type?.id;
                     if (dataTypeId.current) {
                         return DataType.getById(dataTypeId.current);
@@ -557,8 +589,18 @@ export default function LegacyTriggerControl({ title, property, value, disable, 
         value.set(JSON.stringify(newTriggers));
     };
 
+    const addSelector = prop => () => {
+        const newTriggers = { ...triggers };
+        if (!newTriggers[prop.name]) {
+            newTriggers[prop.name] = [];
+        }
+        newTriggers[prop.name].push(defaultConditionFor(prop));
+        setState({ triggers: newTriggers, menuAnchor: null });
+        value.set(JSON.stringify(newTriggers));
+    };
+
     const selectorOptions = (props || []).map(prop => (
-        <MenuItem key={`prop_${prop.name}`} onClick={handleClose}>
+        <MenuItem key={`prop_${prop.name}`} onClick={addSelector(prop)}>
             {prop.name}
         </MenuItem>
     ));
