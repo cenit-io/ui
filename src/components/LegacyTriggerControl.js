@@ -574,6 +574,8 @@ export default function LegacyTriggerControl({ title, property, value, disabled,
             }
         );
 
+        value.parent.changed().next(value.parent.get());
+
         return () => subscription.unsubscribe();
     }, [value]);
 
