@@ -41,7 +41,7 @@ const DefaultOperations = ['_not_null', '_null', '_change', '_presence_change'];
 function defaultOperationsWith(props) {
     const handleClick = op => () => props.onClick(op);
     return DefaultOperations.map(op => (
-        <MenuItem onClick={handleClick(op)}>
+        <MenuItem key={`operation_${op}`} onClick={handleClick(op)}>
             {Operation[op]}
         </MenuItem>
     ));
@@ -73,7 +73,7 @@ function StringCondition({ value, disabled, onChange }) {
     const setOperation = o => setCondition({ o });
 
     const strOperations = StringOperations.map(op => (
-        <MenuItem onClick={() => selectOperation(op)}>
+        <MenuItem key={`operator_${op}`} onClick={() => selectOperation(op)}>
             {Operation[op]}
         </MenuItem>
     ));
@@ -358,7 +358,7 @@ function DateCondition({ value, disabled, onChange }) {
     const setOperation = o => () => setCondition({ o });
 
     const unaryDateOperatios = UnaryDateOperator.map(op => (
-        <MenuItem onClick={setOperation(op)}>
+        <MenuItem key={`operator_${op}`} onClick={setOperation(op)}>
             {Operation[op]}
         </MenuItem>
     ));
@@ -612,7 +612,7 @@ export default function LegacyTriggerControl({ title, property, value, disable, 
                 if (!cond[Key]) {
                     cond[Key] = Random.string();
                 }
-                return <PropertySelector key={cond[key]}
+                return <PropertySelector key={cond[Key]}
                                          property={prop}
                                          value={cond}
                                          disabled={disable || readOnly}
