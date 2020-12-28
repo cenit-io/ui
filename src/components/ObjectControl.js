@@ -245,31 +245,33 @@ function ObjectControl(props) {
                     ...configFields[prop.name],
                     ...(dynamicConfigState && dynamicConfigState[prop.name])
                 };
-                const group = fieldConfig.group || 'default';
-                let controlsGroup = controlsGroups[group];
-                let groupProps = groupsProps[group];
-                if (!controlsGroup) {
-                    controlsGroups[group] = controlsGroup = [];
-                    groupsProps[group] = groupProps = [];
-                    groups.push(group);
+                if (!fieldConfig.hidden) {
+                    const group = fieldConfig.group || 'default';
+                    let controlsGroup = controlsGroups[group];
+                    let groupProps = groupsProps[group];
+                    if (!controlsGroup) {
+                        controlsGroups[group] = controlsGroup = [];
+                        groupsProps[group] = groupProps = [];
+                        groups.push(group);
+                    }
+                    groupProps.push(prop.name);
+                    controlsGroup.push(
+                        <PropertyControl key={prop.name + (fieldConfig.key || '')}
+                                         property={prop}
+                                         value={value.propertyValue(prop.jsonKey)}
+                                         errors={errors[prop.name]}
+                                         width={width}
+                                         onChange={handleChange(prop)}
+                                         onDelete={handleDelete(prop)}
+                                         disabled={fetching || disabled}
+                                         readOnly={readOnly || prop.isReadOnly(context)}
+                                         onStack={onStack}
+                                         config={fieldConfig}
+                                         ready={ready}
+                                         {...fieldConfig.controlProps}
+                                         {...(orchestratorState && orchestratorState[prop.name])}/>
+                    );
                 }
-                groupProps.push(prop.name);
-                controlsGroup.push(
-                    <PropertyControl key={prop.name + (fieldConfig.key || '')}
-                                     property={prop}
-                                     value={value.propertyValue(prop.jsonKey)}
-                                     errors={errors[prop.name]}
-                                     width={width}
-                                     onChange={handleChange(prop)}
-                                     onDelete={handleDelete(prop)}
-                                     disabled={fetching || disabled}
-                                     readOnly={readOnly || prop.isReadOnly(context)}
-                                     onStack={onStack}
-                                     config={fieldConfig}
-                                     ready={ready}
-                                     {...fieldConfig.controlProps}
-                                     {...(orchestratorState && orchestratorState[prop.name])}/>
-                );
             }
         );
 
