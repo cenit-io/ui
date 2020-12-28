@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useSpreadState } from "../common/hooks";
 import { switchMap } from "rxjs/operators";
 import { DataType } from "../services/DataTypeService";
@@ -479,12 +479,6 @@ function PropertySelector({ property, value, onDelete, disabled, onChange }) {
     );
 }
 
-const useStyles = makeStyles(theme => ({
-    selectors: {
-        marginBottom: theme.spacing(2)
-    }
-}));
-
 function defaultConditionFor(property) {
     switch (property.type) {
         case 'integer':
@@ -511,7 +505,16 @@ function defaultConditionFor(property) {
     }
 }
 
-export default function LegacyTriggerControl({ title, property, value, disable, readOnly }) {
+const useStyles = makeStyles(theme => ({
+    selectors: {
+        marginBottom: theme.spacing(2)
+    },
+    error: {
+        color: theme.palette.error.main
+    }
+}));
+
+export default function LegacyTriggerControl({ title, property, value, disable, readOnly, onChange, errors }) {
 
     const [state, setState] = useSpreadState({
         triggers: {}
@@ -522,6 +525,13 @@ export default function LegacyTriggerControl({ title, property, value, disable, 
     const classes = useStyles();
 
     const { props, menuAnchor, triggers } = state;
+
+    const setTriggers = useCallback((triggers, state) => {
+        setState({ triggers, ...state });
+        triggers = JSON.stringify(triggers);
+        value.set(triggers);
+        onChange(triggers);
+    }, [value, onChange]);
 
     useEffect(() => {
         const subscription = value.changed().subscribe(
@@ -577,16 +587,14 @@ export default function LegacyTriggerControl({ title, property, value, disable, 
         if (!newTriggers[name].length) {
             delete newTriggers[name];
         }
-        setState({ triggers: newTriggers });
-        value.set(JSON.stringify(newTriggers));
+        setTriggers(newTriggers);
     };
 
     const changeSelector = (name, index) => cond => {
         const newTriggers = { ...triggers };
         cond[Key] = newTriggers[name][index][Key];
         newTriggers[name][index] = cond;
-        setState({ triggers: newTriggers });
-        value.set(JSON.stringify(newTriggers));
+        setTriggers(newTriggers);
     };
 
     const addSelector = prop => () => {
@@ -595,8 +603,7 @@ export default function LegacyTriggerControl({ title, property, value, disable, 
             newTriggers[prop.name] = [];
         }
         newTriggers[prop.name].push(defaultConditionFor(prop));
-        setState({ triggers: newTriggers, menuAnchor: null });
-        value.set(JSON.stringify(newTriggers));
+        setTriggers(newTriggers, { menuAnchor: null });
     };
 
     const selectorOptions = (props || []).map(prop => (
@@ -627,7 +634,7 @@ export default function LegacyTriggerControl({ title, property, value, disable, 
             <div className={clsx('flex wrap', classes.selectors)}>
                 {selectors}
             </div>
-            <Button startIcon={<AddIcon/>}
+            <Button className={clsx(errors?.length && classes.error)} startIcon={<AddIcon/>}
                     disabled={disable || readOnly || !props}
                     onClick={handleAdd}>
                 Add trigger
