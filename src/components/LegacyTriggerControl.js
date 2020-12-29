@@ -19,6 +19,8 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import TextField from "@material-ui/core/TextField";
 import { Key } from "../common/Symbols";
 import Random from "../util/Random";
+import Skeleton from "@material-ui/lab/Skeleton";
+import useTheme from "@material-ui/core/styles/useTheme";
 
 const Operation = {
     like: 'Contains',
@@ -511,6 +513,11 @@ const useStyles = makeStyles(theme => ({
     },
     error: {
         color: theme.palette.error.main
+    },
+    skeleton: {
+        padding: theme.spacing(1),
+        marginTop: theme.spacing(1),
+        marginLeft: theme.spacing(1)
     }
 }));
 
@@ -523,6 +530,8 @@ export default function LegacyTriggerControl({ title, property, value, disabled,
     const dataTypeId = useRef();
 
     const classes = useStyles();
+
+    const theme = useTheme();
 
     const { props, menuAnchor, triggers } = state;
 
@@ -554,7 +563,7 @@ export default function LegacyTriggerControl({ title, property, value, disabled,
                     if (dataTypeId.current) {
                         setTimeout(() => {
                             value.set('{}', true);
-                            setState({ triggers: {} });
+                            setState({ triggers: {}, props: null });
                         });
                     }
                     dataTypeId.current = data_type?.id;
@@ -608,28 +617,39 @@ export default function LegacyTriggerControl({ title, property, value, disabled,
         setTriggers(newTriggers, { menuAnchor: null });
     };
 
-    const selectorOptions = (props || []).map(prop => (
-        <MenuItem key={`prop_${prop.name}`} onClick={addSelector(prop)}>
-            {prop.name}
-        </MenuItem>
-    ));
+    let selectorOptions, selectors;
+    if (props) {
+        selectorOptions = (props || []).map(prop => (
+            <MenuItem key={`prop_${prop.name}`} onClick={addSelector(prop)}>
+                {prop.name}
+            </MenuItem>
+        ));
 
-    const selectors = Object.keys(triggers).map(key => {
-        const prop = (props || []).find(({ name }) => name === key);
-        if (prop) {
-            return triggers[key].map((cond, index) => {
-                if (!cond[Key]) {
-                    cond[Key] = Random.string();
-                }
-                return <PropertySelector key={cond[Key]}
-                                         property={prop}
-                                         value={cond}
-                                         disabled={disabled || readOnly}
-                                         onDelete={deleteSelector(prop.name, index)}
-                                         onChange={changeSelector(prop.name, index)}/>
-            });
-        }
-    }).filter(s => s).flat();
+        selectors = Object.keys(triggers).map(key => {
+            const prop = (props || []).find(({ name }) => name === key);
+            if (prop) {
+                return triggers[key].map((cond, index) => {
+                    if (!cond[Key]) {
+                        cond[Key] = Random.string();
+                    }
+                    return <PropertySelector key={cond[Key]}
+                                             property={prop}
+                                             value={cond}
+                                             disabled={disabled || readOnly}
+                                             onDelete={deleteSelector(prop.name, index)}
+                                             onChange={changeSelector(prop.name, index)}/>
+                });
+            }
+        }).filter(s => s).flat();
+    } else {
+        selectors = Object.keys(triggers).map(key => triggers[key]).flat().map(
+            () => <Skeleton variant="text"
+                            height={theme.spacing(4)}
+                            width={theme.spacing(22)}
+                            className={classes.skeleton}/>
+        );
+    }
+
 
     return (
         <div>
