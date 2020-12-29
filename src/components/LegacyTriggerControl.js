@@ -495,7 +495,7 @@ function defaultConditionFor(property) {
                 property.propertySchema.format === 'date-time' ||
                 property.propertySchema.format === 'time'
             ) {
-                return { o: 'default', v: ['', '', ''] };
+                return { o: '_not_null' };
             }
 
             return { o: 'like' };
