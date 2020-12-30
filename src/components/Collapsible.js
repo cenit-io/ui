@@ -28,14 +28,14 @@ const HeaderButton = withStyles({
     }
 })(Button);
 
-export default function ({ name, children, error }) {
-    const [collapsed, setCollapsed] = useState(false);
+export default function Collapsible({ title, children, error, variant, defaultCollapsed }) {
+    const [collapsed, setCollapsed] = useState(defaultCollapsed === undefined ? true : Boolean(defaultCollapsed));
 
     const classes = useStyles();
 
     const switchCollapsed = () => setCollapsed(!collapsed);
 
-    const Icon = collapsed ? ExpandLess : ExpandMore;
+    const Icon = collapsed ?  ExpandMore : ExpandLess;
 
     const errorClass = error && classes.error;
 
@@ -43,13 +43,13 @@ export default function ({ name, children, error }) {
         <div className="flex column">
             <div className={classes.header}>
                 <HeaderButton onClick={switchCollapsed}>
-                    <Typography variant="h6" className={clsx(classes.title, errorClass)}>
-                        {name}
+                    <Typography variant={variant || 'h6'} className={clsx(classes.title, errorClass)}>
+                        {title}
                     </Typography>
                     <Icon size="large" className={clsx(errorClass)}/>
                 </HeaderButton>
             </div>
-            <Collapse in={collapsed}>
+            <Collapse in={!collapsed}>
                 {children}
             </Collapse>
         </div>

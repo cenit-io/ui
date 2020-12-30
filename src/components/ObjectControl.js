@@ -11,7 +11,7 @@ import { FETCHED, NEW } from "../common/Symbols";
 import spreadReducer from "../common/spreadReducer";
 import { DataTypeSubject } from "../services/subjects";
 import { tap } from "rxjs/internal/operators/tap";
-import Group from "./Group";
+import Collapsible from "./Collapsible";
 import { useFormContext } from "./FormContext";
 import FrezzerLoader from "./FrezzerLoader";
 import { eq } from "../services/BLoC";
@@ -276,10 +276,10 @@ function ObjectControl(props) {
         );
 
         groups.forEach(group => controls.push(
-            <Group key={`group_${group}`}
-                   name={group}
-                   children={controlsGroups[group]}
-                   error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}/>
+            <Collapsible key={`group_${group}`}
+                         title={group}
+                         children={controlsGroups[group]}
+                         error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}/>
         ));
 
         return <FormGroup error={Object.keys(errors).length > 0}>
