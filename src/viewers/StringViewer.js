@@ -5,5 +5,5 @@ export default function StringViewer({ value }) {
         ? '-'
         : String(value);
 
-    return <span>{str}</span>
+    return <span>{str}</span>;
 }

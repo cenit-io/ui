@@ -24,6 +24,7 @@ import RefOneViewer from "../viewers/RefOneViewer";
 import RefManyViewer from "../viewers/RefManyViewer";
 import EmbedsOneViewer from "../viewers/EmbedsOneViewer";
 import EmbedsManyViewer from "../viewers/EmbedsManyViewer";
+import JsonViewer from "../viewers/JsonViewer";
 
 function viewerComponentFor(property, config) {
     switch (property.type) {
@@ -51,8 +52,12 @@ function viewerComponentFor(property, config) {
             }
         }
 
-        default:
+        default: {
+            if (!property.type || property.type === 'object' || property.type === 'array') {
+                return JsonViewer;
+            }
             return StringViewer;
+        }
     }
 }
 
