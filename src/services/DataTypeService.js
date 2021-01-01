@@ -190,7 +190,10 @@ export class DataType {
                         prop.isModel()
                     ).pipe(map(([isRef, isMany, propSch, isModel]) => {
                             if (isModel) {
-                                if (isRef && !propSch.export_embedded) { // Referenced
+                                if (
+                                    (isRef && !propSch.export_embedded) ||
+                                    prop.dataType?._type === FILE_TYPE
+                                ) { // Referenced
                                     if (isMany) { // Many
                                         prop.type = 'refMany';
                                     } else { // One
@@ -876,7 +879,7 @@ export class DataType {
         if (jsonPath) {
             opts.headers['X-JSON-Path'] = jsonPath;
         }
-        return API.get('setup', 'data_type', this.id, 'digest',  opts);
+        return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
 
     delete(_id) {
