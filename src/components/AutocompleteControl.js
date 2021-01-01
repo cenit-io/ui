@@ -57,7 +57,7 @@ export default function AutocompleteControl({
     if (readOnly) {
         return <TextField key={`readOnly_${state}`}
                           label={title}
-                          value={state}
+                          value={state || ''}
                           className="full-width"
                           variant="filled"
                           InputProps={{ readOnly, error }}/>;
