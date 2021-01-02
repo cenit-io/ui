@@ -74,6 +74,45 @@ export function formConfigProperties(dataType, editMode = false) {
     )
 }
 
+function DefaultPropertiesForm({ controlConfig, dynamicConfigState, properties, propertyControlProps, errors }) {
+    const controls = [];
+    const configFields = controlConfig?.fields || {};
+    const groups = [];
+    const controlsGroups = { default: controls };
+    const groupsProps = { default: [] };
+    properties.forEach(
+        prop => {
+            const fieldConfig = {
+                ...configFields[prop.name],
+                ...(dynamicConfigState && dynamicConfigState[prop.name])
+            };
+            if (!fieldConfig.hidden) {
+                const group = fieldConfig.group || 'default';
+                let controlsGroup = controlsGroups[group];
+                let groupProps = groupsProps[group];
+                if (!controlsGroup) {
+                    controlsGroups[group] = controlsGroup = [];
+                    groupsProps[group] = groupProps = [];
+                    groups.push(group);
+                }
+                groupProps.push(prop.name);
+                controlsGroup.push(
+                    <PropertyControl {...propertyControlProps(prop)}/>
+                );
+            }
+        }
+    );
+
+    groups.forEach(group => controls.push(
+        <Collapsible key={`group_${group}`}
+                     title={group}
+                     children={controlsGroups[group]}
+                     error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}/>
+    ));
+
+    return controls;
+}
+
 function ObjectControl(props) {
     const [state, setState] = useReducer(spreadReducer, {});
 
@@ -234,57 +273,42 @@ function ObjectControl(props) {
 
     if (properties) {
         const fetching = value.get() && !value.cache[FETCHED];
-        const controls = [];
-        const configFields = controlConfig?.fields || {};
-        const groups = [];
-        const controlsGroups = { default: controls };
-        const groupsProps = { default: [] };
-        properties.forEach(
-            prop => {
-                const fieldConfig = {
-                    ...configFields[prop.name],
-                    ...(dynamicConfigState && dynamicConfigState[prop.name])
-                };
-                if (!fieldConfig.hidden) {
-                    const group = fieldConfig.group || 'default';
-                    let controlsGroup = controlsGroups[group];
-                    let groupProps = groupsProps[group];
-                    if (!controlsGroup) {
-                        controlsGroups[group] = controlsGroup = [];
-                        groupsProps[group] = groupProps = [];
-                        groups.push(group);
-                    }
-                    groupProps.push(prop.name);
-                    controlsGroup.push(
-                        <PropertyControl key={prop.name + (fieldConfig.key || '')}
-                                         property={prop}
-                                         value={value.propertyValue(prop.jsonKey)}
-                                         errors={errors[prop.name]}
-                                         width={width}
-                                         onChange={handleChange(prop)}
-                                         onDelete={handleDelete(prop)}
-                                         disabled={fetching || disabled}
-                                         readOnly={readOnly || prop.isReadOnly(context)}
-                                         onStack={onStack}
-                                         config={fieldConfig}
-                                         ready={ready}
-                                         {...fieldConfig.controlProps}
-                                         {...(orchestratorState && orchestratorState[prop.name])}/>
-                    );
-                }
-            }
-        );
 
-        groups.forEach(group => controls.push(
-            <Collapsible key={`group_${group}`}
-                         title={group}
-                         children={controlsGroups[group]}
-                         error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}/>
-        ));
+        const configFields = controlConfig?.fields || {};
+
+        const propertyControlProps = prop => {
+            const fieldConfig = {
+                ...configFields[prop.name],
+                ...(dynamicConfigState && dynamicConfigState[prop.name])
+            };
+
+            return {
+                key: prop.name + (fieldConfig.key || ''),
+                property: prop,
+                value: value.propertyValue(prop.jsonKey),
+                errors: errors[prop.name],
+                width: width,
+                onChange: handleChange(prop),
+                onDelete: handleDelete(prop),
+                disabled: fetching || disabled,
+                readOnly: readOnly || prop.isReadOnly(context),
+                onStack: onStack,
+                config: fieldConfig,
+                ready: ready,
+                ...fieldConfig.controlProps,
+                ...(orchestratorState && orchestratorState[prop.name])
+            };
+        };
+
+        const FormControl = controlConfig.formControl || DefaultPropertiesForm;
 
         return <FormGroup error={Object.keys(errors).length > 0}>
             <ErrorMessages errors={errors.$}>
-                {controls}
+                <FormControl properties={properties}
+                             dynamicConfigState={dynamicConfigState}
+                             controlConfig={controlConfig}
+                             propertyControlProps={propertyControlProps}
+                             errors={errors}/>
             </ErrorMessages>
             {fetching && <FrezzerLoader/>}
         </FormGroup>;
