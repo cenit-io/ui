@@ -33,7 +33,6 @@ function OptionButton({ options, disabled, readOnly, className }) {
     const handleClick = ({ target }) => !readOnly && setState({ menuAnchor: target });
 
     const selectOption = op => () => {
-        console.log(op);
         if (op && op !== option) {
             setState({
                 option: op,

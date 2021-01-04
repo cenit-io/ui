@@ -3,7 +3,6 @@ import DataEventsFilledIcon from "../../../icons/DataEventsFilledIcon";
 import LegacyTriggerControl from "../../../components/LegacyTriggerControl";
 
 function dynamicConfig({ data_type, triggers, trigger_evaluator }, state) {
-    console.log(data_type);
     if (data_type) {
         if (triggers && triggers !== '{}') {
             if (state.triggers || !state.trigger_evaluator) {
