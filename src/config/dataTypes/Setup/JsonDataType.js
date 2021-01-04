@@ -20,7 +20,7 @@ const fields = [
 
 const viewport = `{id ${fields.join(' ')}}`;
 
-const justOneParameterSelector = {
+export const justOneParameterSelector = {
     parameters_size: 1
 };
 
