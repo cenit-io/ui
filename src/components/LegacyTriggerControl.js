@@ -643,10 +643,11 @@ export default function LegacyTriggerControl({ title, property, value, disabled,
         }).filter(s => s).flat();
     } else {
         selectors = Object.keys(triggers).map(key => triggers[key]).flat().map(
-            () => <Skeleton variant="text"
-                            height={theme.spacing(4)}
-                            width={theme.spacing(22)}
-                            className={classes.skeleton}/>
+            (_, index) => <Skeleton key={`skeleton_${index}`}
+                                    variant="text"
+                                    height={theme.spacing(4)}
+                                    width={theme.spacing(22)}
+                                    className={classes.skeleton}/>
         );
     }
 
