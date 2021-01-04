@@ -40,6 +40,7 @@ export default function AutocompleteControl({
                                                 error,
                                                 onChange,
                                                 options,
+                                                freeSolo
                                             }) {
     const [state, setState] = useState(null);
     const classes = useStyles();
@@ -89,6 +90,7 @@ export default function AutocompleteControl({
         : key;
 
     return <Autocomplete options={selectableOptions}
+                         freeSolo={freeSolo}
                          getOptionLabel={optionLabel}
                          disabled={disabled}
                          value={state}
