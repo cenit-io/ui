@@ -73,6 +73,13 @@ class BLoC {
         }
     }
 
+    catchPid(pid) {
+        const projection = this.projections[pid];
+        if (projection) {
+            this.states[pid] = projection(this.state);
+        }
+    }
+
     on(projection, pid = null) {
         pid = pid || projection[Pid] || Random.string();
         if (projection[Pid] !== pid) {

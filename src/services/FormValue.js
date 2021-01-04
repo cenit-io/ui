@@ -53,10 +53,12 @@ class FormValue {
             value = value(this.get());
         }
         this.assign(this.cache = value);
-        if (notifyAllObservers) {
-            this.bloc().checkPids();
-        } else {
-            this.checkTreeChanges();
+        if (notifyAllObservers !== 'skipNotify') {
+            if (notifyAllObservers) {
+                this.bloc().checkPids();
+            } else {
+                this.checkTreeChanges();
+            }
         }
     }
 
@@ -69,19 +71,24 @@ class FormValue {
         }
     }
 
-    delete() {
+    deleteAndNotify() {
+        this.delete(true);
+    }
+
+    delete(inclusiveNotify = false) {
         if (this.parent) {
-            this.parent.set(this.deleteOn(this.parent.get()), false);
+            this.parent.set(this.deleteOn(this.parent.get()), 'skipNotify');
+            this.updateCacheFromParent();
         } else {
-            this.bloc().set({}, false);
+            this.bloc().set({}, 'skipNotify');
         }
-        this.checkTreeChanges();
+        this.checkTreeChanges(inclusiveNotify);
     }
 
     checkTreeChanges(inclusive = false) {
         const paths = this.treePaths();
         if (!inclusive) {
-            paths.pop();
+            this.bloc().catchPid(paths.pop());
         }
         this.bloc().checkPids(...paths);
     }
@@ -152,6 +159,10 @@ class FormPropertyValue extends FormValue {
         delete parentValue[this.property];
         return parentValue;
     }
+
+    updateCacheFromParent() {
+        this.cache = this.parent.cache[this.property];
+    }
 }
 
 class FormIndexValue extends FormValue {
@@ -180,5 +191,9 @@ class FormIndexValue extends FormValue {
         parentValue = [...parentValue];
         parentValue.splice(this.index, 1);
         return parentValue;
+    }
+
+    updateCacheFromParent() {
+        this.cache = this.parent.cache[this.index];
     }
 }
