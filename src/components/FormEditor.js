@@ -22,7 +22,7 @@ import { RecordSubject } from "../services/subjects";
 import { FormRootValue } from "../services/FormValue";
 import JsonViewer from "./JsonViewer";
 import FormContext from './FormContext';
-import { FETCHED } from "../common/Symbols";
+import FrezzerLoader from "./FrezzerLoader";
 
 function withForm(item) {
     item.formComponent = formComponentFor(item.dataType);
@@ -41,6 +41,7 @@ const stackHeaderSpacing = 5;
 
 const styles = theme => ({
     root: {
+        position: 'relative',
         height: props => `calc(${props.height})`
     },
     stackHeader: {
@@ -174,6 +175,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
     const md = useMediaQuery(theme.breakpoints.up('md'));
     const [jsonMode, setJsonMode] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const current = stack[stack.length - 1];
 
@@ -217,8 +219,25 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
     }, [stack.length]);
 
     const handleStack = item => {
-        current.scrollTop = ref.current.scrollTop;
-        updateStack([...stack, withForm(item)]);
+        const { value, dataType } = item;
+        let dataTypeObserver;
+        setLoading(true);
+        if (value?.get() && dataType) {
+            const { _type } = value.cache;
+            dataTypeObserver = (
+                ((!_type || _type === dataType.type_name()) && of(dataType)) ||
+                dataType.findByName(_type)
+            );
+        } else {
+            dataTypeObserver = of(dataType);
+        }
+        dataTypeObserver.subscribe(
+            dataType => {
+                current.scrollTop = ref.current.scrollTop;
+                updateStack([...stack, withForm({ ...item, dataType })]);
+                setLoading(false);
+            }
+        );
     };
 
     const save = () => {
@@ -279,7 +298,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
 
         if (md && jsonMode) {
             jsonView = (
-                <FormContext.Provider value={{value: current.value}}>
+                <FormContext.Provider value={{ value: current.value }}>
                     <JsonViewer className={clsx(classes.jsonContainer, classes.jsonBox)}/>
                 </FormContext.Provider>
             );
@@ -384,6 +403,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
                 </div>
                 {jsonView}
             </div>
+            {loading && <FrezzerLoader/>}
         </div>
     );
 };
