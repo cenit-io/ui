@@ -1,6 +1,8 @@
 import React from 'react';
 import NotificationFilledIcon from "../../../icons/NotificationFilledIcon";
-import FlowFilledIcon from "../../../icons/FlowFilledIcon";
+import ErrorLevelViewer from "../../../viewers/ErrorLevelViewer";
+
+const LevelProjection = ({ type }) => type;
 
 export default {
     title: 'Notification',
@@ -9,5 +11,9 @@ export default {
         index: {
             fields: ['created_at', 'type', 'message', 'task']
         }
+    },
+    viewers: {
+        type: ErrorLevelViewer(LevelProjection, 'background'),
+        message: ErrorLevelViewer(LevelProjection)
     }
 };

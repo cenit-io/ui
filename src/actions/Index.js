@@ -27,15 +27,26 @@ import EmbedsManyViewer from "../viewers/EmbedsManyViewer";
 import JsonViewer from "../viewers/JsonViewer";
 
 function viewerComponentFor(property, config) {
+    let configViewer = config?.viewers;
+    if (configViewer) {
+        configViewer = configViewer[property.name];
+        if (configViewer) {
+            return configViewer;
+        }
+    }
     switch (property.type) {
 
-        case 'refOne': return RefOneViewer;
+        case 'refOne':
+            return RefOneViewer;
 
-        case 'refMany': return RefManyViewer;
+        case 'refMany':
+            return RefManyViewer;
 
-        case 'embedsOne': return EmbedsOneViewer;
+        case 'embedsOne':
+            return EmbedsOneViewer;
 
-        case 'embedsMany': return EmbedsManyViewer;
+        case 'embedsMany':
+            return EmbedsManyViewer;
 
         case 'boolean':
             return BooleanViewer;
@@ -45,7 +56,7 @@ function viewerComponentFor(property, config) {
                 case 'date-time':
                 case 'time':
                 case 'date':
-                    return DateTimeViewer
+                    return DateTimeViewer;
 
                 default:
                     return StringViewer;
@@ -344,7 +355,9 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
                         const Viewer = viewerComponentFor(prop, config);
                         return (
                             <StyledTableCell key={`${item.id}.${prop.name}`}>
-                                <Viewer prop={prop} value={item[prop.jsonKey]}/>
+                                <Viewer prop={prop}
+                                        value={item[prop.jsonKey]}
+                                        item={item}/>
                             </StyledTableCell>
                         );
                     })
