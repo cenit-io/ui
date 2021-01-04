@@ -2,7 +2,7 @@ import React from 'react';
 import FlowFilledIcon from "../../../icons/FlowFilledIcon";
 import FlowFormControl from "../../../components/FlowFormControl";
 import AutocompleteControl from "../../../components/AutocompleteControl";
-import { justOneParameterSelector } from "./JsonDataType";
+import { JustOneParameter, OneOrTwoParameters } from "../../../common/selectors";
 
 export default {
     title: 'Flow',
@@ -37,11 +37,17 @@ export default {
         data_type_scope: {
             control: AutocompleteControl
         },
+        scope_evaluator: {
+            selector: JustOneParameter
+        },
+        before_submit: {
+            selector: OneOrTwoParameters
+        },
         response_translator: {
             selector: { type: 'Import' }
         },
         after_process_callbacks: {
-            selector: justOneParameterSelector
+            selector: JustOneParameter
         }
     },
     groups: {

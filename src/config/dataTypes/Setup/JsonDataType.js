@@ -1,5 +1,6 @@
 import React from 'react';
 import DocumentTypesFilledIcon from "../../../icons/DocumentTypesFilledIcon";
+import { AtLeastOneParameter, JustOneParameter } from "../../../common/selectors";
 
 const behaviorFields = [
     'before_save_callbacks',
@@ -20,16 +21,6 @@ const fields = [
 
 const viewport = `{id ${fields.join(' ')}}`;
 
-export const justOneParameterSelector = {
-    parameters_size: 1
-};
-
-const atLeastOneParameterSelector = {
-    parameters_size: {
-        $gte: 1
-    }
-};
-
 export default {
     title: 'Document Type',
     groups: {
@@ -39,16 +30,16 @@ export default {
     },
     fields: {
         before_save_callbacks: {
-            selector: justOneParameterSelector
+            selector: JustOneParameter
         },
         after_save_callbacks: {
-            selector: justOneParameterSelector
+            selector: JustOneParameter
         },
         records_methods: {
-            selector: atLeastOneParameterSelector
+            selector: AtLeastOneParameter
         },
         data_type_methods: {
-            selector: atLeastOneParameterSelector
+            selector: AtLeastOneParameter
         }
     },
     actions: {
