@@ -26,8 +26,7 @@ function RefOneControl({
     const { text } = state;
 
     useEffect(() => {
-        const obs = value.changed();
-        const subscription = obs.pipe(
+        const subscription = value.changed().pipe(
             switchMap(v => {
                 if (v) {
                     const title = v[Title];
@@ -41,7 +40,7 @@ function RefOneControl({
         ).subscribe(
             text => setState({ text })
         );
-        obs.next(value.get());
+        value.changed().next(value.get());
         return () => subscription.unsubscribe();
     }, [value, property]);
 
