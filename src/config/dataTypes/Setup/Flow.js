@@ -46,6 +46,7 @@ export default {
     },
     groups: {
         request_and_response: {
+            activeByDefault: true,
             title: 'Request & Response',
             fields: [
                 'webhook', 'authorization', 'connection_role', 'before_submit',
@@ -54,6 +55,7 @@ export default {
             ]
         },
         behavior: {
+            activeByDefault: true,
             fields: ['active', 'auto_retry', 'after_process_callbacks']
         }
     }

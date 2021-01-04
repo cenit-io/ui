@@ -109,7 +109,8 @@ export function DefaultPropertiesForm({ controlConfig, dynamicConfigState, prope
         <Collapsible key={`group_${group}`}
                      title={groupsConfig[group]?.title || group}
                      children={controlsGroups[group]}
-                     error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}/>
+                     error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}
+                     defaultCollapsed={!groupsConfig[group]?.activeByDefault}/>
     ));
 
     return controls;
