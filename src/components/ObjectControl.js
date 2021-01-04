@@ -74,7 +74,7 @@ export function formConfigProperties(dataType, editMode = false) {
     )
 }
 
-function DefaultPropertiesForm({ controlConfig, dynamicConfigState, properties, propertyControlProps, errors }) {
+export function DefaultPropertiesForm({ controlConfig, dynamicConfigState, properties, propertyControlProps, errors }) {
     const controls = [];
     const configFields = controlConfig?.fields || {};
     const groups = [];
@@ -97,7 +97,7 @@ function DefaultPropertiesForm({ controlConfig, dynamicConfigState, properties, 
                 }
                 groupProps.push(prop.name);
                 controlsGroup.push(
-                    <PropertyControl {...propertyControlProps(prop)}/>
+                    <PropertyControl {...propertyControlProps(prop.name)}/>
                 );
             }
         }
@@ -245,14 +245,18 @@ function ObjectControl(props) {
         }
     }, [dynamicConfig, dynamicConfigState, value]);
 
-    const handleChange = prop => () => {
-        _update(prop);
-        onChange && onChange(value.get());
+    const handleChange = (prop, handler) => () => {
+        if (!handler || handler() !== 'abort') {
+            _update(prop);
+            onChange && onChange(value.get());
+        }
     };
 
-    const handleDelete = prop => () => {
-        _update(prop.name);
-        onChange && onChange(value.get());
+    const handleDelete = (prop, handler) => () => {
+        if (!handler || handler() !== 'abort') {
+            _update(prop.name);
+            onChange && onChange(value.get());
+        }
     };
 
     const _update = prop => {
@@ -276,28 +280,33 @@ function ObjectControl(props) {
 
         const configFields = controlConfig?.fields || {};
 
-        const propertyControlProps = prop => {
-            const fieldConfig = {
-                ...configFields[prop.name],
-                ...(dynamicConfigState && dynamicConfigState[prop.name])
-            };
+        const propertyControlProps = (name, handlers) => {
 
-            return {
-                key: prop.name + (fieldConfig.key || ''),
-                property: prop,
-                value: value.propertyValue(prop.jsonKey),
-                errors: errors[prop.name],
-                width: width,
-                onChange: handleChange(prop),
-                onDelete: handleDelete(prop),
-                disabled: fetching || disabled,
-                readOnly: readOnly || prop.isReadOnly(context),
-                onStack: onStack,
-                config: fieldConfig,
-                ready: ready,
-                ...fieldConfig.controlProps,
-                ...(orchestratorState && orchestratorState[prop.name])
-            };
+            const prop = properties.find(p => p.name === name);
+
+            if (prop) {
+                const fieldConfig = {
+                    ...configFields[name],
+                    ...(dynamicConfigState && dynamicConfigState[name])
+                };
+
+                return {
+                    key: name + (fieldConfig.key || ''),
+                    property: prop,
+                    value: value.propertyValue(prop.jsonKey),
+                    errors: errors[name],
+                    width: width,
+                    onChange: handleChange(prop, handlers?.onChange),
+                    onDelete: handleDelete(prop, handlers?.onDelete),
+                    disabled: fetching || disabled,
+                    readOnly: readOnly || prop.isReadOnly(context),
+                    onStack: onStack,
+                    config: fieldConfig,
+                    ready: ready,
+                    ...fieldConfig.controlProps,
+                    ...(orchestratorState && orchestratorState[name])
+                };
+            }
         };
 
         const FormControl = controlConfig.formControl || DefaultPropertiesForm;
@@ -308,7 +317,8 @@ function ObjectControl(props) {
                              dynamicConfigState={dynamicConfigState}
                              controlConfig={controlConfig}
                              propertyControlProps={propertyControlProps}
-                             errors={errors}/>
+                             errors={errors}
+                             value={value}/>
             </ErrorMessages>
             {fetching && <FrezzerLoader/>}
         </FormGroup>;
