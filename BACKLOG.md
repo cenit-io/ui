@@ -15,15 +15,17 @@ Issues & next features
  
 - Many-ref control should excludes from search the ids already included in the association
 
-### Cenit side Issues
+- Codemirror code controls do not expand within new action.
 
-- Make file data types `$ref` referenced by default.
+### Cenit side Issues
 
 - Make build-in data types `$ref` referenced by default.
 
 ### Features
 
 - Add styles and navigation links to the editor breadcrumb.
+
+- Titles for forms groups 
 
 ### Optimizations
 

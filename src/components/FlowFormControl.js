@@ -216,14 +216,21 @@ export default function FlowFormControl({
         return () => subscription.unsubscribe();
     }, [value, valueOf, response_translator]);
 
+    const propertiesHash = properties.reduce((hash, p) => (hash[p.name] = p) && hash, {});
+
     const visibleProperties = FormProps.map(name => (
-        !hidden[name] && properties.find(p => p.name === name)
+        !hidden[name] && propertiesHash[name]
     )).filter(c => c);
+
+    const custompropertyControlProps = name => ({
+        ...propertyControlProps(name),
+        ...state[name]
+    });
 
     return (
         <>
             <DefaultPropertiesForm errors={errors}
-                                   propertyControlProps={propertyControlProps}
+                                   propertyControlProps={custompropertyControlProps}
                                    controlConfig={controlConfig}
                                    dynamicConfigState={dynamicConfigState}
                                    properties={visibleProperties}/>
