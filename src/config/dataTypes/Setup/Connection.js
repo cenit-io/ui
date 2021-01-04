@@ -17,6 +17,7 @@ export default {
             fields: ['authorization', 'authorization_handler']
         },
         parameters_and_headers: {
+            title: 'Parameters & Headers',
             fields: ['parameters', 'headers', 'template_parameters']
         }
     }

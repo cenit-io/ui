@@ -25,8 +25,6 @@ Issues & next features
 
 - Add styles and navigation links to the editor breadcrumb.
 
-- Titles for forms groups 
-
 ### Optimizations
 
 - Cache for Liquid templates

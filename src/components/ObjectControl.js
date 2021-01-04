@@ -103,9 +103,11 @@ export function DefaultPropertiesForm({ controlConfig, dynamicConfigState, prope
         }
     );
 
+    const groupsConfig = controlConfig?.groups || {};
+
     groups.forEach(group => controls.push(
         <Collapsible key={`group_${group}`}
-                     title={group}
+                     title={groupsConfig[group]?.title || group}
                      children={controlsGroups[group]}
                      error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}/>
     ));
