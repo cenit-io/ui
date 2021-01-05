@@ -136,7 +136,7 @@ export default function CodeMirrorEditor({
                     cleared.current = false;
                     editor.save();
                 } else {
-                    value.set(editor.getValue());
+                    value.set(editor.getValue(), true);
                     setState({ autoHeight: autoHeightFor(editor.getValue()) });
                     onChange && onChange(editor.getValue());
                 }

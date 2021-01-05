@@ -39,7 +39,7 @@ function JsonControl({ onChange, onError, value, ...otherProps }) {
 
     useEffect(() => {
         const subscription = value.changed().subscribe(
-            v => valueProxy.current.set(jsonStringify(v))
+            v => valueProxy.current.set(jsonStringify(v), true)
         );
         value.changed().next(value.get());
         return () => subscription.unsubscribe();
