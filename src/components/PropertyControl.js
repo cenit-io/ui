@@ -14,6 +14,7 @@ import StringCodeControl from "./StringCodeControl";
 import JsonControl from "./JsonControl";
 import spreadReducer from "../common/spreadReducer";
 import EnumControl from "./EnumControl";
+import DateTimeControl from "./DateTimeControl";
 
 function controlComponentFor(property) {
     if (property.propertySchema.enum) {
@@ -51,6 +52,11 @@ function controlComponentFor(property) {
         }
 
         case 'string': {
+            const format = property.propertySchema.format;
+            if (format === 'date' || format === 'time' || format === 'date-time') {
+                return DateTimeControl;
+            }
+
             if (property.propertySchema.contentMediaType) {
                 return StringCodeControl;
             }
