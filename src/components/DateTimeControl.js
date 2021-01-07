@@ -4,6 +4,35 @@ import { useFormContext } from "./FormContext";
 import { DatePicker, DateTimePicker, TimePicker } from "@material-ui/pickers";
 import CalendarIcon from "@material-ui/icons/Event";
 import ClearIcon from "@material-ui/icons/Clear";
+import { format } from 'date-fns';
+
+const Formats = {
+    date: "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
+    time: 'HH:mm:ss.SSSxxx'
+};
+
+function FormattedTime(props) {
+    return (
+        <TimePicker {...props}
+                    openTo="hours"
+                    views={["hours", "minutes", "seconds"]}
+                    format={Formats.time}/>
+    );
+}
+
+function FormattedDate(props) {
+    return (
+        <DatePicker {...props}
+                    format="MMMM d, yyyy"/>
+    );
+}
+
+function FormattedDateTime(props) {
+    return (
+        <DateTimePicker {...props}
+                        format="MMMM d, yyyy hh:mm aaaa"/>
+    );
+}
 
 export default function DateTimeControl({ title, onChange, value, onDelete, disabled, readOnly, schema }) {
 
@@ -13,16 +42,26 @@ export default function DateTimeControl({ title, onChange, value, onDelete, disa
 
     useEffect(() => {
         const subscription = value.changed().subscribe(
-            date => setDate(date || null)
+            date => {
+                if (date && schema.format === 'time') {
+                    date = `${format(new Date(), 'yyyy-MM-dd')}T${date}`;
+                }
+                setDate(date || null);
+            }
         );
         value.changed().next(value.get());
         return () => subscription.unsubscribe();
-    }, [value]);
+    }, [value, schema]);
 
     const handleChange = date => {
         setDate(date);
         if (!date || !isNaN(date?.getDate())) {
-            date = date?.toISOString();
+            const dateFormat = Formats[schema.format];
+            if (dateFormat) {
+                date = format(date, dateFormat);
+            } else {
+                date = date?.toISOString();
+            }
             value.set(date);
             onChange(date);
         }
@@ -57,10 +96,10 @@ export default function DateTimeControl({ title, onChange, value, onDelete, disa
     }
 
     const Control = schema.format === 'date'
-        ? DatePicker
+        ? FormattedDate
         : (schema.format === 'time'
-            ? TimePicker
-            : DateTimePicker);
+            ? FormattedTime
+            : FormattedDateTime);
 
     return (
         <Control className="full-width"
@@ -71,7 +110,6 @@ export default function DateTimeControl({ title, onChange, value, onDelete, disa
                  readOnly={readOnly}
                  placeholder={title}
                  label={title}
-                 variant="inline"
                  inputVariant="filled"
                  InputProps={{
                      endAdornment: (
