@@ -15,6 +15,8 @@ import { Skeleton } from "@material-ui/lab";
 import ListSubheader from "@material-ui/core/ListSubheader";
 import FormContext from "./FormContext";
 import { useSpreadState } from "../common/hooks";
+import { DataTypeSubject } from "../services/subjects";
+import { FETCHED } from "../common/Symbols";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -36,7 +38,7 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
     const classes = useStyles();
     const theme = useTheme();
 
-    const { formDataType, errors, descendants, titles, descendantsCount, initialFormValue, ready } = state;
+    const { formDataType, errors, descendants, titles, descendantsCount, initialFormValue } = state;
 
     useEffect(() => {
         let subscription;
@@ -93,7 +95,7 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
 
     useEffect(() => {
         if (formDataType) {
-            const subscription = submitter.pipe(
+            const submitterSubscription = submitter.pipe(
                 switchMap(() => viewport || formDataType.titleViewPort('_id')),
                 switchMap(viewport => formDataType.post(value.get(), {
                     viewport,
@@ -108,7 +110,25 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
                 })
             ).subscribe(response => onSubmitDone(response));
 
-            return () => subscription.unsubscribe();
+            let seedSubscription;
+            if (formDataType !== dataType && !rootId) {
+                seedSubscription = DataTypeSubject.for(formDataType.id).config().subscribe(
+                    config => {
+                        const seed = (config.actions?.new?.seed);
+                        if (seed) {
+                            seed[FETCHED] = true;
+                            value.set(seed);
+                        }
+                    }
+                );
+            }
+
+            return () => {
+                submitterSubscription.unsubscribe();
+                if (seedSubscription) {
+                    seedSubscription.unsubscribe();
+                }
+            }
         }
     }, [value, submitter, viewport, formDataType, onSubmitDone, rootId]);
 
