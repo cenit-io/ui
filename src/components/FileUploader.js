@@ -468,12 +468,9 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
     useEffect(() => {
         if (filesUpdated) {
             const filesValue = computeFilesValue(files);
-
-            if (JSON.stringify(filesValue) !== JSON.stringify(value.get())) {
-                value.set(filesValue);
-            }
+            value.set(filesValue, true);
         }
-    }, [filesUpdated, files, value])
+    }, [filesUpdated, files, value]);
 
     useEffect(() => {
         if (current) {
