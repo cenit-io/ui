@@ -94,7 +94,8 @@ const StyledTableRow = withStyles((theme) => ({
             padding: 0,
             '& div': {
                 height: '100%',
-                display: 'flex'
+                display: 'flex',
+                alignItems: 'center'
             }
         },
         '&:nth-of-type(odd)': {
