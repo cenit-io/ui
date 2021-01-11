@@ -1,6 +1,7 @@
 import React from 'react';
 import AlgorithmFilledIcon from "../../../icons/AlgorithmFilledIcon";
 import StringCodeControl from "../../../components/StringCodeControl";
+import RunAlgorithm from "../../../actions/RunAlgorithm";
 
 function orchestrator({ language }, state) {
     const mime = language === 'ruby' ? 'text/x-ruby' : 'text/javascript';
