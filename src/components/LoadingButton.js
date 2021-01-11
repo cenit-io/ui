@@ -28,7 +28,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-export default function LoadingButton({ loading, success, onClick, className }) {
+export default function LoadingButton({ loading, success, onClick, className, actionIcon }) {
     const classes = useStyles();
 
     const fabClassName = clsx({
@@ -44,7 +44,7 @@ export default function LoadingButton({ loading, success, onClick, className }) 
                      color="primary"
                      className={fabClassName}
                      onClick={() => !(loading || success) && onClick()}>
-                    {success ? <CheckIcon/> : <SaveIcon/>}
+                    {success ? <CheckIcon/> : actionIcon || <SaveIcon/>}
                 </Fab>
                 {loading && <CircularProgress size={68} className={classes.fabProgress}/>}
             </div>

@@ -1,19 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import BackIcon from '@material-ui/icons/ArrowBack';
 import FormView from "./FormView";
-import { useMediaQuery, withStyles, Fab } from "@material-ui/core/index";
+import { useMediaQuery, Fab, makeStyles } from "@material-ui/core/index";
 import clsx from 'clsx';
 import LoadingButton from "./LoadingButton";
 import SwipeableViews from "react-swipeable-views";
 import copy from 'copy-to-clipboard/index';
 import CopyIcon from '@material-ui/icons/FileCopy';
-import SuccessIcon from '@material-ui/icons/CheckCircle';
 import Button from '@material-ui/core/Button/index';
-import AddIcon from '@material-ui/icons/Add';
-import Typography from '@material-ui/core/Typography/index';
 import StorageIcon from '@material-ui/icons/Storage';
 import ViewIcon from '@material-ui/icons/OpenInNew';
-import EditIcon from '@material-ui/icons/Edit';
+import WaitingIcon from '@material-ui/icons/HourglassEmpty';
 import zzip from "../util/zzip";
 import { of, Subject } from "rxjs";
 import { FileDataType } from "../services/DataTypeService";
@@ -23,6 +20,9 @@ import { FormRootValue } from "../services/FormValue";
 import JsonViewer from "./JsonViewer";
 import FormContext from './FormContext';
 import FrezzerLoader from "./FrezzerLoader";
+import { switchMap, tap, catchError } from "rxjs/operators";
+import useTheme from "@material-ui/core/styles/useTheme";
+import SuccessAlert from "../actions/SuccessAlert";
 
 function withForm(item) {
     item.formComponent = formComponentFor(item.dataType);
@@ -39,7 +39,7 @@ function formComponentFor(dataType) {
 
 const stackHeaderSpacing = 5;
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
     root: {
         position: 'relative',
         height: props => `calc(${props.height})`
@@ -141,11 +141,74 @@ const styles = theme => ({
     alignCenter: {
         textAlign: 'center'
     }
-});
+}));
 
-const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked, height, value, readOnly, onUpdate }) => {
+const defaultFormProcessor = (viewport, rootId, onFormSubmit, onSubmitDone) => (formDataType, value) => {
+    const submitAction = onFormSubmit
+        ? onFormSubmit(formDataType, value)
+        : (viewport || formDataType.titleViewPort('_id')).pipe(
+            switchMap(viewport => formDataType.post(value.get(), {
+                viewport,
+                add_only: rootId,
+                add_new: !rootId,
+                polymorphic: true
+            })),
+            tap(response => value.set({ ...value.get(), ...response }))
+        );
+
+    return submitAction.pipe(
+        tap(response => setTimeout(() => onSubmitDone(response))),
+        catchError(error => {
+            setTimeout(() => onSubmitDone());
+            throw error
+        })
+    );
+};
+
+const useSuccessStyles = makeStyles(theme => ({
+    alignCenter: {
+        textAlign: 'center'
+    },
+    actionButton: {
+        margin: theme.spacing(1)
+    },
+}));
+
+function DefaultSuccessControl({ title, rootId, onSubjectPicked, dataType, id }) {
+
+    const classes = useSuccessStyles();
+
+    let actions;
+    if (!rootId) {
+        actions = (
+            <div className={classes.alignCenter}>
+                <Button variant="outlined"
+                        color="primary"
+                        startIcon={<ViewIcon/>}
+                        className={classes.actionButton}
+                        onClick={() => onSubjectPicked(RecordSubject.for(dataType.id, id).key)}>
+                    View
+                </Button>
+            </div>
+        );
+    }
+
+    return (
+        <SuccessAlert title={title}
+                      message={`Successfully ${rootId ? 'updated' : 'created'}`}
+                      mainIcon={StorageIcon}>
+            {actions}
+        </SuccessAlert>
+    );
+}
+
+const FormEditor = ({
+                        docked, dataType, rootId, onSubjectPicked, height, value,
+                        readOnly, onUpdate, onFormSubmit, successControl, submitIcon
+                    }) => {
 
     const [id, setId] = useState((value && value.id) || null);
+    const [submitResponse, setSubmitResponse] = useState(null);
     const initialStack = () => [
         withForm({
             value: new FormRootValue({ ...value }),
@@ -159,6 +222,7 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
             viewport: dataType.titleViewPort('_id'),
             callback: value => {
                 setId(value.id);
+                setSubmitResponse(value);
                 if (onUpdate && rootId) {
                     onUpdate(value);
                 }
@@ -172,6 +236,9 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
     const [stackTitles, setStackTitles] = useState([]);
     const [done, setDone] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    const classes = useStyles({ height });
+    const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
     const md = useMediaQuery(theme.breakpoints.up('md'));
     const [jsonMode, setJsonMode] = useState(false);
@@ -246,11 +313,6 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
         current.submitter.next();
     };
 
-    const handleAddAnother = () => {
-        updateStack(initialStack());
-        setDone(false);
-    };
-
     let controlHeight = 0;
     if (stackHeaderRef.current) {
         controlHeight = stackHeaderRef.current.getBoundingClientRect().height
@@ -280,7 +342,8 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
                                loading={saving && !done}
                                onClick={save}
                                className={classes.fabSave}
-                               success={done}/>
+                               success={done}
+                               actionIcon={submitIcon}/>
             );
         }
 
@@ -315,46 +378,6 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
         }
     }
 
-    const DataTypeIcon = StorageIcon;
-
-    const successAlert = (
-        <div key='successAlert' className={clsx(classes.fullHeight, classes.center, classes.okContainer)}>
-            <div className={clsx(classes.okBox, classes.center)}>
-                <SuccessIcon className={classes.okIcon} color="primary"/>
-                <DataTypeIcon/>
-            </div>
-            <Typography variant='h5'>
-                {stackTitles[1]}
-            </Typography>
-            <Typography variant='subtitle1' className={clsx(classes.successLabel, classes.alignCenter)}>
-                Successfully {rootId ? 'updated' : 'created'}
-            </Typography>
-            <div className={classes.alignCenter}>
-                <Button variant="outlined"
-                        color="primary"
-                        startIcon={<ViewIcon/>}
-                        className={classes.actionButton}>
-                    View
-                </Button>
-                <Button variant="outlined"
-                        color="primary"
-                        startIcon={<EditIcon/>}
-                        className={classes.actionButton}
-                        onClick={() => onSubjectPicked(RecordSubject.for(dataType.id, id).key)}>
-                    Edit
-                </Button>
-            </div>
-            <Button variant="contained"
-                    color="primary"
-                    startIcon={<AddIcon/>}
-                    onClick={handleAddAnother}
-                    className={classes.actionButton}>
-                Add another
-            </Button>
-            <div className={classes.trailing}></div>
-        </div>
-    );
-
     const forms = stack.map(
         (item, index) => {
             if (index) {
@@ -372,10 +395,26 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
                              submitter={item.submitter}
                              onSubmitDone={onSubmitDone}
                              onSubjectPicked={onSubjectPicked}
-                             viewport={item.viewport}/>
+                             viewport={item.viewport}
+                             onFormSubmit={defaultFormProcessor(
+                                 item.viewport, item.rootId, onFormSubmit, onSubmitDone
+                             )}/>
             }
 
-            return successAlert;
+            if (submitResponse) {
+
+                const SuccessControl = successControl || DefaultSuccessControl;
+
+                return <SuccessControl key='successAlert'
+                                       title={stackTitles[1]}
+                                       rootId={rootId}
+                                       onSubjectPicked={onSubjectPicked}
+                                       dataType={dataType}
+                                       id={id}
+                                       value={submitResponse}/>;
+            }
+
+            return <SuccessAlert key="notSubmitted" mainIcon={WaitingIcon}/>;
         }
     );
 
@@ -408,4 +447,4 @@ const FormEditor = ({ docked, dataType, theme, classes, rootId, onSubjectPicked,
     );
 };
 
-export default withStyles(styles, { withTheme: true })(FormEditor);
+export default FormEditor;

@@ -30,7 +30,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const FormView = ({ rootId, submitter, viewport, dataType, width, height, value, _type, disabled, onStack, readOnly, onSubmitDone }) => {
+const FormView = ({ rootId, submitter, viewport, dataType, width, height, value, _type, disabled, onStack, readOnly, onFormSubmit }) => {
 
     const [state, setState] = useSpreadState({
         initialFormValue: {}
@@ -95,20 +95,15 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
 
     useEffect(() => {
         if (formDataType) {
-            const submitterSubscription = submitter.pipe(
-                switchMap(() => viewport || formDataType.titleViewPort('_id')),
-                switchMap(viewport => formDataType.post(value.get(), {
-                    viewport,
-                    add_only: rootId,
-                    add_new: !rootId,
-                    polymorphic: true
-                })),
-                tap(response => value.set({ ...value.get(), ...response })),
-                catchError(error => {
-                    setState({ errors: error.response.data });
-                    return of(null);
-                })
-            ).subscribe(response => onSubmitDone(response));
+            let submitSubscription;
+            const submitterSubscription = submitter.subscribe(() => {
+                submitSubscription = onFormSubmit(formDataType, value).pipe(
+                    catchError(error => {
+                        setState({ errors: error.response.data });
+                        return of(null);
+                    })
+                ).subscribe();
+            });
 
             let seedSubscription;
             if (formDataType !== dataType && !rootId) {
@@ -130,7 +125,7 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
                 }
             }
         }
-    }, [value, submitter, viewport, formDataType, onSubmitDone, rootId]);
+    }, [value, submitter, viewport, formDataType, rootId, onFormSubmit]);
 
     const handleFetched = initialFormValue => setState({ initialFormValue });
 
