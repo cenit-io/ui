@@ -18,7 +18,7 @@ const useToolbarStyles = makeStyles(theme => ({
     }
 }));
 
-function CollectionActionsToolbar({ title, arity, onAction, selectedKey, onRefresh }) {
+function CollectionActionsToolbar({ dataType, title, arity, onAction, selectedKey }) {
     const classes = useToolbarStyles();
 
     return (
@@ -34,9 +34,10 @@ function CollectionActionsToolbar({ title, arity, onAction, selectedKey, onRefre
             <ActionPicker kind={ActionKind.collection}
                           arity={arity}
                           onAction={onAction}
-                          selectedKey={selectedKey}/>
+                          selectedKey={selectedKey}
+                          dataType={dataType}/>
         </Toolbar>
     );
-};
+}
 
 export default CollectionActionsToolbar;

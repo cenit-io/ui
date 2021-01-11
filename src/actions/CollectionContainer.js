@@ -111,7 +111,8 @@ function CollectionContainer({ docked, subject, height, width, onSubjectPicked }
     }
     return (
         <div className={classes.root}>
-            <CollectionActionsToolbar title={title}
+            <CollectionActionsToolbar dataType={dataType}
+                                      title={title}
                                       onAction={handleAction}
                                       arity={selectedItems.length}
                                       selectedKey={actionKey}

@@ -158,7 +158,8 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
             <ActionPicker kind={ActionKind.member}
                           arity={1}
                           onAction={handleAction}
-                          disabled={disabled}/>
+                          disabled={disabled}
+                          dataType={dataType}/>
         </Toolbar>
         <div className={classes.actionContainer}
              style={{ height: `calc(${componentHeight})` }}>

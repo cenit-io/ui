@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles, Tooltip } from "@material-ui/core";
 import IconButton from '@material-ui/core/IconButton';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
@@ -10,15 +10,44 @@ const useToolbarStyles = makeStyles(theme => ({
     }
 }));
 
-function ActionPicker({ disabled, kind, arity, selectedKey, onAction }) {
+function match(target, criteria) {
+    const keys = Object.keys(criteria);
+    let i = 0;
+    while (i < keys.length) {
+        if (criteria[keys[i]] !== target[keys[i]]) {
+            return false;
+        }
+        i++;
+    }
+    return true;
+}
+
+function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }) {
+    const [actions, setActions] = useState([]);
     const classes = useToolbarStyles();
 
-    const handleAction = actionKey => () => onAction(actionKey);
-    if (arity === 1) {
-        kind = ActionKind.member;
-    }
+    useEffect(() => {
+        if (dataType) {
+            const k = arity === 1 ? ActionKind.member : kind;
+            const actions = [];
 
-    let actions = ActionRegistry.findBy({ kind, arity }, { kind: ActionKind.bulk }).map(
+            ActionRegistry.findBy({ kind: k, arity }, { kind: ActionKind.bulk }).forEach(
+                action => {
+                    if (!action.onlyFor || action.onlyFor.find(criteria => match(dataType, criteria))) {
+                        actions.push(action)
+                    }
+                }
+            );
+
+            setActions(actions);
+        } else {
+            setActions([]);
+        }
+    }, [dataType, arity, kind]);
+
+    const handleAction = actionKey => () => onAction(actionKey);
+
+    const actionsControls = actions.map(
         action => {
             const Icon = action.icon;
 
@@ -35,8 +64,8 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction }) {
     );
 
     return <div className={classes.actions}>
-        {actions}
+        {actionsControls}
     </div>;
-};
+}
 
 export default ActionPicker;
