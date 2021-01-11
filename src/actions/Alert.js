@@ -44,7 +44,11 @@ const alertStyles = makeStyles(theme => ({
     }
 }));
 
-function Alert({ title, message, children, mainIcon, smallIcon, smallIconColor, background }) {
+const DefaultIconColor = [
+    'inherit', 'primary', 'secondary', 'action', 'error', 'disabled'
+].reduce((hash, color) => (hash[color] = true) && hash, {});
+
+function Alert({ title, message, children, mainIcon, mainIconColor, smallIcon, smallIconColor, background }) {
     const classes = alertStyles();
     const theme = useTheme();
 
@@ -55,11 +59,19 @@ function Alert({ title, message, children, mainIcon, smallIcon, smallIconColor, 
 
     smallIconColor = smallIconColor || 'error';
 
+    mainIconColor = DefaultIconColor[mainIconColor]
+        ? { color: mainIconColor }
+        : { style: { color: mainIconColor } };
+
+    smallIconColor = DefaultIconColor[smallIconColor]
+        ? { color: smallIconColor }
+        : { style: { color: smallIconColor } };
+
     return <ResponsiveContainer>
         <div key='successAlert' className={clsx(classes.fullHeight, classes.center, classes.okContainer)}>
             <div className={clsx(classes.okBox, classes.center)} style={{ background }}>
-                <SmallIcon className={classes.okIcon} color={smallIconColor}/>
-                <MainIcon fontSize='large'/>
+                <SmallIcon className={classes.okIcon} {...smallIconColor}/>
+                <MainIcon fontSize='large' {...mainIconColor}/>
             </div>
             <Typography variant='h5'>
                 {title}
