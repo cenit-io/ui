@@ -1,6 +1,6 @@
 import API from './ApiService';
-import { from, Observable, of } from "rxjs";
-import { map, share, switchMap, tap } from "rxjs/operators";
+import { from, isObservable, Observable, of } from "rxjs";
+import { catchError, map, share, switchMap, tap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import FormContext from "./FormContext";
 import LiquidEngine from "./LiquidEngine";
@@ -9,6 +9,8 @@ import { Async } from "../common/Symbols";
 import { deepMergeArrayConcat, deepMergeObjectsOnly } from "../common/merge";
 import deepDup from "../common/deepDup";
 import Hash from 'object-hash';
+import { preprocess } from "../config/config";
+import { Config as ConfigSymbol } from "../common/Symbols";
 
 const isSimpleSchema = schema => ['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1;
 
@@ -927,6 +929,36 @@ export class DataType {
         return this.shallowViewPort().pipe(
             switchMap(viewport => this.get(id, { viewport, ...opts }))
         );
+    }
+
+    config() {
+        let config = this[ConfigSymbol];
+        if (config) {
+            if (!isObservable(config)) {
+                config = of(config);
+            }
+        } else if (this.id !== undefined) {
+            let path = (this.namespace || '')
+                .split('::')
+                .join('/');
+            if (path) {
+                path = `${path}/${this.name}`;
+            } else {
+                path = this.name;
+            }
+            this[ConfigSymbol] = config = from(
+                import(`../config/dataTypes/${path}.js`)
+            ).pipe(
+                map(mod => mod.default),
+                catchError(e => of({})),
+                tap(config => {
+                    this[ConfigSymbol] = config;
+                })
+            );
+        } else {
+            config = of({});
+        }
+        return config;
     }
 }
 

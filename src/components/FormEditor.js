@@ -13,7 +13,7 @@ import ViewIcon from '@material-ui/icons/OpenInNew';
 import WaitingIcon from '@material-ui/icons/HourglassEmpty';
 import zzip from "../util/zzip";
 import { of, Subject } from "rxjs";
-import { FileDataType } from "../services/DataTypeService";
+import { FILE_TYPE } from "../services/DataTypeService";
 import FileUploader from "./FileUploader";
 import { RecordSubject } from "../services/subjects";
 import { FormRootValue } from "../services/FormValue";
@@ -25,16 +25,8 @@ import useTheme from "@material-ui/core/styles/useTheme";
 import SuccessAlert from "../actions/SuccessAlert";
 
 function withForm(item) {
-    item.formComponent = formComponentFor(item.dataType);
     item.submitter = new Subject();
     return item;
-}
-
-function formComponentFor(dataType) {
-    if (dataType.constructor === FileDataType) {
-        return FileUploader;
-    }
-    return FormView;
 }
 
 const stackHeaderSpacing = 5;
@@ -204,7 +196,8 @@ function DefaultSuccessControl({ title, rootId, onSubjectPicked, dataType, id })
 
 const FormEditor = ({
                         docked, dataType, rootId, onSubjectPicked, height, value,
-                        readOnly, onUpdate, onFormSubmit, successControl, submitIcon
+                        readOnly, onUpdate, onFormSubmit, successControl, submitIcon,
+                        noSubmitButton, noJSON
                     }) => {
 
     const [id, setId] = useState((value && value.id) || null);
@@ -243,6 +236,7 @@ const FormEditor = ({
     const md = useMediaQuery(theme.breakpoints.up('md'));
     const [jsonMode, setJsonMode] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [stackControls, setStackControls] = useState([]);
 
     const current = stack[stack.length - 1];
 
@@ -254,6 +248,23 @@ const FormEditor = ({
             }
         });
     };
+    useEffect(() => {
+        const subscription = zzip(
+            ...stack.map(
+                ({ dataType }) => dataType.config()
+            )
+        ).subscribe(configs => {
+            const controls = configs.map(
+                (config, index) => config.formViewComponent || (
+                    stack[index].dataType._type === FILE_TYPE
+                        ? FileUploader
+                        : FormView)
+            )
+            setStackControls(controls);
+        });
+
+        return () => subscription.unsubscribe();
+    }, [stack]);
 
     const handleBack = useCallback(() => {
         const newStack = [...stack];
@@ -336,7 +347,7 @@ const FormEditor = ({
 
     let jsonView;
     if (stack.length > 1) {
-        if (!readOnly) {
+        if (!noSubmitButton && !readOnly) {
             actions.push(
                 <LoadingButton key='save'
                                loading={saving && !done}
@@ -347,7 +358,7 @@ const FormEditor = ({
             );
         }
 
-        if (md) {
+        if (!noJSON && md) {
             actions.push(
                 <Fab key='json'
                      size='small'
@@ -378,27 +389,27 @@ const FormEditor = ({
         }
     }
 
-    const forms = stack.map(
-        (item, index) => {
+    let forms = stackControls.map(
+        (Control, index) => {
             if (index) {
-                const Form = item.formComponent;
-                return <Form key={`form_${index}`}
-                             dataType={item.dataType}
-                             value={item.value}
-                             _type={item.value && item.value._type}
-                             disabled={saving}
-                             readOnly={readOnly}
-                             onStack={handleStack}
-                             rootId={item.rootId}
-                             max={item.max}
-                             height={controlHeight}
-                             submitter={item.submitter}
-                             onSubmitDone={onSubmitDone}
-                             onSubjectPicked={onSubjectPicked}
-                             viewport={item.viewport}
-                             onFormSubmit={defaultFormProcessor(
-                                 item.viewport, item.rootId, onFormSubmit, onSubmitDone
-                             )}/>
+                const item = stack[index];
+                return item && <Control key={`form_${index}`}
+                                        dataType={item.dataType}
+                                        value={item.value}
+                                        _type={item.value && item.value._type}
+                                        disabled={saving}
+                                        readOnly={readOnly}
+                                        onStack={handleStack}
+                                        rootId={item.rootId}
+                                        max={item.max}
+                                        height={controlHeight}
+                                        submitter={item.submitter}
+                                        onSubmitDone={onSubmitDone}
+                                        onSubjectPicked={onSubjectPicked}
+                                        viewport={item.viewport}
+                                        onFormSubmit={defaultFormProcessor(
+                                            item.viewport, item.rootId, onFormSubmit, onSubmitDone
+                                        )}/>
             }
 
             if (submitResponse) {
@@ -416,8 +427,17 @@ const FormEditor = ({
 
             return <SuccessAlert key="notSubmitted" mainIcon={WaitingIcon}/>;
         }
-    );
+    ).filter(c => c);
 
+    if (forms.length) {
+        forms = (
+            <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+                            disabled={true}
+                            index={stackControls.length - 1}>
+                {forms}
+            </SwipeableViews>
+        );
+    }
     return (
         <div className={classes.root}>
             <div ref={stackHeaderRef} className={classes.stackHeader}>
@@ -425,18 +445,12 @@ const FormEditor = ({
             </div>
             <div style={{ display: 'flex', position: 'relative' }}>
                 <div ref={ref}
-                     className={
-                         clsx(
-                             classes.formContainer,
-                             !xs && !jsonView && (docked || !md) && classes.smFormContainer,
-                             md && ((jsonMode && classes.jsonBox) || classes.mdFormContainer)
-                         )}>
-
-                    <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                                    disabled={true}
-                                    index={stack.length - 1}>
-                        {forms}
-                    </SwipeableViews>
+                     className={clsx(
+                         classes.formContainer,
+                         !xs && !jsonView && (docked || !md) && classes.smFormContainer,
+                         md && ((jsonMode && classes.jsonBox) || classes.mdFormContainer)
+                     )}>
+                    {forms}
                     <div className={classes.trailing}/>
                     {actions}
                 </div>

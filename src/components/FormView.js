@@ -38,7 +38,7 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
     const classes = useStyles();
     const theme = useTheme();
 
-    const { formDataType, errors, descendants, titles, descendantsCount, initialFormValue } = state;
+    const { formDataType, dataTypeConfig, errors, descendants, titles, descendantsCount, initialFormValue } = state;
 
     useEffect(() => {
         let subscription;
@@ -95,6 +95,9 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
 
     useEffect(() => {
         if (formDataType) {
+            const configSubscription = formDataType.config().subscribe(
+                dataTypeConfig => setState({ dataTypeConfig })
+            );
             let submitSubscription;
             const submitterSubscription = submitter.subscribe(() => {
                 submitSubscription = onFormSubmit(formDataType, value).pipe(
@@ -107,7 +110,7 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
 
             let seedSubscription;
             if (formDataType !== dataType && !rootId) {
-                seedSubscription = DataTypeSubject.for(formDataType.id).config().subscribe(
+                seedSubscription = formDataType.config().subscribe(
                     config => {
                         const seed = (config.actions?.new?.seed);
                         if (seed) {
@@ -119,6 +122,7 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
             }
 
             return () => {
+                configSubscription.unsubscribe();
                 submitterSubscription.unsubscribe();
                 if (seedSubscription) {
                     seedSubscription.unsubscribe();
@@ -133,16 +137,17 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
 
     let control;
 
-    if (dataType && formDataType) {
-        control = <ObjectControl dataType={formDataType}
-                                 width={width}
-                                 height={formHeight}
-                                 value={value}
-                                 errors={errors}
-                                 disabled={disabled}
-                                 readOnly={readOnly}
-                                 onStack={onStack}
-                                 onFetched={handleFetched}/>;
+    if (dataType && dataTypeConfig) {
+        const FormViewControl = dataTypeConfig.formViewControl || ObjectControl;
+        control = <FormViewControl dataType={formDataType}
+                                   width={width}
+                                   height={formHeight}
+                                   value={value}
+                                   errors={errors}
+                                   disabled={disabled}
+                                   readOnly={readOnly}
+                                   onStack={onStack}
+                                   onFetched={handleFetched}/>;
     } else {
         const textSkeleton = <Skeleton variant="text"/>;
         if (titles) {

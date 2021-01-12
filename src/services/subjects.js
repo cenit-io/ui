@@ -9,11 +9,9 @@ import MemberContainer from "../actions/MemberContainer";
 import { Cache, Config, Subject as subj, TitlePipe as titlePipe } from '../common/Symbols';
 import { preprocess } from "../config/config";
 import zzip from "../util/zzip";
-import SvgIcon from "@material-ui/core/SvgIcon";
 import pluralize from 'pluralize';
 import Menu from "../components/Menu";
 import DocumentTypeRecordsFilledIcon from "../icons/DocumentTypeRecordsFilledIcon";
-import FileTypesIcon from "../icons/FileTypesIcon";
 import FileTypeFilledIcon from "../icons/FileTypeFilledIcon";
 import FileFilledIcon from "../icons/FileFilledIcon";
 import DocumentTypeFilledIcon from "../icons/DocumentTypeFilledIcon";
@@ -163,33 +161,7 @@ export class DataTypeSubject extends BasicSubject {
         return this.dataType().pipe(
             switchMap(dt => {
                 if (dt) {
-                    let config = dt[Config];
-                    if (config) {
-                        config = of(config);
-                    } else {
-                        config = this[Config];
-                        if (!config) {
-                            let path = (dt.namespace || '')
-                                .split('::')
-                                .join('/');
-                            if (path) {
-                                path = `${path}/${dt.name}`;
-                            } else {
-                                path = dt.name;
-                            }
-                            this[Config] = config = from(
-                                import(`../config/dataTypes/${path}.js`)
-                            ).pipe(
-                                map(mod => mod.default),
-                                catchError(e => of({})),
-                                tap(config => {
-                                    dt[Config] = config;
-                                    delete this[Config];
-                                })
-                            );
-                        }
-                    }
-                    return config;
+                    return dt.config();
                 }
                 return of({});
             }),

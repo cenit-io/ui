@@ -51,8 +51,7 @@ function editViewport(config, dataType, ...plus) {
 }
 
 export function formConfigProperties(dataType, editMode = false) {
-    const subject = DataTypeSubject.for(dataType?.id);
-    return (subject?.config() || of({})).pipe(
+    return (dataType?.config() || of({})).pipe(
         switchMap(config => {
             let propsObservable;
             const configFields = editMode
