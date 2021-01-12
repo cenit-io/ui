@@ -9,7 +9,10 @@ import Loading from "../components/Loading";
 import API from "../services/ApiService";
 import SuccessAlert from "./SuccessAlert";
 import DoneIcon from "@material-ui/icons/Done";
-import Alert from "./Alert";
+import { Config } from "../common/Symbols";
+import LoadingButton from "../components/LoadingButton";
+import { catchError, tap } from "rxjs/operators";
+import { of } from "rxjs";
 
 function parametersSchema(parameters) {
     const properties = {};
@@ -24,12 +27,50 @@ function parametersSchema(parameters) {
             requiredProperties.push(name);
         }
     });
+    if (!requiredProperties.length) {
+        delete schema.required;
+    }
     return schema;
 }
 
 function SuccessRun() {
     return (
         <SuccessAlert mainIcon={DoneIcon}/>
+    );
+}
+
+function ClickAndRun({ onFormSubmit, dataType, value, height }) {
+    const [state, setState] = useSpreadState();
+
+    const { submitting, errors, success } = state;
+
+    useEffect(() => {
+        if (submitting) {
+            const subscription = onFormSubmit(dataType, value).pipe(
+                tap(() => setState({ success: true })),
+                catchError(error => {
+                    setState({
+                        errors: error.response.data,
+                        submitting: false
+                    });
+                    return of(null);
+                })
+            ).subscribe();
+
+            return () => subscription.unsubscribe();
+        }
+    }, [submitting]);
+
+    const submit = () => setState({ submitting: true });
+
+    return (
+        <div className="flex full-width full-height align-items-center justify-content-center"
+             style={{ height: `calc(${height} - 64px)` }}>
+            <LoadingButton loading={submitting}
+                           onClick={submit}
+                           success={success}
+                           actionIcon={<RunActionIcon/>}/>
+        </div>
     );
 }
 
@@ -43,12 +84,17 @@ const RunAlgorithm = ({ docked, dataType, record, onSubjectPicked, height }) => 
             viewport: '{parameters}'
         }).subscribe(
             ({ parameters }) => {
-                const paramsDataType = parameters.length
-                    ? DataType.from({
-                        name: 'Parameters',
-                        schema: parametersSchema(parameters)
-                    })
-                    : null;
+                const paramsDataType = DataType.from({
+                    name: 'Parameters',
+                    schema: parametersSchema(parameters)
+                });
+
+                if (!parameters.length) {
+                    paramsDataType[Config] = {
+                        formViewComponent: ClickAndRun
+                    };
+                }
+
                 setState({ parameters, paramsDataType });
             }
         );
@@ -60,22 +106,20 @@ const RunAlgorithm = ({ docked, dataType, record, onSubjectPicked, height }) => 
         'setup', 'algorithm', record.id, 'digest', value.get()
     );
 
-    if (parameters) {
-        if (paramsDataType) {
-            return (
-                <div className="relative">
-                    <FormEditor docked={docked}
-                                dataType={paramsDataType}
-                                height={height}
-                                submitIcon={<RunActionIcon/>}
-                                onFormSubmit={handleFormSubmit}
-                                onSubjectPicked={onSubjectPicked}
-                                successControl={SuccessRun}/>
-                </div>
-            );
-        }
-
-        return <Alert message="Coming soon..." title="Algorithm with no parameters"/>;
+    if (parameters && paramsDataType) {
+        return (
+            <div className="relative">
+                <FormEditor docked={docked}
+                            dataType={paramsDataType}
+                            height={height}
+                            submitIcon={<RunActionIcon/>}
+                            onFormSubmit={handleFormSubmit}
+                            onSubjectPicked={onSubjectPicked}
+                            successControl={SuccessRun}
+                            noSubmitButton={!parameters.length}
+                            noJSON={!parameters.length}/>
+            </div>
+        );
     }
 
     return <Loading/>;
