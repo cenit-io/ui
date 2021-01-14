@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Loading from '../components/Loading';
 import { Chip, Toolbar, Typography, useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
@@ -7,7 +7,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Show from "./Show";
 import Random from "../util/Random";
 import { switchMap, tap } from "rxjs/operators";
-import { of } from "rxjs";
+import { isObservable, of } from "rxjs";
 import ChevronRight from "@material-ui/icons/ChevronRight";
 import ActionPicker from "./ActionPicker";
 import Alert from "./Alert";
@@ -15,6 +15,10 @@ import { DataTypeSubject } from "../services/subjects";
 import spreadReducer from "../common/spreadReducer";
 import Skeleton from "@material-ui/lab/Skeleton";
 
+import Records from "./Records";
+import DataType from "./DataType";
+import { useSpreadState } from "../common/hooks";
+import FrezzerLoader from "../components/FrezzerLoader";
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
@@ -39,16 +43,17 @@ const actionContainerStyles = makeStyles(theme => ({
 }));
 
 function MemberContainer({ docked, subject, height, width, onSubjectPicked, onClose, updateItem }) {
-    const [state, setState] = useReducer(spreadReducer, {
+    const [state, setState] = useSpreadState({
         actionKey: Show.key,
         actionComponentKey: Random.string()
     });
 
+    const actionSubscription = useRef(null);
     const theme = useTheme();
     const classes = actionContainerStyles();
 
     const {
-        dataType, record, dataTypeTitle, title,
+        dataType, record, dataTypeTitle, title, loading,
         error, actionComponentKey, actionKey, disabled
     } = state;
 
@@ -101,12 +106,26 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
     }
 
     const handleAction = actionKey => {
+        if (actionSubscription.current) {
+            actionSubscription.current.unsubscribe();
+            actionSubscription.current = null;
+        }
         const action = ActionRegistry.byKey(actionKey);
         if (action) {
-            setState({
-                actionKey,
-                actionComponentKey: Random.string()
-            });
+            if (action.executable) {
+                const r = action.call(this, { dataType, record });
+                if (isObservable(r)) {
+                    setState({ loading: true });
+                    actionSubscription.current = r.subscribe(
+                        () => setState({ loading: false })
+                    );
+                }
+            } else {
+                setState({
+                    actionKey,
+                    actionComponentKey: Random.string()
+                });
+            }
         }
     };
 
@@ -164,6 +183,7 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
         <div className={classes.actionContainer}
              style={{ height: `calc(${componentHeight})` }}>
             {action}
+            {loading && <FrezzerLoader/>}
         </div>
     </React.Fragment>;
 }

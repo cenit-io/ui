@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useReducer, useRef } from 'react';
 import Loading from '../components/Loading';
 import { useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
@@ -14,9 +14,10 @@ import CollectionActionsToolbar from "./CollectionActionsToolbar";
 import Random from "../util/Random";
 import { DataType } from "../services/DataTypeService";
 import { RecordSubject } from "../services/subjects";
-import { of } from "rxjs";
+import { isObservable, of } from "rxjs";
 import spreadReducer from "../common/spreadReducer";
 import FrezzerLoader from "../components/FrezzerLoader";
+import { switchMap } from "rxjs/operators";
 
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -37,6 +38,8 @@ function CollectionContainer({ docked, subject, height, width, onSubjectPicked }
         actionKey: Index.key,
         actionComponentKey: Random.string()
     });
+
+    const actionSubscription = useRef(null);
 
     const theme = useTheme();
     const classes = actionContainerStyles();
@@ -65,28 +68,54 @@ function CollectionContainer({ docked, subject, height, width, onSubjectPicked }
 
     const handleSelect = selectedItems => setState({ selectedItems });
 
+    const execute = action => {
+        const r = action.call(this, { dataType });
+        if (isObservable(r)) {
+            setState({ loading: true });
+            actionSubscription.current = r.subscribe(() => {
+                setState({ loading: false });
+            });
+        }
+    };
+
     const handleAction = actionKey => {
+        if (actionSubscription.current) {
+            actionSubscription.current.unsubscribe();
+            actionSubscription.current = null;
+        }
         const action = ActionRegistry.byKey(actionKey);
         if (action) {
             if (action.kind === ActionKind.collection || action.kind === ActionKind.bulk) {
-                setState({ actionKey, actionComponentKey: Random.string() });
+                if (action.executable) {
+                    execute(action);
+                } else {
+                    setState({ actionKey, actionComponentKey: Random.string() });
+                }
             } else {
                 setState({ loading: true });
                 const { _type, id } = selectedItems[0];
-                (
+                actionSubscription.current = (
                     ((!_type || _type === dataType.type_name()) && of(dataType)) ||
                     dataType.findByName(_type)
-                ).subscribe(
-                    dataType => {
-                        if (dataType) {
-                            onSubjectPicked(RecordSubject.for(dataType.id, id).key);
+                ).pipe(
+                    switchMap(dataType => {
+                            if (dataType) {
+                                if (action.executable) {
+                                    const r = action.call(this, { dataType, record: selectedItems[0] });
+                                    if (isObservable(r)) {
+                                        return r;
+                                    }
+                                } else {
+                                    onSubjectPicked(RecordSubject.for(dataType.id, id).key);
+                                }
+                                return of(true);
+                            }
                         }
-                        setState({
-                            selectedItems: [],
-                            loading: false
-                        });
-                    }
-                );
+                    )
+                ).subscribe(() => setState({
+                    selectedItems: [],
+                    loading: false
+                }));
             }
         }
     };
