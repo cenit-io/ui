@@ -727,6 +727,15 @@ export class DataType {
         return API.get('setup', 'data_type', this.id, 'digest', opts);
     }
 
+    distinct(field, opts = {}) {
+        let selector = opts?.selector || {};
+        return API.get('setup', 'data_type', this.id, `digest.distinct(${field})`, {
+            headers: {
+                'X-Query-Selector': JSON.stringify(selector)
+            }
+        });
+    }
+
     titleViewPort(...plus) {
         return this.titleProps().pipe(
             map(props => `{${props.map(p => p.name).concat(plus).join(' ')}}`)
