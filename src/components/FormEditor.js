@@ -16,7 +16,7 @@ import { of, Subject } from "rxjs";
 import { FILE_TYPE } from "../services/DataTypeService";
 import FileUploader from "./FileUploader";
 import { RecordSubject } from "../services/subjects";
-import { FormRootValue } from "../services/FormValue";
+import { FormRootValue, isFormValue } from "../services/FormValue";
 import JsonViewer from "./JsonViewer";
 import FormContext from './FormContext';
 import FrezzerLoader from "./FrezzerLoader";
@@ -194,22 +194,30 @@ function DefaultSuccessControl({ title, rootId, onSubjectPicked, dataType, id })
     );
 }
 
+function plainFormValue(value) {
+    if (isFormValue(value)) {
+        return value.get();
+    }
+
+    return value;
+}
+
 const FormEditor = ({
                         docked, dataType, rootId, onSubjectPicked, height, value,
                         readOnly, onUpdate, onFormSubmit, successControl, submitIcon,
                         noSubmitButton, noJSON
                     }) => {
 
-    const [id, setId] = useState((value && value.id) || null);
+    const [id, setId] = useState(plainFormValue(value)?.id || null);
     const [submitResponse, setSubmitResponse] = useState(null);
     const initialStack = () => [
         withForm({
-            value: new FormRootValue({ ...value }),
+            value: new FormRootValue({ ...plainFormValue(value) }),
             dataType,
             title: () => of('')
         }),
         withForm({
-            value: new FormRootValue({ ...value }),
+            value: isFormValue(value) ? value : new FormRootValue({ ...value }),
             dataType,
             title: value => dataType.titleFor(value),
             viewport: dataType.titleViewPort('_id'),
@@ -220,7 +228,7 @@ const FormEditor = ({
                     onUpdate(value);
                 }
             },
-            rootId: value && value.id
+            rootId: plainFormValue(value)?.id
         })
     ];
     const ref = useRef(null);
@@ -248,6 +256,7 @@ const FormEditor = ({
             }
         });
     };
+
     useEffect(() => {
         const subscription = zzip(
             ...stack.map(

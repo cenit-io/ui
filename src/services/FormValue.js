@@ -197,3 +197,11 @@ class FormIndexValue extends FormValue {
         this.cache = this.parent.cache[this.index];
     }
 }
+
+export function isFormValue(value) {
+    return value && (
+        value.constructor === FormRootValue ||
+        value.constructor === FormPropertyValue ||
+        value.constructor === FormIndexValue
+    );
+}
