@@ -363,7 +363,7 @@ const FormEditor = ({
                                onClick={save}
                                className={classes.fabSave}
                                success={done}
-                               actionIcon={submitIcon}/>
+                               actionIcon={stack.length === 2 && submitIcon}/>
             );
         }
 
@@ -417,7 +417,10 @@ const FormEditor = ({
                                         onSubjectPicked={onSubjectPicked}
                                         viewport={item.viewport}
                                         onFormSubmit={defaultFormProcessor(
-                                            item.viewport, item.rootId, onFormSubmit, onSubmitDone
+                                            item.viewport,
+                                            item.rootId,
+                                            index === 1 && onFormSubmit, // TODO Improve this
+                                            onSubmitDone
                                         )}/>
             }
 

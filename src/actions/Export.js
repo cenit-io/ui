@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import RunActionIcon from '@material-ui/icons/PlayArrow';
+import React, { useEffect, useRef } from 'react';
 import ActionRegistry from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { useSpreadState } from "../common/hooks";
@@ -166,7 +165,7 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
                 <FormEditor docked={docked}
                             dataType={formDataType}
                             height={height}
-                            submitIcon={<RunActionIcon/>}
+                            submitIcon={<SharedCollectionIcon/>}
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
                             successControl={SuccessExport}
