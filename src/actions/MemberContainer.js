@@ -21,6 +21,8 @@ import { useSpreadState } from "../common/hooks";
 import FrezzerLoader from "../components/FrezzerLoader";
 import ContainerContext, { useContainerContext } from "./ContainerContext";
 
+import DownloadFile from './DownloadFile';
+
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
         paddingLeft: theme.spacing(2),

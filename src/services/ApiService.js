@@ -18,6 +18,7 @@ export const ApiResource = function () {
     let size;
     let onUploadProgress;
     let cancelToken;
+    let responseType;
 
     if (params && params.constructor === Object) {
         params = args.pop();
@@ -26,6 +27,8 @@ export const ApiResource = function () {
         delete params.onUploadProgress;
         cancelToken = params.cancelToken;
         delete params.cancelToken;
+        responseType = params.responseType;
+        delete params.responseType;
 
         headers = params.headers;
         if (headers &&
@@ -42,7 +45,8 @@ export const ApiResource = function () {
     const config = {
         params,
         onUploadProgress,
-        cancelToken
+        cancelToken,
+        responseType
     };
 
     this.path = '/' + args.join('/');

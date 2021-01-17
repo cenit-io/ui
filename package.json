@@ -14,6 +14,7 @@
     "copy-to-clipboard": "^3.3.1",
     "date-fns": "^2.16.1",
     "deepmerge": "^4.2.2",
+    "file-saver": "^2.0.5",
     "htmlhint": "^0.14.2",
     "liquidjs": "^9.19.0",
     "mime-types": "^2.1.27",
