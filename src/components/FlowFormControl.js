@@ -222,7 +222,7 @@ export default function FlowFormControl({
         !hidden[name] && propertiesHash[name]
     )).filter(c => c);
 
-    const custompropertyControlProps = name => ({
+    const customPropertyControlProps = name => ({
         ...propertyControlProps(name),
         ...state[name]
     });
@@ -230,7 +230,7 @@ export default function FlowFormControl({
     return (
         <>
             <DefaultPropertiesForm errors={errors}
-                                   propertyControlProps={custompropertyControlProps}
+                                   propertyControlProps={customPropertyControlProps}
                                    controlConfig={controlConfig}
                                    dynamicConfigState={dynamicConfigState}
                                    properties={visibleProperties}/>
