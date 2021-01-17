@@ -19,6 +19,7 @@ import Records from "./Records";
 import DataType from "./DataType";
 import { useSpreadState } from "../common/hooks";
 import FrezzerLoader from "../components/FrezzerLoader";
+import ContainerContext, { useContainerContext } from "./ContainerContext";
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
@@ -42,18 +43,22 @@ const actionContainerStyles = makeStyles(theme => ({
     }
 }));
 
-function MemberContainer({ docked, subject, height, width, onSubjectPicked, onClose, updateItem }) {
+function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked, onClose, updateItem }) {
     const [state, setState] = useSpreadState({
         actionKey: Show.key,
         actionComponentKey: Random.string()
     });
+
+    const [containerState, setContainerState] = useContainerContext();
+
+    const { dataType, record } = containerState;
 
     const actionSubscription = useRef(null);
     const theme = useTheme();
     const classes = actionContainerStyles();
 
     const {
-        dataType, record, dataTypeTitle, title, loading,
+        dataTypeTitle, title, loading,
         error, actionComponentKey, actionKey, disabled
     } = state;
 
@@ -61,7 +66,7 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
 
     useEffect(() => {
         const subscription = subject.dataTypeSubject().dataType().pipe(
-            tap(dataType => setState({ dataType, record: null })),
+            tap(dataType => setContainerState({ dataType, record: null, selectedItems: [] })),
             switchMap(
                 dataType => {
                     if (dataType) {
@@ -73,7 +78,7 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
             )
         ).subscribe(record => {
             if (record) {
-                setState({ record });
+                setContainerState({ record, selectedItems: [record] });
                 subject.updateCache(record);
             } else {
                 setError(`Record with ID ${subject.id} not found!`);
@@ -170,22 +175,34 @@ function MemberContainer({ docked, subject, height, width, onSubjectPicked, onCl
                                                        onDisable={disabled => setState({ disabled })}
                                                        onClose={onClose}/>;
 
-    return <React.Fragment>
-        <Toolbar className={classes.toolbar}>
-            {breadcumb}
-            <div className={classes.spacer}/>
-            <ActionPicker kind={ActionKind.member}
-                          arity={1}
-                          onAction={handleAction}
-                          disabled={disabled}
-                          dataType={dataType}/>
-        </Toolbar>
-        <div className={classes.actionContainer}
-             style={{ height: `calc(${componentHeight})` }}>
-            {action}
-            {loading && <FrezzerLoader/>}
-        </div>
-    </React.Fragment>;
+    return (
+        <>
+            <Toolbar className={classes.toolbar}>
+                {breadcumb}
+                <div className={classes.spacer}/>
+                <ActionPicker kind={ActionKind.member}
+                              arity={1}
+                              onAction={handleAction}
+                              disabled={disabled}
+                              dataType={dataType}/>
+            </Toolbar>
+            <div className={classes.actionContainer}
+                 style={{ height: `calc(${componentHeight})` }}>
+                {action}
+                {loading && <FrezzerLoader/>}
+            </div>
+        </>
+    );
 }
 
-export default MemberContainer;
+const InitialContextState = {
+    selectedItems: []
+};
+
+export default function MemberContainer(props) {
+    return (
+        <ContainerContext initialState={InitialContextState}>
+            <MemberContainerLayout {...props}/>
+        </ContainerContext>
+    );
+};
