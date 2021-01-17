@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { makeStyles, Toolbar, Typography, Chip } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
 import ActionPicker from "./ActionPicker";
-import { ActionKind } from "./ActionRegistry";
+import ActionRegistry, { ActionKind } from "./ActionRegistry";
+import { isObservable, of } from "rxjs";
+import Random from "../util/Random";
+import { switchMap } from "rxjs/operators";
+import { RecordSubject } from "../services/subjects";
+import { useContainerContext } from "./ContainerContext";
+import Index from "./Index";
 
 const useToolbarStyles = makeStyles(theme => ({
     root: {
@@ -18,8 +24,83 @@ const useToolbarStyles = makeStyles(theme => ({
     }
 }));
 
-function CollectionActionsToolbar({ dataType, title, arity, onAction, selectedKey }) {
+function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicked }) {
+
+    const actionSubscription = useRef(null);
+
     const classes = useToolbarStyles();
+
+    const [containerState, setContainerState] = useContainerContext();
+
+    const { selectedItems, actionKey, data } = containerState;
+
+    const execute = action => {
+        const r = action.call(this, { dataType });
+        if (isObservable(r)) {
+            setContainerState({ loading: true });
+            actionSubscription.current = r.subscribe(() => {
+                setContainerState({ loading: false });
+            });
+        }
+    };
+
+    const handleAction = actionKey => {
+        if (actionSubscription.current) {
+            actionSubscription.current.unsubscribe();
+            actionSubscription.current = null;
+        }
+        const action = ActionRegistry.byKey(actionKey);
+        if (action) {
+            if (!action.kind || action.kind === ActionKind.collection || action.bulkable) {
+                if (action.executable) {
+                    execute(action);
+                } else {
+                    setContainerState({ actionKey, actionComponentKey: Random.string() });
+                }
+            } else {
+                setContainerState({ loading: true });
+                const { _type, id } = selectedItems[0];
+                actionSubscription.current = (
+                    ((!_type || _type === dataType.type_name()) && of(dataType)) ||
+                    dataType.findByName(_type)
+                ).pipe(
+                    switchMap(dataType => {
+                            if (dataType) {
+                                if (action.executable) {
+                                    const r = action.call(this, { dataType, record: selectedItems[0] });
+                                    if (isObservable(r)) {
+                                        return r;
+                                    }
+                                } else {
+                                    onSubjectPicked(RecordSubject.for(dataType.id, id).key);
+                                }
+                                return of(true);
+                            }
+                        }
+                    )
+                ).subscribe(() => setContainerState({
+                    selectedItems: [],
+                    loading: false
+                }));
+            }
+        }
+    };
+
+    const clearSelection = () => {
+        setContainerState({ selectedItems: [] });
+        handleAction(Index.key);
+    };
+
+    let chip;
+    if (selectedItems.length) {
+        chip = <Chip label={`${selectedItems.length} selected`}
+                     color='secondary'
+                     onDelete={clearSelection}/>;
+    } else {
+        if (data) {
+            chip = <Chip label={`about ${data.count}`}/>;
+        }
+    }
 
     return (
         <Toolbar className={classes.root}>
@@ -29,11 +110,11 @@ function CollectionActionsToolbar({ dataType, title, arity, onAction, selectedKe
                 </Typography>
             </div>
             <div className={classes.spacer}/>
-            {arity > 0 && <Chip label={`${arity} selected`} color='secondary'/>}
+            {chip}
             <div className={classes.spacer}/>
             <ActionPicker kind={ActionKind.collection}
-                          arity={arity}
-                          onAction={onAction}
+                          arity={selectedItems.length}
+                          onAction={handleAction}
                           selectedKey={selectedKey}
                           dataType={dataType}/>
         </Toolbar>

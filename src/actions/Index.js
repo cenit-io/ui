@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Loading from '../components/Loading';
 import { Checkbox, fade, makeStyles, useMediaQuery, useTheme, withStyles } from "@material-ui/core";
 import Table from '@material-ui/core/Table';
@@ -16,7 +16,6 @@ import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 import Typography from "@material-ui/core/Typography";
 import clsx from "clsx";
-import spreadReducer from "../common/spreadReducer";
 import StringViewer from "../viewers/StringViewer";
 import BooleanViewer from "../viewers/BooleanViewer";
 import DateTimeViewer from "../viewers/DateTimeViewer";
@@ -25,6 +24,8 @@ import RefManyViewer from "../viewers/RefManyViewer";
 import EmbedsOneViewer from "../viewers/EmbedsOneViewer";
 import EmbedsManyViewer from "../viewers/EmbedsManyViewer";
 import JsonViewer from "../viewers/JsonViewer";
+import { useSpreadState } from "../common/hooks";
+import { useContainerContext } from "./ContainerContext";
 
 function viewerComponentFor(property, config) {
     let configViewer = config?.viewers;
@@ -184,22 +185,25 @@ const MinItemsPerPage = 5;
 
 const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
-function Index({ dataType, subject, height, selectedItems, onSelect }) {
+function Index({ dataType, subject, height }) {
 
-    const [state, setState] = useReducer(spreadReducer, {
-        limit: MinItemsPerPage,
+    const [state, setState] = useSpreadState({
         order: 'asc',
-        orderBy: '_id',
-        page: 0
+        orderBy: '_id'
     });
+
+    const [containerState, setContainerState] = useContainerContext();
+
+    const { data, page, limit, selectedItems, props, itemsViewport } = containerState;
 
     const classes = useStyles();
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
-    const { props, itemsViewport, data, dense, limit, order, orderBy, page, config } = state;
+    const { dense, order, orderBy, config } = state;
 
     useEffect(() => {
+        setContainerState({ loading: true });
         const subscription = subject.config().pipe(
             switchMap(
                 config => {
@@ -227,7 +231,7 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
                     )
                 )
             )
-        ).subscribe(props => setState({ props }));
+        ).subscribe(props => setContainerState({ props }));
 
         return () => subscription.unsubscribe();
     }, [dataType]);
@@ -237,7 +241,7 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
             const subscription = zzip(
                 ...props.map(({ prop }) => prop.viewportToken())
             ).subscribe(
-                tokens => setState({ itemsViewport: `{_id ${tokens.join(' ')}}` })
+                tokens => setContainerState({ itemsViewport: `{_id ${tokens.join(' ')}}` })
             );
             return () => subscription.unsubscribe();
         }
@@ -245,17 +249,20 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
 
     useEffect(() => {
         if (itemsViewport) {
+            setContainerState({ loading: true })
             const subscription = dataType.find('', {
                 limit: limit,
                 page: page,
                 sort: { _id: -1 },
                 props: dataType.queryProps(),
                 viewport: itemsViewport
-            }).subscribe(data => setState({ data }));
+            }).subscribe(data => setContainerState({ data, loading: false }));
 
             return () => subscription.unsubscribe();
         }
     }, [limit, page, dataType, itemsViewport]);
+
+    const select = selectedItems => setContainerState({ selectedItems });
 
     const handleRequestSort = (event, property) => {
         const isDesc = orderBy === property && order === 'desc';
@@ -263,7 +270,7 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
             order: isDesc ? 'asc' : 'desc',
             orderBy: property
         });
-    }
+    };
 
     const handleSelectAllClick = event => {
         let selection;
@@ -272,14 +279,14 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
         } else {
             selection = [];
         }
-        onSelect(selection);
+        select(selection);
     };
 
     const handleSelectOne = item => () => {
         if (selectedItems.length === 1 && selectedItems[0].id === item.id) {
-            onSelect([]);
+            select([]);
         } else {
-            onSelect([item]);
+            select([item]);
         }
     }
 
@@ -293,21 +300,21 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
             newSelection.splice(index, 1);
         }
 
-        onSelect(newSelection);
+        select(newSelection);
     };
 
     const handleChangePage = (_, page) => {
-        setState({ data: null, page });
-        onSelect([]);
+        setContainerState({ data: null, page });
+        select([]);
     };
 
     const handleChangeRowsPerPage = event => {
-        setState({
+        setContainerState({
             data: null,
             limit: +event.target.value,
             page: 0
         });
-        onSelect([]);
+        select([]);
     };
 
     const handleChangeDense = event => setState({ dense: event.target.checked });
@@ -319,7 +326,7 @@ function Index({ dataType, subject, height, selectedItems, onSelect }) {
     let tableHeight = height;
 
     if (!props || !data || !itemsViewport) {
-        return <Loading height={`calc(${tableHeight})`}/>;
+        return <div/>;
     }
 
     /*const headCells = props.map(prop => <StyledTableCell key={prop.prop.name}
