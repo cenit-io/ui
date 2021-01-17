@@ -14,7 +14,7 @@ import { useFormContext } from "./FormContext";
 function RefOneControl({
                            title, value, property, disabled, readOnly,
                            onChange, onDelete, onStack, config,
-                           editDisabled, deleteDisabled
+                           editDisabled, deleteDisabled, onPicked, additionalViewportProps
                        }) {
 
     const [state, setState] = useSpreadState({
@@ -44,23 +44,32 @@ function RefOneControl({
         return () => subscription.unsubscribe();
     }, [value, property]);
 
-    const refValue = ({ id, _type }) => {
-        const value = {
+    const refValue = value => {
+        const { id, _type } = value;
+        const refValue = {
             id,
             _reference: true
         };
         if (_type && _type !== property.dataType.type_name()) {
-            value._type = _type;
+            refValue._type = _type;
         }
-        return value;
+        if (additionalViewportProps) {
+            additionalViewportProps.forEach(p => {
+                if (value.hasOwnProperty(p)) {
+                    refValue[p] = value[p];
+                }
+            })
+        }
+        return refValue;
     };
 
     const handlePick = ({ record, title }) => {
-        record = refValue(record);
-        record[Title] = title;
-        value.set(record);
-        value.changed().next(record);
-        onChange(record);
+        const recordRef = refValue(record);
+        recordRef[Title] = title;
+        value.set(recordRef);
+        value.changed().next(recordRef);
+        onChange(recordRef);
+        onPicked && onPicked(record);
     };
 
     const handleAddNew = () => onStack({
@@ -148,7 +157,8 @@ function RefOneControl({
                        text={text}
                        disabled={disabled || text === null}
                        readOnly={readOnly}
-                       baseSelector={config?.selector}/>
+                       baseSelector={config?.selector}
+                       additionalViewportProps={additionalViewportProps}/>
             {editButton}
             {addButton}
             {deleteButton}

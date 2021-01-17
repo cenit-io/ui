@@ -1,4 +1,4 @@
-import React, { useReducer, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
     ClickAwayListener,
     InputBase,
@@ -11,13 +11,13 @@ import {
 } from "@material-ui/core";
 import Random from "../util/Random";
 import '../common/FlexBox.css';
-import spreadReducer from "../common/spreadReducer";
 import { switchMap, delay } from "rxjs/operators";
 import { of, zip } from "rxjs";
 import Pagination from "@material-ui/lab/Pagination";
 import Skeleton from "@material-ui/lab/Skeleton";
 import { makeStyles } from "@material-ui/core/styles";
 import clsx from "clsx";
+import { useSpreadState } from "../common/hooks";
 
 const useStyles = makeStyles(theme => ({
     list: {
@@ -40,9 +40,11 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder, dataType, onPick, anchor, baseSelector }) {
+function RefPicker({
+                       text, label, disabled, inputClasses, readOnly, placeholder, dataType,
+                       onPick, anchor, baseSelector, additionalViewportProps }) {
 
-    const [state, setState] = useReducer(spreadReducer, {
+    const [state, setState] = useSpreadState({
         query: null,
         page: 1,
         total_pages: 0,
@@ -69,9 +71,11 @@ function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder,
     useEffect(() => {
         if (query !== null) {
             setState({ loading: true });
-            const subscription = of(true).pipe(
+            const subscription = dataType.titleViewPort(...(additionalViewportProps || [])).pipe(
                 delay(700),
-                switchMap(() => dataType.find(query, { page, selector: baseSelector })),
+                switchMap(viewport => dataType.find(query, {
+                    viewport, page, selector: baseSelector
+                })),
                 switchMap(
                     ({ items, total_pages }) => {
                         if (items) {
@@ -96,7 +100,7 @@ function RefPicker({ text, label, disabled, inputClasses, readOnly, placeholder,
 
             return () => subscription.unsubscribe();
         }
-    }, [query, page]);
+    }, [dataType, query, page]);
 
     const activate = activated => () => {
         if (activated && text !== null) {
