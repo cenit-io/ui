@@ -429,6 +429,7 @@ function Index({ dataType, subject, height }) {
 
 export default ActionRegistry.register(Index, {
     kind: ActionKind.collection,
+    bulkable: true,
     icon: ListIcon,
     title: 'List'
 });
