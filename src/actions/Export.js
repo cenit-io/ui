@@ -112,8 +112,6 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
             : {}
     }));
 
-    const template = useRef(null);
-
     const { formDataType } = state;
 
     useEffect(() => {
