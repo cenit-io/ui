@@ -23,7 +23,7 @@ function SuccessExport() {
     );
 }
 
-function exportDataTypeFormFor(formats, selectedItems) {
+function exportDataTypeFormFor(sourceDataType, formats, selectedItems) {
     const properties = {};
     if (formats.length > 1) {
         properties.format = {
@@ -46,20 +46,26 @@ function exportDataTypeFormFor(formats, selectedItems) {
         }
     });
 
+    const defaultSelector = {
+        $or: [
+            { source_data_type_id: { $exists: false } },
+            { source_data_type_id: sourceDataType.id }
+        ]
+    };
+
     const config = dt[Config] = {
         fields: {
             template: {
                 controlProps: {
                     additionalViewportProps: ['file_extension'],
-                }
+                },
+                selector: defaultSelector
             }
         }
     };
 
     if (selectedItems.length !== 1) {
-        config.fields.template.selector = {
-            bulk_source: true
-        }
+        defaultSelector.bulk_source = true;
     }
 
     if (formats.length > 1) {
@@ -70,10 +76,7 @@ function exportDataTypeFormFor(formats, selectedItems) {
             }
         };
         config.dynamicConfig = ({ format }, state) => {
-            const selector = {}
-            if (selectedItems.length !== 1) {
-                selector.bulk_source = true;
-            }
+            const selector = defaultSelector;
             if (format) {
                 if (format !== state.template?.selector?.file_extension) {
                     selector.file_extension = format;
@@ -145,12 +148,12 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
         ).subscribe(
             formats => {
                 formats = formats.filter(f => f);
-                setState({ formDataType: exportDataTypeFormFor(formats, selectedItems) })
+                setState({ formDataType: exportDataTypeFormFor(dataType, formats, selectedItems) })
             }
         );
 
         return () => subscription.unsubscribe();
-    }, [selectedItems]);
+    }, [dataType, selectedItems]);
 
     const handleFormSubmit = (_, value) => {
         const { data_type, selector, template } = value.get();
