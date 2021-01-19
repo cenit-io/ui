@@ -2,6 +2,8 @@ import React from 'react';
 import HomeIcon from '@material-ui/icons/Home';
 import ErrorLevelViewer from "../../viewers/ErrorLevelViewer";
 
+import "../../actions/SwitchTenant";
+
 export default {
     title: 'Tenant',
     icon: <HomeIcon/>,
