@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect } from 'react';
 import clsx from 'clsx';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -9,13 +9,14 @@ import { makeStyles, useTheme } from "@material-ui/core";
 import Loading from "../components/Loading";
 import Skeleton from "@material-ui/lab/Skeleton";
 import ConfigService from "../services/ConfigService";
-import spreadReducer from "../common/spreadReducer";
 import Subjects, { TabsSubject } from "../services/subjects";
 import Collapse from "@material-ui/core/Collapse";
 import zzip from "../util/zzip";
+import { useSpreadState } from "../common/hooks";
+import { useMainContext } from "./MainContext";
 
 function NavItem({ subject, onClick }) {
-    const [state, setState] = useReducer(spreadReducer, {});
+    const [state, setState] = useSpreadState();
     const theme = useTheme();
 
     const { icon, title } = state;
@@ -97,8 +98,13 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const Navigation = ({ docked, setDocked, xs }) => {
-    const [state, setState] = useReducer(spreadReducer, {
+const Navigation = ({ xs }) => {
+
+    const [mainContextState, setMainContextState] = useMainContext();
+
+    const { docked } = mainContextState;
+
+    const [state, setState] = useSpreadState({
         navigation: ConfigService.state().navigation || [],
         history: true
     });
@@ -108,10 +114,12 @@ const Navigation = ({ docked, setDocked, xs }) => {
 
     useEffect(() => {
         const subscription = ConfigService.navigationChanges().subscribe(
-            navigation => setState({
-                navigation: navigation || [],
-                disabled: true
-            })
+            navigation => setTimeout(() =>
+                setState({
+                    navigation: navigation || [],
+                    disabled: true
+                })
+            )
         );
         return () => subscription.unsubscribe();
     }, []);
@@ -120,7 +128,7 @@ const Navigation = ({ docked, setDocked, xs }) => {
 
     const select = key => () => {
         if (xs) {
-            setDocked(false);
+            setMainContextState({ docked: false });
         }
         TabsSubject.next(key);
     };

@@ -42,7 +42,8 @@ const useStyles = makeStyles(theme => ({
 
 function RefPicker({
                        text, label, disabled, inputClasses, readOnly, placeholder, dataType,
-                       onPick, anchor, baseSelector, additionalViewportProps }) {
+                       onPick, anchor, baseSelector, additionalViewportProps
+                   }) {
 
     const [state, setState] = useSpreadState({
         query: null,

@@ -18,6 +18,8 @@ import { DataTypeSubject, MenuSubject, TabsSubject } from "../services/subjects"
 import Search from "../components/Search";
 import MenuIcon from "../icons/MenuIcon";
 import QuickAccessIcon from "../icons/QuickAccessIcon";
+import { useTenantContext } from "./TenantContext";
+import { useMainContext } from "./MainContext";
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
@@ -67,9 +69,13 @@ const useStyles = makeStyles(theme => ({
 
 export const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
-export default function ({ onToggle, idToken, disabled }) {
+export default function ({ onToggle }) {
+
+    const { idToken } = useMainContext()[0];
 
     const [open, setOpen] = useState(false);
+
+    const [_, __, loading] = useTenantContext();
 
     const classes = useStyles();
 
@@ -132,7 +138,7 @@ export default function ({ onToggle, idToken, disabled }) {
                         color="inherit"
                         aria-label="Menu"
                         onClick={onToggle}
-                        disabled={disabled}>
+                        disabled={loading}>
                 <MenuIcon/>
             </IconButton>
             {
@@ -143,18 +149,18 @@ export default function ({ onToggle, idToken, disabled }) {
             }
             <IconButton className={classes.quickAccess}
                         color="inherit"
-                        disabled={disabled}
+                        disabled={loading}
                         onClick={handleQuickAccess}>
                 <QuickAccessIcon/>
             </IconButton>
             <Search dataTypeSelector={DataTypeSelector}
                     onSelect={({ record }) => handleDataTypeSelected(record)}
-                    disabled={disabled}/>
+                    disabled={loading}/>
             <div className={classes.grow}/>
             <Search searchIcon={<HomeIcon/>}
                     selectorComponent={TenantSelector}
                     onSelect={handleTenantSelected}
-                    disabled={disabled}/>
+                    disabled={loading}/>
             {avatar}
         </Toolbar>
     </AppBar>

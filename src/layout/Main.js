@@ -1,17 +1,16 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect } from 'react';
 import { makeStyles, useMediaQuery } from "@material-ui/core";
 import AppBar, { appBarHeight } from './AppBar';
 import Navigation, { navigationWidth } from "./Navigation";
 import useTheme from "@material-ui/core/styles/useTheme";
-import AuthorizationService from "../services/AuthorizationService";
 import Drawer from "../components/Drawer";
 import clsx from "clsx";
 import Tabs from "./Tabs";
-import spreadReducer from "../common/spreadReducer";
 import ConfigService from "../services/ConfigService";
-import Loading from "../components/Loading";
 import Subjects, { NavSubject } from "../services/subjects";
 import { delay } from "rxjs/operators";
+import MainContext, { useMainContext } from "./MainContext";
+import TenantContext from "./TenantContext";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -35,35 +34,16 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const Main = () => {
-    const [state, setState] = useReducer(spreadReducer, {
-        docked: localStorage.getItem('docked') !== 'false',
-        disabled: ConfigService.isDisabled()
-    });
+function MainLayout() {
+    const [mainContextState, setMainContextState] = useMainContext();
 
     const classes = useStyles();
 
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
-    const { idToken, docked, disabled } = state;
-
-    const setDocked = docked => setState({ docked });
-
-    useEffect(() => {
-        const subscription = ConfigService.onDisabled().subscribe(
-            disabled => setState({ disabled })
-        );
-        return () => subscription.unsubscribe();
-    }, []);
-
-    useEffect(() => {
-        const subscription = AuthorizationService.getIdToken().subscribe(
-            idToken => setState({ idToken })
-        );
-
-        return () => subscription.unsubscribe();
-    }, []);
+    const { docked } = mainContextState;
+    const setDocked = docked => setMainContextState({ docked });
 
     useEffect(() => {
         const subscription = NavSubject.pipe(
@@ -103,8 +83,6 @@ const Main = () => {
         navKey = `nav_${ConfigService.state().tenant_id}`;
     }
     let navigationUI = <Navigation key={navKey}
-                                   docked={docked}
-                                   setDocked={setDocked}
                                    xs={xs}/>;
 
     const switchNavigation = () => {
@@ -114,9 +92,7 @@ const Main = () => {
 
     if (xs) {
         navigationUI = (
-            <Drawer docked={docked}
-                    onClose={switchNavigation}
-                    idToken={idToken}>
+            <Drawer onClose={switchNavigation}>
                 {navigationUI}
             </Drawer>
         );
@@ -125,31 +101,33 @@ const Main = () => {
     const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`);
     const tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
 
-    let drop;
-    if (disabled) {
-        drop = <Loading className={classes.drop}/>;
-    }
-
-    return <div className={classes.root}>
-        <div className={classes.mainContainer}>
-            <div className={clsx(!(xs || docked) && classes.contentMargin)}
-                 style={{
-                     flexGrow: 1,
-                     order: 1,
-                     width: `calc(${tabsWidth})`
-                 }}>
-                <Tabs docked={docked}
-                      width={tabsWidth}/>
+    return (
+        <div className={classes.root}>
+            <div className={classes.mainContainer}>
+                <div className={clsx(!(xs || docked) && classes.contentMargin)}
+                     style={{
+                         flexGrow: 1,
+                         order: 1,
+                         width: `calc(${tabsWidth})`
+                     }}>
+                    <Tabs docked={docked}
+                          width={tabsWidth}/>
+                </div>
+                {
+                    navigationUI
+                }
             </div>
-            {
-                navigationUI
-            }
+            <AppBar onToggle={switchNavigation}/>
         </div>
-        <AppBar onToggle={switchNavigation}
-                disabled={disabled}
-                idToken={idToken}/>
-        {drop}
-    </div>
-};
+    );
+}
 
-export default Main;
+export default function Main() {
+    return (
+        <MainContext>
+            <TenantContext>
+                <MainLayout/>
+            </TenantContext>
+        </MainContext>
+    )
+}

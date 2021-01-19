@@ -28,7 +28,7 @@ const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputCla
     }
 
     return <div>
-        <InputBase disabled/>
+        <InputBase disabled classes={inputClasses}/>
         <LinearProgress/>
     </div>;
 };

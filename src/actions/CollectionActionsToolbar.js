@@ -9,6 +9,7 @@ import { switchMap } from "rxjs/operators";
 import { RecordSubject } from "../services/subjects";
 import { useContainerContext } from "./ContainerContext";
 import Index from "./Index";
+import { useTenantContext } from "../layout/TenantContext";
 
 const useToolbarStyles = makeStyles(theme => ({
     root: {
@@ -30,12 +31,14 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
 
     const classes = useToolbarStyles();
 
+    const tenantContext = useTenantContext();
+
     const [containerState, setContainerState] = useContainerContext();
 
-    const { selectedItems, actionKey, data } = containerState;
+    const { selectedItems, data } = containerState;
 
     const execute = action => {
-        const r = action.call(this, { dataType });
+        const r = action.call(this, { dataType, tenantContext });
         if (isObservable(r)) {
             setContainerState({ loading: true });
             actionSubscription.current = r.subscribe(() => {
@@ -67,7 +70,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                     switchMap(dataType => {
                             if (dataType) {
                                 if (action.executable) {
-                                    const r = action.call(this, { dataType, record: selectedItems[0] });
+                                    const r = action.call(this, { dataType, record: selectedItems[0], tenantContext });
                                     if (isObservable(r)) {
                                         return r;
                                     }

@@ -1,56 +1,25 @@
-import React, { useEffect, useReducer } from 'react';
-import API from "../services/ApiService";
+import React, { useEffect } from 'react';
 import RecordSelector from "./RecordSelector";
-import spreadReducer from "../common/spreadReducer";
+import { useSpreadState } from "../common/hooks";
+import { useTenantContext } from "../layout/TenantContext";
 
-const TenantTypeSelector = { namespace: '', name: 'Account' };
+export const TenantTypeSelector = { namespace: '', name: 'Account' };
 
-function TenantSelector({ inputClasses, onSelect, readOnly }) {
-    const [state, setState] = useReducer(spreadReducer, {
-        tenant: { name: 'Loading...' },
-        disabled: true
+export default function TenantSelector({ inputClasses, onSelect, readOnly }) {
+    const [state, setState] = useSpreadState({
+        tenant: { name: 'Loading...' }
     });
 
-    const { tenant, selection, disabled } = state;
+    const [tenant, switchTenant, loading] = useTenantContext();
 
-    useEffect(() => {
-        const subscription = API.get('setup', 'user', 'me').subscribe(
-            user => {
-                if (user) {
-                    setState({ tenant: user.account, disabled: false });
-                    onSelect && onSelect(user.account);
-                }
-            }
-        );
-        return () => subscription && subscription.unsubscribe();
-    }, []);
+    const handleSelect = selection => switchTenant(selection.record);
 
-    useEffect(() => {
-        if (selection && selection.record.id !== tenant.id) {
-            setState({ tenant: selection.record, disabled: true });
-
-            const subscription = API.post('setup', 'user', 'me', {
-                account: {
-                    id: selection.record.id
-                }
-            }).subscribe(() => {
-                setState({ disabled: false, selection: null });
-                onSelect && onSelect(selection.record);
-            });
-
-            return () => subscription && subscription.unsubscribe();
-        }
-    }, [selection]);
-
-    const handleSelect = selection => setState({ selection });
-
-    return <RecordSelector dataTypeSelector={TenantTypeSelector}
+    return <RecordSelector key={tenant.id}
+                           dataTypeSelector={TenantTypeSelector}
                            inputClasses={inputClasses}
                            text={tenant.name}
                            onSelect={handleSelect}
-                           disabled={disabled}
+                           disabled={loading}
                            readOnly={readOnly}
                            anchor="right"/>;
 }
-
-export default TenantSelector;

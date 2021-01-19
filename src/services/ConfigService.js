@@ -1,7 +1,7 @@
 import BLoC from "./BLoC";
 import AuthorizationService from "./AuthorizationService";
 import { debounce, switchMap } from "rxjs/operators";
-import { interval, Subject } from "rxjs";
+import { interval } from "rxjs";
 
 const configBLoC = new BLoC();
 
@@ -15,20 +15,7 @@ configBLoC.on(config => config).pipe(
 const tenantId = config => config.tenant_id;
 const navigation = config => config.navigation;
 
-const disabledSubject = new Subject();
-
 const ConfigService = {
-
-    isDisabled: function() {
-      return this.disabled;
-    },
-
-    setDisabled: function (disabled) {
-        this.disabled = disabled;
-        this.onDisabled().next(disabled);
-    },
-
-    onDisabled: () => disabledSubject,
 
     state: () => configBLoC.state,
 
@@ -40,12 +27,8 @@ const ConfigService = {
 
     update: function (config) {
         if (config.tenant_id && config.tenant_id !== configBLoC.state.tenant_id) {
-            this.setDisabled(true);
             AuthorizationService.config(config).subscribe(
-                newConfig => {
-                    configBLoC.set(newConfig);
-                    this.setDisabled(false);
-                }
+                newConfig => configBLoC.set(newConfig)
             )
         } else {
             configBLoC.update(config);

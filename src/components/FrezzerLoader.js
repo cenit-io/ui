@@ -1,11 +1,12 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Loading from "./Loading";
+import clsx from "clsx";
 
 
 const useStyles = makeStyles(theme => ({
     loader: {
-        zIndex: 3,
+        zIndex: 1111,
         opacity: 0.6,
         top: 0,
         left: 0,
@@ -16,10 +17,10 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-export default function () {
+export default function ({ backdropClass }) {
     const classes = useStyles();
     return (
-        <div className={classes.loader}>
+        <div className={clsx(classes.loader, backdropClass)}>
             <Loading/>
         </div>
     );
