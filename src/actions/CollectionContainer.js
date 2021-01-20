@@ -11,6 +11,7 @@ import "./Show";
 import './Delete';
 import './Export';
 import './Import';
+import './Update';
 
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
 import Random from "../util/Random";
