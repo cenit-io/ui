@@ -14,6 +14,7 @@ import { Config } from "../common/Symbols";
 import ToggleEnumControl from "../components/ToggleEnumControl";
 import { FormRootValue } from "../services/FormValue";
 import { eq } from "../services/BLoC";
+import { of } from "rxjs";
 
 
 function SuccessExport() {
@@ -154,10 +155,21 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const handleFormSubmit = (_, value) => {
         const { data_type, selector, template } = value.get();
-        return API.post('setup', 'template', template.id, 'digest', {
-            source_data_type_id: data_type.id,
-            selector
-        });
+        return of(true).pipe(
+            switchMap(() => {
+                let error;
+                if (!template?.id) {
+                    error = { template: ['is required'] };
+                }
+                if (error) {
+                    throw ({ response: { data: error } });
+                }
+                return API.post('setup', 'template', template.id, 'digest', {
+                    source_data_type_id: data_type.id,
+                    selector
+                });
+            })
+        );
     };
 
     if (formDataType) {
