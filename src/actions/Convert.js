@@ -9,6 +9,8 @@ import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import { useContainerContext } from "./ContainerContext";
 import ConverterIcon from "../icons/ConverterIcon";
+import { of } from "rxjs";
+import { switchMap } from "rxjs/operators";
 
 function ConvertUpdate() {
     return (
@@ -69,10 +71,21 @@ const Convert = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const handleFormSubmit = (_, value) => {
         const { data_type, selector, converter } = value.get();
-        return API.post('setup', 'converter_transformation', converter.id, 'digest', {
-            target_data_type_id: data_type.id,
-            selector
-        });
+        return of(true).pipe(
+            switchMap(() => {
+                let error;
+                if (!converter?.id) {
+                    error = { converter: ['is required'] };
+                }
+                if (error) {
+                    throw ({ response: { data: error } });
+                }
+                return API.post('setup', 'converter_transformation', converter.id, 'digest', {
+                    target_data_type_id: data_type.id,
+                    selector
+                });
+            })
+        );
     };
 
     return (
