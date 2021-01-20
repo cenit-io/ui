@@ -8,7 +8,9 @@ import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import ImportIcon from "@material-ui/icons/CloudUpload";
-import StringCodeControl from "../components/StringCodeControl";
+import DataControl from "../components/DataControl";
+import { switchMap } from "rxjs/operators";
+import { of } from "rxjs";
 
 
 function SuccessImport() {
@@ -31,7 +33,7 @@ function importDataTypeFormFor(targetDataType) {
                     }
                 },
                 data: {
-                    type: 'string'
+                    type: 'object'
                 }
             }
         }
@@ -48,7 +50,7 @@ function importDataTypeFormFor(targetDataType) {
                 }
             },
             data: {
-                control: StringCodeControl
+                control: DataControl
             }
         }
     };
@@ -69,11 +71,34 @@ const Import = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const handleFormSubmit = (_, value) => {
         const { data_type, parser, data } = value.get();
-        return API.post('setup', 'parser_transformation', parser.id, 'digest', {
-            headers: {
-                'X-Digest-Options': JSON.stringify({ target_data_type_id: data_type.id })
+        let formData;
+        if (data.type === 'file') {
+            if ((formData = data.file)) {
+                formData = Object.values(formData)[0];
             }
-        }, data);
+        } else {
+            formData = data.plain_data;
+        }
+        return of(true).pipe(
+            switchMap(() => {
+                let error;
+                if (!parser?.id) {
+                    error = { parser: ['is required'] };
+                }
+                if (!formData) {
+                    error = { ...error, data: ['is required'] };
+                }
+                if (error) {
+                    throw ({ response: { data: error } });
+                }
+
+                return API.post('setup', 'parser_transformation', parser.id, 'digest', {
+                    headers: {
+                        'X-Digest-Options': JSON.stringify({ target_data_type_id: data_type.id })
+                    }
+                }, formData)
+            })
+        );
     };
 
     return (
