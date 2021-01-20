@@ -6,10 +6,11 @@ import ActionRegistry from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
 
 import Index from "./Index";
-import New from './New';
-import Show from "./Show";
-import Delete from './Delete';
-import Export from './Export';
+import './New';
+import "./Show";
+import './Delete';
+import './Export';
+import './Import';
 
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
 import Random from "../util/Random";
