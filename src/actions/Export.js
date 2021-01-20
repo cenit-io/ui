@@ -154,7 +154,10 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const handleFormSubmit = (_, value) => {
         const { data_type, selector, template } = value.get();
-        return API.post('setup', 'template', template.id, 'digest', { data_type, selector })
+        return API.post('setup', 'template', template.id, 'digest', {
+            source_data_type_id: data_type.id,
+            selector
+        });
     };
 
     if (formDataType) {

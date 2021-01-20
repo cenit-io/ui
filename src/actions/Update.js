@@ -70,7 +70,7 @@ const Update = ({ docked, dataType, onSubjectPicked, height }) => {
     const handleFormSubmit = (_, value) => {
         const { data_type, selector, updater } = value.get();
         return API.post('setup', 'updater_transformation', updater.id, 'digest', {
-            data_type,
+            target_data_type_id: data_type.id,
             selector
         });
     };

@@ -71,9 +71,9 @@ const Import = ({ docked, dataType, onSubjectPicked, height }) => {
         const { data_type, parser, data } = value.get();
         return API.post('setup', 'parser_transformation', parser.id, 'digest', {
             headers: {
-                'X-Digest-Options': JSON.stringify({ data_type_id: data_type.id })
+                'X-Digest-Options': JSON.stringify({ target_data_type_id: data_type.id })
             }
-        }, data)
+        }, data);
     };
 
     return (
