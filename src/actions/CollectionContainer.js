@@ -12,6 +12,7 @@ import './Delete';
 import './Export';
 import './Import';
 import './Update';
+import './Convert';
 
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
 import Random from "../util/Random";
