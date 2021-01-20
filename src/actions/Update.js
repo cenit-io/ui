@@ -9,6 +9,8 @@ import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import UpdateIcon from "@material-ui/icons/SystemUpdateAlt";
 import { useContainerContext } from "./ContainerContext";
+import { of } from "rxjs";
+import { switchMap } from "rxjs/operators";
 
 function SuccessUpdate() {
     return (
@@ -69,10 +71,21 @@ const Update = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const handleFormSubmit = (_, value) => {
         const { data_type, selector, updater } = value.get();
-        return API.post('setup', 'updater_transformation', updater.id, 'digest', {
-            target_data_type_id: data_type.id,
-            selector
-        });
+        return of(true).pipe(
+            switchMap(() => {
+                let error;
+                if (!updater?.id) {
+                    error = { updater: ['is required'] };
+                }
+                if (error) {
+                    throw ({ response: { data: error } });
+                }
+                return API.post('setup', 'updater_transformation', updater.id, 'digest', {
+                    target_data_type_id: data_type.id,
+                    selector
+                });
+            })
+        );
     };
 
     return (
