@@ -33,16 +33,24 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
 
     const tenantContext = useTenantContext();
 
-    const [containerState, setContainerState] = useContainerContext();
+    const containerContext = useContainerContext();
+
+    const [containerState, setContainerState] = containerContext;
 
     const { selectedItems, data } = containerState;
 
     const execute = action => {
-        const r = action.call(this, { dataType, tenantContext });
+        const r = action.call(this, {
+            dataType, tenantContext, selectedItems, containerContext
+        });
         if (isObservable(r)) {
             setContainerState({ loading: true });
             actionSubscription.current = r.subscribe(() => {
-                setContainerState({ loading: false });
+                setContainerState({
+                    loading: false,
+                    actionKey: Index.key,
+                    actionComponentKey: Random.string()
+                });
             });
         }
     };

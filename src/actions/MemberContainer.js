@@ -12,15 +12,15 @@ import ChevronRight from "@material-ui/icons/ChevronRight";
 import ActionPicker from "./ActionPicker";
 import Alert from "./Alert";
 import { DataTypeSubject } from "../services/subjects";
-import spreadReducer from "../common/spreadReducer";
 import Skeleton from "@material-ui/lab/Skeleton";
-
-import Records from "./Records";
-import DataType from "./DataType";
 import { useSpreadState } from "../common/hooks";
 import FrezzerLoader from "../components/FrezzerLoader";
 import ContainerContext, { useContainerContext } from "./ContainerContext";
+import { useTenantContext } from "../layout/TenantContext";
 
+
+import Records from "./Records";
+import DataType from "./DataType";
 import DownloadFile from './DownloadFile';
 
 const actionContainerStyles = makeStyles(theme => ({
@@ -51,7 +51,11 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
         actionComponentKey: Random.string()
     });
 
-    const [containerState, setContainerState] = useContainerContext();
+    const containerContext= useContainerContext();
+
+    const [containerState, setContainerState] = containerContext;
+
+    const tenantContext = useTenantContext();
 
     const { dataType, record } = containerState;
 
@@ -120,11 +124,17 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
         const action = ActionRegistry.byKey(actionKey);
         if (action) {
             if (action.executable) {
-                const r = action.call(this, { dataType, record });
+                const r = action.call(this, {
+                    dataType, record, tenantContext, containerContext
+                });
                 if (isObservable(r)) {
                     setState({ loading: true });
                     actionSubscription.current = r.subscribe(
-                        () => setState({ loading: false })
+                        () => setState({
+                            loading: false,
+                            actionKey: Show.key,
+                            actionComponentKey: Random.string()
+                        })
                     );
                 }
             } else {
