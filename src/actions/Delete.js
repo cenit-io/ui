@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ActionRegistry, { ActionKind } from "./ActionRegistry";
+import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
 import DeleteIcon from '@material-ui/icons/Delete';
 import WarningIcon from '@material-ui/icons/Info';
 import CheckIcon from "@material-ui/icons/CheckCircle";
@@ -158,5 +158,6 @@ export default ActionRegistry.register(Delete, {
     icon: DeleteIcon,
     arity: 1,
     title: 'Delete',
-    activeColor: 'secondary'
+    activeColor: 'secondary',
+    crud: [CRUD.delete]
 });

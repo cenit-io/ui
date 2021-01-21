@@ -6,6 +6,13 @@ export const ActionKind = Object.freeze({
     member: 'member'
 });
 
+export const CRUD = Object.freeze({
+    create: 'create',
+    read: 'read',
+    update: 'update',
+    delete: 'delete'
+});
+
 class ActionRegistryClass {
 
     actions = {};

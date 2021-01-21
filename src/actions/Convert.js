@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import ActionRegistry from "./ActionRegistry";
+import ActionRegistry, { CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
@@ -105,5 +105,6 @@ const Convert = ({ docked, dataType, onSubjectPicked, height }) => {
 export default ActionRegistry.register(Convert, {
     bulkable: true,
     icon: ConverterIcon,
-    title: 'Convert'
+    title: 'Convert',
+    crud: [CRUD.create, CRUD.update]
 });

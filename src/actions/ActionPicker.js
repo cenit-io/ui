@@ -28,23 +28,32 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
 
     useEffect(() => {
         if (dataType) {
-            const k = arity === 1 ? ActionKind.member : kind;
-            const actions = [];
+            const subscription = dataType.config().subscribe(config => {
+                const k = arity === 1 ? ActionKind.member : kind;
+                const actions = [];
 
-            ActionRegistry.findBy(
-                { kind: k, arity },
-                { kind: k, bulkable: true },
-                { kind: undefined, arity },
-                { kind: undefined, bulkable: true },
-            ).forEach(
-                action => {
-                    if (!action.onlyFor || action.onlyFor.find(criteria => match(dataType, criteria))) {
-                        actions.push(action)
+                ActionRegistry.findBy(
+                    { kind: k, arity },
+                    { kind: k, bulkable: true },
+                    { kind: undefined, arity },
+                    { kind: undefined, bulkable: true },
+                ).forEach(
+                    action => {
+                        if (!action.onlyFor || action.onlyFor.find(criteria => match(dataType, criteria))) {
+                            if (
+                                !config.crud || !action.crud || (
+                                    !config.crud.find(op => action.crud.indexOf(op) === -1)
+                                )) {
+                                actions.push(action)
+                            }
+                        }
                     }
-                }
-            );
+                );
 
-            setActions(actions);
+                setActions(actions);
+            });
+
+            return () => subscription.unsubscribe();
         } else {
             setActions([]);
         }

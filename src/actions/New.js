@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ActionRegistry, { ActionKind } from "./ActionRegistry";
+import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import NewIcon from '@material-ui/icons/Add';
 import { DataTypeSubject } from "../services/subjects";
@@ -36,5 +36,6 @@ const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
 export default ActionRegistry.register(New, {
     kind: ActionKind.collection,
     icon: NewIcon,
-    title: 'New'
+    title: 'New',
+    crud: [CRUD.create]
 });

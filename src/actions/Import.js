@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import ActionRegistry, { ActionKind } from "./ActionRegistry";
+import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
@@ -118,5 +118,6 @@ const Import = ({ docked, dataType, onSubjectPicked, height }) => {
 export default ActionRegistry.register(Import, {
     kind: ActionKind.collection,
     icon: ImportIcon,
-    title: 'Import'
+    title: 'Import',
+    crud: [CRUD.create, CRUD.update]
 });

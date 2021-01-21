@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ShowIcon from '@material-ui/icons/RemoveRedEye';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { makeStyles } from "@material-ui/core";
 import Fab from "@material-ui/core/Fab";
 import EditIcon from "@material-ui/icons/Edit";
 import FormEditor from "../components/FormEditor";
+import { useSpreadState } from "../common/hooks";
 
 const useStyles = makeStyles(theme => ({
     editButton: {
@@ -15,17 +16,31 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const Show = ({ docked, dataType, record, onSubjectPicked, updateItem, height }) => {
-    const [readOnly, setReadOnly] = useState(true);
+    const [state, setState] = useSpreadState({
+        readOnly: true
+    });
+
+    const { readOnly, config } = state;
 
     const classes = useStyles();
 
+    useEffect(() => {
+        const subscription = dataType.config().subscribe(
+            config => setState({ config })
+        );
+
+        return () => subscription.unsubscribe();
+    }, [dataType]);
+
+    const submitable = config && (!config.crud || config.crud.indexOf('update') !== -1);
+
     let editButton;
-    if (readOnly) {
+    if (readOnly && submitable) {
         editButton = (
             <Fab aria-label="edit"
                  color="primary"
                  className={classes.editButton}
-                 onClick={() => setReadOnly(false)}>
+                 onClick={() => setState({ readOnly: false })}>
                 <EditIcon/>
             </Fab>
         );
@@ -40,7 +55,8 @@ const Show = ({ docked, dataType, record, onSubjectPicked, updateItem, height })
                         onUpdate={updateItem}
                         onSubjectPicked={onSubjectPicked}
                         height={height}
-                        readOnly={readOnly}/>
+                        readOnly={readOnly}
+                        noSubmitButton={!submitable}/>
             {editButton}
         </div>
     );
