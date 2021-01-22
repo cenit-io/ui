@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { makeStyles, Tooltip } from "@material-ui/core";
 import IconButton from '@material-ui/core/IconButton';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
+import { useContainerContext } from "./ContainerContext";
 
 const useToolbarStyles = makeStyles(theme => ({
     actions: {
@@ -25,6 +26,8 @@ function match(target, criteria) {
 function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }) {
     const [actions, setActions] = useState([]);
     const classes = useToolbarStyles();
+
+    const [containerState] = useContainerContext();
 
     useEffect(() => {
         if (dataType) {
@@ -65,8 +68,12 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
         action => {
             const Icon = action.icon;
 
+            const title = typeof action.title === "function"
+                ? action.title.call(this, containerState)
+                : action.title;
+
             return <Tooltip key={`action_${action.key}`}
-                            title={action.title}>
+                            title={title}>
                 <IconButton aria-label={action.title}
                             color={selectedKey === action.key ? (action.activeColor || 'primary') : 'default'}
                             onClick={handleAction(action.key)}

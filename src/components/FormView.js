@@ -30,7 +30,10 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const FormView = ({ rootId, submitter, viewport, dataType, width, height, value, _type, disabled, onStack, readOnly, onFormSubmit }) => {
+const FormView = ({
+                      rootId, submitter, viewport, dataType, width, height, value, _type,
+                      disabled, onStack, readOnly, onFormSubmit, onUpdate
+                  }) => {
 
     const [state, setState] = useSpreadState({
         initialFormValue: {}
@@ -131,7 +134,10 @@ const FormView = ({ rootId, submitter, viewport, dataType, width, height, value,
         }
     }, [value, submitter, viewport, formDataType, rootId, onFormSubmit]);
 
-    const handleFetched = initialFormValue => setState({ initialFormValue });
+    const handleFetched = initialFormValue => {
+        setState({ initialFormValue });
+        onUpdate && onUpdate(initialFormValue);
+    };
 
     const formHeight = `${height} - ${theme.spacing(16)}px`;
 

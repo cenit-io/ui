@@ -256,7 +256,11 @@ function Index({ dataType, subject, height }) {
                 sort: { _id: -1 },
                 props: dataType.queryProps(),
                 viewport: itemsViewport
-            }).subscribe(data => setContainerState({ data, loading: false }));
+            }).subscribe(data => setContainerState(({ selectedItems }) => {
+                const itemsHash = data.items.reduce((hash, item) => (hash[item.id] = item) && hash, {});
+                selectedItems = selectedItems.map(({ id }) => itemsHash[id]).filter(item => item);
+                return { data, loading: false, selectedItems };
+            }));
 
             return () => subscription.unsubscribe();
         }

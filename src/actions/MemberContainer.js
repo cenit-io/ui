@@ -45,13 +45,13 @@ const actionContainerStyles = makeStyles(theme => ({
     }
 }));
 
-function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked, onClose, updateItem }) {
+function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked, onClose, onUpdate }) {
     const [state, setState] = useSpreadState({
         actionKey: Show.key,
         actionComponentKey: Random.string()
     });
 
-    const containerContext= useContainerContext();
+    const containerContext = useContainerContext();
 
     const [containerState, setContainerState] = containerContext;
 
@@ -146,9 +146,10 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
         }
     };
 
-    const handleUpdateItem = item => {
-        subject.updateCache(item);
-        updateItem && updateItem(item)
+    const handleUpdateItem = record => {
+        setContainerState({ record, selectedItems: [record] })
+        subject.updateCache(record);
+        onUpdate && onUpdate(record)
     };
 
     let dataLink;
@@ -179,7 +180,7 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
                                                        subject={subject}
                                                        dataType={dataType}
                                                        record={record}
-                                                       updateItem={handleUpdateItem}
+                                                       onUpdate={handleUpdateItem}
                                                        height={componentHeight}
                                                        width={width}
                                                        onSubjectPicked={onSubjectPicked}

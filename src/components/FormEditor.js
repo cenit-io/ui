@@ -416,6 +416,7 @@ const FormEditor = ({
                                         onSubmitDone={onSubmitDone}
                                         onSubjectPicked={onSubjectPicked}
                                         viewport={item.viewport}
+                                        onUpdate={onUpdate}
                                         onFormSubmit={defaultFormProcessor(
                                             item.viewport,
                                             item.rootId,

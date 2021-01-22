@@ -15,7 +15,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const Show = ({ docked, dataType, record, onSubjectPicked, updateItem, height }) => {
+const Show = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) => {
     const [state, setState] = useSpreadState({
         readOnly: true
     });
@@ -52,11 +52,11 @@ const Show = ({ docked, dataType, record, onSubjectPicked, updateItem, height })
                         docked={docked}
                         dataType={dataType}
                         value={{ id: record.id }}
-                        onUpdate={updateItem}
                         onSubjectPicked={onSubjectPicked}
                         height={height}
                         readOnly={readOnly}
-                        noSubmitButton={!submitable}/>
+                        noSubmitButton={!submitable}
+                        onUpdate={onUpdate}/>
             {editButton}
         </div>
     );

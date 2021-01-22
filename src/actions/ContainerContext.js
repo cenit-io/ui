@@ -69,7 +69,8 @@ export default function ContainerContext({ initialState, children }) {
         <CC.Provider value={value}>
             {children}
             <Dialog open={Boolean(confirmationSubject)}
-                    onClose={closeDialog(false)}>
+                    onClose={closeDialog(false)}
+                    maxWidth="sm">
                 {dialogContent}
             </Dialog>
         </CC.Provider>
