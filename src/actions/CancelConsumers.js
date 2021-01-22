@@ -24,7 +24,8 @@ function CancelConsumers({ selectedItems, record, dataType, containerContext }) 
 
     return containerContext.confirm({
         title: 'Cancel confirmation',
-        message
+        message,
+        cancelText: 'Abort',
     }).pipe(
         switchMap(ok => {
             if (ok) {
@@ -43,5 +44,6 @@ export default ActionRegistry.register(CancelConsumers, {
     bulkable: true,
     icon: CancelIcon,
     title: 'Cancel',
-    executable: true
+    executable: true,
+    onlyFor: [{ namespace: '', name: 'RabbitConsumer' }]
 });
