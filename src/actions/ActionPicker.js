@@ -45,7 +45,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                         if (!action.onlyFor || action.onlyFor.find(criteria => match(dataType, criteria))) {
                             if (
                                 !config.crud || !action.crud || (
-                                    !config.crud.find(op => action.crud.indexOf(op) === -1)
+                                    !action.crud.find(op => config.crud.indexOf(op) === -1)
                                 )) {
                                 actions.push(action)
                             }
