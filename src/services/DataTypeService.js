@@ -452,6 +452,8 @@ export class DataType {
         if (name.length > 1) {
             [name, ns] = [name.pop(), name];
             ns = ns.join('::');
+        } else {
+            name = name[0];
         }
         return this.find_data_type(name, ns).pipe(
             switchMap(dataType => {
