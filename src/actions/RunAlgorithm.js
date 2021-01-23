@@ -11,7 +11,7 @@ import SuccessAlert from "./SuccessAlert";
 import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import LoadingButton from "../components/LoadingButton";
-import { catchError, tap } from "rxjs/operators";
+import { catchError, switchMap, tap, delay } from "rxjs/operators";
 import { of } from "rxjs";
 
 function parametersSchema(parameters) {
@@ -33,13 +33,27 @@ function parametersSchema(parameters) {
     return schema;
 }
 
-function SuccessRun() {
+export function SuccessRun({ value }) {
+
+    useEffect(() => {
+        const subscription = DataType.find({
+            namespace: 'Setup',
+            name: 'Execution'
+        }).pipe(
+            delay(1000),
+            switchMap(dt => dt.get(value.id, {
+                viewport: '{attachment status started_at completed_at}'
+            }))
+        ).subscribe(console.log);
+
+    }, [value]);
+
     return (
         <SuccessAlert mainIcon={DoneIcon}/>
     );
 }
 
-function ClickAndRun({ onFormSubmit, dataType, value, height }) {
+export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
     const [state, setState] = useSpreadState();
 
     const { submitting, errors, success } = state;
