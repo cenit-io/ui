@@ -101,6 +101,127 @@ const Cross = ({ docked, dataType, onSubjectPicked, height }) => {
 export default ActionRegistry.register(Cross, {
     bulkable: true,
     icon: CrossIcon,
-    title: 'Export',
-    // TODO Filter croos-origin data types
+    title: 'Cross',
+    onlyFor: [
+        {
+            "namespace": "Setup",
+            "name": "RemoteOauthClient"
+        },
+        {
+            "namespace": "Setup",
+            "name": "GenericAuthorizationClient"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Oauth2Scope"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Algorithm"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Resource"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Operation"
+        },
+        {
+            "namespace": "Setup",
+            "name": "PlainWebhook"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Connection"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Flow"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Snippet"
+        },
+        {
+            "namespace": "Setup",
+            "name": "ApiSpec"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Translator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Template"
+        },
+        {
+            "namespace": "Setup",
+            "name": "ParserTransformation"
+        },
+        {
+            "namespace": "Setup",
+            "name": "UpdaterTransformation"
+        },
+        {
+            "namespace": "Setup",
+            "name": "ConverterTransformation"
+        },
+        {
+            "namespace": "Setup",
+            "name": "AuthorizationProvider"
+        },
+        {
+            "namespace": "Setup",
+            "name": "BaseOauthProvider"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Oauth2Provider"
+        },
+        {
+            "namespace": "Setup",
+            "name": "DataType"
+        },
+        {
+            "namespace": "Setup",
+            "name": "JsonDataType"
+        },
+        {
+            "namespace": "Setup",
+            "name": "CenitDataType"
+        },
+        {
+            "namespace": "Setup",
+            "name": "FileDataType"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Validator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Schema"
+        },
+        {
+            "namespace": "Setup",
+            "name": "CustomValidator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "XsltValidator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Collection"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Scheduler"
+        },
+        {
+            "namespace": "Setup",
+            "name": "CrossSharedCollection"
+        }
+    ]
 });
