@@ -14,6 +14,7 @@ import './Import';
 import './Update';
 import './Convert';
 import './SendToFlow';
+import './Cross';
 
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
 import Random from "../util/Random";
