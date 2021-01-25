@@ -18,7 +18,7 @@ export const CenitHostKey = 'cenitHost';
 
 Config.getCenitHost = function () {
     return localStorage.getItem(CenitHostKey) || this.cenitHost;
-}
+};
 
 const appGateway = axios.create({
     baseURL: `${Config.getCenitHost()}/app/${Config.appIdentifier}`,
@@ -135,6 +135,22 @@ const AuthorizationService = {
                     headers: { Authorization: `Bearer ${access.access_token}` }
                 })
             ).pipe(map(response => response.data)))
+        );
+    },
+
+    request: function (opts) {
+        return this.getAccess().pipe(
+            switchMap(
+                access => {
+                    const headers = { ...opts.headers };
+                    headers.Authorization = `Bearer ${access.access_token}`;
+                    opts = { ...opts, headers };
+                    return from(axios(opts));
+                }
+            ),
+            map(
+                response => response.data
+            )
         );
     }
 };
