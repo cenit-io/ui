@@ -13,7 +13,7 @@ import InfoAlert from "./InfoAlert";
 import ScheduleIcon from '@material-ui/icons/Schedule';
 import Collapsible from "../components/Collapsible";
 import { DataType } from "../services/DataTypeService";
-import { switchMap, map } from "rxjs/operators";
+import { switchMap, map, tap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import Skeleton from "@material-ui/lab/Skeleton";
 import Chip from "@material-ui/core/Chip";
@@ -141,7 +141,7 @@ function PullCheck(props) {
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { pull_data, record, collectionDataType, dataType } = containerState;
+    const { pull_data, record, collectionDataType, dataType, dirty } = containerState;
 
     useEffect(() => {
         if (!collectionDataType) {
@@ -158,6 +158,7 @@ function PullCheck(props) {
 
     useEffect(() => {
         let viewport = {
+            status: true,
             data: true,
             pull_request: true,
             pulled_request: true
@@ -169,18 +170,18 @@ function PullCheck(props) {
     }, [record]);
 
     useEffect(() => {
-        if (refreshKey) {
+        if (refreshKey || dirty) {
             setState({ refreshing: true });
             const subscription = dataType.get(record.id, { viewport }).subscribe(
                 record => {
-                    setState({ refreshing: false });
+                    setState({ refreshing: false, dirty: false });
                     setContainerState({ record });
                 }
             );
 
             return () => subscription.unsubscribe();
         }
-    }, [dataType, record.id, viewport, refreshKey]);
+    }, [dataType, record.id, viewport, refreshKey, dirty]);
 
     useEffect(() => {
         if (record.pull_request?.url) {
@@ -299,13 +300,15 @@ function PullForm({ docked, dataType, onSubjectPicked, height }) {
         }
     }));
 
-    const [containerState] = useContainerContext();
+    const [containerState, setContainerState] = useContainerContext();
 
     const { pull_data, record, collectionDataType } = containerState;
 
     const handleFormSubmit = (_, _value) => {
         //const { pull_parameters } = value.get();
-        return API.post('setup', 'pull_import', record.id, 'digest', 'pull', {});
+        return API.post('setup', 'pull_import', record.id, 'digest', 'pull', {}).pipe(
+            tap(() => setContainerState({ dirty: true }))
+        );
     };
 
     if (Object.keys(pull_data.new_records).length + Object.keys(pull_data.updated_records).length) {
@@ -324,7 +327,7 @@ function PullForm({ docked, dataType, onSubjectPicked, height }) {
         <ResponsiveContainer>
             <SuccessAlert title="Nothing to pull"
                           message="No changes detected in this data pull"
-                          mainIcon={ReviewIcon}/>;
+                          mainIcon={ReviewIcon}/>
         </ResponsiveContainer>
     );
 }

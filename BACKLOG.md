@@ -21,6 +21,8 @@ Issues & next features
 
 - Copy doesn't work on readonly codemirror controls.
 
+- Brake large titles with ellipsis.
+
 ### Cenit side Issues
 
 - Make build-in data types `$ref` referenced by default.
@@ -29,7 +31,9 @@ Issues & next features
 
 - Add styles and navigation links to the editor breadcrumb.
 
-- Tasks and executions agents through API. 
+- Tasks and executions agents through API.
+
+- Extend support for tasks descriptions across all executions APIs
 
 ### Optimizations
 
