@@ -45,6 +45,8 @@ function SuccessPull() {
     );
 }
 
+const MaxRecordsViews = 25;
+
 function RecordsView({ entry, records, collectionDataType }) {
     const [state, setState] = useSpreadState();
 
@@ -58,7 +60,7 @@ function RecordsView({ entry, records, collectionDataType }) {
             switchMap(dataType => zzip(
                 of(dataType),
                 dataType.getTitle(),
-                dataType.titlesFor(...records)
+                dataType.titlesFor(...records.slice(0, Math.min(MaxRecordsViews, records.length)))
                 )
             )
         ).subscribe(
@@ -107,6 +109,15 @@ function RecordsView({ entry, records, collectionDataType }) {
                          className={classes.margin}
                          label={title}/>;
         });
+
+        if (recordsTitles.length < records.length) {
+            recordsChips.push(
+                <Chip key="and_more_items"
+                      className={classes.margin}
+                      variant="outlined"
+                      label={`... and ${records.length - recordsTitles.length} more`}/>
+            )
+        }
 
         return (
             <div className="relative">
