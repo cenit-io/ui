@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
@@ -11,6 +11,9 @@ import PullImportIcon from "@material-ui/icons/SaveAlt";
 import DataControl from "../components/DataControl";
 import { switchMap } from "rxjs/operators";
 import { of } from "rxjs";
+import { useSpreadState } from "../common/hooks";
+import LinearProgress from "@material-ui/core/LinearProgress";
+import * as pluralize from "pluralize";
 
 function SuccessImport() {
     return (
@@ -19,27 +22,7 @@ function SuccessImport() {
 }
 
 function importDataTypeFormFor(targetDataType) {
-    const dt = DataType.from({
-        name: 'Pull Import',
-        schema: {
-            type: 'object',
-            properties: {
-                data: {
-                    type: 'object'
-                }
-            }
-        }
-    });
 
-    dt[Config] = {
-        fields: {
-            data: {
-                control: DataControl
-            }
-        }
-    };
-
-    return dt;
 }
 
 const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
@@ -51,10 +34,69 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
         }
     }));
 
-    const formDataType = useRef(importDataTypeFormFor(dataType));
+    const nameTouched = useRef(false);
+
+    const [state, setState] = useSpreadState();
+
+    const { formDataType, formTitle } = state;
+
+    useEffect(() => {
+        const subscription = dataType.getTitle().subscribe(
+            formTitle => {
+                const name = `Pull-import ${pluralize(formTitle)}`;
+                const formDataType = DataType.from({
+                    name,
+                    schema: {
+                        type: 'object',
+                        properties: {
+                            task_description: {
+                                type: 'string'
+                            },
+                            data: {
+                                type: 'object'
+                            }
+                        }
+                    }
+                });
+
+                formDataType[Config] = {
+                    fields: {
+                        task_description: {
+                            controlProps: {
+                                onChange: () => nameTouched.current = true
+                            }
+                        },
+                        data: {
+                            control: DataControl,
+                            controlProps: {
+                                onChange: ({ file }) => {
+                                    if (!nameTouched.current) {
+                                        const taskName = value.current.propertyValue('task_description');
+                                        const fileName = file && Object.keys(file)[0];
+                                        if (fileName) {
+                                            taskName.set(
+                                                `${name} from ${fileName}`, true
+                                            );
+                                        } else {
+                                            taskName.set(name);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+
+                value.current.propertyValue('task_description').set(name);
+                setState({ formTitle, formDataType });
+            }
+        );
+
+        return () => subscription.unsubscribe();
+    }, [dataType]);
 
     const handleFormSubmit = (_, value) => {
-        const { data_type, data } = value.get();
+        const { data_type, data, task_description } = value.get();
         let formData;
         if (data.type === 'file') {
             if ((formData = data.file)) {
@@ -73,15 +115,25 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
                     throw ({ response: { data: error } });
                 }
 
-                return API.post('setup', 'data_type', data_type.id, 'digest', 'pull_import', formData);
+                return API.post('setup', 'data_type', data_type.id, 'digest', 'pull_import', {
+                    headers: {
+                        'X-Digest-Options': JSON.stringify({
+                            task_description: task_description.trim() || null
+                        })
+                    }
+                }, formData);
             })
         );
     };
 
+    if (!formDataType) {
+        return <LinearProgress className="full-width"/>;
+    }
+
     return (
         <div className="relative">
             <FormEditor docked={docked}
-                        dataType={formDataType.current}
+                        dataType={formDataType}
                         height={height}
                         submitIcon={<PullImportIcon/>}
                         onFormSubmit={handleFormSubmit}
