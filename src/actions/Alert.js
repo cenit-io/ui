@@ -41,6 +41,9 @@ const alertStyles = makeStyles(theme => ({
     },
     alignCenter: {
         textAlign: 'center'
+    },
+    padding: {
+        padding: theme.spacing(1)
     }
 }));
 
@@ -79,7 +82,7 @@ function Alert({ title, message, children, mainIcon, mainIconColor, smallIcon, s
             <Typography variant='subtitle1' className={classes.alignCenter}>
                 {message}
             </Typography>
-            <div className={classes.alignCenter}>
+            <div className={clsx(classes.alignCenter, classes.padding)}>
                 {children}
             </div>
         </div>
