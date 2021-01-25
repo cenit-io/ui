@@ -811,8 +811,10 @@ export class DataType {
                         completeItems = this.titleViewPort('_id').pipe(
                             switchMap(
                                 viewport => this.list({
-                                    params: { _id: { '$in': missingIds } },
-                                    headers: { 'X-Template-Options': JSON.stringify({ viewport }) }
+                                    headers: {
+                                        'X-Template-Options': JSON.stringify({ viewport }),
+                                        'X-Query-Selector': JSON.stringify({ _id: { '$in': missingIds } })
+                                    }
                                 }).pipe(map(response => response.items))
                             ));
                     } else {
