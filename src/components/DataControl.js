@@ -21,7 +21,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 export default function DataControl(props) {
-    const { value, fileEntryName, plainDataEntryName } = props;
+    const { value, fileEntryName, plainDataEntryName, onChange } = props;
 
     const [state, setState] = useSpreadState({ type: 'file' });
 
@@ -35,15 +35,19 @@ export default function DataControl(props) {
 
     const switchType = () => setState({ type: type === 'file' ? 'plain_data' : 'file' });
 
+    const handleChange = () => onChange && onChange(value.get());
+
     let control;
     let switchMsg;
     if (type === 'file') {
         switchMsg = 'Switch to type or paste a plain data';
         control = <DropFileControl {...props}
-                                   value={value.propertyValue(fileEntryName || 'file')}/>;
+                                   value={value.propertyValue(fileEntryName || 'file')}
+                                   onChange={handleChange}/>;
     } else {
         control = <StringCodeControl {...props}
-                                     value={value.propertyValue(plainDataEntryName || 'plain_data')}/>;
+                                     value={value.propertyValue(plainDataEntryName || 'plain_data')}
+                                     onChange={handleChange}/>;
         switchMsg = 'Switch to upload a file';
     }
 
