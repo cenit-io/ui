@@ -17,6 +17,10 @@ Issues & next features
 
 - Codemirror code controls do not expand within new action.
 
+- Data types and records names
+
+- Copy doesn't work on readonly codemirror controls.
+
 ### Cenit side Issues
 
 - Make build-in data types `$ref` referenced by default.
@@ -24,6 +28,8 @@ Issues & next features
 ### Features
 
 - Add styles and navigation links to the editor breadcrumb.
+
+- Tasks and executions agents through API. 
 
 ### Optimizations
 
