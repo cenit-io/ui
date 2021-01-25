@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import ShowIcon from '@material-ui/icons/RemoveRedEye';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { makeStyles } from "@material-ui/core";
