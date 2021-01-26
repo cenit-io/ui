@@ -194,7 +194,8 @@ export class DataType {
                             if (isModel) {
                                 if (
                                     (isRef && !propSch.export_embedded) ||
-                                    prop.dataType?._type === FILE_TYPE
+                                    prop.dataType?._type === FILE_TYPE ||
+                                    prop.dataType?._type === CENIT_TYPE
                                 ) { // Referenced
                                     if (isMany) { // Many
                                         prop.type = 'refMany';
