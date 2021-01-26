@@ -36,10 +36,16 @@ function controlComponentFor(property) {
         }
 
         case 'refOne': {
+            if (property.propertySchema.export_embedded) {
+                return EmbedsOneControl;
+            }
             return RefOneControl;
         }
 
         case 'refMany': {
+            if (property.propertySchema.export_embedded) {
+                return EmbedsManyControl;
+            }
             return RefManyControl;
         }
 

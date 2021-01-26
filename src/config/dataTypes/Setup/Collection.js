@@ -1,6 +1,9 @@
 import React from 'react';
 import CollectionFilledIcon from "../../../icons/CollectionFilledIcon";
 
+import '../../../actions/Share';
+import RefManyControl from "../../../components/RefManyControl";
+
 const groups = {
     data: {
         fields: ['data_types', 'schemas', 'custom_validators']
@@ -40,5 +43,16 @@ export default {
         index: {
             fields: ['name', 'title', 'updated_at']
         }
+    },
+    fields: {
+        ...Object.values(groups)
+            .map(({ fields }) => fields)
+            .flat()
+            .reduce((config, field) => {
+                config[field] = {
+                    control: RefManyControl
+                };
+                return config
+            }, {})
     }
 };
