@@ -55,8 +55,12 @@ function RecordsView({ entry, records, collectionDataType }) {
     const classes = useStyles();
 
     useEffect(() => {
-        const subscription = collectionDataType.getProperty(entry).pipe(
-            map(property => property.dataType),
+        const subscription = (entry === 'collections'
+                ? of(collectionDataType)
+                : collectionDataType.getProperty(entry).pipe(
+                    map(property => property.dataType)
+                )
+        ).pipe(
             switchMap(dataType => zzip(
                 of(dataType),
                 dataType.getTitle(),
