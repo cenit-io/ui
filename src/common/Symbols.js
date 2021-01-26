@@ -28,3 +28,5 @@ export const Async = Symbol.for('_async');
 export const Config = Symbol.for('_config');
 
 export const Title = Symbol.for('_title');
+
+export const Status = Symbol.for('_status');

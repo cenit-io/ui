@@ -2,6 +2,7 @@ import axios from 'axios';
 import AuthorizationService, { Config } from './AuthorizationService';
 import { catchError, map, switchMap } from "rxjs/operators";
 import { from, of } from "rxjs";
+import { Status } from "../common/Symbols";
 
 const apiGateway = axios.create({
     baseURL: `${Config.getCenitHost()}/api/v3`,
@@ -79,7 +80,13 @@ export const ApiResource = function () {
                 apiGateway.post(this.path, data, {
                     headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
                     ...config
-                })).pipe(map(response => response.data))
+                })).pipe(map(response => {
+                    const { data } = response;
+                    if (data?.constructor === Object) {
+                        data[Status] = response.status;
+                    }
+                    return data;
+                }))
             )
         );
     };

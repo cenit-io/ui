@@ -23,6 +23,8 @@ import FrezzerLoader from "./FrezzerLoader";
 import { switchMap, tap, catchError } from "rxjs/operators";
 import useTheme from "@material-ui/core/styles/useTheme";
 import SuccessAlert from "../actions/SuccessAlert";
+import { Status } from "../common/Symbols";
+import InfoAlert from "../actions/InfoAlert";
 
 function withForm(item) {
     item.submitter = new Subject();
@@ -145,7 +147,11 @@ const defaultFormProcessor = (viewport, rootId, onFormSubmit, onSubmitDone) => (
                 add_new: !rootId,
                 polymorphic: true
             })),
-            tap(response => value.set({ ...value.get(), ...response }))
+            tap(response => {
+                if (response[Status] === 200 || response[Status] === 201) {
+                    value.set({ ...value.get(), ...response })
+                }
+            })
         );
 
     return submitAction.pipe(
@@ -166,12 +172,14 @@ const useSuccessStyles = makeStyles(theme => ({
     },
 }));
 
-function DefaultSuccessControl({ title, rootId, onSubjectPicked, dataType, id }) {
+function DefaultSuccessControl({ title, rootId, onSubjectPicked, dataType, id, value }) {
 
     const classes = useSuccessStyles();
 
+    const success = value[Status] === 200 || value[Status] === 201;
+
     let actions;
-    if (!rootId) {
+    if (success && !rootId) {
         actions = (
             <div className={classes.alignCenter}>
                 <Button variant="outlined"
@@ -185,12 +193,22 @@ function DefaultSuccessControl({ title, rootId, onSubjectPicked, dataType, id })
         );
     }
 
+    let Alert;
+    let message;
+    if (success) {
+        Alert = SuccessAlert;
+        message = `Successfully ${rootId ? 'updated' : 'created'}`;
+    } else {
+        Alert = InfoAlert;
+        message = `${rootId ? 'Update' : 'Create'} request received`;
+    }
+
     return (
-        <SuccessAlert title={title}
-                      message={`Successfully ${rootId ? 'updated' : 'created'}`}
-                      mainIcon={StorageIcon}>
+        <Alert title={title}
+               message={message}
+               mainIcon={StorageIcon}>
             {actions}
-        </SuccessAlert>
+        </Alert>
     );
 }
 
@@ -224,7 +242,7 @@ const FormEditor = ({
             callback: value => {
                 setId(value.id);
                 setSubmitResponse(value);
-                if (onUpdate && rootId) {
+                if ((!value[Status] || value[Status] === 200 || value[Status] === 201) && onUpdate && rootId) {
                     onUpdate(value);
                 }
             },
