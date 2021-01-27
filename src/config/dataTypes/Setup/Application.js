@@ -6,7 +6,10 @@ export default {
     icon: <ApplicationFilledIcon/>,
     actions: {
         index: {
-            fields: ['namespace', 'name', 'updated_at']
+            fields: ['namespace', 'name', 'slug', 'registered', 'actions', 'application_parameters', 'updated_at']
+        },
+        new: {
+            fields: ['namespace', 'name', 'slug',  'actions', 'application_parameters']
         }
     }
 };
