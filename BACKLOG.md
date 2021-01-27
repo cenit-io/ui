@@ -23,6 +23,14 @@ Issues & next features
 
 - Brake large titles with ellipsis.
 
+- Updating container context record on forms onUpdate
+
+- Mapping converters
+
+- Customize all tasks models for show action view
+
+- Refresh task record before and after schedule action
+
 ### Cenit side Issues
 
 - Make build-in data types `$ref` referenced by default.

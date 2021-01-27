@@ -24,6 +24,7 @@ import "./DataType";
 import './DownloadFile';
 import './PullReview';
 import './Pull';
+import './Schedule';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
