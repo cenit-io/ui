@@ -3,12 +3,12 @@ import { CRUD } from "../../../actions/ActionRegistry";
 import AttachmentViewer from "../../../viewers/AttachmentViewer";
 
 const fields = [
-    'data', 'pull_request', 'pulled_request', 'description', 'scheduler',
+    'shared_collection', 'pull_request', 'pulled_request', 'description', 'scheduler',
     'attempts', 'succeded', 'retries', 'progress', 'status', 'updated_at'
 ];
 
 export default {
-    title: 'Pull Import',
+    title: 'Shared Collection Pull',
     actions: {
         index: { fields },
         new: { fields }

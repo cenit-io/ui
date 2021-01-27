@@ -19,9 +19,10 @@ import ContainerContext, { useContainerContext } from "./ContainerContext";
 import { useTenantContext } from "../layout/TenantContext";
 
 
-import Records from "./Records";
-import DataType from "./DataType";
-import DownloadFile from './DownloadFile';
+import "./Records";
+import "./DataType";
+import './DownloadFile';
+import './PullReview';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {

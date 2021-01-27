@@ -25,6 +25,8 @@ import FormEditor from "../components/FormEditor";
 import { FormRootValue } from "../services/FormValue";
 import API from "../services/ApiService";
 import { Config } from "../common/Symbols";
+import { underscore } from "../common/strutls";
+import Loading from "../components/Loading";
 
 const ReviewIcon = () => (
     <SvgIcon>
@@ -285,46 +287,98 @@ function PullState() {
     );
 }
 
+export function pullParametersSchema(pull_parameters) {
+    const properties = {};
+    const requiredProperties = [];
+    const schema = { type: 'object', properties, required: requiredProperties };
+    pull_parameters.forEach(({ id, label, type, many, required, description }) => {
+        const propertySchema = properties[id] = { label, description };
+        if (many) {
+            propertySchema.type = 'array';
+            if (type) {
+                propertySchema.items = { type }
+            }
+        } else if (type) {
+            propertySchema.type = type;
+        }
+        if (required) {
+            requiredProperties.push(id);
+        }
+    });
+    if (!requiredProperties.length) {
+        delete schema.required;
+    }
+    return schema;
+}
+
 function PullForm({ docked, dataType, onSubjectPicked, height }) {
 
-    const formDataType = useRef(DataType.from({
-        name: 'Pull Review',
-        schema: {
-            type: 'object'
-        },
-        [Config]: {
-            formViewControl: PullState
-        }
-    }));
+    const [state, setState] = useSpreadState();
 
-    const value = useRef(new FormRootValue({
-        data_type: {
-            id: dataType.id,
-            _reference: true
-        }
-    }));
+    const { pull_parameters, formDataType } = state;
 
     const [containerState, setContainerState] = useContainerContext();
 
     const { pull_data, record, collectionDataType } = containerState;
 
-    const handleFormSubmit = (_, _value) => {
-        //const { pull_parameters } = value.get();
-        return API.post('setup', 'pull_import', record.id, 'digest', 'pull', {}).pipe(
+    const value = useRef(new FormRootValue({
+        ...pull_data.pull_parameters
+    }));
+
+    const shared_collection_id = record.shared_collection?.id;
+
+    useEffect(() => {
+        const subscription = (
+            shared_collection_id
+                ? API.get('setup', 'cross_shared_collection', shared_collection_id, { viewport: '{pull_parameters}' })
+                : of({ pull_parameters: [] })
+        ).subscribe(({ pull_parameters }) => {
+            const schema = pullParametersSchema(pull_parameters);
+            schema.properties.state = {};
+            const formDataType = DataType.from({
+                name: 'Pull Review',
+                schema,
+                [Config]: {
+                    fields: {
+                        ...pull_parameters.reduce((config, p) => {
+                            config[p.id] = { readOnly: true };
+                            return config;
+                        }, {}),
+                        state: {
+                            control: PullState
+                        }
+                    }
+                }
+            });
+
+            setState({ pull_parameters, formDataType });
+        })
+
+    }, [shared_collection_id]);
+
+    const handleFormSubmit = (_, formValue) => {
+        const value = formValue.get();
+        const pp = {};
+        pull_parameters.forEach(({ id }) => pp[id] = value[id]);
+        const formData = { pull_parameters: pp };
+        const slug = underscore(dataType.name);
+        return API.post('setup', slug, record.id, 'digest', 'pull', formData).pipe(
             tap(() => setContainerState({ dirty: true }))
         );
     };
 
     if (Object.keys(pull_data.new_records).length + Object.keys(pull_data.updated_records).length) {
-
-        return <FormEditor docked={docked}
-                           dataType={formDataType.current}
-                           height={height}
-                           submitIcon={<ReviewIcon/>}
-                           onFormSubmit={handleFormSubmit}
-                           onSubjectPicked={onSubjectPicked}
-                           successControl={SuccessPull}
-                           value={value.current}/>;
+        if (formDataType) {
+            return <FormEditor docked={docked}
+                               dataType={formDataType}
+                               height={height}
+                               submitIcon={<ReviewIcon/>}
+                               onFormSubmit={handleFormSubmit}
+                               onSubjectPicked={onSubjectPicked}
+                               successControl={SuccessPull}
+                               value={value.current}/>;
+        }
+        return <Loading/>;
     }
 
     return (
@@ -357,5 +411,8 @@ export default ActionRegistry.register(PullReview, {
     icon: ReviewIcon,
     arity: 1,
     title: 'Review',
-    onlyFor: [{ namespace: 'Setup', name: 'PullImport' }]
+    onlyFor: [
+        { namespace: 'Setup', name: 'PullImport' },
+        { namespace: 'Setup', name: 'SharedCollectionPull' }
+    ]
 });
