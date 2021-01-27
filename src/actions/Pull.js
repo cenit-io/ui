@@ -115,7 +115,9 @@ const Pull = ({ dataType, docked, record, onSubjectPicked, height }) => {
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
                             successControl={SuccessImport}
-                            value={value.current}/>
+                            value={value.current}
+                            noSubmitButton={!pull_parameters.length}
+                            noJSON={!pull_parameters.length}/>
             </div>
         );
     }

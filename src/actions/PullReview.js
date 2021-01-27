@@ -413,6 +413,7 @@ export default ActionRegistry.register(PullReview, {
     title: 'Review',
     onlyFor: [
         { namespace: 'Setup', name: 'PullImport' },
-        { namespace: 'Setup', name: 'SharedCollectionPull' }
+        { namespace: 'Setup', name: 'SharedCollectionPull' },
+        { namespace: 'Setup', name: 'ApiPull' }
     ]
 });

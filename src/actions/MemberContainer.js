@@ -23,6 +23,7 @@ import "./Records";
 import "./DataType";
 import './DownloadFile';
 import './PullReview';
+import './Pull';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
