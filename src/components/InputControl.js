@@ -16,11 +16,13 @@ const InputControl = reactiveControlFor(
          onBlur,
          autoFocus,
          onFocus,
-         onClear
+         onClear,
+         type
      }) => (
         <FormControl variant="filled" fullWidth={true} disabled={disabled}>
             <InputLabel>{title}</InputLabel>
             <FilledInput key={dynamicKey}
+                         type={type}
                          readOnly={readOnly}
                          error={error}
                          defaultValue={value}

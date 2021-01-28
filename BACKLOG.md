@@ -43,6 +43,10 @@ Issues & next features
 
 - Extend support for tasks descriptions across all executions APIs
 
+- Action to config tasks description and auto-retry
+
+- Config Authorization models
+
 ### Optimizations
 
 - Cache for Liquid templates

@@ -26,6 +26,7 @@ import './PullReview';
 import './Pull';
 import './Schedule';
 import './ConfigureApp';
+import './Authorize';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
