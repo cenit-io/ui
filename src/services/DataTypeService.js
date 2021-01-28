@@ -877,7 +877,7 @@ export class DataType {
     }
 
     get(id, opts = {}) {
-        const { viewport, jsonPath, with_references } = opts;
+        const { viewport, jsonPath, with_references, include_id } = opts;
         const include_blanks = opts.hasOwnProperty('include_blanks') ? opts.include_blanks : true;
         const templateOptions = { include_blanks };
         opts = { headers: { 'X-Record-Id': id } };
@@ -886,6 +886,9 @@ export class DataType {
         }
         if (with_references) {
             templateOptions.with_references = with_references;
+        }
+        if (include_id) {
+            templateOptions.include_id = true;
         }
         opts.headers['X-Template-Options'] = JSON.stringify(templateOptions);
         if (jsonPath) {
