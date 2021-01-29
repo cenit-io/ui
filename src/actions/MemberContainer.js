@@ -152,7 +152,7 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
     };
 
     const handleUpdateItem = record => {
-        setContainerState({ record, selectedItems: [record] })
+        setContainerState({ record, selectedItems: [record] });
         subject.updateCache(record);
         onUpdate && onUpdate(record)
     };
@@ -214,7 +214,8 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 }
 
 const InitialContextState = {
-    selectedItems: []
+    selectedItems: [],
+    landingActionKey: Show.key
 };
 
 export default function MemberContainer(props) {

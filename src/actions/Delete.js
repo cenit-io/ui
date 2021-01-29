@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
+import ActionRegistry, { CRUD } from "./ActionRegistry";
 import DeleteIcon from '@material-ui/icons/Delete';
 import WarningIcon from '@material-ui/icons/Info';
 import CheckIcon from "@material-ui/icons/CheckCircle";
@@ -9,6 +9,10 @@ import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import { CircularProgress, makeStyles } from "@material-ui/core";
 import ResponsiveContainer from "../components/ResponsiveContainer";
+import { useContainerContext } from "./ContainerContext";
+import { map } from "rxjs/operators";
+import * as pluralize from "pluralize";
+import Show from "./Show";
 
 const useStyles = makeStyles(theme => ({
     okBox: {
@@ -69,33 +73,60 @@ const Status = Object.freeze({
     failed: 5
 });
 
-const Delete = ({ docked, dataType, onDisable, theme, onSubjectPicked, height, onCancel, onClose, subject }) => {
+const Delete = ({ dataType, onCancel, onClose }) => {
     const [status, setStatus] = useState(Status.loading);
     const [title, setTitle] = useState(null);
     const classes = useStyles();
 
+    const [containerState, setContainerState] = useContainerContext();
+
+    const { selectedItems, landingActionKey } = containerState;
+
     useEffect(() => {
-        const subscription = subject.quickTitle().subscribe(
+        let theTitle;
+        if (selectedItems.length === 1) {
+            theTitle = dataType.titleFor(selectedItems[0]).pipe(
+                map(title => `${title} will be destroyed!`)
+            );
+        } else {
+            theTitle = dataType.getTitle().pipe(
+                map(dtTitle => {
+                    dtTitle = pluralize(dtTitle);
+                    if (selectedItems.length > 1) {
+                        return `${selectedItems.length} ${dtTitle} will be destroyed!`;
+                    }
+                    return `All the ${dtTitle} will be destroyed`;
+                })
+            );
+        }
+        const subscription = theTitle.subscribe(
             title => {
                 setStatus(Status.ready);
                 setTitle(title);
             }
         );
         return () => subscription.unsubscribe();
-    }, [subject]);
+    }, [selectedItems]);
 
     useEffect(() => {
         switch (status) {
             case Status.destroying: {
-                onDisable(true);
-                const subscription = dataType.delete(subject.id).subscribe(
+                const selector = selectedItems.length
+                    ? { _id: { $in: selectedItems.map(({ id }) => id) } }
+                    : {};
+                const subscription = dataType.bulkDelete(selector).subscribe(
                     () => setStatus(Status.destroyed)
                 );
                 return () => subscription.unsubscribe();
             }
-                break;
             case Status.destroyed:
-                setTimeout(() => onClose(), 1000);
+                setTimeout(() => {
+                    if (landingActionKey === Show.key) {
+                        onClose();
+                    } else {
+                        setContainerState({ actionKey: landingActionKey })
+                    }
+                }, 1000);
         }
     }, [status]);
 
@@ -105,7 +136,7 @@ const Delete = ({ docked, dataType, onDisable, theme, onSubjectPicked, height, o
     switch (status) {
         case Status.ready:
             statusUI = <WarningIcon className={classes.infoIcon} color="secondary"/>;
-            text = `${title} will be destroyed!`;
+            text = title;
             actions = <React.Fragment>
                 <Typography variant='subtitle1' className={clsx(classes.successLabel, classes.alignCenter)}>
                     Are you sure you want to proceed?
@@ -126,7 +157,7 @@ const Delete = ({ docked, dataType, onDisable, theme, onSubjectPicked, height, o
                         Yes, I'm sure!
                     </Button>
                 </div>
-            </React.Fragment>
+            </React.Fragment>;
             break;
         case Status.destroyed:
             statusUI = <CheckIcon className={classes.infoIcon} color="secondary"/>;
@@ -135,7 +166,7 @@ const Delete = ({ docked, dataType, onDisable, theme, onSubjectPicked, height, o
         default:
             statusUI = <CircularProgress size={110} className={classes.loading}/>;
             if (status === Status.destroying) {
-                text = `Destroying ${title}`;
+                text = 'Destroying...';
             }
     }
 
@@ -154,10 +185,9 @@ const Delete = ({ docked, dataType, onDisable, theme, onSubjectPicked, height, o
 };
 
 export default ActionRegistry.register(Delete, {
-    kind: ActionKind.member, // TODO Define as bulk when ready for collection container
     icon: DeleteIcon,
-    arity: 1,
     title: 'Delete',
+    bulkable: true,
     activeColor: 'secondary',
     crud: [CRUD.delete]
 });
