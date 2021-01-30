@@ -11,7 +11,7 @@ import DoneIcon from "@material-ui/icons/Done";
 import { Config, FETCHED } from "../common/Symbols";
 import { map } from "rxjs/operators";
 import { FormRootValue } from "../services/FormValue";
-import { capitalize } from "../common/strutls";
+import { capitalize, underscore } from "../common/strutls";
 
 export function SuccessAppConfig() {
 
@@ -85,16 +85,19 @@ const ConfigureApp = ({ docked, dataType, record, onSubjectPicked, height }) => 
             viewport: '{application_parameters configuration}',
             include_id: true
         }).subscribe(({ application_parameters, configuration }) => {
+                application_parameters = application_parameters || [];
                 const formDataType = DataType.from({
                     name: 'Config',
                     schema: {
                         properties: {
-                            authentication_method: {
-                                type: 'string',
-                                enum: ['User credentials', 'Application ID'],
-                                group: 'Security',
-                                default: 'User credentials'
-                            },
+                            ...(dataType.name === 'Application' && ({
+                                authentication_method: {
+                                    type: 'string',
+                                    enum: ['User credentials', 'Application ID'],
+                                    group: 'Security',
+                                    default: 'User credentials'
+                                }
+                            }) || undefined),
                             logo: {
                                 type: 'string',
                                 group: 'UI'
@@ -127,7 +130,7 @@ const ConfigureApp = ({ docked, dataType, record, onSubjectPicked, height }) => 
 
 
     const handleFormSubmit = (_, value) => API.post(
-        'setup', 'application', record.id, 'digest', 'config', value.get()
+        underscore(dataType.namespace), underscore(dataType.name), record.id, 'digest', 'config', value.get()
     ).pipe(
         map(() => ({}))
     );
@@ -155,5 +158,8 @@ export default ActionRegistry.register(ConfigureApp, {
     icon: ConfigIcon,
     title: 'Configure',
     arity: 1,
-    onlyFor: [{ namespace: 'Setup', name: 'Application' }]
+    onlyFor: [
+        { namespace: 'Setup', name: 'Application' },
+        { namespace: 'Cenit', name: 'BuildInApp' }
+    ]
 });
