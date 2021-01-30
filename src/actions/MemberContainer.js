@@ -27,6 +27,7 @@ import './Pull';
 import './Schedule';
 import './ConfigureApp';
 import './Authorize';
+import './RetryTask';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {

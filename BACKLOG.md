@@ -31,6 +31,8 @@ Issues & next features
 
 - Refresh task record before and after schedule action
 
+- Handle errors from executable actions observers
+
 ### Cenit side Issues
 
 - Make build-in data types `$ref` referenced by default.
