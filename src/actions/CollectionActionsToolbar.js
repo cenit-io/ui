@@ -78,7 +78,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                     switchMap(dataType => {
                             if (dataType) {
                                 if (action.executable) {
-                                    const r = action.call(this, { dataType, record: selectedItems[0], tenantContext });
+                                    const r = action.call(this, { dataType, record: selectedItems[0], tenantContext, containerContext });
                                     if (isObservable(r)) {
                                         return r;
                                     }
