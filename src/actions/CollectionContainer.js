@@ -49,7 +49,7 @@ const InitialState = {
 function CollectionContainerLayout({ docked, subject, height, width, onSubjectPicked }) {
     const [state, setState] = useSpreadState();
 
-    const [containerState] = useContainerContext();
+    const [containerState, setContainerState] = useContainerContext();
 
     const { selectedItems, loading, actionKey, actionComponentKey } = containerState;
 
@@ -89,7 +89,8 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
                                                        selectedItems={selectedItems}
                                                        height={componentHeight}
                                                        width={width}
-                                                       onSubjectPicked={onSubjectPicked}/>;
+                                                       onSubjectPicked={onSubjectPicked}
+                                                       onCancel={() => setContainerState({ actionKey: Index.key })}/>;
 
     let loader;
     if (loading) {
