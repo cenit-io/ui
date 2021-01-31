@@ -168,12 +168,26 @@ function RefPicker({
                     </ListItem>
                 )
             );
-        } else if (itemsQuery && !loading) {
+        } else if (loading) {
             list = (
                 <ListItem>
-                    <ListItemText primary={`No results for '${itemsQuery}'`}/>
+                    <ListItemText primary={`Looking for options...`}/>
                 </ListItem>
             );
+        } else {
+            if (itemsQuery) {
+                list = (
+                    <ListItem>
+                        <ListItemText primary={`No results for '${itemsQuery}'`}/>
+                    </ListItem>
+                );
+            } else {
+                list = (
+                    <ListItem>
+                        <ListItemText primary={`No options`}/>
+                    </ListItem>
+                );
+            }
         }
         let pagination;
         if (total_pages > 1) {
