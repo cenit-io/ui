@@ -28,6 +28,7 @@ import './Schedule';
 import './ConfigureApp';
 import './Authorize';
 import './RetryTask';
+import './ShredCollection';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
