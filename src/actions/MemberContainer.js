@@ -30,6 +30,7 @@ import './Authorize';
 import './RetryTask';
 import './ShredCollection';
 import './ShredTenant';
+import './PushCollection';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {

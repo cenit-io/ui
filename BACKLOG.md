@@ -5,6 +5,8 @@ Issues & next features
 
 ### Issues
 
+- Filter PUSH target collections by origins depending on the super user status.
+
 - Fix xs view for large breadcrumb on actions toolbar.
 
 - Tab recovery from Not Found responses.
@@ -33,6 +35,8 @@ Issues & next features
 
 - Handle errors from executable actions observers
 
+- Clean up tenant configuration after tenant shredding
+
 ### Cenit side Issues
 
 - Make build-in data types `$ref` referenced by default.
@@ -48,6 +52,10 @@ Issues & next features
 - Action to config tasks description and auto-retry
 
 - Config Authorization models
+
+- Use the data type title to customize ref-picker loading message.
+
+- Async response might be not an execution but an error notification because the task could not be created.
 
 ### Optimizations
 

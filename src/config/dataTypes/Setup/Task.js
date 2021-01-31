@@ -59,6 +59,10 @@ export const TasksHierarchy = [
     },
     {
         "namespace": "Setup",
+        "name": "CollectionShredding"
+    },
+    {
+        "namespace": "Setup",
         "name": "Crossing"
     },
     {
@@ -113,4 +117,4 @@ export const TasksHierarchy = [
         "namespace": "Setup",
         "name": "Translation"
     }
-]
+];
