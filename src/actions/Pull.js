@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
+import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
@@ -8,10 +8,8 @@ import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import PullIcon from "@material-ui/icons/SaveAlt";
-import DataControl from "../components/DataControl";
 import { switchMap } from "rxjs/operators";
 import { of } from "rxjs";
-import ShareIcon from "@material-ui/core/SvgIcon/SvgIcon";
 import { useSpreadState } from "../common/hooks";
 import { ClickAndRun } from "./RunAlgorithm";
 import Loading from "../components/Loading";
@@ -93,7 +91,7 @@ const Pull = ({ dataType, docked, record, onSubjectPicked, height }) => {
                     if (p.required && !pp[p.id]) {
                         error = { [p.id]: ['is required'] };
                     }
-                })
+                });
                 if (error) {
                     throw ({ response: { data: error } });
                 }
@@ -132,11 +130,11 @@ export default ActionRegistry.register(Pull, {
     title: 'Pull',
     onlyFor: [
         {
-            "namespace": "Setup",
-            "name": "CrossSharedCollection"
+            namespace: 'Setup',
+            name: 'CrossSharedCollection'
         },
         {
-            "namespace": "Setup",
-            "name": "ApiSpec"
+            namespace: 'Setup',
+            name: 'ApiSpec'
         }]
 });
