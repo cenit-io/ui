@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
@@ -9,6 +9,7 @@ import { Config } from "../common/Symbols";
 import ShredIcon from "@material-ui/icons/DeleteSweep";
 import WarningAlert from "./WarningAlert";
 import { useContainerContext } from "./ContainerContext";
+import { tap } from "rxjs/operators";
 
 function SuccessShred() {
     return (
@@ -24,7 +25,7 @@ function ShredAlert() {
                          mainIcon={ShredIcon}/>;
 }
 
-const ShredCollection = ({ docked, record, onSubjectPicked, height }) => {
+const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) => {
 
     const formDataType = useRef(DataType.from({
         name: 'Shred',
@@ -37,7 +38,9 @@ const ShredCollection = ({ docked, record, onSubjectPicked, height }) => {
         }
     }));
 
-    const handleFormSubmit = () => API.delete('setup', 'collection', record.id, 'digest', 'shred', {});
+    const handleFormSubmit = () => API.delete('setup', 'collection', record.id, 'digest', 'shred', {}).pipe(
+        tap(() => setTimeout(onClose, 1000))
+    );
 
     return (
         <div className="relative">
