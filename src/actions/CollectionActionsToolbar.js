@@ -91,7 +91,8 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                     )
                 ).subscribe(() => setContainerState({
                     selectedItems: [],
-                    loading: false
+                    loading: false,
+                    actionComponentKey: Random.string()
                 }));
             }
         }
