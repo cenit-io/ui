@@ -111,6 +111,10 @@ export const TasksHierarchy = [
     },
     {
         "namespace": "Setup",
+        "name": "SharedCollectionReinstall"
+    },
+    {
+        "namespace": "Setup",
         "name": "Submission"
     },
     {

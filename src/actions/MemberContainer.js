@@ -31,6 +31,7 @@ import './RetryTask';
 import './ShredCollection';
 import './ShredTenant';
 import './PushCollection';
+import './Reinstall';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
