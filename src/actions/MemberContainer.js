@@ -32,6 +32,7 @@ import './ShredCollection';
 import './ShredTenant';
 import './PushCollection';
 import './Reinstall';
+import './SwitchTrust';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
