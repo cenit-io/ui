@@ -109,7 +109,7 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
             switchMap(() => {
                 let error;
                 if (!formData) {
-                    error = { ...error, data: ['is required'] };
+                    error = { data: ['is required'] };
                 }
                 if (error) {
                     throw ({ response: { data: error } });

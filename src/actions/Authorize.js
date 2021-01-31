@@ -59,10 +59,10 @@ function BasicAuthorizationForm({ docked, dataType, record, onSubjectPicked, onU
                     error = { username: ['is required'] };
                 }
                 if (!password) {
-                    error = { password: ['is required'] };
+                    error = { ...error, password: ['is required'] };
                 }
                 if (error) {
-                    throw ({ response: { origin: error } });
+                    throw ({ response: { data: error } });
                 }
                 return dataType.post(value.get());
             }),

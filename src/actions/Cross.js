@@ -70,7 +70,7 @@ const Cross = ({ docked, dataType, onSubjectPicked, height }) => {
                     error = { origin: ['is required'] };
                 }
                 if (error) {
-                    throw ({ response: { origin: error } });
+                    throw ({ response: { data: error } });
                 }
                 return API.post('setup', 'data_type', data_type.id, 'digest', 'cross', {
                     selector,

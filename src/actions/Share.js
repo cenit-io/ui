@@ -55,15 +55,18 @@ const Share = ({ docked, record, onSubjectPicked, height }) => {
     }));
 
     const handleFormSubmit = (_, value) => {
-        const { name, collection } = value.get();
+        const { name, summary, collection } = value.get();
         return of(true).pipe(
             switchMap(() => {
                 let error;
                 if (!name) {
                     error = { name: ['is required'] };
                 }
+                if (!summary) {
+                    error = {  ...error, summary: ['is required'] };
+                }
                 if (error) {
-                    throw ({ response: { origin: error } });
+                    throw ({ response: { data: error } });
                 }
                 const shareData = { ...value.cache };
                 delete shareData.collection;
