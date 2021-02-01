@@ -35,11 +35,14 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                 const k = arity === 1 ? ActionKind.member : kind;
                 const actions = [];
 
-                ActionRegistry.findBy(
-                    { kind: k, arity },
-                    { kind: k, bulkable: true },
-                    { kind: undefined, arity },
-                    { kind: undefined, bulkable: true },
+                (
+                    config.onlyActions ||
+                    ActionRegistry.findBy(
+                        { kind: k, arity },
+                        { kind: k, bulkable: true },
+                        { kind: undefined, arity },
+                        { kind: undefined, bulkable: true },
+                    )
                 ).forEach(
                     action => {
                         if (!action.onlyFor || action.onlyFor.find(criteria => match(dataType, criteria))) {
