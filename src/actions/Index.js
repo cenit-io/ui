@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Loading from '../components/Loading';
 import { Checkbox, fade, makeStyles, useMediaQuery, useTheme, withStyles } from "@material-ui/core";
 import Table from '@material-ui/core/Table';
@@ -185,7 +185,7 @@ const MinItemsPerPage = 5;
 
 const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
-function Index({ dataType, subject, height }) {
+function DefaultIndex({ dataType, subject, height }) {
 
     const [state, setState] = useSpreadState({
         order: 'asc',
@@ -429,6 +429,26 @@ function Index({ dataType, subject, height }) {
         </div>
         {pagination}
     </React.Fragment>;
+}
+
+function Index(props) {
+    const [config, setConfig] = useState(null);
+    const { dataType } = props;
+
+    useEffect(() => {
+        const subscription = dataType.config().subscribe(
+            config => setConfig(config)
+        );
+        return () => subscription.unsubscribe();
+    }, [dataType]);
+
+    if (config) {
+        const IndexComponent = config.indexComponent || DefaultIndex;
+
+        return <IndexComponent {...props}/>;
+    }
+
+    return <Loading/>;
 }
 
 export default ActionRegistry.register(Index, {
