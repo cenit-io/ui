@@ -23,7 +23,8 @@ const useStyles = makeStyles(theme => ({
         cursor: 'pointer',
         '&:hover': {
             background: theme.palette.background.default
-        }
+        },
+        margin: theme.spacing(1, 0)
     },
     tenant: {
         marginRight: theme.spacing(2)
