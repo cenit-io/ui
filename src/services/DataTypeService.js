@@ -158,6 +158,12 @@ export class DataType {
         return this.gettingSchema;
     }
 
+    withOrigin() {
+        return this.getSchemaEntry('with_origin').pipe(
+            map(v => Boolean(v))
+        );
+    }
+
     propertiesSchema() {
         if (this.propertiesSchemaCache) {
             return of(this.propertiesSchemaCache)

@@ -26,6 +26,7 @@ import EmbedsManyViewer from "../viewers/EmbedsManyViewer";
 import JsonViewer from "../viewers/JsonViewer";
 import { useSpreadState } from "../common/hooks";
 import { useContainerContext } from "./ContainerContext";
+import { useOriginsStyles } from "../components/OriginsColors";
 
 function viewerComponentFor(property, config) {
     let configViewer = config?.viewers;
@@ -102,14 +103,14 @@ const StyledTableRow = withStyles((theme) => ({
         '&:nth-of-type(odd)': {
             backgroundColor: fade(theme.palette.action.hover, 0.02),
             '& td:first-child': {
-                '& div': {
+                '& .check': {
                     backgroundColor: fade(theme.palette.action.hover, 0.02),
                 }
             }
         },
         '&:hover': {
             '& td:first-child': {
-                '& div': {
+                '& .check': {
                     background: `${theme.palette.action.hover} !important`
                 }
             }
@@ -185,7 +186,7 @@ const MinItemsPerPage = 5;
 
 const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
-function DefaultIndex({ dataType, subject, height }) {
+function ListView({ height, dataType }) {
 
     const [state, setState] = useSpreadState({
         order: 'asc',
@@ -194,77 +195,26 @@ function DefaultIndex({ dataType, subject, height }) {
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { data, page, limit, selectedItems, props, itemsViewport } = containerState;
+    const { data, page, limit, selectedItems, props, itemsViewport, withOrigin } = containerState;
 
     const classes = useStyles();
+    const originsClasses = useOriginsStyles();
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
     const { dense, order, orderBy, config } = state;
 
     useEffect(() => {
-        setContainerState({ loading: true });
-        const subscription = subject.config().pipe(
-            switchMap(
-                config => {
-                    setState({ config });
-                    const configFields = config.actions?.index?.fields;
-                    if (configFields) {
-                        return dataType.properties().pipe(
-                            map(
-                                properties => configFields.map(
-                                    field => properties[field]
-                                )
-                            )
-                        );
-                    }
-
-                    return dataType.allProperties();
-                }
-            ),
-            switchMap(
-                props => zzip(...props.map(prop => prop.getTitle())).pipe(
-                    map(
-                        titles => titles.map(
-                            (title, index) => ({ title, prop: props[index] })
-                        )
-                    )
-                )
-            )
-        ).subscribe(props => setContainerState({ props }));
+        const subscription = dataType.config().subscribe(
+            config => setState({ config })
+        );
 
         return () => subscription.unsubscribe();
     }, [dataType]);
 
-    useEffect(() => {
-        if (props) {
-            const subscription = zzip(
-                ...props.map(({ prop }) => prop.viewportToken())
-            ).subscribe(
-                tokens => setContainerState({ itemsViewport: `{_id ${tokens.join(' ')}}` })
-            );
-            return () => subscription.unsubscribe();
-        }
-    }, [props]);
-
-    useEffect(() => {
-        if (itemsViewport) {
-            setContainerState({ loading: true })
-            const subscription = dataType.find('', {
-                limit: limit,
-                page: page,
-                sort: { _id: -1 },
-                props: dataType.queryProps(),
-                viewport: itemsViewport
-            }).subscribe(data => setContainerState(({ selectedItems }) => {
-                const itemsHash = data.items.reduce((hash, item) => (hash[item.id] = item) && hash, {});
-                selectedItems = selectedItems.map(({ id }) => itemsHash[id]).filter(item => item);
-                return { data, loading: false, selectedItems };
-            }));
-
-            return () => subscription.unsubscribe();
-        }
-    }, [limit, page, dataType, itemsViewport]);
+    if (!config) {
+        return <div/>;
+    }
 
     const select = selectedItems => setContainerState({ selectedItems });
 
@@ -307,31 +257,11 @@ function DefaultIndex({ dataType, subject, height }) {
         select(newSelection);
     };
 
-    const handleChangePage = (_, page) => {
-        setContainerState({ data: null, page });
-        select([]);
-    };
-
-    const handleChangeRowsPerPage = event => {
-        setContainerState({
-            data: null,
-            limit: +event.target.value,
-            page: 0
-        });
-        select([]);
-    };
-
     const handleChangeDense = event => setState({ dense: event.target.checked });
 
     //const { order, orderBy, page} = this.state;
 
     //const isSelected = name => selectedItems.indexOf(name) !== -1;
-
-    let tableHeight = height;
-
-    if (!props || !data || !itemsViewport) {
-        return <div/>;
-    }
 
     /*const headCells = props.map(prop => <StyledTableCell key={prop.prop.name}
                                                    style={{
@@ -356,8 +286,9 @@ function DefaultIndex({ dataType, subject, height }) {
                                      left: 0,
                                      zIndex: 2
                                  }}>
-                    <div>
-                        <Checkbox checked={isSelected}
+                    <div className={clsx((withOrigin && originsClasses[item.origin]) || 'check')}>
+                        <Checkbox className={clsx(withOrigin && originsClasses[`${item.origin}Text`])}
+                                  checked={isSelected}
                                   inputProps={{ 'aria-labelledby': item.id }}
                                   onChange={handleSelect(item)}/>
                     </div>
@@ -378,10 +309,127 @@ function DefaultIndex({ dataType, subject, height }) {
         );
     });
 
+    return (
+        <div style={{ height: `calc(${height})`, overflow: 'auto' }}>
+            <Table className={classes.table}
+                   size={dense ? 'small' : 'medium'}>
+                <EnhancedTableHead props={props}
+                                   onSelectAllClick={handleSelectAllClick}
+                                   numSelected={selectedItems.length}
+                                   rowCount={data.items.length}/>
+                <TableBody>
+                    {rows}
+                </TableBody>
+            </Table>
+        </div>
+    );
+}
+
+function DefaultIndex({ dataType, subject, height }) {
+
+    const [containerState, setContainerState] = useContainerContext();
+
+    const { data, page, limit, props, itemsViewport } = containerState;
+
+    const classes = useStyles();
+    const theme = useTheme();
+    const xs = useMediaQuery(theme.breakpoints.down('xs'));
+
+    useEffect(() => {
+        setContainerState({ loading: true });
+        const subscription = subject.config().pipe(
+            switchMap(
+                config => {
+                    const configFields = config.actions?.index?.fields;
+                    if (configFields) {
+                        return dataType.properties().pipe(
+                            map(
+                                properties => configFields.map(
+                                    field => properties[field]
+                                )
+                            )
+                        );
+                    }
+
+                    return dataType.allProperties();
+                }
+            ),
+            switchMap(
+                props => zzip(...props.map(prop => prop.getTitle())).pipe(
+                    map(
+                        titles => titles.map(
+                            (title, index) => ({ title, prop: props[index] })
+                        )
+                    )
+                )
+            )
+        ).subscribe(props => setContainerState({ props }));
+
+        return () => subscription.unsubscribe();
+    }, [dataType]);
+
+    useEffect(() => {
+        if (props) {
+            const subscription = zzip(
+                dataType.withOrigin(),
+                ...props.map(({ prop }) => prop.viewportToken())
+            ).subscribe(
+                ([withOrigin, ...tokens]) => {
+                    if (withOrigin) {
+                        tokens.push('origin');
+                    }
+                    setContainerState({ withOrigin, itemsViewport: `{_id ${tokens.join(' ')}}` });
+                }
+            );
+            return () => subscription.unsubscribe();
+        }
+    }, [dataType, props]);
+
+    useEffect(() => {
+        if (itemsViewport) {
+            setContainerState({ loading: true })
+            const subscription = dataType.find('', {
+                limit: limit,
+                page: page,
+                sort: { _id: -1 },
+                props: dataType.queryProps(),
+                viewport: itemsViewport
+            }).subscribe(data => setContainerState(({ selectedItems }) => {
+                const itemsHash = data.items.reduce((hash, item) => (hash[item.id] = item) && hash, {});
+                selectedItems = selectedItems.map(({ id }) => itemsHash[id]).filter(item => item);
+                return { data, loading: false, selectedItems };
+            }));
+
+            return () => subscription.unsubscribe();
+        }
+    }, [limit, page, dataType, itemsViewport]);
+
+    const select = selectedItems => setContainerState({ selectedItems });
+
+    const handleChangePage = (_, page) => {
+        setContainerState({ data: null, page });
+        select([]);
+    };
+
+    const handleChangeRowsPerPage = event => {
+        setContainerState({
+            data: null,
+            limit: +event.target.value,
+            page: 0
+        });
+        select([]);
+    };
+
+    if (!props || !data || !itemsViewport) {
+        return <div/>;
+    }
+
+    let viewHeight = height;
+
     let pagination;
 
     if (data.count > MinItemsPerPage) {
-        tableHeight = `${tableHeight} - ${theme.spacing(7)}px`;
+        viewHeight = `${viewHeight} - ${theme.spacing(7)}px`;
         const pagOpts = {};
         if (xs) {
             pagOpts.siblingCount = 0;
@@ -414,21 +462,12 @@ function DefaultIndex({ dataType, subject, height }) {
         );
     }
 
-    return <React.Fragment>
-        <div style={{ height: `calc(${tableHeight})`, overflow: 'auto' }}>
-            <Table className={classes.table}
-                   size={dense ? 'small' : 'medium'}>
-                <EnhancedTableHead props={props}
-                                   onSelectAllClick={handleSelectAllClick}
-                                   numSelected={selectedItems.length}
-                                   rowCount={data.items.length}/>
-                <TableBody>
-                    {rows}
-                </TableBody>
-            </Table>
-        </div>
-        {pagination}
-    </React.Fragment>;
+    return (
+        <>
+            <ListView height={viewHeight} dataType={dataType}/>
+            {pagination}
+        </>
+    );
 }
 
 function Index(props) {
