@@ -6,10 +6,10 @@ export default {
     icon: <UserIcon/>,
     actions: {
         index: {
-            fields: ['name', 'email', 'account', 'created_at', 'updated_at']
+            fields: ['name', 'email', 'roles', 'account', 'created_at', 'updated_at']
         },
         new: {
-            fields: ['name', 'email', 'password', 'account']
+            fields: ['name', 'email', 'roles', 'password', 'account']
         }
     }
 };
