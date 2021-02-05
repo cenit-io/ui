@@ -337,7 +337,7 @@ function DefaultIndex({ dataType, subject, height }) {
 
     useEffect(() => {
         setContainerState({ loading: true });
-        const subscription = subject.config().pipe(
+        const subscription = dataType.config().pipe(
             switchMap(
                 config => {
                     const configFields = config.actions?.index?.fields;
@@ -371,14 +371,20 @@ function DefaultIndex({ dataType, subject, height }) {
     useEffect(() => {
         if (props) {
             const subscription = zzip(
+                dataType.config(),
                 dataType.withOrigin(),
                 ...props.map(({ prop }) => prop.viewportToken())
             ).subscribe(
-                ([withOrigin, ...tokens]) => {
-                    if (withOrigin) {
-                        tokens.push('origin');
+                ([config, withOrigin, ...tokens]) => {
+                    let itemsViewport = config.actions?.index?.viewport;
+                    if (!itemsViewport) {
+                        if (withOrigin) {
+                            tokens.push('origin');
+                        }
+                        itemsViewport = `{_id ${tokens.join(' ')}}`;
                     }
-                    setContainerState({ withOrigin, itemsViewport: `{_id ${tokens.join(' ')}}` });
+
+                    setContainerState({ withOrigin, itemsViewport });
                 }
             );
             return () => subscription.unsubscribe();
