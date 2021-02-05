@@ -1,9 +1,9 @@
 import React, { useReducer, useEffect } from 'react';
 import Skeleton from "@material-ui/lab/Skeleton";
 import Chip from "@material-ui/core/Chip";
-import { DataTypeSubject, RecordSubject, TabsSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subjects";
 import { of } from "rxjs";
-import { switchMap, tap } from "rxjs/operators";
+import { switchMap } from "rxjs/operators";
 import spreadReducer from "../common/spreadReducer";
 import zzip from "../util/zzip";
 
