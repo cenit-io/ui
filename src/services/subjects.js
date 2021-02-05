@@ -143,9 +143,9 @@ export class DataTypeSubject extends BasicSubject {
             this.config()
         ).pipe(
             map(
-                ([dataType, config]) => config.icon || (
+                ([dataType, config]) => config?.icon || (dataType && (
                     dataType._type === FILE_TYPE ? fileTypeIcon : documentTypeIcon
-                ))
+                )))
         );
     }
 
