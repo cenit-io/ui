@@ -23,7 +23,7 @@ const fields = [
     ...behaviorFields
 ];
 
-const viewport = `{id ${fields.join(' ')}}`;
+const viewport = `{id ${fields.join(' ')} _type}`;
 
 export default {
     title: 'File Type',
