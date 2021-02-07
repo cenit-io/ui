@@ -329,7 +329,7 @@ function DefaultIndex({ dataType, subject, height }) {
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { data, page, limit, props, itemsViewport } = containerState;
+    const { data, page, limit, props, itemsViewport, selector } = containerState;
 
     const classes = useStyles();
     const theme = useTheme();
@@ -399,7 +399,8 @@ function DefaultIndex({ dataType, subject, height }) {
                 page: page,
                 sort: { _id: -1 },
                 props: dataType.queryProps(),
-                viewport: itemsViewport
+                viewport: itemsViewport,
+                selector
             }).subscribe(data => setContainerState(({ selectedItems }) => {
                 const itemsHash = data.items.reduce((hash, item) => (hash[item.id] = item) && hash, {});
                 selectedItems = selectedItems.map(({ id }) => itemsHash[id]).filter(item => item);
@@ -408,7 +409,7 @@ function DefaultIndex({ dataType, subject, height }) {
 
             return () => subscription.unsubscribe();
         }
-    }, [limit, page, dataType, itemsViewport]);
+    }, [selector, limit, page, dataType, itemsViewport]);
 
     const select = selectedItems => setContainerState({ selectedItems });
 

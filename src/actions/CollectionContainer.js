@@ -105,7 +105,8 @@ const InitialState = {
     actionKey: Index.key,
     actionComponentKey: Random.string(),
     selectedItems: [],
-    landingActionKey: Index.key
+    landingActionKey: Index.key,
+    selector: {}
 };
 
 function CollectionContainerLayout({ docked, subject, height, width, onSubjectPicked }) {

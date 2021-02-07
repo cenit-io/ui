@@ -34,6 +34,7 @@ import './PushCollection';
 import './Reinstall';
 import './SwitchTrust';
 import './DataTypeConfig';
+import './Filter';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {

@@ -119,7 +119,10 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                      onDelete={clearSelection}/>;
     } else {
         if (data) {
-            chip = <Chip label={`about ${data.count}`}/>;
+            const msg = data.count
+                ? `about ${data.count}`
+                : 'no records found';
+            chip = <Chip label={msg}/>;
         }
     }
 
