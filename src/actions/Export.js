@@ -101,7 +101,7 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const [containerState] = useContainerContext();
 
-    const { selectedItems } = containerState;
+    const { selectedItems, selector } = containerState;
 
     const value = useRef(new FormRootValue({
         data_type: {
@@ -110,7 +110,7 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
         },
         selector: selectedItems.length
             ? { _id: { $in: selectedItems.map(({ id }) => id) } }
-            : {}
+            : selector || {}
     }));
 
     const { formDataType } = state;

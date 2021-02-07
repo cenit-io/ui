@@ -10,8 +10,8 @@ import { useContainerContext } from "./ContainerContext";
 import { of } from "rxjs";
 import { delay, tap } from "rxjs/operators";
 
-const FilterIcon = () => (
-    <SvgIcon>
+export const FilterIcon = ({fontSize}) => (
+    <SvgIcon fontSize={fontSize}>
         <g xmlns="http://www.w3.org/2000/svg">
             <path d="M0,0h24 M24,24H0" fill="none"/>
             <path

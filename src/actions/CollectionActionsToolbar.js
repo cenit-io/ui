@@ -10,6 +10,8 @@ import { RecordSubject } from "../services/subjects";
 import { useContainerContext } from "./ContainerContext";
 import Index from "./Index";
 import { useTenantContext } from "../layout/TenantContext";
+import Filter, { FilterIcon } from "./Filter";
+import IconButton from "@material-ui/core/IconButton";
 
 const useToolbarStyles = makeStyles(theme => ({
     root: {
@@ -22,6 +24,9 @@ const useToolbarStyles = makeStyles(theme => ({
     },
     spacer: {
         flex: '1 1 100%',
+    },
+    filterIcon: {
+        color: theme.palette.getContrastText(theme.palette.secondary.main)
     }
 }));
 
@@ -37,11 +42,11 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
 
     const [containerState, setContainerState] = containerContext;
 
-    const { selectedItems, data } = containerState;
+    const { selectedItems, data, selector } = containerState;
 
     const execute = action => {
         const r = action.call(this, {
-            dataType, tenantContext, selectedItems, containerContext
+            dataType, tenantContext, selectedItems, containerContext, selector
         });
         if (isObservable(r)) {
             setContainerState({ loading: true });
@@ -86,7 +91,8 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                                         dataType,
                                         record: selectedItems[0],
                                         tenantContext,
-                                        containerContext
+                                        containerContext,
+                                        selector
                                     });
                                     if (isObservable(r)) {
                                         return r;
@@ -108,8 +114,12 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     };
 
     const clearSelection = () => {
-        setContainerState({ selectedItems: [] });
-        handleAction(Index.key);
+        if (selectedItems.length) {
+            setContainerState({ selectedItems: [] });
+            handleAction(Index.key);
+        } else if (Object.keys(selector).length) {
+            setContainerState({ actionKey: Filter.key });
+        }
     };
 
     let chip;
@@ -119,10 +129,26 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                      onDelete={clearSelection}/>;
     } else {
         if (data) {
-            const msg = data.count
-                ? `about ${data.count}`
-                : 'no records found';
-            chip = <Chip label={msg}/>;
+            const selection = Object.keys(selector).length;
+            if (selection) {
+                const msg = data.count
+                    ? `found ${data.count}`
+                    : 'no records found';
+                chip = <Chip label={msg}
+                             color='secondary'
+                             onDelete={clearSelection}
+                             onClick={clearSelection}
+                             deleteIcon={(
+                                 <IconButton size="small" className={classes.filterIcon}>
+                                     <FilterIcon/>
+                                 </IconButton>
+                             )}/>;
+            } else {
+                const msg = data.count
+                    ? `about ${data.count}`
+                    : 'no records found';
+                chip = <Chip label={msg}/>;
+            }
         }
     }
 

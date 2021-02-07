@@ -80,7 +80,7 @@ const Delete = ({ dataType, onCancel, onClose }) => {
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { selectedItems, landingActionKey } = containerState;
+    const { selectedItems, landingActionKey, selector } = containerState;
 
     useEffect(() => {
         let theTitle;
@@ -95,7 +95,7 @@ const Delete = ({ dataType, onCancel, onClose }) => {
                     if (selectedItems.length > 1) {
                         return `${selectedItems.length} ${dtTitle} will be destroyed!`;
                     }
-                    return `All the ${dtTitle} will be destroyed`;
+                    return `All the found ${dtTitle} will be destroyed`;
                 })
             );
         }
@@ -111,10 +111,10 @@ const Delete = ({ dataType, onCancel, onClose }) => {
     useEffect(() => {
         switch (status) {
             case Status.destroying: {
-                const selector = selectedItems.length
+                const selection = selectedItems.length
                     ? { _id: { $in: selectedItems.map(({ id }) => id) } }
-                    : {};
-                const subscription = dataType.bulkDelete(selector).subscribe(
+                    : selector || {};
+                const subscription = dataType.bulkDelete(selection).subscribe(
                     () => setStatus(Status.destroyed)
                 );
                 return () => subscription.unsubscribe();
@@ -128,7 +128,7 @@ const Delete = ({ dataType, onCancel, onClose }) => {
                     }
                 }, 1000);
         }
-    }, [status]);
+    }, [status, selector]);
 
     const handleDestroy = () => setStatus(Status.destroying);
 

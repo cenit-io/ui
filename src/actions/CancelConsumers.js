@@ -4,23 +4,26 @@ import API from "../services/ApiService";
 import { switchMap } from "rxjs/operators";
 import { of } from "rxjs";
 
-function CancelConsumers({ selectedItems, record, dataType, containerContext }) {
+function CancelConsumers({ selectedItems, record, dataType, containerContext, selector }) {
+
     selectedItems = record
         ? [record]
         : selectedItems || [];
 
-    const selector = selectedItems.length
-        ? { _id: { $in: selectedItems.map(({ id }) => id) } }
-        : {};
+    if (selectedItems.length) {
+        selector = { _id: { $in: selectedItems.map(({ id }) => id) } };
+    }
 
     let message;
     if (record || selectedItems.length === 1) {
         message = `The consumer ${(record || selectedItems[0]).tag} will be canceled.`;
     } else if (selectedItems.length) {
         message = `The ${selectedItems.length} selected consumers will be canceled.`;
+    } else if (Object.keys(selector).length) {
+        message = 'All the found consumers will be cancelled';
     } else {
         message = 'All the consumers will be cancelled';
-    } // TODO Message for selector
+    }
 
     return containerContext.confirm({
         title: 'Cancel confirmation',

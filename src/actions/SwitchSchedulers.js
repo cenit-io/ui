@@ -45,14 +45,15 @@ function contextTitle({ selectedItems, data }) { // TODO selector
     return title;
 }
 
-function SwitchSchedulers({ selectedItems, record, dataType, containerContext }) {
+function SwitchSchedulers({ selectedItems, record, dataType, containerContext, selector }) {
+
     selectedItems = record
         ? [record]
         : selectedItems || [];
 
-    const selector = selectedItems.length
-        ? { _id: { $in: selectedItems.map(({ id }) => id) } }
-        : {};
+    if (selectedItems.length) {
+        selector = { _id: { $in: selectedItems.map(({ id }) => id) } };
+    }
 
     const title = contextTitle(containerContext[0]);
     const action = title === ActivateTitle
@@ -70,8 +71,8 @@ function SwitchSchedulers({ selectedItems, record, dataType, containerContext })
     } else if (selectedItems.length) {
         message = `The ${selectedItems.length} selected schedulers will be ${action}.`;
     } else {
-        message = `All the schedulers will be ${action}`;
-    } // TODO Message for selector
+        message = `All the found schedulers will be ${action}`;
+    }
 
     return containerContext.confirm({
         title: title === ActivateTitle
