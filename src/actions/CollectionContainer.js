@@ -25,6 +25,67 @@ import FrezzerLoader from "../components/FrezzerLoader";
 import ContainerContext, { useContainerContext } from "./ContainerContext";
 import { useSpreadState } from "../common/hooks";
 
+const miniDrawerStyles = makeStyles(theme => ({
+    drop: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background: theme.palette.common.black,
+        opacity: 0,
+        zIndex: 10,
+        transition: 'all 0.3s ease'
+    },
+    card: {
+        top: 0,
+        position: 'absolute',
+        width: theme.spacing(40),
+        height: '100%',
+        right: theme.spacing(-40),
+        background: theme.palette.background.paper,
+        zIndex: 11,
+        transition: 'all 0.3s ease'
+    }
+}));
+
+function MiniDrawer({ children, onClose }) {
+    const [state, setState] = useSpreadState({
+        open: true
+    });
+
+    const classes = miniDrawerStyles();
+
+    const { open, cardStyle, dropStyle } = state;
+
+    useEffect(() => {
+        setState({
+            dropStyle: { opacity: 0.5 },
+            cardStyle: { right: 0 }
+        });
+    }, []);
+
+    const handleClose = () => {
+        if (open) {
+            setState({
+                open: false,
+                cardStyle: null,
+                dropStyle: null
+            });
+            setTimeout(onClose, 300);
+        }
+    };
+
+    return (
+        <>
+            <div className={classes.drop} style={dropStyle} onClick={handleClose}>
+            </div>
+            <div className={classes.card} style={cardStyle}>
+                {children}
+            </div>
+        </>
+    );
+}
 
 const actionContainerStyles = makeStyles(theme => ({
     root: {
@@ -52,7 +113,7 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { selectedItems, loading, actionKey, actionComponentKey } = containerState;
+    const { selectedItems, loading, actionKey, actionComponentKey, drawerActionKey } = containerState;
 
     const theme = useTheme();
     const classes = actionContainerStyles();
@@ -93,6 +154,29 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
                                                        onSubjectPicked={onSubjectPicked}
                                                        onCancel={() => setContainerState({ actionKey: Index.key })}/>;
 
+    let drawerAction;
+    if (drawerActionKey) {
+        const DrawerActionComponent = ActionRegistry.byKey(drawerActionKey);
+        drawerAction = (DrawerActionComponent &&
+            <DrawerActionComponent key={actionComponentKey}
+                                   docked={docked}
+                                   dataType={dataType}
+                                   subject={subject}
+                                   selectedItems={selectedItems}
+                                   height={componentHeight}
+                                   width={width}
+                                   onSubjectPicked={onSubjectPicked}
+                                   onCancel={() => setContainerState({ actionKey: Index.key })}/>
+        );
+        drawerAction = (
+            <MiniDrawer anchor="right"
+                        open={Boolean(drawerActionKey)}
+                        onClose={() => setContainerState({ drawerActionKey: null })}>
+                {drawerAction}
+            </MiniDrawer>
+        );
+    }
+
     let loader;
     if (loading) {
         loader = <FrezzerLoader/>;
@@ -109,6 +193,7 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
                 {action}
             </div>
             {loader}
+            {drawerAction}
         </div>
     );
 }

@@ -66,7 +66,11 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                 if (action.executable) {
                     execute(action);
                 } else {
-                    setContainerState({ actionKey, actionComponentKey: Random.string() });
+                    if (action.drawer) {
+                        setContainerState({ drawerActionKey: actionKey });
+                    } else {
+                        setContainerState({ actionKey, actionComponentKey: Random.string() });
+                    }
                 }
             } else {
                 setContainerState({ loading: true });
@@ -78,7 +82,12 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                     switchMap(dataType => {
                             if (dataType) {
                                 if (action.executable) {
-                                    const r = action.call(this, { dataType, record: selectedItems[0], tenantContext, containerContext });
+                                    const r = action.call(this, {
+                                        dataType,
+                                        record: selectedItems[0],
+                                        tenantContext,
+                                        containerContext
+                                    });
                                     if (isObservable(r)) {
                                         return r;
                                     }
