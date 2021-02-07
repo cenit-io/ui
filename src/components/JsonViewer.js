@@ -2,9 +2,13 @@ import clsx from "clsx";
 import React, { useState, useEffect } from "react";
 import { useFormObjectValue } from "./FormContext";
 
-export default function JsonViewer({ className }) {
+export default function JsonViewer({ className, projection }) {
 
-    const value = useFormObjectValue();
+    let value = useFormObjectValue();
+
+    if (projection) {
+        value = projection(value);
+    }
 
     return (
         <div className={className}>

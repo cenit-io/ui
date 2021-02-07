@@ -223,7 +223,7 @@ function plainFormValue(value) {
 const FormEditor = ({
                         docked, dataType, rootId, onSubjectPicked, height, value,
                         readOnly, onUpdate, onFormSubmit, successControl, submitIcon,
-                        noSubmitButton, noJSON
+                        noSubmitButton, noJSON, jsonProjection
                     }) => {
 
     const [id, setId] = useState(plainFormValue(value)?.id || null);
@@ -400,7 +400,8 @@ const FormEditor = ({
         if (md && jsonMode) {
             jsonView = (
                 <FormContext.Provider value={{ value: current.value }}>
-                    <JsonViewer className={clsx(classes.jsonContainer, classes.jsonBox)}/>
+                    <JsonViewer className={clsx(classes.jsonContainer, classes.jsonBox)}
+                                projection={jsonProjection}/>
                 </FormContext.Provider>
             );
 
