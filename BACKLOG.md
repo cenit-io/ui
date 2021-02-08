@@ -41,6 +41,8 @@ Issues & next features
 
 - Make build-in data types `$ref` referenced by default.
 
+- When filtering booleans (and probably other types) $eq: null cats null to false and filter does not work
+
 ### Features
 
 - Add styles and navigation links to the editor breadcrumb.

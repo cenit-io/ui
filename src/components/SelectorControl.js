@@ -19,6 +19,9 @@ import CheckIcon from "../icons/CheckIcon";
 import FalseIcon from "../icons/FalseIcon";
 import Select from "@material-ui/core/Select";
 import ClearIcon from "@material-ui/icons/Clear";
+import RefPicker from "./RefPicker";
+import { Title } from "../common/Symbols";
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 const Operators = {
     $eq: 'Equal',
@@ -46,6 +49,9 @@ const useSelectorStyles = makeStyles(theme => ({
     },
     unchecked: {
         color: `${theme.palette.error.main} !important`
+    },
+    chip: {
+        margin: theme.spacing(0.5, 1)
     }
 }));
 
@@ -349,6 +355,125 @@ function DateCondition({ field, operator, value, disabled, onChange }) {
     );
 }
 
+const RefOneOperators = [
+    '$in',
+    '$nin'
+];
+
+function RefOneValue({ property, operator, value, onChange, disabled }) {
+    const [state, setState] = useSpreadState({
+        items: {}
+    });
+
+    const theme = useTheme();
+
+    const classes = useSelectorStyles();
+
+    const { items } = state;
+
+    useEffect(() => {
+        setState(prevState => {
+            let items = { ...prevState.items };
+            const hash = {};
+            let updated = false;
+            value.forEach(id => {
+                hash[id] = true;
+                if (!items.hasOwnProperty(id)) {
+                    items[id] = { id };
+                    updated = true;
+                }
+            });
+            Object.keys(items).forEach(currentId => {
+                if (!hash[currentId]) {
+                    delete items[currentId];
+                    updated = true;
+                }
+            });
+            if (updated) {
+                setState({ items })
+            }
+            return null;
+        });
+    }, [value]);
+
+    useEffect(() => {
+        const titleLess = [];
+        Object.keys(items).forEach(id => {
+            if (!items[id].hasOwnProperty('title')) {
+                titleLess.push(items[id]);
+            }
+        });
+        if (titleLess.length) {
+            const subscription = property.dataType.titlesFor(...titleLess).subscribe(
+                titles => {
+                    titles.forEach((title, index) => titleLess[index].title = title);
+                    setState({});
+                }
+            );
+            return () => subscription.unsubscribe();
+        }
+    }, [items, property]);
+
+    const handlePick = ({ record, title }) => {
+        const { id } = record;
+        const newItems = { ...items };
+        newItems[id] = { id, title };
+        setState({ items: newItems });
+        if (!value.includes(id)) {
+            onChange({ [operator]: Object.keys(newItems) });
+        }
+    };
+
+    const handleDelete = id => () => {
+        if (items.hasOwnProperty(id)) {
+            const newItems = { ...items };
+            delete newItems[id];
+            setState({ items: newItems });
+            if (value.includes(id)) {
+                onChange({ [operator]: Object.keys(newItems) });
+            }
+        }
+    };
+
+    const chips = Object.values(items).map(({ id, title }) => {
+        let chip;
+        if (title) {
+            chip = <Chip label={title} onDelete={handleDelete(id)}/>;
+        } else {
+            chip = <Chip label={id} onDelete={handleDelete(id)}
+                         avatar={<CircularProgress size={theme.spacing(2)}/>}/>;
+        }
+        return (
+            <div key={id} className={classes.chip}>
+                {chip}
+            </div>
+        )
+    });
+
+    return (
+        <>
+            {chips}
+            <RefPicker dataType={property.dataType}
+                       onPick={handlePick}
+                       placeholder="Search"
+                       additionalViewportProps={['id']}/>
+        </>
+    );
+}
+
+function RefOneCondition({ field, operator, value, disabled, onChange, property }) {
+    return (
+        <ValueCondition valueControl={RefOneValue}
+                        operators={RefOneOperators}
+                        operator={operator}
+                        value={value}
+                        onChange={onChange}
+                        field={field}
+                        disabled={disabled}
+                        property={property}/>
+    );
+}
+
 function conditionControlFor(property) {
     switch (property.type) {
         case 'integer':
@@ -356,6 +481,9 @@ function conditionControlFor(property) {
             return NumberCondition;
         case 'boolean':
             return BooleanCondition;
+        case 'refOne': {
+            return RefOneCondition;
+        }
         case 'string': {
             if (property.propertySchema.enum) {
                 return EnumCondition;
@@ -432,6 +560,8 @@ function defaultConditionFor(property, current) {
             return defaultConditionFrom(NumberOperators, current, 0);
         case 'boolean':
             return defaultConditionFrom(BooleanOperators, current, true);
+        case 'refOne':
+            return defaultConditionFrom(RefOneOperators, current, []);
         case 'string': {
             if (property.propertySchema.enum) {
                 return defaultConditionFrom(EnumOperators, current, []);
@@ -465,6 +595,12 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+const SelectableTypes = ['integer', 'number', 'string', 'boolean', 'refOne'];
+
+const propertyAttribute = prop => prop.type === 'refOne'
+    ? `${prop.name}_id`
+    : prop.name;
+
 export default function SelectorControl({ title, dataType, value, disabled, readOnly, onChange, errors }) {
 
     const [state, setState] = useSpreadState({
@@ -494,8 +630,8 @@ export default function SelectorControl({ title, dataType, value, disabled, read
     }, [value]);
 
     useEffect(() => {
-        const subscription = dataType.queryProps().subscribe(
-            props => setState({ props })
+        const subscription = dataType.allProperties().subscribe(
+            props => setState({ props: props.filter(({ type }) => SelectableTypes.includes(type)) })
         );
 
         return () => subscription.unsubscribe();
@@ -505,30 +641,31 @@ export default function SelectorControl({ title, dataType, value, disabled, read
 
     const handleClose = () => setState({ menuAnchor: null });
 
-    const deleteCondition = (name, operator) => () => {
-        const propCondition = { ...selector[name] };
+    const deleteCondition = (attr, operator) => () => {
+        const propCondition = { ...selector[attr] };
         delete propCondition[operator];
         const newSelector = { ...selector };
         if (Object.keys(propCondition).length) {
-            newSelector[name] = propCondition;
+            newSelector[attr] = propCondition;
         } else {
-            delete newSelector[name];
+            delete newSelector[attr];
         }
         setSelector(newSelector);
     };
 
-    const changeCondition = (name, operator) => cond => {
+    const changeCondition = (attr, operator) => cond => {
         let newSelector = { ...selector };
-        delete newSelector[name][operator];
-        newSelector[name] = { ...newSelector[name], ...cond };
+        delete newSelector[attr][operator];
+        newSelector[attr] = { ...newSelector[attr], ...cond };
         setSelector(newSelector);
     };
 
     const addPropertyCondition = prop => () => {
+        const attr = propertyAttribute(prop);
         const newSelector = { ...selector };
-        newSelector[prop.name] = {
-            ...newSelector[prop.name],
-            ...defaultConditionFor(prop, newSelector[prop.name] || {})
+        newSelector[attr] = {
+            ...newSelector[attr],
+            ...defaultConditionFor(prop, newSelector[attr] || {})
         };
         setSelector(newSelector, { menuAnchor: null });
     };
@@ -541,20 +678,20 @@ export default function SelectorControl({ title, dataType, value, disabled, read
             </MenuItem>
         ));
 
-        selectors = Object.keys(selector).map(field => {
-            const prop = (props || []).find(({ name }) => name === field);
+        selectors = Object.keys(selector).map(attr => {
+            const prop = (props || []).find(prop => propertyAttribute(prop) === attr);
             if (prop) {
-                const fieldConditions = selector[field];
+                const fieldConditions = selector[attr];
                 const operators = Object.keys(fieldConditions);
                 return operators.map(op => (
-                    <PropertyCondition key={`${field}_${op}`}
+                    <PropertyCondition key={`${attr}_${op}`}
                                        property={prop}
                                        operator={op}
                                        field={fieldConditions}
                                        value={fieldConditions[op]}
                                        disabled={disabled || readOnly}
-                                       onDelete={deleteCondition(prop.name, op)}
-                                       onChange={changeCondition(prop.name, op)}/>
+                                       onDelete={deleteCondition(propertyAttribute(prop), op)}
+                                       onChange={changeCondition(propertyAttribute(prop), op)}/>
                 ));
             }
         }).filter(s => s).flat();
