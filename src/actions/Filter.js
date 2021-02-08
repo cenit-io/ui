@@ -9,8 +9,10 @@ import { Config } from "../common/Symbols";
 import { useContainerContext } from "./ContainerContext";
 import { of } from "rxjs";
 import { delay, tap } from "rxjs/operators";
+import { makeStyles } from "@material-ui/core";
+import Fab from "@material-ui/core/Fab";
 
-export const FilterIcon = ({fontSize}) => (
+export const FilterIcon = ({ fontSize }) => (
     <SvgIcon fontSize={fontSize}>
         <g xmlns="http://www.w3.org/2000/svg">
             <path d="M0,0h24 M24,24H0" fill="none"/>
@@ -21,9 +23,19 @@ export const FilterIcon = ({fontSize}) => (
     </SvgIcon>
 );
 
+const useStyles = makeStyles(theme => ({
+    filterButton: {
+        position: 'absolute',
+        right: theme.spacing(3),
+        bottom: theme.spacing(3)
+    }
+}));
+
 const Filter = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const [containerState, setContainerState] = useContainerContext();
+
+    const classes = useStyles();
 
     const { selector, landingActionKey } = containerState;
 
@@ -51,26 +63,27 @@ const Filter = ({ docked, dataType, onSubjectPicked, height }) => {
         }
     }));
 
-    const handleFormSubmit = () => of(false).pipe(
-        delay(500),
-        tap(() =>
-            setContainerState({
-                actionKey: landingActionKey,
-                page: 1,
-                selector: value.current.propertyValue('selector').get()
-            }))
-    );
+    const handleFilter = () => setContainerState({
+        actionKey: landingActionKey,
+        page: 1,
+        selector: value.current.propertyValue('selector').get()
+    });
 
     return (
         <div className="relative">
             <FormEditor docked={docked}
                         dataType={selectorDataType.current}
                         height={height}
-                        submitIcon={<FilterIcon/>}
-                        onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         value={value.current}
-                        jsonProjection={({ selector }) => selector}/>
+                        jsonProjection={({ selector }) => selector}
+                        noSubmitButton={true}/>
+            <Fab aria-label="filter"
+                 color="primary"
+                 className={classes.filterButton}
+                 onClick={handleFilter}>
+                <FilterIcon/>
+            </Fab>
         </div>
     );
 };
