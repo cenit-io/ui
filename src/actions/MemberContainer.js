@@ -35,6 +35,7 @@ import './Reinstall';
 import './SwitchTrust';
 import './DataTypeConfig';
 import './Filter';
+import './Access';
 
 const actionContainerStyles = makeStyles(theme => ({
     toolbar: {
