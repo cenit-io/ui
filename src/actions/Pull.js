@@ -59,7 +59,6 @@ const Pull = ({ dataType, docked, record, onSubjectPicked, height }) => {
             viewport: '{pull_parameters {id label type many required description}}'
         }).subscribe(
             ({ pull_parameters }) => {
-                console.log('pull p', pull_parameters);
                 pull_parameters = pull_parameters || [];
                 const formDataType = DataType.from({
                     name: 'Pull',

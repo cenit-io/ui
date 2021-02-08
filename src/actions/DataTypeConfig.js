@@ -30,7 +30,6 @@ const DataTypeConfig = ({ docked, record, onSubjectPicked, height }) => {
     const { value, formDataType } = state;
 
     useEffect(() => {
-        console.log('sdfslkfg');
         const schema = {
             type: 'object',
             properties: {
