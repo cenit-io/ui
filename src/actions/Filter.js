@@ -56,6 +56,7 @@ const Filter = ({ docked, dataType, onSubjectPicked, height }) => {
         tap(() =>
             setContainerState({
                 actionKey: landingActionKey,
+                page: 1,
                 selector: value.current.propertyValue('selector').get()
             }))
     );
