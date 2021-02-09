@@ -66,7 +66,7 @@ export default function TenantContext({ children }) {
     }, [tenant, switchingTenant]);
 
     return (
-        <TC.Provider value={[tenant, setSwitchingTenant, loading]}>
+        <TC.Provider value={[state, setState]}>
             {tenant && children}
             {loading && <FrezzerLoader backdropClass={classes.backdrop}/>}
         </TC.Provider>

@@ -10,9 +10,11 @@ export default function TenantSelector({ inputClasses, onSelect, readOnly }) {
         tenant: { name: 'Loading...' }
     });
 
-    const [tenant, switchTenant, loading] = useTenantContext();
+    const [tenantState, setTenantState] = useTenantContext();
 
-    const handleSelect = selection => switchTenant(selection.record);
+    const { tenant, loading } = tenantState;
+
+    const handleSelect = selection => setTenantState({ switchingTenant: selection.record });
 
     return <RecordSelector key={tenant.id}
                            dataTypeSelector={TenantTypeSelector}

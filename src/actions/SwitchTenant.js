@@ -3,9 +3,11 @@ import TenantIcon from "@material-ui/icons/Home";
 import { TenantTypeSelector } from "../components/TenantSelector";
 
 function SwitchTenant({ record, tenantContext }) {
-    const [tenant, switchTenant] = tenantContext;
+    const [tenantState, setTenantState] = tenantContext;
+
+    const { tenant } = tenantState;
     if (tenant.id !== record.id) {
-        switchTenant(record);
+        setTenantState({ switchingTenant: record });
     }
 }
 

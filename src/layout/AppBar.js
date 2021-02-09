@@ -75,7 +75,9 @@ export default function ({ onToggle }) {
 
     const [open, setOpen] = useState(false);
 
-    const [_, __, loading] = useTenantContext();
+    const [tenantState] = useTenantContext();
+
+    const { loading } = tenantState;
 
     const classes = useStyles();
 
