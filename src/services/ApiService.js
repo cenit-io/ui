@@ -58,7 +58,13 @@ export const ApiResource = function () {
                 apiGateway.get(this.path, {
                     headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
                     ...config
-                })).pipe(map(response => response.data))
+                })).pipe(map(response => {
+                    const { data } = response;
+                    if (data?.constructor === Object) {
+                        data[Status] = response.status;
+                    }
+                    return data;
+                }))
             )
         );
     };
