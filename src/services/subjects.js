@@ -211,7 +211,7 @@ export class RecordSubject extends BasicSubject {
     navIcon() {
         return this.dataType().pipe(
             map(dataType => {
-                if (dataType._type === FILE_TYPE) {
+                if (dataType?._type === FILE_TYPE) {
                     return fileIcon;
                 }
 
