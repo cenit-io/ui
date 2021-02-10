@@ -1,13 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { makeStyles, Tooltip } from "@material-ui/core";
 import IconButton from '@material-ui/core/IconButton';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { useContainerContext } from "./ContainerContext";
+import { useSpreadState } from "../common/hooks";
+import useResizeObserver from "@react-hook/resize-observer";
+import useTheme from "@material-ui/core/styles/useTheme";
+import MoreIcon from "@material-ui/icons/MoreVert";
+import MenuItem from "@material-ui/core/MenuItem";
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import Menu from "@material-ui/core/Menu";
 
 const useToolbarStyles = makeStyles(theme => ({
     actions: {
         display: 'flex',
+        flexGrow: 1,
         color: theme.palette.text.secondary,
+        minWidth: theme.spacing(6),
+        overflow: 'hidden',
+        paddingLeft: theme.spacing(0.5),
+        justifyContent: 'flex-end'
     }
 }));
 
@@ -24,10 +36,19 @@ function match(target, criteria) {
 }
 
 function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }) {
-    const [actions, setActions] = useState([]);
+    const [state, setState] = useSpreadState({
+        actions: [],
+        width: 0
+    });
+
+    const theme = useTheme();
     const classes = useToolbarStyles();
 
+    const { actions, width, moreEl } = state;
+
     const [containerState] = useContainerContext();
+
+    const frame = useRef(null);
 
     useEffect(() => {
         if (dataType) {
@@ -56,27 +77,44 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                     }
                 );
 
-                setActions(actions);
+                setState({ actions });
             });
 
             return () => subscription.unsubscribe();
         } else {
-            setActions([]);
+            setState({ actions: [] });
         }
     }, [dataType, arity, kind]);
 
-    const handleAction = actionKey => () => onAction(actionKey);
+    useResizeObserver(frame, entry => setState({ width: Math.floor(entry.contentRect.width) }));
 
-    const actionsControls = actions.map(
-        action => {
-            const Icon = action.icon;
+    const handleAction = actionKey => () => {
+        setState({ moreEl: null });
+        onAction(actionKey);
+    };
 
-            const title = typeof action.title === "function"
-                ? action.title.call(this, containerState)
-                : action.title;
+    let max = Math.max(0, Math.floor((width - theme.spacing(0.5)) / theme.spacing(6)));
 
-            return <Tooltip key={`action_${action.key}`}
-                            title={title}>
+    if (max < actions.length) {
+        max--;
+    }
+
+    const actionsControls = [];
+
+    let cursor = 0;
+    for (let i = 0; i < max && i < actions.length; i++) {
+        cursor++;
+        const action = actions[i];
+
+        const Icon = action.icon;
+
+        const title = typeof action.title === "function"
+            ? action.title.call(this, containerState)
+            : action.title;
+
+        actionsControls.push(
+            <Tooltip key={`action_${action.key}`}
+                     title={title}>
                 <IconButton aria-label={action.title}
                             color={selectedKey === action.key ? (action.activeColor || 'primary') : 'default'}
                             onClick={handleAction(action.key)}
@@ -84,12 +122,51 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                     <Icon/>
                 </IconButton>
             </Tooltip>
-        }
-    );
+        );
+    }
 
-    return <div className={classes.actions}>
-        {actionsControls}
-    </div>;
+    let menu;
+    if (max < actions.length) {
+        actionsControls.push(
+            <Tooltip key="_more_actions" title="More">
+                <IconButton disabled={disabled} onClick={({ target }) => setState({ moreEl: target })}>
+                    <MoreIcon/>
+                </IconButton>
+            </Tooltip>
+        );
+        menu = [];
+        while (cursor < actions.length) {
+            const action = actions[cursor];
+            const Icon = action.icon;
+            const title = typeof action.title === "function"
+                ? action.title.call(this, containerState)
+                : action.title;
+            menu.push(
+                <MenuItem key={`action_${action.key}`} button onClick={handleAction(action.key)}>
+                    <ListItemIcon>
+                        <Icon/>
+                    </ListItemIcon>
+                    {title}
+                </MenuItem>
+            );
+            cursor++;
+        }
+        menu = (
+            <Menu anchorEl={moreEl}
+                  keepMounted
+                  open={Boolean(moreEl)}
+                  onClose={() => setState({ moreEl: null })}>
+                {menu}
+            </Menu>
+        );
+    }
+
+    return (
+        <div className={classes.actions} ref={frame}>
+            {actionsControls}
+            {menu}
+        </div>
+    );
 }
 
 export default ActionPicker;

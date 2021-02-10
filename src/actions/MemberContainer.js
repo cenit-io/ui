@@ -37,20 +37,24 @@ import './DataTypeConfig';
 import './Filter';
 import './Access';
 import './RegisterApp';
+import * as pluralize from "pluralize";
 
-const actionContainerStyles = makeStyles(theme => ({
+const useActionContainerStyles = makeStyles(theme => ({
     toolbar: {
+        width: ({ width }) => `calc(${width} - ${theme.spacing(3)}px)`,
         paddingLeft: theme.spacing(2),
         paddingRight: theme.spacing(1),
         height: appBarHeight(theme)
     },
     breadcrumb: {
-        flex: '0 0 auto',
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        maxWidth: ({ width }) => `calc(${width} - ${theme.spacing(9)}px)`
     },
-    spacer: {
-        flex: '1 1 100%',
+    recordTitle: {
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden'
     },
     actionContainer: {
         width: '100%',
@@ -76,7 +80,7 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
     const actionSubscription = useRef(null);
     const theme = useTheme();
-    const classes = actionContainerStyles();
+    const classes = useActionContainerStyles({ width, height });
 
     const {
         dataTypeTitle, title, loading,
@@ -169,18 +173,18 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
     let dataLink;
     if (dataTypeTitle) {
-        dataLink = <Chip label={dataTypeTitle}
+        dataLink = <Chip label={pluralize(dataTypeTitle)}
                          onClick={() => onSubjectPicked(DataTypeSubject.for(subject.dataTypeId).key)}/>;
     } else {
         dataLink = <Skeleton variant="circle"
                              width={theme.spacing(3)}
                              height={theme.spacing(3)}/>;
     }
-    const breadcumb = (
+    const breadcrumb = (
         <div className={classes.breadcrumb}>
             {dataLink}
             <ChevronRight/>
-            <Typography variant="h6">
+            <Typography variant="h6" className={classes.recordTitle}>
                 {title || <Skeleton variant="text" width={theme.spacing(5)}/>}
             </Typography>
         </div>
@@ -206,8 +210,7 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
     return (
         <>
             <Toolbar className={classes.toolbar}>
-                {breadcumb}
-                <div className={classes.spacer}/>
+                {breadcrumb}
                 <ActionPicker kind={ActionKind.member}
                               arity={1}
                               onAction={handleAction}

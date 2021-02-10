@@ -15,15 +15,13 @@ import IconButton from "@material-ui/core/IconButton";
 
 const useToolbarStyles = makeStyles(theme => ({
     root: {
+        display: 'flex',
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
         height: appBarHeight(theme)
     },
     title: {
         flex: '0 0 auto',
-    },
-    spacer: {
-        flex: '1 1 100%',
     },
     filterIcon: {
         color: theme.palette.getContrastText(theme.palette.secondary.main)
@@ -159,9 +157,8 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                     {title}
                 </Typography>
             </div>
-            <div className={classes.spacer}/>
+            <div className="grow-1"/>
             {chip}
-            <div className={classes.spacer}/>
             <ActionPicker kind={ActionKind.collection}
                           arity={selectedItems.length}
                           onAction={handleAction}

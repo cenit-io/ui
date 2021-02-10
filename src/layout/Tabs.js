@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles, useTheme } from '@material-ui/core/styles/index';
 import AppBar from '@material-ui/core/AppBar/index';
 import Tabs from '@material-ui/core/Tabs/index';
@@ -8,9 +8,9 @@ import IconButton from '@material-ui/core/IconButton/index';
 import CloseIcon from '@material-ui/icons/Clear';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
-import spreadReducer from "../common/spreadReducer";
 import Subjects, { NavSubject, TabsSubject } from "../services/subjects";
 import ConfigService from "../services/ConfigService";
+import { useSpreadState } from "../common/hooks";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
@@ -70,7 +70,7 @@ const useStyles = makeStyles(theme => ({
 export default function NavTabs({ docked, width }) {
     const classes = useStyles();
     const theme = useTheme();
-    const [state, setState] = useReducer(spreadReducer, {
+    const [state, setState] = useSpreadState({
         tabs: [],
         tabIndex: 0
     });
