@@ -1,5 +1,5 @@
 import API from './ApiService';
-import { from, isObservable, Observable, of } from "rxjs";
+import { from, isObservable, of } from "rxjs";
 import { catchError, map, share, switchMap, tap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import FormContext from "./FormContext";
@@ -9,10 +9,13 @@ import { Async } from "../common/Symbols";
 import { deepMergeArrayConcat, deepMergeObjectsOnly } from "../common/merge";
 import deepDup from "../common/deepDup";
 import Hash from 'object-hash';
-import { preprocess } from "../config/config";
 import { Config as ConfigSymbol } from "../common/Symbols";
 
-const isSimpleSchema = schema => ['integer', 'number', 'string', 'boolean'].indexOf(schema['type']) !== -1;
+const SimpleTypes = ['integer', 'number', 'string', 'boolean'];
+
+export function isSimpleSchema(schema) {
+    return SimpleTypes.indexOf(schema?.type) !== -1;
+}
 
 function injectCommonProperties(schema) {
     const properties = schema?.properties;
@@ -929,8 +932,8 @@ export class DataType {
             switchMap(
                 props => zzip(
                     ...props.map(
-                        p => p.isSimple().pipe(
-                            switchMap(simple => (simple && of('')) || p.dataType.titleViewPort('_id'))
+                        p => p.isModel().pipe(
+                            switchMap(model => (model && p.dataType.titleViewPort('_id')) || of(''))
                         )
                     )
                 ).pipe(
@@ -1014,14 +1017,14 @@ export class Property {
     }
 
     viewportToken() {
-        return this.isSimple().pipe(
-            switchMap(simple => {
-                if (simple) {
-                    return of(this.name);
+        return this.isModel().pipe(
+            switchMap(model => {
+                if (model) {
+                    return this.dataType.titleViewPort('_id').pipe(
+                        map(viewport => `${this.name} ${viewport}`)
+                    );
                 }
-                return this.dataType.titleViewPort('_id').pipe(
-                    map(viewport => `${this.name} ${viewport}`)
-                );
+                return of(this.name);
             })
         );
     }
