@@ -7,12 +7,11 @@ import { useSpreadState } from "../common/hooks";
 import { DataType } from "../services/DataTypeService";
 import Loading from "../components/Loading";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import LoadingButton from "../components/LoadingButton";
-import { catchError, switchMap, tap, delay } from "rxjs/operators";
+import { catchError, tap } from "rxjs/operators";
 import { of } from "rxjs";
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 function parametersSchema(parameters) {
     const properties = {};
@@ -31,26 +30,6 @@ function parametersSchema(parameters) {
         delete schema.required;
     }
     return schema;
-}
-
-export function SuccessRun({ value }) {
-
-    useEffect(() => {
-        const subscription = DataType.find({
-            namespace: 'Setup',
-            name: 'Execution'
-        }).pipe(
-            delay(1000),
-            switchMap(dt => dt.get(value.id, {
-                viewport: '{attachment status started_at completed_at}'
-            }))
-        ).subscribe(console.log);
-
-    }, [value]);
-
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
 }
 
 export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
@@ -129,7 +108,7 @@ const RunAlgorithm = ({ docked, dataType, record, onSubjectPicked, height }) => 
                             submitIcon={<RunActionIcon/>}
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
-                            successControl={SuccessRun}
+                            successControl={ExecutionMonitor}
                             noSubmitButton={!parameters.length}
                             noJSON={!parameters.length}/>
             </div>

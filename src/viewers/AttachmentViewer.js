@@ -4,16 +4,20 @@ import Link from "@material-ui/core/Link";
 
 const stopPropagation = e => e.stopPropagation();
 
-export default function AttachmentViewer({ value }) {
+export default function AttachmentViewer({ value, className }) {
     const url = value?.url;
 
     if (url) {
         const filename = url.split('/').pop();
 
         return (
-            <Link href={url} target="_blank" onClick={stopPropagation}>{filename}</Link>
+            <Link className={className}
+                  href={url} target="_blank"
+                  onClick={stopPropagation}>
+                {filename}
+            </Link>
         )
     }
 
-    return <span>-</span>;
+    return <span className={className}>-</span>;
 }

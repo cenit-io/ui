@@ -6,7 +6,8 @@ import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
 import { Config } from "../common/Symbols";
-import { ClickAndRun, SuccessRun } from "./RunAlgorithm";
+import { ClickAndRun } from "./RunAlgorithm";
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 
 const RunScript = ({ docked, record, onSubjectPicked, height }) => {
@@ -30,7 +31,7 @@ const RunScript = ({ docked, record, onSubjectPicked, height }) => {
                         submitIcon={<RunActionIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessRun}
+                        successControl={ExecutionMonitor}
                         noSubmitButton={true}
                         noJSON={true}/>
         </div>

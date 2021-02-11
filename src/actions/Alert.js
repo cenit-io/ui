@@ -76,7 +76,7 @@ function Alert({ title, message, children, mainIcon, mainIconColor, smallIcon, s
                 <SmallIcon className={classes.okIcon} {...smallIconColor}/>
                 <MainIcon fontSize='large' {...mainIconColor}/>
             </div>
-            <Typography variant='h5'>
+            <Typography variant='h5' className="flex align-items-center">
                 {title}
             </Typography>
             <Typography variant='subtitle1' className={classes.alignCenter}>
