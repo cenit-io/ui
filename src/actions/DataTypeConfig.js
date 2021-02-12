@@ -7,7 +7,6 @@ import { DataType, JSON_TYPE } from "../services/DataTypeService";
 import Loading from "../components/Loading";
 import API from "../services/ApiService";
 import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config, FETCHED } from "../common/Symbols";
 import {  switchMap } from "rxjs/operators";
 import { FormRootValue } from "../services/FormValue";
@@ -18,7 +17,7 @@ import { of } from "rxjs";
 export function SuccessConfig() {
 
     return (
-        <SuccessAlert mainIcon={DoneIcon}/>
+        <SuccessAlert mainIcon={ConfigIcon}/>
     );
 }
 

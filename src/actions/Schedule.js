@@ -3,15 +3,14 @@ import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
 import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { FormRootValue } from "../services/FormValue";
 import ScheduleIcon from "@material-ui/icons/Schedule";
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { TasksHierarchy } from "../config/dataTypes/Setup/Task";
 
-function SuccessUpdate() {
+function SuccessSchedule() {
     return (
-        <SuccessAlert mainIcon={DoneIcon}/>
+        <SuccessAlert mainIcon={ScheduleIcon}/>
     );
 }
 
@@ -52,7 +51,7 @@ const Schedule = ({ docked, record, onSubjectPicked, height }) => {
                         submitIcon={<ScheduleIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessUpdate}
+                        successControl={SuccessSchedule}
                         value={value.current}/>
         </div>
     );

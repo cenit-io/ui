@@ -5,7 +5,6 @@ import { useSpreadState } from "../common/hooks";
 import Loading from "../components/Loading";
 import API from "../services/ApiService";
 import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { FETCHED } from "../common/Symbols";
 import { switchMap } from "rxjs/operators";
 import { FormRootValue } from "../services/FormValue";
@@ -39,7 +38,7 @@ const RegistrationIcon = () => (
 export function RegistrationSuccess() {
 
     return (
-        <SuccessAlert mainIcon={DoneIcon}/>
+        <SuccessAlert mainIcon={RegistrationIcon}/>
     );
 }
 
