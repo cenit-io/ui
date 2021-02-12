@@ -31,6 +31,9 @@ const useStyles = makeStyles(theme => ({
     error: {
         color: theme.palette.error.main
     },
+    warning: {
+        color: theme.palette.warning.main
+    },
     resultSkeleton: {
         margin: theme.spacing(1, 0)
     },
@@ -48,9 +51,15 @@ const useStyles = makeStyles(theme => ({
 
 const Delays = [1, 3, 5, 8, 13];
 
-export function ExecutionMonitor({ value, mainIcon }) {
+const StatusNotifications = {
+    failed: 'error',
+    paused: 'warning'
+};
+
+export function ExecutionMonitor({ dataType, value, mainIcon }) {
 
     const [state, setState] = useSpreadState({
+        task: value.task,
         execution: value,
         delayIndex: 0,
         taskProgress: 0,
@@ -61,59 +70,58 @@ export function ExecutionMonitor({ value, mainIcon }) {
     const classes = useStyles();
 
     const {
-        executionDataType, notificationDataType, delayIndex, taskProgress,
+        task, taskDataType, notificationDataType, delayIndex, taskProgress,
         execution, refreshKey, resultData, retrievingResult, refreshing
     } = state;
 
-    const { status, task, attachment } = execution;
+    const { status } = task;
+    const { attachment } = execution;
 
     useEffect(() => {
         const subscription = zzip(
-            DataType.find({
-                namespace: 'Setup',
-                name: 'Execution'
-            }),
+            dataType.findByName(value.task._type),
             DataType.find({
                 namespace: 'Setup',
                 name: 'SystemNotification'
             })
-        ).subscribe(([executionDataType, notificationDataType]) => setState({
-            executionDataType,
+        ).subscribe(([taskDataType, notificationDataType]) => setState({
+            taskDataType,
             notificationDataType
         }));
 
         return () => subscription.unsubscribe();
-    }, []);
+    }, [value, dataType]);
 
     useEffect(() => {
-        if (executionDataType && refreshKey && taskProgress < 100) {
+        if (taskDataType && refreshKey && taskProgress < 100) {
             const subscription = of(true).pipe(
                 delay(1000 * (Delays[delayIndex] || 0)),
                 tap(() => setState({ refreshing: true })),
-                switchMap(() => executionDataType.get(execution.id, {
+                switchMap(() => taskDataType.get(task.id, {
                     include_blanks: false,
-                    viewport: '{' +
-                        'id attachment status started_at completed_at ' +
-                        'task {progress description} notifications {id type message}' +
+                    viewport: '{id status progress description current_execution {' +
+                        'attachment status notifications {id type message}' +
                         '}'
                 }))
-            ).subscribe(remoteExecution => {
-                setState(({ execution, taskProgress }) => {
-                    const currentProgress = remoteExecution?.task?.progress || taskProgress;
+            ).subscribe(remoteTask => {
+                setState(({ task, taskProgress }) => {
+                    const currentProgress = remoteTask?.progress || taskProgress;
                     if (currentProgress > taskProgress) {
                         return {
                             taskProgress: currentProgress,
-                            execution: remoteExecution,
+                            task: remoteTask,
+                            execution: remoteTask.current_execution || {},
                             delayIndex: 2,
                             refreshing: false
                         };
                     }
-                    const nextDelay = AliveStatuses.includes(remoteExecution?.status) && delayIndex < Delays.length - 1
+                    const nextDelay = AliveStatuses.includes(remoteTask?.status) && delayIndex < Delays.length - 1
                         ? delayIndex + 1
                         : delayIndex;
                     return {
                         taskProgress: currentProgress,
-                        execution: remoteExecution || execution,
+                        task: remoteTask || task,
+                        execution: remoteTask?.current_execution || {},
                         delayIndex: nextDelay,
                         refreshKey: nextDelay === delayIndex ? null : refreshKey,
                         refreshing: false
@@ -124,7 +132,7 @@ export function ExecutionMonitor({ value, mainIcon }) {
             return () => subscription.unsubscribe();
         }
 
-    }, [executionDataType, refreshKey, delayIndex, taskProgress]);
+    }, [taskDataType, refreshKey, delayIndex, taskProgress]);
 
     useEffect(() => {
         if (attachment) {
@@ -143,11 +151,11 @@ export function ExecutionMonitor({ value, mainIcon }) {
         }
     }, [attachment]);
 
-    if (!executionDataType) {
+    if (!taskDataType) {
         return <LinearProgress/>;
     }
 
-    const statusAlert = TaskStatusConfig[execution?.status] || TaskStatusConfig.default;
+    const statusAlert = TaskStatusConfig[status] || TaskStatusConfig.default;
 
     Object.keys(statusAlert).forEach(key => {
         const value = statusAlert[key];
@@ -192,30 +200,33 @@ export function ExecutionMonitor({ value, mainIcon }) {
         );
     }
 
-    let error;
-    if (status === 'failed') {
-        const notification = (execution.notifications || []).find(({ type }) => type === 'error');
-        if (notification) {
-            error = (
-                <Typography component="div"
-                            variant="subtitle2"
-                            className={clsx(classes.result, classes.error, 'flex column')}>
-                    {notification.message}
-                    <div>
-                        <IconButton size="small"
-                                    onClick={() => TabsSubject.next(
-                                        RecordSubject.for(notificationDataType.id, notification.id).key
-                                    )}>
-                            <OpenIcon className={classes.error}/>
-                        </IconButton>
-                    </div>
-                </Typography>
-            );
+    let notifications;
+    Object.keys(StatusNotifications).forEach(key => {
+        if (status === key) {
+            const notificationType = StatusNotifications[key];
+            const notification = (execution.notifications || []).find(({ type }) => type === notificationType);
+            if (notification) {
+                notifications = (
+                    <Typography component="div"
+                                variant="subtitle2"
+                                className={clsx(classes.result, classes[notificationType], 'flex column')}>
+                        {notification.message}
+                        <div>
+                            <IconButton size="small"
+                                        onClick={() => TabsSubject.next(
+                                            RecordSubject.for(notificationDataType.id, notification.id).key
+                                        )}>
+                                <OpenIcon className={classes[notificationType]}/>
+                            </IconButton>
+                        </div>
+                    </Typography>
+                );
+            }
         }
-    }
+    });
 
     const openExecution = () => TabsSubject.next(
-        RecordSubject.for(executionDataType.id, execution.id).key
+        RecordSubject.for(taskDataType.id, task.id).key
     );
 
     let refresh;
@@ -246,7 +257,7 @@ export function ExecutionMonitor({ value, mainIcon }) {
         <Alert {...statusAlert}
                title={title}>
             <div className="flex column align-items-center full-width">
-                <TaskStatusViewer value={status} item={execution}/>
+                <TaskStatusViewer value={status} item={task}/>
                 <div className={classes.progress}>
                     <Typography component="div" variant="caption">
                         {task.progress}%
@@ -255,7 +266,7 @@ export function ExecutionMonitor({ value, mainIcon }) {
                 </div>
                 {refresh}
                 {result}
-                {error}
+                {notifications}
             </div>
         </Alert>
     );
