@@ -3,20 +3,13 @@ import ActionRegistry, { CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import { useContainerContext } from "./ContainerContext";
 import ConverterIcon from "../icons/ConverterIcon";
 import { of } from "rxjs";
 import { switchMap } from "rxjs/operators";
-
-function ConvertUpdate() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 function convertDataTypeFormFor(sourceDataType) {
     const dt = DataType.from({
@@ -96,7 +89,7 @@ const Convert = ({ docked, dataType, onSubjectPicked, height }) => {
                         submitIcon={<ConverterIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={ConvertUpdate}
+                        successControl={ExecutionMonitor}
                         value={value.current}/>
         </div>
     );

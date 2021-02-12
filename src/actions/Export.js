@@ -5,8 +5,6 @@ import { useSpreadState } from "../common/hooks";
 import { DataType } from "../services/DataTypeService";
 import Loading from "../components/Loading";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { switchMap } from "rxjs/operators";
 import { useContainerContext } from "./ContainerContext";
 import SharedCollectionIcon from "../icons/SharedCollectionIcon";
@@ -15,13 +13,7 @@ import ToggleEnumControl from "../components/ToggleEnumControl";
 import { FormRootValue } from "../services/FormValue";
 import { eq } from "../services/BLoC";
 import { of } from "rxjs";
-
-
-function SuccessExport() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 function exportDataTypeFormFor(sourceDataType, formats, selectedItems) {
     const properties = {};
@@ -181,7 +173,7 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
                             submitIcon={<SharedCollectionIcon/>}
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
-                            successControl={SuccessExport}
+                            successControl={ExecutionMonitor}
                             value={value.current}/>
             </div>
         );

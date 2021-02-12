@@ -3,20 +3,13 @@ import ActionRegistry, { CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import UpdateIcon from "@material-ui/icons/SystemUpdateAlt";
 import { useContainerContext } from "./ContainerContext";
 import { of } from "rxjs";
 import { switchMap } from "rxjs/operators";
-
-function SuccessUpdate() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 function updateDataTypeFormFor(sourceDataType) {
     const dt = DataType.from({
@@ -40,8 +33,8 @@ function updateDataTypeFormFor(sourceDataType) {
             updater: {
                 selector: {
                     $or: [
-                        { source_data_type_id: { $exists: false } },
-                        { source_data_type_id: sourceDataType.id }
+                        { target_data_type_id: { $exists: false } },
+                        { target_data_type_id: sourceDataType.id }
                     ]
                 }
             }
@@ -96,7 +89,7 @@ const Update = ({ docked, dataType, onSubjectPicked, height }) => {
                         submitIcon={<UpdateIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessUpdate}
+                        successControl={ExecutionMonitor}
                         value={value.current}/>
         </div>
     );

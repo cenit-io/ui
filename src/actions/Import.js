@@ -3,21 +3,13 @@ import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import ImportIcon from "@material-ui/icons/CloudUpload";
 import DataControl from "../components/DataControl";
 import { switchMap } from "rxjs/operators";
 import { of } from "rxjs";
-
-
-function SuccessImport() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 function importDataTypeFormFor(targetDataType) {
     const dt = DataType.from({
@@ -109,7 +101,7 @@ const Import = ({ docked, dataType, onSubjectPicked, height }) => {
                         submitIcon={<ImportIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessImport}
+                        successControl={ExecutionMonitor}
                         value={value.current}/>
         </div>
     );
