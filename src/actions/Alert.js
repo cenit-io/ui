@@ -82,7 +82,7 @@ function Alert({ title, message, children, mainIcon, mainIconColor, smallIcon, s
             <Typography variant='subtitle1' className={classes.alignCenter}>
                 {message}
             </Typography>
-            <div className={clsx(classes.alignCenter, classes.padding)}>
+            <div className={clsx(classes.alignCenter, classes.padding, 'full-width')}>
                 {children}
             </div>
         </div>

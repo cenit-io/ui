@@ -39,6 +39,10 @@ const useStyles = makeStyles(theme => ({
     },
     refreshing: {
         margin: theme.spacing(2, 0)
+    },
+    progress: {
+        width: '100%',
+        padding: theme.spacing(1, 0)
     }
 }));
 
@@ -49,6 +53,7 @@ export function ExecutionMonitor({ value, mainIcon }) {
     const [state, setState] = useSpreadState({
         execution: value,
         delayIndex: 0,
+        taskProgress: 0,
         refreshKey: Random.string()
     });
 
@@ -56,7 +61,7 @@ export function ExecutionMonitor({ value, mainIcon }) {
     const classes = useStyles();
 
     const {
-        executionDataType, notificationDataType, delayIndex,
+        executionDataType, notificationDataType, delayIndex, taskProgress,
         execution, refreshKey, resultData, retrievingResult, refreshing
     } = state;
 
@@ -81,7 +86,7 @@ export function ExecutionMonitor({ value, mainIcon }) {
     }, []);
 
     useEffect(() => {
-        if (executionDataType && refreshKey) {
+        if (executionDataType && refreshKey && taskProgress < 100) {
             const subscription = of(true).pipe(
                 delay(1000 * (Delays[delayIndex] || 0)),
                 tap(() => setState({ refreshing: true })),
@@ -93,21 +98,33 @@ export function ExecutionMonitor({ value, mainIcon }) {
                         '}'
                 }))
             ).subscribe(remoteExecution => {
-                const nextDelay = AliveStatuses.includes(remoteExecution?.status) && delayIndex < Delays.length - 1
-                    ? delayIndex + 1
-                    : delayIndex;
-                setState(({ execution }) => ({
-                    execution: remoteExecution || execution,
-                    delayIndex: nextDelay,
-                    refreshKey: nextDelay === delayIndex ? null : refreshKey,
-                    refreshing: false
-                }));
+                setState(({ execution, taskProgress }) => {
+                    const currentProgress = remoteExecution?.task?.progress || taskProgress;
+                    if (currentProgress > taskProgress) {
+                        return {
+                            taskProgress: currentProgress,
+                            execution: remoteExecution,
+                            delayIndex: 2,
+                            refreshing: false
+                        };
+                    }
+                    const nextDelay = AliveStatuses.includes(remoteExecution?.status) && delayIndex < Delays.length - 1
+                        ? delayIndex + 1
+                        : delayIndex;
+                    return {
+                        taskProgress: currentProgress,
+                        execution: remoteExecution || execution,
+                        delayIndex: nextDelay,
+                        refreshKey: nextDelay === delayIndex ? null : refreshKey,
+                        refreshing: false
+                    };
+                });
             });
 
             return () => subscription.unsubscribe();
         }
 
-    }, [executionDataType, refreshKey, delayIndex]);
+    }, [executionDataType, refreshKey, delayIndex, taskProgress]);
 
     useEffect(() => {
         if (attachment) {
@@ -228,8 +245,14 @@ export function ExecutionMonitor({ value, mainIcon }) {
     return (
         <Alert {...statusAlert}
                title={title}>
-            <div className="flex column align-items-center">
+            <div className="flex column align-items-center full-width">
                 <TaskStatusViewer value={status} item={execution}/>
+                <div className={classes.progress}>
+                    <Typography component="div" variant="caption">
+                        {task.progress}%
+                    </Typography>
+                    <LinearProgress variant="determinate" value={task.progress} className="grow-1"/>
+                </div>
                 {refresh}
                 {result}
                 {error}
