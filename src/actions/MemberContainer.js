@@ -17,7 +17,7 @@ import { useSpreadState } from "../common/hooks";
 import FrezzerLoader from "../components/FrezzerLoader";
 import ContainerContext, { useContainerContext } from "./ContainerContext";
 import { useTenantContext } from "../layout/TenantContext";
-
+import * as pluralize from "pluralize";
 
 import "./Records";
 import "./DataType";
@@ -37,7 +37,7 @@ import './DataTypeConfig';
 import './Filter';
 import './Access';
 import './RegisterApp';
-import * as pluralize from "pluralize";
+import './ProcessFlow';
 
 const useActionContainerStyles = makeStyles(theme => ({
     toolbar: {
