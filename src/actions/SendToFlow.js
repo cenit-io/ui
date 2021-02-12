@@ -3,26 +3,19 @@ import ActionRegistry from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import { useContainerContext } from "./ContainerContext";
 import { of } from "rxjs";
 import { switchMap } from "rxjs/operators";
 import SvgIcon from "@material-ui/core/SvgIcon";
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 const SendToFlowIcon = () => (
     <SvgIcon style={{ display: 'block', transform: 'scale(-1,1)' }}>
         <path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/>
     </SvgIcon>
 );
-
-function Success() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
 
 function sendToFlowDataTypeFormFor(sourceDataType) {
     const dt = DataType.from({
@@ -102,7 +95,7 @@ const SendToFlow = ({ docked, dataType, onSubjectPicked, height }) => {
                         submitIcon={<SendToFlowIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={Success}
+                        successControl={ExecutionMonitor}
                         value={value.current}/>
         </div>
     );

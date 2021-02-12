@@ -27,6 +27,7 @@ import API from "../services/ApiService";
 import { Config } from "../common/Symbols";
 import { underscore } from "../common/strutls";
 import Loading from "../components/Loading";
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 const ReviewIcon = () => (
     <SvgIcon>
@@ -40,12 +41,6 @@ const useStyles = makeStyles(theme => ({
         margin: theme.spacing(1)
     }
 }));
-
-function SuccessPull() {
-    return (
-        <SuccessAlert mainIcon={ReviewIcon}/>
-    );
-}
 
 const MaxRecordsViews = 25;
 
@@ -333,6 +328,7 @@ function PullForm({ docked, dataType, onSubjectPicked, height }) {
                 ? API.get('setup', 'cross_shared_collection', shared_collection_id, { viewport: '{pull_parameters}' })
                 : of({ pull_parameters: [] })
         ).subscribe(({ pull_parameters }) => {
+            pull_parameters = pull_parameters || [];
             const schema = pullParametersSchema(pull_parameters);
             schema.properties.state = {};
             const formDataType = DataType.from({
@@ -375,7 +371,7 @@ function PullForm({ docked, dataType, onSubjectPicked, height }) {
                                submitIcon={<ReviewIcon/>}
                                onFormSubmit={handleFormSubmit}
                                onSubjectPicked={onSubjectPicked}
-                               successControl={SuccessPull}
+                               successControl={ExecutionMonitor}
                                value={value.current}/>;
         }
         return <Loading/>;

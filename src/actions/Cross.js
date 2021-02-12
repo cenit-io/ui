@@ -5,20 +5,12 @@ import { useSpreadState } from "../common/hooks";
 import { DataType } from "../services/DataTypeService";
 import Loading from "../components/Loading";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { switchMap } from "rxjs/operators";
 import { useContainerContext } from "./ContainerContext";
 import CrossIcon from "@material-ui/icons/SwapHoriz";
 import { FormRootValue } from "../services/FormValue";
 import { of } from "rxjs";
-
-
-function SuccessExport() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 const Cross = ({ docked, dataType, onSubjectPicked, height }) => {
 
@@ -89,7 +81,7 @@ const Cross = ({ docked, dataType, onSubjectPicked, height }) => {
                             submitIcon={<CrossIcon/>}
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
-                            successControl={SuccessExport}
+                            successControl={ExecutionMonitor}
                             value={value.current}/>
             </div>
         );

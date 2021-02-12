@@ -3,8 +3,6 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import PullIcon from "@material-ui/icons/SaveAlt";
@@ -14,13 +12,7 @@ import { useSpreadState } from "../common/hooks";
 import { ClickAndRun } from "./RunAlgorithm";
 import Loading from "../components/Loading";
 import { underscore } from "../common/strutls";
-
-
-function SuccessImport() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 function pullParametersSchema(pull_parameters) {
     const properties = {};
@@ -111,7 +103,7 @@ const Pull = ({ dataType, docked, record, onSubjectPicked, height }) => {
                             submitIcon={<PullIcon/>}
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
-                            successControl={SuccessImport}
+                            successControl={ExecutionMonitor}
                             value={value.current}
                             noSubmitButton={!pull_parameters.length}
                             noJSON={!pull_parameters.length}/>

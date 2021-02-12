@@ -3,13 +3,11 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
-import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import { of } from "rxjs";
 import { switchMap } from "rxjs/operators";
 import SvgIcon from "@material-ui/core/SvgIcon";
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 const PushIcon = () => (
     <SvgIcon style={{ display: 'block', transform: 'rotate(180deg)' }}>
@@ -17,12 +15,6 @@ const PushIcon = () => (
             d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"/>
     </SvgIcon>
 );
-
-function SuccessPush() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
 
 const PushCollection = ({ docked, record, onSubjectPicked, height }) => {
 
@@ -75,7 +67,7 @@ const PushCollection = ({ docked, record, onSubjectPicked, height }) => {
                         submitIcon={<PushIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessPush}
+                        successControl={ExecutionMonitor}
                         value={value.current}/>
         </div>
     );

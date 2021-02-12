@@ -5,6 +5,10 @@ Issues & next features
 
 ### Issues
 
+- Pull-import execution monitor leaks
+
+- "\xC3" from ASCII-8BIT to UTF-8
+
 - Filter PUSH target collections by origins depending on the super user status.
 
 - Fix xs view for large breadcrumb on actions toolbar.
@@ -44,6 +48,8 @@ Issues & next features
 - When filtering booleans (and probably other types) $eq: null cats null to false and filter does not work
 
 ### Features
+
+- Use ExecutionMonitor to track collection create/update.
 
 - Add styles and navigation links to the editor breadcrumb.
 

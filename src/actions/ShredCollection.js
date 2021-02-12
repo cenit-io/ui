@@ -1,21 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import ShredIcon from "@material-ui/icons/DeleteSweep";
 import WarningAlert from "./WarningAlert";
 import { useContainerContext } from "./ContainerContext";
 import { tap } from "rxjs/operators";
-
-function SuccessShred() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
 
 function ShredAlert() {
     const { record } = useContainerContext()[0];
@@ -50,7 +42,6 @@ const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) =
                         submitIcon={<ShredIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessShred}
                         noJSON={true}/>
         </div>
     );

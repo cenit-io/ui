@@ -3,8 +3,6 @@ import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import { FormRootValue } from "../services/FormValue";
 import PullImportIcon from "@material-ui/icons/SaveAlt";
@@ -14,16 +12,7 @@ import { of } from "rxjs";
 import { useSpreadState } from "../common/hooks";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import * as pluralize from "pluralize";
-
-function SuccessImport() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
-
-function importDataTypeFormFor(targetDataType) {
-
-}
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
 
@@ -38,7 +27,7 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const [state, setState] = useSpreadState();
 
-    const { formDataType, formTitle } = state;
+    const { formDataType } = state;
 
     useEffect(() => {
         const subscription = dataType.getTitle().subscribe(
@@ -138,7 +127,7 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
                         submitIcon={<PullImportIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessImport}
+                        successControl={ExecutionMonitor}
                         value={value.current}/>
         </div>
     );

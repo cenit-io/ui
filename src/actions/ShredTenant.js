@@ -1,10 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
 import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { Config } from "../common/Symbols";
 import ShredIcon from "@material-ui/icons/DeleteSweep";
 import WarningAlert from "./WarningAlert";
@@ -13,7 +12,7 @@ import { map } from "rxjs/operators";
 
 function SuccessShred() {
     return (
-        <SuccessAlert mainIcon={DoneIcon}/>
+        <SuccessAlert mainIcon={ShredIcon}/>
     );
 }
 
@@ -25,7 +24,7 @@ function ShredAlert() {
                          mainIcon={ShredIcon}/>;
 }
 
-const ShredTenant = ({ docked, record, onSubjectPicked, height, onClose }) => {
+const ShredTenant = ({ docked, record, onSubjectPicked, height }) => {
 
     const formDataType = useRef(DataType.from({
         name: 'Shred',

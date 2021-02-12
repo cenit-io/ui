@@ -3,19 +3,11 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
-import SuccessAlert from "./SuccessAlert";
-import DoneIcon from "@material-ui/icons/Done";
 import { switchMap } from "rxjs/operators";
 import ShareIcon from "@material-ui/icons/Share";
 import { FormRootValue } from "../services/FormValue";
 import { of } from "rxjs";
-
-
-function SuccessShare() {
-    return (
-        <SuccessAlert mainIcon={DoneIcon}/>
-    );
-}
+import { ExecutionMonitor } from "./ExecutionMonitor";
 
 const Share = ({ docked, record, onSubjectPicked, height }) => {
 
@@ -83,7 +75,7 @@ const Share = ({ docked, record, onSubjectPicked, height }) => {
                         submitIcon={<ShareIcon/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessShare}
+                        successControl={ExecutionMonitor}
                         value={value.current}/>
         </div>
     );
