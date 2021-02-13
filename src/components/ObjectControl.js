@@ -1,6 +1,5 @@
 import { map, switchMap } from "rxjs/operators";
 import { isObservable, of } from "rxjs";
-import { DataType, Property } from "../services/DataTypeService";
 import FormContex from "../services/FormContext";
 import PropertyControl from "./PropertyControl";
 import { FormGroup } from "./FormGroup";
@@ -10,11 +9,9 @@ import React, { useCallback, useEffect, useReducer } from "react";
 import { FETCHED, NEW } from "../common/Symbols";
 import spreadReducer from "../common/spreadReducer";
 import { DataTypeSubject } from "../services/subjects";
-import { tap } from "rxjs/internal/operators/tap";
 import Collapsible from "./Collapsible";
 import { useFormContext } from "./FormContext";
 import FrezzerLoader from "./FrezzerLoader";
-import { eq } from "../services/BLoC";
 import zzip from "../util/zzip";
 
 function editFields(config) {
@@ -32,17 +29,18 @@ function editFields(config) {
     }
 }
 
-function editViewport(config, dataType, ...plus) {
+function editViewport(config, dataType, embedded, ...plus) {
     const editConfig = config.actions?.edit;
-    if (editConfig?.viewport) {
+    const configViewport = (embedded && editConfig?.embeddedViewport) || editConfig?.viewport;
+    if (configViewport) {
         if (plus.length) {
-            let viewport = editConfig.viewport.trim();
+            let viewport = configViewport.trim();
             if (viewport.endsWith('}')) {
                 viewport = viewport.substring(0, viewport.length - 1);
             }
             return `${viewport} ${plus.join(' ')}}`;
         }
-        return editConfig.viewport;
+        return configViewport;
     }
     const fields = editFields(config);
     if (fields) {
@@ -167,7 +165,7 @@ function ObjectControl(props) {
                     switchMap(config => {
                         const configViewport = v[NEW]
                             ? config.actions?.new?.viewport
-                            : editViewport(config, getDataType(), 'id');
+                            : editViewport(config, getDataType(), value.jsonPath() !== '$', 'id');
 
                         if (configViewport) {
                             if (typeof configViewport === 'string') {
