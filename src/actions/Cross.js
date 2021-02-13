@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import ActionRegistry from "./ActionRegistry";
+import ActionRegistry, { CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { useSpreadState } from "../common/hooks";
 import { DataType } from "../services/DataTypeService";
@@ -94,6 +94,7 @@ export default ActionRegistry.register(Cross, {
     bulkable: true,
     icon: CrossIcon,
     title: 'Cross',
+    crud: [CRUD.update],
     onlyFor: [
         {
             "namespace": "Setup",
