@@ -32,6 +32,7 @@ import AccessGrantIcon from "../icons/AccessGrantIcon";
 import ProviderIcon from "../icons/ProviderIcon";
 import OauthScopesIcon from "../icons/OauthScopesIcon";
 import WorkflowIcon from "../icons/WorkflowIcon";
+import ResourceIcon from "@material-ui/icons/WorkOutline";
 
 export default {
     groups: [
@@ -162,7 +163,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Resource'
-                    }
+                    },
+                    icon: <ResourceIcon component="icon"/>
                 },
                 {
                     type: DataTypeSubject.type,

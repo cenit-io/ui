@@ -23,7 +23,10 @@ export default function FlowFormControl({
                                         }) {
 
     const [state, setState] = useSpreadState({
-        formValue: {}
+        formValue: {},
+        webhook: {
+            editDisabled: true
+        }
     });
 
     const [hidden, setHidden] = useSpreadState(
@@ -171,7 +174,7 @@ export default function FlowFormControl({
 
     useEffect(() => {
         const subscription = valueOf('translator').subscribe(translator => {
-            const hidingGetaway = !translator || (translator.type !== 'Export' && translator.type !== 'Import');
+            const hidingGateway = !translator || (translator.type !== 'Export' && translator.type !== 'Import');
             const { data_type_scope } = value.get();
             const hidden = {
                 lot_size: (
@@ -180,13 +183,13 @@ export default function FlowFormControl({
                     !data_type_scope ||
                     data_type_scope === 'Event source'
                 ),
-                webhook: hidingGetaway,
-                authorization: hidingGetaway,
-                connection_role: hidingGetaway,
+                webhook: hidingGateway,
+                authorization: hidingGateway,
+                connection_role: hidingGateway,
                 before_submit: !translator || translator.type !== 'Import',
                 response_translator: !translator || translator.type !== 'Export',
-                notify_request: hidingGetaway,
-                notify_response: hidingGetaway
+                notify_request: hidingGateway,
+                notify_response: hidingGateway
             };
             Object.keys(hidden).forEach(
                 key => hidden[key] && value.propertyValue(key).delete()
