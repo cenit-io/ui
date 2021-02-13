@@ -775,17 +775,25 @@ export class DataType {
     }
 
     straightTitleFor(item) {
-        return zzip(this.getSchema(), this.getTitle()).pipe(
-            switchMap(([schema, dtTitle]) => {
-                if (schema.label) {
-                    return from(LiquidEngine.parseAndRender(schema.label, item)).pipe(
-                        map(
-                            title => title || `${dtTitle} ${item.id || '(blank)'}`
-                        )
-                    );
+        return this.config().pipe(
+            switchMap(config => {
+                if (config.itemLabel) {
+                    return of(config.itemLabel(item));
                 }
-                return of(
-                    item.title || item.name || `${dtTitle} ${item.id || '(blank)'}`
+
+                return zzip(this.getSchema(), this.getTitle()).pipe(
+                    switchMap(([schema, dtTitle]) => {
+                        if (schema.label) {
+                            return from(LiquidEngine.parseAndRender(schema.label, item)).pipe(
+                                map(
+                                    title => title || `${dtTitle} ${item.id || '(blank)'}`
+                                )
+                            );
+                        }
+                        return of(
+                            item.title || item.name || `${dtTitle} ${item.id || '(blank)'}`
+                        );
+                    })
                 );
             })
         );
@@ -794,6 +802,18 @@ export class DataType {
     titlesFor(...items) {
         items = [...items];
 
+        return this.config().pipe(switchMap(
+            config => {
+                if (config.itemLabel) {
+                    return of(items.map(item => config.itemLabel(item)))
+                }
+
+                return this.computeTitlesFor(...items);
+            }
+        ));
+    }
+
+    computeTitlesFor(...items) {
         return zzip(this.getSchema(), this.titleProps()).pipe(
             switchMap(
                 ([schema, titleProps]) => {
@@ -856,7 +876,7 @@ export class DataType {
                     );
                 }
             )
-        )
+        );
     }
 
     post(data, opts = {}) {
