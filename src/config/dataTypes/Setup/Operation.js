@@ -5,6 +5,7 @@ import WebhookFilledIcon from "../../../icons/WebhookFilledIcon";
 export default {
     title: 'Operation',
     icon: <WebhookFilledIcon/>,
+    titleViewport: '{resource method}',
     itemLabel: ({ resource, method }) => {
         if (resource) {
             const { namespace, name } = resource;
