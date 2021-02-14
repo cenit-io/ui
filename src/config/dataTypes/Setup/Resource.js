@@ -8,7 +8,7 @@ export default {
     actions: {
         index: {
             fields: ['namespace', 'name', 'path', 'description', 'operations', 'updated_at'],
-            viewport: '{namespace name path description operations {id method} updated_at}'
+            viewport: '{id namespace name path description operations {id method} updated_at}'
         },
         new: {
             fields: ['namespace', 'name', 'path', 'description', 'operations', 'parameters', 'headers', 'template_parameters']

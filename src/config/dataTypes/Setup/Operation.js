@@ -19,6 +19,9 @@ export default {
         index: {
             fields: ['resource', 'method', 'description', 'parameters', 'updated_at']
         },
+        new: {
+            fields: ['method', 'description', 'parameters']
+        },
         edit: {
             fields: ['method', 'description', 'parameters'],
             viewport: '{resource {id namespace name} method description parameters}',

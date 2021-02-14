@@ -164,7 +164,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Resource'
                     },
-                    icon: <ResourceIcon component="icon"/>
+                    icon: <ResourceIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
