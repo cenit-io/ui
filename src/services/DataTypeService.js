@@ -139,7 +139,7 @@ export class DataType {
             }
             return this.name;
         }
-        return `Dt${this.id}`;
+        return this.id && `Dt${this.id}`;
     }
 
     getSchema() {
@@ -821,6 +821,9 @@ export class DataType {
     }
 
     polymorphicTitlesFor(...items) {
+        if (!this.type_name()) {
+            return this.titlesFor(...items);
+        }
         const typeHash = {};
         const indices = {};
         items.forEach((item, index) => {
