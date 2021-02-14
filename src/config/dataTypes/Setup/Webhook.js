@@ -3,5 +3,6 @@ import WebhookFilledIcon from "../../../icons/WebhookFilledIcon";
 
 export default {
     title: 'Webhook',
-    icon: <WebhookFilledIcon/>
+    icon: <WebhookFilledIcon/>,
+    titleViewport: '{id namespace name method resource}'
 };

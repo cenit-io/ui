@@ -744,9 +744,16 @@ export class DataType {
         });
     }
 
-    titleViewPort(...plus) {
-        return this.titleProps().pipe(
-            map(props => `{${props.map(p => p.name).concat(plus).join(' ')}}`)
+    titleViewport(...plus) {
+        return this.config().pipe(
+            switchMap(config => {
+                if (config.titleViewport) {
+                    return of(config.titleViewport);
+                }
+                return this.titleProps().pipe(
+                    map(props => `{${props.map(p => p.name).concat(plus).join(' ')}}`)
+                )
+            })
         );
     }
 
@@ -771,7 +778,7 @@ export class DataType {
     }
 
     titleFor(item) {
-        return this.titlesFor(item).pipe(map(titles => titles[0]));
+        return this.polymorphicTitlesFor(item).pipe(map(titles => titles[0]));
     }
 
     straightTitleFor(item) {
@@ -813,6 +820,39 @@ export class DataType {
         ));
     }
 
+    polymorphicTitlesFor(...items) {
+        const typeHash = {};
+        const indices = {};
+        items.forEach((item, index) => {
+            const type = item._type || this.type_name();
+            let typeItems = typeHash[type];
+            let typeIndices = indices[type];
+            if (!typeItems) {
+                typeItems = typeHash[type] = [];
+                typeIndices = indices[type] = [];
+            }
+            typeItems.push(item);
+            typeIndices.push(index);
+        });
+        return zzip(...Object.keys(typeHash).map(type => this.findByName(type))).pipe(
+            switchMap(dataTypes => zzip(...dataTypes.map(
+                dataType => dataType.titlesFor(...typeHash[dataType.type_name()])
+            )).pipe(
+                map(titlesByType => {
+                    const titles = [];
+                    titlesByType.forEach((titleGroup, dataTypeIndex) => {
+                        const type = dataTypes[dataTypeIndex].type_name();
+                        titleGroup.forEach((title, index) => {
+                            const itemIndex = indices[type][index];
+                            titles[itemIndex] = title;
+                        });
+                    });
+                    return titles;
+                })
+            ))
+        );
+    }
+
     computeTitlesFor(...items) {
         return zzip(this.getSchema(), this.titleProps()).pipe(
             switchMap(
@@ -834,7 +874,7 @@ export class DataType {
                     const missingIds = Object.keys(missingProps);
                     let completeItems;
                     if (missingIds.length > 0) {
-                        completeItems = this.titleViewPort('_id').pipe(
+                        completeItems = this.titleViewport('_id').pipe(
                             switchMap(
                                 viewport => this.list({
                                     headers: {
@@ -953,7 +993,7 @@ export class DataType {
                 props => zzip(
                     ...props.map(
                         p => p.isModel().pipe(
-                            switchMap(model => (model && p.dataType.titleViewPort('_id')) || of(''))
+                            switchMap(model => (model && p.dataType.titleViewport('_id')) || of(''))
                         )
                     )
                 ).pipe(
@@ -1040,7 +1080,7 @@ export class Property {
         return this.isModel().pipe(
             switchMap(model => {
                 if (model) {
-                    return this.dataType.titleViewPort('_id').pipe(
+                    return this.dataType.titleViewport('_id').pipe(
                         map(viewport => `${this.name} ${viewport}`)
                     );
                 }

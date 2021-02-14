@@ -61,7 +61,7 @@ function RecordsView({ entry, records, collectionDataType }) {
             switchMap(dataType => zzip(
                 of(dataType),
                 dataType.getTitle(),
-                dataType.titlesFor(...records.slice(0, Math.min(MaxRecordsViews, records.length)))
+                dataType.polymorphicTitlesFor(...records.slice(0, Math.min(MaxRecordsViews, records.length)))
                 )
             )
         ).subscribe(

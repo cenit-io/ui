@@ -404,7 +404,7 @@ function RefOneValue({ property, operator, value, onChange, disabled }) {
             }
         });
         if (titleLess.length) {
-            const subscription = property.dataType.titlesFor(...titleLess).subscribe(
+            const subscription = property.dataType.polymorphicTitlesFor(...titleLess).subscribe(
                 titles => {
                     titles.forEach((title, index) => titleLess[index].title = title);
                     setState({});

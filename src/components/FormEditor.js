@@ -140,7 +140,7 @@ const useStyles = makeStyles(theme => ({
 const defaultFormProcessor = (viewport, rootId, onFormSubmit, onSubmitDone) => (formDataType, value) => {
     const submitAction = onFormSubmit
         ? onFormSubmit(formDataType, value)
-        : (viewport || formDataType.titleViewPort('_id')).pipe(
+        : (viewport || formDataType.titleViewport('_id')).pipe(
             switchMap(viewport => formDataType.post(value.get(), {
                 viewport,
                 add_only: rootId,
@@ -238,7 +238,7 @@ const FormEditor = ({
             value: isFormValue(value) ? value : new FormRootValue({ ...value }),
             dataType,
             title: value => dataType.titleFor(value),
-            viewport: dataType.titleViewPort('_id'),
+            viewport: dataType.titleViewport('_id'),
             callback: value => {
                 setId(value.id);
                 setSubmitResponse(value);

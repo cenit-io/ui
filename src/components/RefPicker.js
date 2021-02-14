@@ -12,12 +12,13 @@ import {
 import Random from "../util/Random";
 import '../common/FlexBox.css';
 import { switchMap, delay } from "rxjs/operators";
-import { of, zip } from "rxjs";
+import { of } from "rxjs";
 import Pagination from "@material-ui/lab/Pagination";
 import Skeleton from "@material-ui/lab/Skeleton";
 import { makeStyles } from "@material-ui/core/styles";
 import clsx from "clsx";
 import { useSpreadState } from "../common/hooks";
+import zzip from "../util/zzip";
 
 const useStyles = makeStyles(theme => ({
     list: {
@@ -72,7 +73,7 @@ function RefPicker({
     useEffect(() => {
         if (query !== null) {
             setState({ loading: true });
-            const subscription = dataType.titleViewPort(...(additionalViewportProps || [])).pipe(
+            const subscription = dataType.titleViewport(...(additionalViewportProps || [])).pipe(
                 delay(700),
                 switchMap(viewport => dataType.find(query, {
                     viewport, page, selector: baseSelector
@@ -81,7 +82,7 @@ function RefPicker({
                     ({ items, total_pages }) => {
                         if (items) {
                             setState({ total_pages });
-                            return zip(of(items), dataType.titlesFor(...items));
+                            return zzip(of(items), dataType.polymorphicTitlesFor(...items));
                         } else {
                             setState({ items, loading: false, itemsQuery: query, total_pages: 0 });
                             return of([null, null]);
