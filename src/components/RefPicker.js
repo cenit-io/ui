@@ -75,7 +75,7 @@ function RefPicker({
             setState({ loading: true });
             const subscription = dataType.titleViewport(...(additionalViewportProps || [])).pipe(
                 delay(700),
-                switchMap(viewport => dataType.find(query, {
+                switchMap(viewport => dataType.queryFind(query, {
                     viewport, page, selector: baseSelector
                 })),
                 switchMap(

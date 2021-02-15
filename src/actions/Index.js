@@ -393,8 +393,8 @@ function DefaultIndex({ dataType, subject, height }) {
 
     useEffect(() => {
         if (itemsViewport) {
-            setContainerState({ loading: true })
-            const subscription = dataType.find('', {
+            setContainerState({ loading: true });
+            const subscription = dataType.find({
                 limit: limit,
                 page: page,
                 sort: { _id: -1 },

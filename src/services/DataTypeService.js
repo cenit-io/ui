@@ -237,9 +237,15 @@ export class DataType {
     queryProps() {
         return this.allProperties().pipe(
             switchMap(props => zzip(...props.map(p => p.getSchema())).pipe(
-                map(
-                    schemas => schemas.map(
-                        (schema, index) => isSimpleSchema(schema) ? props[index] : null
+                map(schemas => schemas.map(
+                    (schema, index) => (
+                        schema.type === 'string' &&
+                        schema.format !== 'date' &&
+                        schema.format !== 'date-time' &&
+                        schema.format !== 'time' &&
+                        schema.format !== 'symbol' &&
+                        props[index].name !== '_type'
+                    ) ? props[index] : null
                     ).filter(p => p)
                 )
             ))
@@ -679,55 +685,73 @@ export class DataType {
             });
     }
 
-    find(query, opts = null) {
+    queryFind(query, opts = null) {
+        query = query?.toString()?.trim() || '';
+        if (!query) {
+            return this.find(opts);
+        }
+
+        return this.descendants().pipe(
+            switchMap(dataTypes => zzip(...[this, ...dataTypes].map(dt => dt.isAbstract())).pipe(
+                map(abstractFlags => dataTypes.map((dt, index) => abstractFlags[index] && dt).filter(dt => dt))
+            )),
+            switchMap(dataTypes => zzip(...dataTypes.map(
+                dataType => dataType.queryProps()
+            )).pipe(
+                switchMap(queriesProps => {
+                    let dataTypesSelectors = queriesProps.map((queryProps, index) => {
+                        const $and = [];
+                        const $or = queryProps.map(
+                            prop => ({ [prop.name]: { '$regex': `(?i)${query}` } })
+                        );
+                        $and.push({ $or });
+                        if (dataTypes.length > 1) {
+                            $and.push({ _type: dataTypes[index].type_name() })
+                        }
+                        return { $and };
+                    });
+                    if (dataTypesSelectors.length > 1) {
+                        dataTypesSelectors = { $or: dataTypesSelectors };
+                    } else {
+                        dataTypesSelectors = dataTypesSelectors[0];
+                    }
+                    return of(dataTypesSelectors);
+                }),
+                switchMap(selector => {
+                    if (opts?.selector) {
+                        selector = {
+                            $and: [
+                                selector,
+                                opts.selector
+                            ]
+                        };
+                    }
+
+                    return this.find({ ...opts, selector });
+                })
+            ))
+        );
+
+    }
+
+    find(opts = null) {
         const limit = opts?.limit || 5;
         const page = opts?.page || 1;
         const sort = opts?.sort || {};
-        let selector = opts?.selector || {};
-        query = query?.toString()?.trim() || '';
+        const selector = opts?.selector || {};
         const params = { limit, page };
-        const props = opts?.props ||
-            this.titleProps().pipe(
-                switchMap(
-                    titleProps => zzip(
-                        ...titleProps.map(p => p.is('string')
-                        )
-                    ).pipe(
-                        map(
-                            strFlags => strFlags.map(
-                                (flag, index) => flag && titleProps[index]).filter(p => p)
-                        )
-                    )
-                )
-            ); // TODO Query on other types than string and prevent no query props
 
-        return props.pipe(
-            switchMap(queryProps => {
-                if (query.length > 0) {
-                    const $or = queryProps.map(
-                        prop => ({ [prop.name]: { '$regex': `(?i)${query}` } })
-                    );
-                    selector = {
-                        $and: [
-                            { $or },
-                            selector
-                        ]
-                    };
-                }
-                return API.get('setup', 'data_type', this.id, 'digest', {
+        return ((opts?.viewport && of(opts.viewport)) || this.shallowViewPort()).pipe(
+            switchMap(viewport => API.get('setup', 'data_type', this.id, 'digest', {
                     params,
                     headers: {
-                        'X-Template-Options': JSON.stringify({
-                            viewport: opts.viewport || (
-                                '{_id ' + (opts.viewportProps || queryProps).map(p => p.name).join(' ') + '}'
-                            ),
-                            polymorphic: true
-                        }),
+                        'X-Template-Options': JSON.stringify({ viewport, polymorphic: true }),
                         'X-Query-Options': JSON.stringify({ sort }),
                         'X-Query-Selector': JSON.stringify(selector)
                     }
-                }).pipe(map(response => response || { items: [] }));
-            })
+                })
+            ),
+            map(response => response || { items: [] })
         );
     }
 
