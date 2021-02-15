@@ -17,6 +17,7 @@ import FormContext from "./FormContext";
 import { useSpreadState } from "../common/hooks";
 import { DataTypeSubject } from "../services/subjects";
 import { FETCHED } from "../common/Symbols";
+import { CRUD } from "../actions/ActionRegistry";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -41,7 +42,10 @@ const FormView = ({
     const classes = useStyles();
     const theme = useTheme();
 
-    const { formDataType, dataTypeConfig, errors, descendants, titles, descendantsCount, initialFormValue } = state;
+    const {
+        formDataType, dataTypeConfig, errors, initialFormValue,
+        descendants, titles, descendantsCount, configs
+    } = state;
 
     useEffect(() => {
         let subscription;
@@ -70,24 +74,26 @@ const FormView = ({
                     }
                 }),
                 switchMap(
-                    descendants => zzip(
-                        of(descendants),
-                        zzip(...descendants.map(d => d.isAbstract()))
+                    descendants => zzip(...descendants.map(d => d.isAbstract())).pipe(
+                        map(
+                            abstracts => descendants = descendants.filter((_, index) => !abstracts[index])
+                        ),
+                        tap(
+                            () => setState({ descendants })
+                        ),
+                        switchMap(
+                            () => zzip(...descendants.map(d => d.getTitle()))
+                        ),
+                        tap(
+                            titles => setState({ titles })
+                        ),
+                        switchMap(
+                            () => zzip(...descendants.map(d => d.config()))
+                        )
                     )
-                ),
-                map(
-                    ([descendants, abstracts]) => descendants.filter(
-                        (_, index) => !abstracts[index]
-                    )
-                ),
-                tap(
-                    descendants => setState({ descendants })
-                ),
-                switchMap(
-                    descendants => zzip(...descendants.map(d => d.getTitle()))
                 )
             ).subscribe(
-                titles => setState({ titles })
+                configs => setState({ configs })
             );
         }
 
@@ -156,19 +162,19 @@ const FormView = ({
                                    onFetched={handleFetched}/>;
     } else {
         const textSkeleton = <Skeleton variant="text"/>;
-        if (titles) {
-            control = titles.map(
-                (title, index) => (
+        if (configs) {
+            control = configs.map(
+                (config, index) => ((!config.crud || config.crud.includes(CRUD.create)) &&
                     <ListItem button
                               key={descendants[index].id}
                               onClick={() => setState({ formDataType: descendants[index] })}>
                         <ListItemIcon>
-                            {index % 2 === 0 ? <InboxIcon/> : <MailIcon/>}
+                            {config.icon}
                         </ListItemIcon>
-                        <ListItemText primary={title}/>
+                        <ListItemText primary={titles[index]}/>
                     </ListItem>
                 )
-            );
+            ).filter(item => item);
         } else if (descendantsCount) {
             const iconSkeleton = <Skeleton variant="circle"
                                            width={theme.spacing(3)}
