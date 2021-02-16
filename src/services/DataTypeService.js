@@ -735,22 +735,33 @@ export class DataType {
     }
 
     find(opts = null) {
-        const limit = opts?.limit || 5;
-        const page = opts?.page || 1;
-        const sort = opts?.sort || {};
-        const selector = opts?.selector || {};
-        const params = { limit, page };
-
         return ((opts?.viewport && of(opts.viewport)) || this.shallowViewPort()).pipe(
-            switchMap(viewport => API.get('setup', 'data_type', this.id, 'digest', {
-                    params,
-                    headers: {
-                        'X-Template-Options': JSON.stringify({ viewport, polymorphic: true }),
-                        'X-Query-Options': JSON.stringify({ sort }),
-                        'X-Query-Selector': JSON.stringify(selector)
-                    }
-                })
-            ),
+            switchMap(viewport => {
+                const limit = opts?.limit || 5;
+                const page = opts?.page || 1;
+                const sort = opts?.sort || {};
+                const params = { limit, page };
+
+                const headers = {
+                    'X-Template-Options': JSON.stringify({ viewport, polymorphic: true }),
+                    'X-Query-Options': JSON.stringify({ sort })
+                };
+
+                const request = ['setup', 'data_type', this.id, 'digest'];
+
+                const query = opts.query;
+
+                if (query) {
+                    params.query = query;
+                    request.push('search');
+                } else {
+                    headers['X-Query-Selector'] = JSON.stringify(opts.selector || {});
+                }
+
+                request.push({ params, headers });
+
+                return API.get(...request);
+            }),
             map(response => response || { items: [] })
         );
     }
