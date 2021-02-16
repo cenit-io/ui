@@ -25,8 +25,6 @@ Issues & next features
 
 - Data types and records names
 
-- Copy doesn't work on readonly codemirror controls.
-
 - Brake large titles with ellipsis.
 
 - Updating container context record on forms onUpdate
