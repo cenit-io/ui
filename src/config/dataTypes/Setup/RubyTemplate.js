@@ -2,7 +2,7 @@ import React from "react";
 import TemplateFilledIcon from "../../../icons/TemplateFilledIcon";
 import StringCodeControl from "../../../components/StringCodeControl";
 import AutocompleteControl from "../../../components/AutocompleteControl";
-import { templateMimeOrchestrator } from "./Template";
+import templateMimeOrchestrator  from "../../orchestrators/templateMimeOrchestrator";
 
 const orchestrator = templateMimeOrchestrator('text/x-ruby');
 
