@@ -207,7 +207,7 @@ function ObjectControl(props) {
         if (orchestrator) {
             const subscription = value.changed().subscribe(
                 v => {
-                    let newState = orchestrator(v, orchestratorState || {}, value);
+                    let newState = orchestrator(v, orchestratorState || {}, value, { readOnly });
                     if (newState) {
                         if (!isObservable(newState)) {
                             newState = of(newState);
@@ -220,9 +220,10 @@ function ObjectControl(props) {
                     }
                 }
             );
+            value.changed().next(value.get());
             return () => subscription.unsubscribe();
         }
-    }, [orchestrator, orchestratorState, value]);
+    }, [orchestrator, orchestratorState, value, readOnly]);
 
     useEffect(() => {
         if (dynamicConfig) {
