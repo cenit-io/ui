@@ -44,7 +44,7 @@ const FormView = ({
 
     const {
         formDataType, dataTypeConfig, errors, initialFormValue,
-        descendants, titles, descendantsCount, configs
+        descendants, titles, descendantsCount, configs, configProps
     } = state;
 
     useEffect(() => {
@@ -140,6 +140,23 @@ const FormView = ({
         }
     }, [value, submitter, viewport, formDataType, rootId, onFormSubmit]);
 
+    useEffect(() => {
+        if (dataTypeConfig) {
+            const { formViewControlProps } = dataTypeConfig;
+            if (formViewControlProps) {
+                if (typeof formViewControlProps === 'function') {
+                    const subscription = value.changed().subscribe(
+                        v => setState({configProps: formViewControlProps(v)})
+                    );
+                    value.changed().next(value.get());
+                    return () => subscription.unsubscribe();
+                } else {
+                    setState({ configProps: formViewControlProps });
+                }
+            }
+        }
+    }, [dataTypeConfig, value]);
+
     const handleFetched = initialFormValue => {
         setState({ initialFormValue });
         onUpdate && onUpdate(initialFormValue);
@@ -151,13 +168,14 @@ const FormView = ({
 
     if (dataType && dataTypeConfig) {
         const FormViewControl = dataTypeConfig.formViewControl || ObjectControl;
-        control = <FormViewControl dataType={formDataType}
+        control = <FormViewControl disabled={disabled}
+                                   readOnly={readOnly}
+                                   {...configProps}
+                                   dataType={formDataType}
                                    width={width}
                                    height={formHeight}
                                    value={value}
                                    errors={errors}
-                                   disabled={disabled}
-                                   readOnly={readOnly}
                                    onStack={onStack}
                                    onFetched={handleFetched}/>;
     } else {
