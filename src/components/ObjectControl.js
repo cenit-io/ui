@@ -182,7 +182,8 @@ function ObjectControl(props) {
                         return rootDataType.get(rootId, {
                             viewport,
                             jsonPath,
-                            with_references: true
+                            with_references: true,
+                            include_id: true
                         });
                     })
                 ).subscribe(

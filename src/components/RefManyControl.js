@@ -95,8 +95,8 @@ export default function RefManyControl({ title, property, value, onChange, onSta
     };
 
     const handleSelect = index => () => {
-        onStack({ // TODO Optimize by passing value with title props
-            value: new FormRootValue(value.indexValue(index).get()),
+        onStack({
+            value: new FormRootValue({ id: value.indexValue(index).get().id }),
             dataType: property.dataType,
             title: v => property.dataType.titleFor(v).pipe(map(title => `[${property.name} #${index}] ${title}`)),
             callback: item => property.dataType.titleFor(item).subscribe( //TODO sanitize with unsubscribe
