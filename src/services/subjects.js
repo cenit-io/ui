@@ -7,7 +7,6 @@ import ConfigService from "./ConfigService";
 import CollectionContainer from "../actions/CollectionContainer";
 import MemberContainer from "../actions/MemberContainer";
 import { Cache, Config, Subject as subj, TitlePipe as titlePipe } from '../common/Symbols';
-import { preprocess } from "../config/config";
 import zzip from "../util/zzip";
 import pluralize from 'pluralize';
 import Menu from "../components/Menu";
@@ -22,6 +21,28 @@ const fileIcon = <FileFilledIcon/>;
 const documentIcon = <DocumentTypeRecordsFilledIcon/>;
 const documentTypeIcon = <DocumentTypeFilledIcon/>;
 const fileTypeIcon = <FileTypeFilledIcon/>;
+
+function preprocess(config) {
+    let configFields = config.fields;
+    if (!configFields) {
+        config.fields = configFields = {};
+    }
+    Object.keys(config.groups || {}).forEach(
+        group => {
+            const groupConfig = config.groups[group];
+            (groupConfig.fields || []).forEach(
+                fieldName => {
+                    let fieldConfig = configFields[fieldName];
+                    if (!fieldConfig) {
+                        configFields[fieldName] = fieldConfig = {};
+                    }
+                    fieldConfig.group = group;
+                }
+            );
+        }
+    );
+    return config;
+}
 
 class BasicSubject {
     constructor(attrs = {}) {
