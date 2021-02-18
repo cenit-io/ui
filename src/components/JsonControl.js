@@ -1,11 +1,11 @@
-import React, { useEffect, useReducer, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import CodeMirrorControl from "./CodeMirrorControl";
-import spreadReducer from "../common/spreadReducer";
 import scriptLoader from 'react-async-script-loader';
 import { interval, Subject } from "rxjs";
 import { debounce } from "rxjs/operators";
 import { FormRootValue } from "../services/FormValue";
 import { useFormContext } from "./FormContext";
+import { useSpreadState } from "../common/hooks";
 
 const addons = [
     ['lint', 'lint.js'],
@@ -24,7 +24,7 @@ const jsonStringify = value => JSON.stringify(value, null, 2);
 
 function JsonControl({ onChange, onError, value, ...otherProps }) {
 
-    const [state, setState] = useReducer(spreadReducer, {
+    const [state, setState] = useSpreadState({
         css: customCSS,
         errorDebounce: new Subject()
     });
