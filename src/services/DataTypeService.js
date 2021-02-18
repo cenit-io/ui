@@ -558,13 +558,21 @@ export class DataType {
     }
 
     getTitle() {
-        return this.getSchema().pipe(
-            map(schema => {
-                const title = schema && schema['title'];
+        return this.config().pipe(
+            switchMap(({ title }) => {
                 if (title) {
-                    return title.toString();
+                    return of(title);
                 }
-                return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+
+                return this.getSchema().pipe(
+                    map(schema => {
+                        const title = schema && schema['title'];
+                        if (title) {
+                            return title.toString();
+                        }
+                        return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+                    })
+                );
             })
         );
     }
@@ -833,7 +841,9 @@ export class DataType {
                             );
                         }
                         return of(
-                            item.title || item.name || `${dtTitle} ${item.id || '(blank)'}`
+                            item.title ||
+                            (item.namespace && item.name && `${item.namespace} | ${item.name}`) ||
+                            item.name || `${dtTitle} ${item.id || '(blank)'}`
                         );
                     })
                 );
@@ -941,11 +951,19 @@ export class DataType {
                                             if (schema.label) {
                                                 return from(LiquidEngine.parseAndRender(schema.label, item));
                                             }
-                                            let title = item.title || item.name;
-                                            if (title) {
-                                                return of(title);
+                                            let { title, origin } = item;
+                                            if (!title) {
+                                                const { namespace, name } = item;
+                                                if (namespace && name) {
+                                                    title = `${namespace} | ${name}`
+                                                } else {
+                                                    title = name || `${dtTitle} ${item.id || '(blank)'}`;
+                                                }
                                             }
-                                            return of(`${dtTitle} ${item.id || '(blank)'}`);
+                                            if (origin !== undefined && origin !== 'default') {
+                                                title = `${title} [${origin}]`
+                                            }
+                                            return of(title);
                                         })
                                     )
                                 )
