@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import ActionRegistry, { CRUD } from "./ActionRegistry";
+import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import API from "../services/ApiService";
@@ -96,6 +96,7 @@ const Update = ({ docked, dataType, onSubjectPicked, height }) => {
 };
 
 export default ActionRegistry.register(Update, {
+    kind: ActionKind.collection,
     bulkable: true,
     icon: UpdateIcon,
     title: 'Update',
