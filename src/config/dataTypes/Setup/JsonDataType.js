@@ -1,6 +1,9 @@
 import React from 'react';
 import DocumentTypesFilledIcon from "../../../icons/DocumentTypesFilledIcon";
 import { AtLeastOneParameter, JustOneParameter } from "../../../common/selectors";
+import { arrayDiff } from "../../../common/arrays";
+import sharedOriginFields from "../../orchestrators/sharedOriginFields";
+import SharedCode from "../../../components/SharedCode";
 
 const behaviorFields = [
     'before_save_callbacks',
@@ -12,6 +15,7 @@ const behaviorFields = [
 const fields = [
     'namespace',
     'name',
+    'code',
     'schema',
     'discard_additional_properties',
     'title',
@@ -19,7 +23,7 @@ const fields = [
     ...behaviorFields
 ];
 
-const viewport = `{id ${fields.join(' ')} _type}`;
+const viewport = `{id ${arrayDiff(fields, 'code').join(' ')} _type origin}`;
 
 export default {
     title: 'Document Type',
@@ -40,6 +44,12 @@ export default {
         },
         data_type_methods: {
             selector: AtLeastOneParameter
+        },
+        code: {
+            control: SharedCode,
+            controlProps: {
+                alertsOnly: true
+            }
         }
     },
     actions: {
@@ -65,5 +75,6 @@ export default {
             fields: ['namespace', 'name', 'slug', 'discard_additional_properties', 'updated_at']
         }
     },
-    icon: <DocumentTypesFilledIcon/>
+    icon: <DocumentTypesFilledIcon/>,
+    orchestrator: sharedOriginFields(...arrayDiff(fields, 'schema', 'slug'))
 };
