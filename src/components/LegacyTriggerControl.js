@@ -574,7 +574,7 @@ export default function LegacyTriggerControl({ title, property, value, disabled,
 
                 return of(null);
             }),
-            switchMap(dt => (dt && dt.queryProps()) || of(null))
+            switchMap(dt => (dt && dt.simpleProperties()) || of(null))
         ).subscribe(
             props => {
                 if (props || !dataTypeId.current) {

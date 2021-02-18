@@ -234,6 +234,18 @@ export class DataType {
         return this.properties().pipe(map(properties => properties[name]));
     }
 
+    simpleProperties() {
+        return this.allProperties().pipe(
+            switchMap(props => zzip(...props.map(p => p.isSimple())).pipe(
+                map(
+                    simpleFlags => simpleFlags.map(
+                        (simple, index) => simple ? props[index] : null
+                    ).filter(p => p)
+                )
+            ))
+        );
+    }
+
     queryProps() {
         return this.allProperties().pipe(
             switchMap(props => zzip(...props.map(p => p.getSchema())).pipe(
