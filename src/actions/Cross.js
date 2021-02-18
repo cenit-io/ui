@@ -11,10 +11,40 @@ import CrossIcon from "@material-ui/icons/SwapHoriz";
 import { FormRootValue } from "../services/FormValue";
 import { of } from "rxjs";
 import { ExecutionMonitor } from "./ExecutionMonitor";
+import { Config } from "../common/Symbols";
+import ToggleEnumControl from "../components/ToggleEnumControl";
+import { OriginsColors } from "../components/OriginsColors";
+import { makeStyles } from "@material-ui/core";
+
+const useOriginStyles = makeStyles(theme => ({
+    option: {
+        margin: theme.spacing(1)
+    },
+    default: {
+        borderColor: theme.palette.text.disabled,
+        '&.selected': {
+            backgroundColor: theme.palette.text.disabled,
+            color: theme.palette.getContrastText(theme.palette.text.disabled),
+            fontWeight: 700
+        }
+    },
+    ...Object.keys(OriginsColors).reduce(
+        (cls, origin) => (cls[origin] = {
+            borderColor: OriginsColors[origin],
+            '&.selected': {
+                backgroundColor: OriginsColors[origin],
+                color: theme.palette.getContrastText(OriginsColors[origin]),
+                fontWeight: 700
+            }
+        }) && cls, {}
+    )
+}));
 
 const Cross = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const [state, setState] = useSpreadState();
+
+    const optionsClasses = useOriginStyles();
 
     const [containerState] = useContainerContext();
 
@@ -43,6 +73,16 @@ const Cross = ({ docked, dataType, onSubjectPicked, height }) => {
                             origin: {
                                 type: 'string',
                                 enum: origins
+                            }
+                        }
+                    },
+                    [Config]: {
+                        fields: {
+                            origin: {
+                                control: ToggleEnumControl,
+                                controlProps: {
+                                    optionsClasses
+                                }
                             }
                         }
                     }
