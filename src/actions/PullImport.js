@@ -269,10 +269,6 @@ export default ActionRegistry.register(PullImport, {
         },
         {
             "namespace": "Setup",
-            "name": "CenitDataType"
-        },
-        {
-            "namespace": "Setup",
             "name": "FileDataType"
         },
         {
