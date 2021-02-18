@@ -111,11 +111,11 @@ export default function RefManyControl({ title, property, value, onChange, onSta
     };
 
     const sort = indices => {
-        indices = indices.map(({id}) => parseInt(id));
+        indices = indices.map(({ id }) => parseInt(id));
         const newValue = new Array(value.get());
         let modified = false;
         indices.forEach((oldIndex, index) => {
-            modified =  modified || oldIndex !== index;
+            modified = modified || oldIndex !== index;
             newValue[index] = value.cache[oldIndex];
         });
         if (modified) {
@@ -130,7 +130,7 @@ export default function RefManyControl({ title, property, value, onChange, onSta
     if (aValue) {
         if (open) {
             dropButton = aValue.length > 0 &&
-                <IconButton onClick={() => setOpen(false)} disabled={disabled}><ArrowDropUpIcon/></IconButton>;
+                <IconButton onClick={() => setOpen(false)}><ArrowDropUpIcon/></IconButton>;
             itemsControls = aValue.map(
                 (_, index) => <ItemChip key={`item_${index}`}
                                         dataType={property.dataType}
@@ -141,23 +141,24 @@ export default function RefManyControl({ title, property, value, onChange, onSta
                                         readOnly={readOnly}/>
             );
             itemsControls = (
-                <ReactSortable list={Object.keys(aValue).map(id => ({id}))}
+                <ReactSortable list={Object.keys(aValue).map(id => ({ id }))}
                                setList={sort}>
                     {itemsControls}
                 </ReactSortable>
             );
         } else {
             dropButton = aValue.length > 0 &&
-                <IconButton onClick={() => setOpen(true)}
-                            disabled={disabled}><ArrowDropDownIcon/></IconButton>;
+                <IconButton onClick={() => setOpen(true)}>
+                    <ArrowDropDownIcon/>
+                </IconButton>;
         }
-        if (!readOnly) {
+        if (!readOnly && !disabled) {
             deleteButton = <IconButton onClick={handleClear} disabled={disabled}><ClearIcon/></IconButton>;
         }
     }
 
     let addButton;
-    if (!readOnly) {
+    if (!readOnly && !disabled) {
         const AddNewIcon = aValue ? AddIcon : CreateIcon;
         addButton = <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>;
     }
