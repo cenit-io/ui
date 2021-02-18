@@ -29,6 +29,10 @@ function editFields(config) {
     }
 }
 
+function editViewportFields(config) {
+    return config.actions?.edit?.viewportFields || editFields(config);
+}
+
 function editViewport(config, dataType, embedded, ...plus) {
     const editConfig = config.actions?.edit;
     const configViewport = (embedded && editConfig?.embeddedViewport) || editConfig?.viewport;
@@ -42,7 +46,7 @@ function editViewport(config, dataType, embedded, ...plus) {
         }
         return configViewport;
     }
-    const fields = editFields(config);
+    const fields = editViewportFields(config);
     if (fields) {
         return dataType.shallowViewPort(...fields, ...plus);
     }
