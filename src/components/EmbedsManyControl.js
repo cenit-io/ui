@@ -171,7 +171,7 @@ function EmbedsManyControl({
                 }
             );
 
-            if (!sortDisabled) {
+            if (!readOnly && !disabled && !sortDisabled) {
                 itemChips = (
                     <ReactSortable list={Object.keys(eValue).map(id => ({ id }))}
                                    setList={sort}>
