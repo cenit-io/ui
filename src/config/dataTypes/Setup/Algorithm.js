@@ -1,18 +1,27 @@
 import React from 'react';
 import AlgorithmFilledIcon from "../../../icons/AlgorithmFilledIcon";
-import StringCodeControl from "../../../components/StringCodeControl";
-import RunAlgorithm from "../../../actions/RunAlgorithm";
+import SharedCode from "../../../components/SharedCode";
+import mergeOrchestrators from "../../orchestrators/mergeOrchestrators";
+import sharedOriginFields from "../../orchestrators/sharedOriginFields";
+import { arrayDiff } from "../../../common/arrays";
 
-function orchestrator({ language }, state) {
-    const mime = language === 'ruby' ? 'text/x-ruby' : 'text/javascript';
-    if (state.code?.mime !== mime) {
-        return {
-            code: {
-                mime
+const editFields = ['id', 'namespace', 'name', 'description', 'parameters', 'language', 'code', 'call_links'];
+
+const orchestrator = mergeOrchestrators(
+    ({ language }, state) => {
+        const mime = language === 'ruby' ? 'text/x-ruby' : 'text/javascript';
+        if (state.code?.mime !== mime) {
+            return {
+                code: {
+                    mime
+                }
             }
         }
-    }
-}
+    },
+    sharedOriginFields(...arrayDiff(editFields, 'code'))
+);
+
+const viewport = `{id ${editFields.join(' ')} origin}`;
 
 export default {
     title: 'Algorithm',
@@ -28,12 +37,13 @@ export default {
             }
         },
         edit: {
-            fields: ['id', 'namespace', 'name', 'description', 'parameters', 'language', 'code', 'call_links']
+            fields: editFields,
+            viewport
         }
     },
     fields: {
         code: {
-            control: StringCodeControl
+            control: SharedCode
         },
         call_links: {
             controlProps: {
