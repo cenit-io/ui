@@ -1,5 +1,8 @@
 import React from 'react';
 import FileTypesFilledIcon from "../../../icons/FileTypesFilledIcon";
+import DocumentTypesFilledIcon from "../../../icons/DocumentTypesFilledIcon";
+import sharedOriginFields from "../../orchestrators/sharedOriginFields";
+import { arrayDiff } from "../../../common/arrays";
 
 const contentFields = [
     'validators',
@@ -23,7 +26,7 @@ const fields = [
     ...behaviorFields
 ];
 
-const viewport = `{id ${fields.join(' ')} _type}`;
+const viewport = `{id ${fields.join(' ')} _type origin}`;
 
 export default {
     title: 'File Type',
@@ -51,5 +54,6 @@ export default {
             fields: ['namespace', 'name', 'slug', 'id_type', 'updated_at']
         }
     },
-    icon: <FileTypesFilledIcon/>
+    icon: <FileTypesFilledIcon/>,
+    orchestrator: sharedOriginFields(...arrayDiff(fields,  'slug'))
 };
