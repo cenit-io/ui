@@ -2,7 +2,7 @@ import readOnlyFields from "./readOnlyFields";
 
 export default function (...fields) {
     return readOnlyFields(
-        ({ origin }) => ({ origin }) => origin && origin !== 'default',
+        ({ origin }) => origin && origin !== 'default',
         ...fields
     );
 }
