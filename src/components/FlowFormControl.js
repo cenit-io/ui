@@ -17,9 +17,16 @@ const FormProps = [
 
 const DefaultScopeOptions = ['All', 'Evaluator'];
 
+const SharedReadOnly = [
+    'namespace', 'name', 'description', 'translator',
+    'custom_data_type', 'data_type_scope', 'scope_filter', 'scope_evaluator', 'lot_size',
+    'webhook', 'before_submit',
+    'response_translator', 'response_data_type', 'after_process_callbacks'
+].reduce((hash, prop) => (hash[prop] = true) && hash, {});
+
 export default function FlowFormControl({
                                             errors, value, propertyControlProps, properties,
-                                            controlConfig, dynamicConfigState
+                                            controlConfig, dynamicConfigState, readOnly
                                         }) {
 
     const [state, setState] = useSpreadState({
@@ -225,10 +232,21 @@ export default function FlowFormControl({
         !hidden[name] && propertiesHash[name]
     )).filter(c => c);
 
-    const customPropertyControlProps = name => ({
-        ...propertyControlProps(name),
-        ...state[name]
-    });
+    const { origin } = value.get();
+    const isShared = origin && origin !== 'default';
+
+    const customPropertyControlProps = name => {
+        const props = {
+            ...propertyControlProps(name),
+            ...state[name]
+        };
+
+        if (!readOnly && isShared && SharedReadOnly[name]) {
+            props.disabled = true
+        }
+
+        return props;
+    };
 
     return (
         <>

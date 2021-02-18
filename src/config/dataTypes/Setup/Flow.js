@@ -4,6 +4,15 @@ import FlowFormControl from "../../../components/FlowFormControl";
 import AutocompleteControl from "../../../components/AutocompleteControl";
 import { JustOneParameter, OneOrTwoParameters } from "../../../common/selectors";
 
+const fields = [
+    'namespace', 'name', 'description', 'event', 'translator',
+    'custom_data_type', 'data_type_scope', 'scope_filter', 'scope_evaluator', 'lot_size',
+    'webhook', 'authorization', 'connection_role', 'before_submit',
+    'response_translator', 'response_data_type', 'discard_events',
+    'notify_request', 'notify_response',
+    'active', 'auto_retry', 'after_process_callbacks'
+];
+
 export default {
     title: 'Flow',
     icon: <FlowFilledIcon/>,
@@ -12,14 +21,10 @@ export default {
             fields: ['namespace', 'name', 'description', 'active', 'event', 'translator', 'updated_at']
         },
         new: {
-            fields: [
-                'namespace', 'name', 'description', 'event', 'translator',
-                'custom_data_type', 'data_type_scope', 'scope_filter', 'scope_evaluator', 'lot_size',
-                'webhook', 'authorization', 'connection_role', 'before_submit',
-                'response_translator', 'response_data_type', 'discard_events',
-                'notify_request', 'notify_response',
-                'active', 'auto_retry', 'after_process_callbacks'
-            ]
+            fields
+        },
+        edit: {
+            viewportFields: [...fields, 'origin']
         }
     },
     formControl: FlowFormControl,
