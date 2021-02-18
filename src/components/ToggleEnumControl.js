@@ -3,6 +3,7 @@ import Button from "@material-ui/core/Button";
 import { useSpreadState } from "../common/hooks";
 import { makeStyles } from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
+import clsx from "clsx";
 
 const useStyles = makeStyles(theme => ({
     option: {
@@ -15,9 +16,11 @@ export default function EnumControl({
                                         value,
                                         disabled,
                                         readOnly,
-                                        error,
+                                        error, // TODO Unused error parameter
                                         onChange,
-                                        property
+                                        onDelete,
+                                        property,
+                                        optionsClasses
                                     }) {
     const [state, setState] = useSpreadState({
         options: {}
@@ -43,13 +46,17 @@ export default function EnumControl({
     }, [property]);
 
     const selectOption = option => () => {
-        if (value.get() === option) {
-            value.delete();
-        } else {
-            value.set(option);
+        if (!readOnly) {
+            if (value.get() === option) {
+                value.delete();
+                onDelete && onDelete()
+            } else {
+                value.set(option);
+                onChange && onChange(option)
+            }
+            setState({}); //to refresh
         }
-        setState({}); //to refresh
-    }
+    };
 
     value.get();
 
@@ -57,9 +64,14 @@ export default function EnumControl({
         option => (
             <Button key={option}
                     variant={option === value.cache ? 'contained' : 'outlined'}
-                    className={classes.option}
-                    color={option === value.cache ? 'primary' : 'default'}
-                    onClick={selectOption(option)}>
+                    className={clsx(
+                        classes.option,
+                        optionsClasses && optionsClasses[option],
+                        (optionsClasses && option === value.cache) && 'selected'
+                    )}
+                    color={optionsClasses ? undefined : (option === value.cache ? 'primary' : 'default')}
+                    onClick={selectOption(option)}
+                    disabled={disabled}>
                 {options[option]}
             </Button>
         )
