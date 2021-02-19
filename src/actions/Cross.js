@@ -190,7 +190,35 @@ export default ActionRegistry.register(Cross, {
         },
         {
             "namespace": "Setup",
+            "name": "ErbTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "HandlebarsTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "LiquidTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "PrawnTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "RubyTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "XsltTemplate"
+        },
+        {
+            "namespace": "Setup",
             "name": "ParserTransformation"
+        },
+        {
+            "namespace": "Setup",
+            "name": "RubyParser"
         },
         {
             "namespace": "Setup",
@@ -198,7 +226,119 @@ export default ActionRegistry.register(Cross, {
         },
         {
             "namespace": "Setup",
+            "name": "RubyUpdater"
+        },
+        {
+            "namespace": "Setup",
             "name": "ConverterTransformation"
+        },
+        {
+            "namespace": "Setup",
+            "name": "HandlebarsConverter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "LiquidConverter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "MappingConverter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "RubyConverter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "XsltConverter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "LegacyTranslator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Converter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Parser"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Renderer"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Updater"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Template"
+        },
+        {
+            "namespace": "Setup",
+            "name": "ErbTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "HandlebarsTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "LiquidTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "PrawnTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "RubyTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "XsltTemplate"
+        },
+        {
+            "namespace": "Setup",
+            "name": "ParserTransformation"
+        },
+        {
+            "namespace": "Setup",
+            "name": "RubyParser"
+        },
+        {
+            "namespace": "Setup",
+            "name": "UpdaterTransformation"
+        },
+        {
+            "namespace": "Setup",
+            "name": "RubyUpdater"
+        },
+        {
+            "namespace": "Setup",
+            "name": "ConverterTransformation"
+        },
+        {
+            "namespace": "Setup",
+            "name": "HandlebarsConverter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "LiquidConverter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "MappingConverter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "RubyConverter"
+        },
+        {
+            "namespace": "Setup",
+            "name": "XsltConverter"
         },
         {
             "namespace": "Setup",
@@ -214,7 +354,43 @@ export default ActionRegistry.register(Cross, {
         },
         {
             "namespace": "Setup",
+            "name": "OauthProvider"
+        },
+        {
+            "namespace": "Setup",
+            "name": "GenericAuthorizationProvider"
+        },
+        {
+            "namespace": "Setup",
+            "name": "BaseOauthProvider"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Oauth2Provider"
+        },
+        {
+            "namespace": "Setup",
+            "name": "OauthProvider"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Oauth2Provider"
+        },
+        {
+            "namespace": "Setup",
             "name": "DataType"
+        },
+        {
+            "namespace": "Setup",
+            "name": "JsonDataType"
+        },
+        {
+            "namespace": "Setup",
+            "name": "CenitDataType"
+        },
+        {
+            "namespace": "Setup",
+            "name": "FileDataType"
         },
         {
             "namespace": "Setup",
@@ -239,6 +415,38 @@ export default ActionRegistry.register(Cross, {
         {
             "namespace": "Setup",
             "name": "CustomValidator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "XsltValidator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "AlgorithmValidator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "EdiValidator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "Schema"
+        },
+        {
+            "namespace": "Setup",
+            "name": "CustomValidator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "XsltValidator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "AlgorithmValidator"
+        },
+        {
+            "namespace": "Setup",
+            "name": "EdiValidator"
         },
         {
             "namespace": "Setup",
