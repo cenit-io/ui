@@ -33,6 +33,7 @@ import ProviderIcon from "../icons/ProviderIcon";
 import OauthScopesIcon from "../icons/OauthScopesIcon";
 import WorkflowIcon from "../icons/WorkflowIcon";
 import ResourceIcon from "@material-ui/icons/WorkOutline";
+import TraceIcon from "@material-ui/icons/HistoryEdu";
 
 export default {
     groups: [
@@ -312,7 +313,8 @@ export default {
                     $ref: {
                         namespace: 'Mongoid::Tracer',
                         name: 'Trace'
-                    }
+                    },
+                    icon: <TraceIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
