@@ -1,10 +1,13 @@
 import React from "react";
 import TemplateFilledIcon from "../../../icons/TemplateFilledIcon";
-import StringCodeControl from "../../../components/StringCodeControl";
 import AutocompleteControl from "../../../components/AutocompleteControl";
 import templateMimeOrchestrator  from "../../orchestrators/templateMimeOrchestrator";
+import { arrayDiff } from "../../../common/arrays";
+import SharedCode from "../../../components/SharedCode";
 
-const orchestrator = templateMimeOrchestrator('text/x-ruby');
+const fields = ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'bulk_source', 'code'];
+
+const orchestrator = templateMimeOrchestrator(arrayDiff(fields, 'code'), 'text/x-ruby');
 
 export default {
     title: 'Ruby Template',
@@ -13,8 +16,9 @@ export default {
         index: {
             fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'bulk_source', 'updated_at']
         },
-        new: {
-            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'bulk_source', 'code']
+        new: { fields },
+        edit: {
+            viewportFields: [...fields, 'origin']
         }
     },
     fields: {
@@ -25,7 +29,7 @@ export default {
             control: AutocompleteControl
         },
         code: {
-            control: StringCodeControl
+            control: SharedCode
         }
     },
     orchestrator

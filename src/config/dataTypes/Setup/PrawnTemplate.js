@@ -1,6 +1,10 @@
 import React from "react";
 import TemplateFilledIcon from "../../../icons/TemplateFilledIcon";
-import StringCodeControl from "../../../components/StringCodeControl";
+import SharedCode from "../../../components/SharedCode";
+import sharedOriginFields from "../../orchestrators/sharedOriginFields";
+import { arrayDiff } from "../../../common/arrays";
+
+const fields = ['namespace', 'name', 'source_data_type', 'bulk_source', 'code'];
 
 export default {
     title: 'Prawn Template',
@@ -9,16 +13,18 @@ export default {
         index: {
             fields: ['namespace', 'name', 'source_data_type', 'bulk_source', 'updated_at']
         },
-        new: {
-            fields: ['namespace', 'name', 'source_data_type', 'bulk_source', 'code']
+        new: { fields },
+        edit: {
+            viewportFields: [...fields, 'origin']
         }
     },
     fields: {
         code: {
-            control: StringCodeControl,
+            control: SharedCode,
             controlProps: {
                 mime: 'text/x-ruby'
             }
         }
-    }
+    },
+    orchestrator: sharedOriginFields(...arrayDiff(fields, 'code'))
 };
