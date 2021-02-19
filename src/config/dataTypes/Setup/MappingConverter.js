@@ -7,6 +7,7 @@ import { switchMap, map } from "rxjs/operators";
 import zzip from "../../../util/zzip";
 import Random from "../../../util/Random";
 import { formConfigProperties } from "../../../components/ObjectControl";
+import sharedOriginFields from "../../orchestrators/sharedOriginFields";
 
 const SourceDataTypeID = Symbol.for('source_data_type_id');
 const TargetDataTypeID = Symbol.for('target_data_type_id');
@@ -92,6 +93,8 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
     }
 }
 
+const fields = ['namespace', 'name', 'source_data_type', 'target_data_type', 'discard_events', 'mapping'];
+
 export default {
     title: 'Mapping Converter',
     icon: <ConverterFilledIcon/>,
@@ -100,11 +103,15 @@ export default {
             fields: ['namespace', 'name', 'source_data_type', 'target_data_type', 'discard_events', 'updated_at']
         },
         new: {
-            fields: ['namespace', 'name', 'source_data_type', 'target_data_type', 'discard_events', 'mapping'],
+            fields,
             seed: {
                 mapping: {}
             }
+        },
+        edit: {
+            viewportFields: [...fields, 'origin']
         }
     },
+    orchestrator: sharedOriginFields(...fields),
     dynamicConfig
 };
