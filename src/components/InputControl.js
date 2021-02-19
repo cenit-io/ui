@@ -54,7 +54,7 @@ const InputControl = reactiveControlFor(
                                       </IconButton>
                                   </InputAdornment>
                               }
-                              variant='filled'/>
+                              variant={variant}/>
             </FormControl>
         );
     }
