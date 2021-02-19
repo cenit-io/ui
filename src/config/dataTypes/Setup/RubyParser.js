@@ -1,6 +1,10 @@
 import React from "react";
 import ParserFilledIcon from "../../../icons/ParserFilledIcon";
-import StringCodeControl from "../../../components/StringCodeControl";
+import SharedCode from "../../../components/SharedCode";
+import sharedOriginFields from "../../orchestrators/sharedOriginFields";
+import { arrayDiff } from "../../../common/arrays";
+
+const fields = ['namespace', 'name', 'target_data_type', 'discard_events', 'code'];
 
 export default {
     title: 'Ruby Parser',
@@ -9,16 +13,18 @@ export default {
         index: {
             fields: ['namespace', 'name', 'target_data_type', 'discard_events', 'updated_at']
         },
-        new: {
-            fields: ['namespace', 'name', 'target_data_type', 'discard_events', 'code']
+        new: { fields },
+        edit: {
+            viewportFields: [...fields, 'origin']
         }
     },
     fields: {
         code: {
-            control: StringCodeControl,
+            control: SharedCode,
             controlProps: {
                 mime: 'text/x-ruby'
             }
         }
-    }
+    },
+    orchestrator: sharedOriginFields(...arrayDiff(fields, 'code'))
 };
