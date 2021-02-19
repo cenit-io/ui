@@ -214,14 +214,15 @@ function ObjectControl(props) {
                 v => {
                     let newState = orchestrator(v, orchestratorState || {}, value, { readOnly });
                     if (newState) {
-                        if (!isObservable(newState)) {
-                            newState = of(newState);
+                        if (isObservable(newState)) {
+                            newState.subscribe(s => { // TODO unsubscribe
+                                if (s) {
+                                    setState({ orchestratorState: s });
+                                }
+                            });
+                        } else {
+                            setState({ orchestratorState: newState });
                         }
-                        newState.subscribe(s => { // TODO unsubscribe
-                            if (s) {
-                                setState({ orchestratorState: s });
-                            }
-                        });
                     }
                 }
             );
