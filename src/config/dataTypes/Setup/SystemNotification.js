@@ -3,8 +3,9 @@ import NotificationFilledIcon from "../../../icons/NotificationFilledIcon";
 import ErrorLevelViewer from "../../../viewers/ErrorLevelViewer";
 import AttachmentViewer from "../../../viewers/AttachmentViewer";
 import { CRUD } from "../../../actions/ActionRegistry";
+import ViewerControl from "../../../components/ViewerControl";
 
-const LevelProjection = ({ type }) => type;
+const LevelProjection = n => n?.type;
 
 export default {
     title: 'System Notification',
@@ -12,6 +13,20 @@ export default {
     actions: {
         index: {
             fields: ['created_at', 'type', 'message', 'attachment', 'task']
+        }
+    },
+    fields: {
+        type: {
+            control: ViewerControl
+        },
+        attachment: {
+            control: ViewerControl
+        },
+        message: {
+            control: ViewerControl
+        },
+        task: {
+            control: ViewerControl
         }
     },
     viewers: {

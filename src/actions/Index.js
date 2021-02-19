@@ -16,63 +16,10 @@ import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 import Typography from "@material-ui/core/Typography";
 import clsx from "clsx";
-import StringViewer from "../viewers/StringViewer";
-import BooleanViewer from "../viewers/BooleanViewer";
-import DateTimeViewer from "../viewers/DateTimeViewer";
-import RefOneViewer from "../viewers/RefOneViewer";
-import RefManyViewer from "../viewers/RefManyViewer";
-import EmbedsOneViewer from "../viewers/EmbedsOneViewer";
-import EmbedsManyViewer from "../viewers/EmbedsManyViewer";
-import JsonViewer from "../viewers/JsonViewer";
 import { useSpreadState } from "../common/hooks";
 import { useContainerContext } from "./ContainerContext";
 import { useOriginsStyles } from "../components/OriginsColors";
-
-function viewerComponentFor(property, config) {
-    let configViewer = config?.viewers;
-    if (configViewer) {
-        configViewer = configViewer[property.name];
-        if (configViewer) {
-            return configViewer;
-        }
-    }
-    switch (property.type) {
-
-        case 'refOne':
-            return RefOneViewer;
-
-        case 'refMany':
-            return RefManyViewer;
-
-        case 'embedsOne':
-            return EmbedsOneViewer;
-
-        case 'embedsMany':
-            return EmbedsManyViewer;
-
-        case 'boolean':
-            return BooleanViewer;
-
-        case 'string': {
-            switch (property.propertySchema.format) {
-                case 'date-time':
-                case 'time':
-                case 'date':
-                    return DateTimeViewer;
-
-                default:
-                    return StringViewer;
-            }
-        }
-
-        default: {
-            if (!property.type || property.type === 'object' || property.type === 'array') {
-                return JsonViewer;
-            }
-            return StringViewer;
-        }
-    }
-}
+import viewerComponentFor from "../viewers/viewerComponentFor";
 
 const StyledTableCell = withStyles((theme) => ({
     head: {

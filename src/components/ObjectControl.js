@@ -286,12 +286,15 @@ function ObjectControl(props) {
 
         const configFields = controlConfig?.fields || {};
 
+        const viewers = controlConfig?.viewers || {};
+
         const propertyControlProps = (name, handlers) => {
 
             const prop = properties.find(p => p.name === name);
 
             if (prop) {
                 const fieldConfig = {
+                    viewer: viewers[name],
                     ...configFields[name],
                     ...(dynamicConfigState && dynamicConfigState[name])
                 };
