@@ -6,3 +6,11 @@ export function underscore(str) {
 export function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export function titleize(str) {
+    return str.split(/\s|-|_/)
+        .map(token => token.trim())
+        .filter(token => token)
+        .map(token => capitalize(token))
+        .join(' ');
+}

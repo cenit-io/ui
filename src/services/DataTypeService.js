@@ -10,6 +10,7 @@ import { deepMergeArrayConcat, deepMergeObjectsOnly } from "../common/merge";
 import deepDup from "../common/deepDup";
 import Hash from 'object-hash';
 import { Config as ConfigSymbol } from "../common/Symbols";
+import { titleize } from "../common/strutls";
 
 const SimpleTypes = ['integer', 'number', 'string', 'boolean'];
 
@@ -84,6 +85,32 @@ export class DataType {
 
         DataType.gets[id] = dataType;
         return dataType;
+    }
+
+    static splitName(name) {
+        let namespace = '';
+        name = name.split('::');
+        if (name.length > 1) {
+            [name, namespace] = [name.pop(), name];
+            namespace = namespace.join('::');
+        } else {
+            name = name[0];
+        }
+        return [namespace, name];
+    }
+
+    static byTypeName(name) {
+        let namespace;
+        [namespace, name] = this.splitName(name);
+        return this.find({ namespace, name }).pipe(
+            switchMap(dataType => {
+                if (!dataType && name.startsWith('Dt')) {
+                    return DataType.getById(name.substring(3))
+                }
+
+                return of(dataType);
+            })
+        );
     }
 
     static find(criteria) {
@@ -471,15 +498,9 @@ export class DataType {
     }
 
     findByName(name) {
-        let ns = null;
-        name = name.split('::');
-        if (name.length > 1) {
-            [name, ns] = [name.pop(), name];
-            ns = ns.join('::');
-        } else {
-            name = name[0];
-        }
-        return this.find_data_type(name, ns).pipe(
+        let namespace;
+        [namespace, name] = DataType.splitName(name);
+        return this.find_data_type(name, namespace).pipe(
             switchMap(dataType => {
                 if (!dataType && name.startsWith('Dt')) {
                     return DataType.getById(name.substring(3))
@@ -1196,7 +1217,7 @@ export class Property {
                 if (title) {
                     return from(LiquidEngine.parseAndRender(title.toString(), this));
                 }
-                return of(this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()));
+                return of(titleize(this.name));
             }));
     }
 

@@ -6,6 +6,7 @@ import BooleanViewer from "./BooleanViewer";
 import DateTimeViewer from "./DateTimeViewer";
 import StringViewer from "./StringViewer";
 import JsonViewer from "./JsonViewer";
+import TypePropertyViewer from "./TypePropertyViewer";
 
 export default function viewerComponentFor(property, config) {
     let configViewer = config?.viewers;
@@ -15,6 +16,11 @@ export default function viewerComponentFor(property, config) {
             return configViewer;
         }
     }
+
+    if (property.name === '_type') {
+        return TypePropertyViewer;
+    }
+
     switch (property.type) {
 
         case 'refOne':
