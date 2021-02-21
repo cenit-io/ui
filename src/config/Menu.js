@@ -33,7 +33,7 @@ import ProviderIcon from "../icons/ProviderIcon";
 import OauthScopesIcon from "../icons/OauthScopesIcon";
 import WorkflowIcon from "../icons/WorkflowIcon";
 import ResourceIcon from "@material-ui/icons/WorkOutline";
-import TraceIcon from "@material-ui/icons/HistoryEdu";
+import TraceIcon from "@material-ui/icons/HistoryToggleOff";
 import SvgIcon from "@material-ui/core/SvgIcon";
 
 export default {

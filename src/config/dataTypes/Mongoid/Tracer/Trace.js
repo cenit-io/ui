@@ -3,7 +3,7 @@ import TraceTargetViewer from "../../../../viewers/TraceTargetViewer";
 import TraceActionViewer from "../../../../viewers/TraceActionViewer";
 import { CRUD } from "../../../../actions/ActionRegistry";
 import ChangesSetControl from "../../../../components/ChangesSetControl";
-import TraceIcon from "@material-ui/icons/HistoryEdu";
+import TraceIcon from "@material-ui/icons/HistoryToggleOff";
 import ViewerControl from "../../../../components/ViewerControl";
 
 const ActionProjection = t => t?.action;
