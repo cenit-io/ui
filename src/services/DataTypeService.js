@@ -1200,6 +1200,8 @@ export class Property {
 
     isSimple = () => this.getSchema().pipe(map(schema => isSimpleSchema(schema)));
 
+    isVirtual = () => this.getSchemaEntry('virtual');
+
     is = type => this.getSchema().pipe(map(schema => schema['type'] === type));
 
     isReferenced() {

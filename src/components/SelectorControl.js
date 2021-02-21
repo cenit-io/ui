@@ -20,8 +20,9 @@ import FalseIcon from "../icons/FalseIcon";
 import Select from "@material-ui/core/Select";
 import ClearIcon from "@material-ui/icons/Clear";
 import RefPicker from "./RefPicker";
-import { Title } from "../common/Symbols";
 import CircularProgress from "@material-ui/core/CircularProgress";
+import { switchMap, map } from "rxjs/operators";
+import zzip from "../util/zzip";
 
 const Operators = {
     $eq: 'Equal',
@@ -630,7 +631,13 @@ export default function SelectorControl({ title, dataType, value, disabled, read
     }, [value]);
 
     useEffect(() => {
-        const subscription = dataType.allProperties().subscribe(
+        const subscription = dataType.allProperties().pipe(
+            switchMap(props => zzip(
+                ...props.map(prop => prop.isVirtual())
+            ).pipe(
+                map(virtualFlags => virtualFlags.map((virtual, index) => !virtual && props[index]).filter(p => p))
+            ))
+        ).subscribe(
             props => setState({ props: props.filter(({ type }) => SelectableTypes.includes(type)) })
         );
 
