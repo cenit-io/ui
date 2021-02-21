@@ -10,10 +10,20 @@ import RetryingIcon from "@material-ui/icons/Replay";
 import BrokenIcon from "@material-ui/icons/BrokenImage";
 import UnscheduleIcon from "@material-ui/icons/UpdateDisabled";
 import PausedIcon from "@material-ui/icons/PauseCircleOutline";
+import SvgIcon from "@material-ui/core/SvgIcon";
+
+export const TaskIcon = props => (
+    <SvgIcon {...props}>
+        <g>
+            <path
+                d="M14,2H6C4.9,2,4.01,2.9,4.01,4L4,20c0,1.1,0.89,2,1.99,2H18c1.1,0,2-0.9,2-2V8L14,2z M10.94,18L7.4,14.46l1.41-1.41 l2.12,2.12l4.24-4.24l1.41,1.41L10.94,18z M13,9V3.5L18.5,9H13z"/>
+        </g>
+    </SvgIcon>
+);
 
 const fields = [
-    '_type', 'description', 'status', 'scheduler', 'attempts', 'succeded',
-    'retries', 'progress', 'updated_at'
+    '_type', 'description', 'status', 'progress', 'scheduler', 'attempts', 'succeded',
+    'retries', 'updated_at'
 ];
 
 export const TaskStatusConfig = {
@@ -62,12 +72,13 @@ export const TaskStatusConfig = {
 };
 
 export const TaskStatusViewer = ErrorLevelViewer(
-    ({ status }) => TaskStatusConfig[status]?.level || 'notice',
+    task => TaskStatusConfig[task?.status]?.level || 'notice',
     'background'
 );
 
 export default {
     title: 'Task',
+    icon: <TaskIcon/>,
     actions: {
         index: { fields },
         new: { fields }

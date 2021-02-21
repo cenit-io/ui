@@ -5,6 +5,8 @@ Issues & next features
 
 ### Issues
 
+- Uprocessable entity for delete action
+
 - Pull-import execution monitor leaks
 
 - "\xC3" from ASCII-8BIT to UTF-8
@@ -47,6 +49,8 @@ Issues & next features
 
 ### Features
 
+- Add attachment filter option for notifications and executions.
+
 - Use ExecutionMonitor to track collection create/update.
 
 - Add styles and navigation links to the editor breadcrumb.
@@ -62,6 +66,10 @@ Issues & next features
 - Use the data type title to customize ref-picker loading message.
 
 - Async response might be not an execution but an error notification because the task could not be created.
+
+- Add collection agent field to collection sharing models
+
+- Add data type agent field to deletion task
 
 ### Optimizations
 

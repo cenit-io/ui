@@ -1,22 +1,20 @@
 import React from 'react';
-import { CRUD } from "../../../actions/ActionRegistry";
 import AttachmentViewer from "../../../viewers/AttachmentViewer";
+import commonTaskConfig from "./commonTaskConfig";
+import ViewerControl from "../../../components/ViewerControl";
 
-const fields = [
-    'shared_collection', 'pull_request', 'pulled_request', 'description', 'scheduler',
-    'attempts', 'succeded', 'retries', 'progress', 'status', 'updated_at'
-];
+const SharedCollectionPull = commonTaskConfig('Shared Collection Pull', {
+    shared_collection: {
+        control: ViewerControl
+    },
+    pull_request: {
+        viewer: AttachmentViewer,
+        control: ViewerControl
+    },
+    pulled_request: {
+        viewer: AttachmentViewer,
+        control: ViewerControl
+    }
+});
 
-export default {
-    title: 'Shared Collection Pull',
-    actions: {
-        index: { fields },
-        new: { fields }
-    },
-    viewers: {
-        data: AttachmentViewer,
-        pull_request: AttachmentViewer,
-        pulled_request: AttachmentViewer
-    },
-    crud: [CRUD.read, CRUD.delete]
-};
+export default SharedCollectionPull;

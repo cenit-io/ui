@@ -3,18 +3,13 @@ import AttachmentViewer from "../../../viewers/AttachmentViewer";
 import commonTaskConfig from "./commonTaskConfig";
 import ViewerControl from "../../../components/ViewerControl";
 
-const ApiPull = commonTaskConfig('API Pull', {
-    api: {
+const Push = commonTaskConfig('Push', {
+    source_collection: {
         control: ViewerControl
     },
-    pull_request: {
-        viewer: AttachmentViewer,
-        control: ViewerControl
-    },
-    pulled_request: {
-        viewer: AttachmentViewer,
+    shared_collection: {
         control: ViewerControl
     }
 });
 
-export default ApiPull;
+export default Push;

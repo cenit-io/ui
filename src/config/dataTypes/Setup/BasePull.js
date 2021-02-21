@@ -1,12 +1,9 @@
-import React from 'react';
-import AttachmentViewer from "../../../viewers/AttachmentViewer";
 import commonTaskConfig from "./commonTaskConfig";
+import AttachmentViewer from "../../../viewers/AttachmentViewer";
 import ViewerControl from "../../../components/ViewerControl";
 
-const ApiPull = commonTaskConfig('API Pull', {
-    api: {
-        control: ViewerControl
-    },
+const BasePull = commonTaskConfig('Pull', {
+    _type: {},
     pull_request: {
         viewer: AttachmentViewer,
         control: ViewerControl
@@ -17,4 +14,4 @@ const ApiPull = commonTaskConfig('API Pull', {
     }
 });
 
-export default ApiPull;
+export default BasePull;
