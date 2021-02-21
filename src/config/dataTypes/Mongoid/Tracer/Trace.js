@@ -1,10 +1,10 @@
 import React from 'react';
-import TraceTargetViewer from "../../../../viewers/TraceTargetViewer";
 import TraceActionViewer from "../../../../viewers/TraceActionViewer";
 import { CRUD } from "../../../../actions/ActionRegistry";
 import ChangesSetControl from "../../../../components/ChangesSetControl";
 import TraceIcon from "@material-ui/icons/HistoryToggleOff";
 import ViewerControl from "../../../../components/ViewerControl";
+import recordViewer from "../../../../viewers/recordViewer";
 
 const ActionProjection = t => t?.action;
 
@@ -40,7 +40,7 @@ export default {
         }
     },
     viewers: {
-        target: TraceTargetViewer,
+        target: recordViewer(trace => trace?.data_type),
         action: TraceActionViewer(ActionProjection, 'background')
     },
     crud: [CRUD.read, CRUD.delete]
