@@ -16,7 +16,7 @@ export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
 function ItemTab({ subject, onClick, onClose }) {
 
-    const [title, setTitle] = useState(subject.titleCache || '...');
+    const [title, setTitle] = useState(subject?.titleCache || '...');
 
     useEffect(() => {
         const subscription = subject.navTitle().subscribe(
@@ -144,7 +144,7 @@ export default function NavTabs({ docked, width }) {
 
     const containers = tabs.map(
         (key, index) => {
-            const { TabComponent } = Subjects[key];
+            const TabComponent = Subjects[key]?.TabComponent;
             return (
                 <div key={`container_${key}`}
                      style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
@@ -157,7 +157,7 @@ export default function NavTabs({ docked, width }) {
                 </div>
             );
         }
-    );
+    ).filter(c => c);
 
     function handleChange(event, newValue) {
         console.warn('CHANGED', newValue);
