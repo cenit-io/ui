@@ -105,7 +105,7 @@ const lazy = (Control, opts = {}) => function (props) {
         };
     }
 
-    if (fetched) {
+    if (!rootId || fetched) {
         return <Control {...props}
                         value={lazyValue.current}
                         onChange={handleChange}
