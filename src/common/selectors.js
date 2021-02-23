@@ -14,3 +14,7 @@ export const OneOrTwoParameters = {
         { parameters_size: 2 }
     ]
 };
+
+export const ExactlyTwoParameter = {
+    parameters_size: 2
+};
