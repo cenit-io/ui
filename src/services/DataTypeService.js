@@ -784,8 +784,13 @@ export class DataType {
                 const params = { limit, page };
 
                 const headers = {
-                    'X-Template-Options': JSON.stringify({ viewport, polymorphic: true }),
-                    'X-Query-Options': JSON.stringify({ sort })
+                    'X-Template-Options': JSON.stringify({
+                        viewport,
+                        polymorphic: true,
+                        include_id: Boolean(opts.include_id)
+                    }),
+                    'X-Query-Options': JSON.stringify({ sort }),
+                    'X-Query-Selector': JSON.stringify(opts.selector || {})
                 };
 
                 const request = ['setup', 'data_type', this.id, 'digest'];
@@ -795,8 +800,6 @@ export class DataType {
                 if (query) {
                     params.query = query;
                     request.push('search');
-                } else {
-                    headers['X-Query-Selector'] = JSON.stringify(opts.selector || {});
                 }
 
                 request.push({ params, headers });
