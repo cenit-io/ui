@@ -5,14 +5,14 @@ import PropertyControl from "./PropertyControl";
 import { FormGroup } from "./FormGroup";
 import ErrorMessages from "./ErrorMessages";
 import { LinearProgress } from "@material-ui/core";
-import React, { useCallback, useEffect, useReducer } from "react";
+import React, { useCallback, useEffect } from "react";
 import { FETCHED, NEW } from "../common/Symbols";
-import spreadReducer from "../common/spreadReducer";
 import { DataTypeSubject } from "../services/subjects";
 import Collapsible from "./Collapsible";
 import { useFormContext } from "./FormContext";
 import FrezzerLoader from "./FrezzerLoader";
 import zzip from "../util/zzip";
+import { useSpreadState } from "../common/hooks";
 
 function editFields(config) {
     const editConfig = config.actions?.edit;
@@ -118,7 +118,7 @@ export function DefaultPropertiesForm({ controlConfig, dynamicConfigState, prope
 }
 
 function ObjectControl(props) {
-    const [state, setState] = useReducer(spreadReducer, {});
+    const [state, setState] = useSpreadState();
 
     const { initialFormValue } = useFormContext();
 
@@ -235,7 +235,7 @@ function ObjectControl(props) {
         if (dynamicConfig) {
             const subscription = value.changed().subscribe(
                 v => {
-                    let newState = dynamicConfig(v, dynamicConfigState || {}, value);
+                    let newState = dynamicConfig(v, dynamicConfigState || {}, value, { readOnly });
                     if (newState) {
                         if (!isObservable(newState)) {
                             newState = of(newState);
@@ -248,9 +248,10 @@ function ObjectControl(props) {
                     }
                 }
             );
+            value.changed().next(value.get());
             return () => subscription.unsubscribe();
         }
-    }, [dynamicConfig, dynamicConfigState, value]);
+    }, [dynamicConfig, dynamicConfigState, value, readOnly]);
 
     const handleChange = (prop, handler) => () => {
         if (!handler || handler() !== 'abort') {
