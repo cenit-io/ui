@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import AuthorizeIcon from '@material-ui/icons/VpnKey';
+import AuthorizeIcon from '@material-ui/icons/VerifiedUser';
 import ActionRegistry, { ActionKind } from './ActionRegistry';
 import { makeStyles } from '@material-ui/core';
 import FormEditor from '../components/FormEditor';

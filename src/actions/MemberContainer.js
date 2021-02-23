@@ -35,9 +35,10 @@ import './Reinstall';
 import './SwitchTrust';
 import './DataTypeConfig';
 import './Filter';
-import './Access';
+import './ApplicationAccess';
 import './RegisterApp';
 import './ProcessFlow';
+import './AuthorizationAccess';
 
 const useActionContainerStyles = makeStyles(theme => ({
     toolbar: {
