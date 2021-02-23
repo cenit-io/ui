@@ -16,7 +16,7 @@ import { of } from "rxjs";
 
 const Success = () => <SuccessAlert mainIcon={AccessIcon}/>;
 
-function AuthorizationAccess({ docked, dataType, record, onSubjectPicked, onUpdate, height }) {
+function Oauth2AuthorizationAccess({ docked, dataType, record, onSubjectPicked, onUpdate, height }) {
 
     const [state, setState] = useSpreadState();
 
@@ -118,7 +118,7 @@ function AuthorizationAccess({ docked, dataType, record, onSubjectPicked, onUpda
                        successControl={Success}/>;
 }
 
-export default ActionRegistry.register(AuthorizationAccess, {
+export default ActionRegistry.register(Oauth2AuthorizationAccess, {
     kind: ActionKind.member,
     icon: AccessIcon,
     title: 'Access',
@@ -135,10 +135,6 @@ export default ActionRegistry.register(AuthorizationAccess, {
         {
             'namespace': 'Setup',
             'name': 'LazadaAuthorization'
-        },
-        {
-            'namespace': 'Setup',
-            'name': 'OauthAuthorization'
         }
     ]
 });

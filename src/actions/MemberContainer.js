@@ -38,7 +38,8 @@ import './Filter';
 import './ApplicationAccess';
 import './RegisterApp';
 import './ProcessFlow';
-import './AuthorizationAccess';
+import './Oauth2AuthorizationAccess';
+import './Oauth1AuthorizationAccess';
 
 const useActionContainerStyles = makeStyles(theme => ({
     toolbar: {
