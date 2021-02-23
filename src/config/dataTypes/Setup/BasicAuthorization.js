@@ -12,8 +12,10 @@ export default {
         }
     },
     actions: {
-        new: { fields },
-        edit: { fields }
+        index: {
+            fields: ['namespace', 'name', 'username', 'updated_at']
+        },
+        new: { fields }
     },
     fields: {
         password: {
