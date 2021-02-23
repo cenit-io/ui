@@ -5,6 +5,8 @@ Issues & next features
 
 ### Issues
 
+- Behavior for success notice after form submit is not polymorphic (go to authorizations and create one...)
+
 - Uprocessable entity for delete action
 
 - Pull-import execution monitor leaks
