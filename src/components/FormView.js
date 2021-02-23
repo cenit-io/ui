@@ -8,14 +8,11 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import MailIcon from '@material-ui/icons/Mail';
 import Typography from "@material-ui/core/Typography";
 import { Skeleton } from "@material-ui/lab";
 import ListSubheader from "@material-ui/core/ListSubheader";
 import FormContext from "./FormContext";
 import { useSpreadState } from "../common/hooks";
-import { DataTypeSubject } from "../services/subjects";
 import { FETCHED } from "../common/Symbols";
 import { CRUD } from "../actions/ActionRegistry";
 
@@ -37,7 +34,7 @@ const FormView = ({
                   }) => {
 
     const [state, setState] = useSpreadState({
-        initialFormValue: {}
+        initialFormValue: value.get()[FETCHED] ? value.cache : {}
     });
     const classes = useStyles();
     const theme = useTheme();
@@ -146,7 +143,7 @@ const FormView = ({
             if (formViewControlProps) {
                 if (typeof formViewControlProps === 'function') {
                     const subscription = value.changed().subscribe(
-                        v => setState({configProps: formViewControlProps(v)})
+                        v => setState({ configProps: formViewControlProps(v) })
                     );
                     value.changed().next(value.get());
                     return () => subscription.unsubscribe();

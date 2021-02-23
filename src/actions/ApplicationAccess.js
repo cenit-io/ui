@@ -19,7 +19,7 @@ function openAccess(access) {
     );
 }
 
-function Access({ record, containerContext }) {
+function ApplicationAccess({ record, containerContext }) {
     return API.get('setup', 'application', record.id, 'digest', 'access').pipe(
         switchMap(access => {
             if (access) {
@@ -46,7 +46,7 @@ function Access({ record, containerContext }) {
     )
 }
 
-export default ActionRegistry.register(Access, {
+export default ActionRegistry.register(ApplicationAccess, {
     kind: ActionKind.member,
     icon: AccessIcon,
     title: 'Access',
