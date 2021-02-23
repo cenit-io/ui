@@ -16,7 +16,10 @@ import { useFormContext } from "./FormContext";
 import { ReactSortable } from "react-sortablejs";
 
 
-export default function RefManyControl({ title, property, value, onChange, onStack, onDelete, disabled, readOnly, config }) {
+export default function RefManyControl({
+                                           title, property, value, onChange, onStack, onDelete, disabled,
+                                           readOnly, config, additionalViewportProps
+                                       }) {
 
     const [state, setState] = useSpreadState();
 
@@ -177,7 +180,8 @@ export default function RefManyControl({ title, property, value, onChange, onSta
                            placeholder={placeholder}
                            disabled={disabled}
                            readOnly={readOnly || !aValue}
-                           baseSelector={config?.selector}/>
+                           baseSelector={config?.selector}
+                           additionalViewportProps={additionalViewportProps}/>
                 {dropButton}
                 {addButton}
                 {deleteButton}
