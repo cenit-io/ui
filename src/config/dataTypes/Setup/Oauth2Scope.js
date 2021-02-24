@@ -1,13 +1,29 @@
 import React from 'react';
 import OauthScopesFilledIcon from "../../../icons/OauthScopesFilledIcon";
-import AccessGrantFilledIcon from "../../../icons/AccessGrantFilledIcon";
+import sharedOriginFields from "../../orchestrators/sharedOriginFields";
+
+const fields = ['provider', 'name', 'description'];
 
 export default {
     title: 'OAuth 2.0 Scope',
     icon: <OauthScopesFilledIcon/>,
     actions: {
         index: {
-            fields: ['provider', 'name', 'description', 'updated_at']
+            fields: [...fields, 'updated_at']
+        },
+        new: {
+            fields: ['provider', 'name', 'description']
+        },
+        edit: {
+            viewport: '{provider {namespace name} name description origin}'
         }
-    }
+    },
+    fields: {
+        description: {
+            controlProps: {
+                multiline: true
+            }
+        }
+    },
+    orchestrator: sharedOriginFields(...fields)
 };
