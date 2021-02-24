@@ -40,6 +40,7 @@ import './RegisterApp';
 import './ProcessFlow';
 import './Oauth2AuthorizationAccess';
 import './Oauth1AuthorizationAccess';
+import './AccessTokens';
 
 const useActionContainerStyles = makeStyles(theme => ({
     toolbar: {
@@ -67,10 +68,7 @@ const useActionContainerStyles = makeStyles(theme => ({
 }));
 
 function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked, onClose, onUpdate }) {
-    const [state, setState] = useSpreadState({
-        actionKey: Show.key,
-        actionComponentKey: Random.string()
-    });
+    const [state, setState] = useSpreadState();
 
     const containerContext = useContainerContext();
 
@@ -78,16 +76,13 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
     const tenantContext = useTenantContext();
 
-    const { dataType, record } = containerState;
+    const { dataType, record, loading, actionKey, actionComponentKey } = containerState;
 
     const actionSubscription = useRef(null);
     const theme = useTheme();
     const classes = useActionContainerStyles({ width, height });
 
-    const {
-        dataTypeTitle, title, loading,
-        error, actionComponentKey, actionKey, disabled
-    } = state;
+    const { dataTypeTitle, title, error, disabled } = state;
 
     const setError = error => setState({ error });
 
@@ -151,7 +146,7 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
                 if (isObservable(r)) {
                     setState({ loading: true });
                     actionSubscription.current = r.subscribe(
-                        () => setState({
+                        () => setContainerState({
                             loading: false,
                             actionKey: Show.key,
                             actionComponentKey: Random.string()
@@ -159,7 +154,7 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
                     );
                 }
             } else {
-                setState({
+                setContainerState({
                     actionKey,
                     actionComponentKey: Random.string()
                 });
@@ -230,7 +225,9 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
 const InitialContextState = {
     selectedItems: [],
-    landingActionKey: Show.key
+    landingActionKey: Show.key,
+    actionKey: Show.key,
+    actionComponentKey: Random.string()
 };
 
 export default function MemberContainer(props) {
