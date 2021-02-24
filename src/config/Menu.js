@@ -35,6 +35,7 @@ import WorkflowIcon from "../icons/WorkflowIcon";
 import ResourceIcon from "@material-ui/icons/WorkOutline";
 import TraceIcon from "@material-ui/icons/HistoryToggleOff";
 import SvgIcon from "@material-ui/core/SvgIcon";
+import NamespaceIcon from "@material-ui/icons/Dns";
 
 export default {
     groups: [
@@ -370,7 +371,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Namespace'
-                    }
+                    },
+                    icon: <NamespaceIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
