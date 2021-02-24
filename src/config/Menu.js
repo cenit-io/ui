@@ -415,7 +415,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Parameter'
-                    }
+                    },
+                    icon: <ConfigIcon component="svg"/>
                 }
             ]
         },

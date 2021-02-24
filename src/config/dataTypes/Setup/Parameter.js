@@ -1,12 +1,16 @@
 import React from 'react';
+import { CRUD } from "../../../actions/ActionRegistry";
+import recordViewer from "../../../viewers/recordViewer";
+import ParameterIcon from "@material-ui/icons/Settings";
 
 const editFields = ['key', 'value', 'description', 'metadata'];
 
 export default {
     title: 'Parameter',
+    icon: <ParameterIcon component="svg"/>,
     actions: {
         index: {
-            fields: ['key', 'value', 'updated_at']
+            fields: ['parent_data_type', 'parent', 'location', 'key', 'value', 'description', 'updated_at']
         },
         new: {
             fields: editFields,
@@ -17,5 +21,9 @@ export default {
         edit: {
             fields: editFields
         }
-    }
+    },
+    viewers: {
+        parent: recordViewer(p => p?.parent_data_type)
+    },
+    crud: [CRUD.read, CRUD.delete]
 };
