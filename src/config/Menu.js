@@ -398,7 +398,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'FlowConfig'
-                    }
+                    },
+                    icon: <ConfigIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
