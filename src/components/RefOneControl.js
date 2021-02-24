@@ -14,7 +14,7 @@ import { useFormContext } from "./FormContext";
 function RefOneControl({
                            title, value, property, disabled, readOnly,
                            onChange, onDelete, onStack, config,
-                           editDisabled, deleteDisabled, onPicked, additionalViewportProps
+                           editDisabled, deleteDisabled, addDisabled, onPicked, additionalViewportProps
                        }) {
 
     const [state, setState] = useSpreadState({
@@ -139,7 +139,7 @@ function RefOneControl({
             }
         }
 
-        if (!readOnly) {
+        if (!readOnly && !addDisabled) {
             addButton = (
                 <IconButton onClick={handleAddNew}
                             disabled={disabled}>
