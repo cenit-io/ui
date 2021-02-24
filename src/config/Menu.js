@@ -407,7 +407,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'Binding'
-                    }
+                    },
+                    icon: <ConfigIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
