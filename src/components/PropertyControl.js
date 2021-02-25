@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react'
+import React, { useEffect } from 'react'
 import StringControl from './StringControl';
 import { LinearProgress, makeStyles } from '@material-ui/core';
 import EmbedsOneControl from "./EmbedsOneControl";
@@ -12,9 +12,10 @@ import NumericControl from "./NumericControl";
 import IntegerControl from "./IntegerControl";
 import StringCodeControl from "./StringCodeControl";
 import JsonControl from "./JsonControl";
-import spreadReducer from "../common/spreadReducer";
 import EnumControl from "./EnumControl";
 import DateTimeControl from "./DateTimeControl";
+import { useSpreadState } from "../common/hooks";
+import { of } from "rxjs";
 
 function controlComponentFor(property) {
     if (property.propertySchema.enum) {
@@ -106,19 +107,22 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function PropertyControl(props) {
-    const [state, setState] = useReducer(spreadReducer, {});
+    const [state, setState] = useSpreadState();
 
     const { errors, property, onChange, config } = props;
     const { schema, controlErrors } = state;
     const classes = useStyles();
 
     useEffect(() => {
-        const subscription = zzip(property.getSchema(), property.getTitle()).subscribe(
+        const subscription = zzip(
+            property.getSchema(),
+            (config.title && of(config.title)) || property.getTitle()
+        ).subscribe(
             ([schema, title]) => setState({ schema, title })
         );
 
         return () => subscription.unsubscribe();
-    }, [property]);
+    }, [config, property]);
 
     useEffect(() => setState({ controlErrors: null }), [errors]);
 
