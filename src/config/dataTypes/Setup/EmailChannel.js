@@ -6,7 +6,7 @@ export default {
     icon: <EmailChannelsFilledIcon/>,
     actions: {
         index: {
-            fields: ['namespace', 'name', 'updated_at']
+            fields: ['_type', 'namespace', 'name', 'updated_at']
         }
     }
 };

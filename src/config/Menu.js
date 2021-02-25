@@ -185,7 +185,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'SmtpProvider'
-                    }
+                    },
+                    icon: <EmailChannelsIcon/>
                 },
                 {
                     type: DataTypeSubject.type,
