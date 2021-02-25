@@ -129,7 +129,7 @@ function ObjectControl(props) {
 
     const {
         onChange, value, dataType, fetchPath, onFetched, config,
-        property, width, disabled, onStack, readOnly
+        property, width, disabled, onStack, readOnly, errors
     } = props;
 
     const { rootId, rootDataType } = useFormContext();
@@ -235,7 +235,7 @@ function ObjectControl(props) {
         if (dynamicConfig) {
             const subscription = value.changed().subscribe(
                 v => {
-                    let newState = dynamicConfig(v, dynamicConfigState || {}, value, { readOnly });
+                    let newState = dynamicConfig(v, dynamicConfigState || {}, value, { readOnly, errors });
                     if (newState) {
                         if (!isObservable(newState)) {
                             newState = of(newState);
@@ -251,7 +251,7 @@ function ObjectControl(props) {
             value.changed().next(value.get());
             return () => subscription.unsubscribe();
         }
-    }, [dynamicConfig, dynamicConfigState, value, readOnly]);
+    }, [dynamicConfig, dynamicConfigState, value, readOnly, errors]);
 
     const handleChange = (prop, handler) => () => {
         if (!handler || handler() !== 'abort') {
@@ -280,7 +280,7 @@ function ObjectControl(props) {
         }
     };
 
-    const errors = props.errors || {};
+    const formErrors = errors || {};
     const context = rootId ? FormContex.edit : FormContex.new;
 
     if (properties) {
@@ -305,7 +305,7 @@ function ObjectControl(props) {
                     key: name + (fieldConfig.key || ''),
                     property: prop,
                     value: value.propertyValue(prop.jsonKey),
-                    errors: errors[name],
+                    errors: formErrors[name],
                     width: width,
                     onChange: handleChange(prop, handlers?.onChange),
                     onDelete: handleDelete(prop, handlers?.onDelete),
@@ -322,13 +322,13 @@ function ObjectControl(props) {
 
         const FormControl = controlConfig.formControl || DefaultPropertiesForm;
 
-        return <FormGroup error={Object.keys(errors).length > 0}>
-            <ErrorMessages errors={errors.$}>
+        return <FormGroup error={Object.keys(formErrors).length > 0}>
+            <ErrorMessages errors={formErrors.$}>
                 <FormControl properties={properties}
                              dynamicConfigState={dynamicConfigState}
                              controlConfig={controlConfig}
                              propertyControlProps={propertyControlProps}
-                             errors={errors}
+                             errors={formErrors}
                              value={value}
                              readOnly={readOnly}
                              disabled={disabled}
