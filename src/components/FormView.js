@@ -106,7 +106,7 @@ const FormView = ({
             );
             let submitSubscription;
             const submitterSubscription = submitter.subscribe(() => {
-                submitSubscription = onFormSubmit(formDataType, value).pipe(
+                submitSubscription = onFormSubmit(formDataType, value, dataTypeConfig.formSanitizer).pipe(
                     catchError(error => {
                         setState({ errors: error.response.data });
                         return of(null);
@@ -135,7 +135,7 @@ const FormView = ({
                 }
             }
         }
-    }, [value, submitter, viewport, formDataType, rootId, onFormSubmit]);
+    }, [value, submitter, viewport, formDataType, rootId, onFormSubmit, dataTypeConfig]);
 
     useEffect(() => {
         if (dataTypeConfig) {

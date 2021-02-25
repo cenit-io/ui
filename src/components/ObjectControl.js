@@ -331,7 +331,8 @@ function ObjectControl(props) {
                              errors={errors}
                              value={value}
                              readOnly={readOnly}
-                             disabled={disabled}/>
+                             disabled={disabled}
+                             dataType={dataType}/>
             </ErrorMessages>
             {fetching && <FrezzerLoader/>}
         </FormGroup>;

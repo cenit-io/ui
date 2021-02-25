@@ -390,7 +390,8 @@ export default {
                     $ref: {
                         namespace: 'Setup',
                         name: 'FileStoreConfig'
-                    }
+                    },
+                    icon: <ConfigIcon/>
                 },
                 {
                     type: DataTypeSubject.type,

@@ -137,16 +137,18 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const defaultFormProcessor = (viewport, rootId, onFormSubmit, onSubmitDone) => (formDataType, value) => {
+const defaultFormProcessor = (viewport, rootId, onFormSubmit, onSubmitDone) => (formDataType, value, formSanitizer) => {
     const submitAction = onFormSubmit
-        ? onFormSubmit(formDataType, value)
+        ? onFormSubmit(formDataType, value, formSanitizer)
         : (viewport || formDataType.titleViewport('_id')).pipe(
-            switchMap(viewport => formDataType.post(value.get(), {
-                viewport,
-                add_only: rootId,
-                add_new: !rootId,
-                polymorphic: true
-            })),
+            switchMap(viewport => formDataType.post(
+                (formSanitizer && formSanitizer(value.get())) || value.get(), {
+                    viewport,
+                    add_only: rootId,
+                    add_new: !rootId,
+                    polymorphic: true
+                }
+            )),
             tap(response => {
                 if (response[Status] === 200 || response[Status] === 201) {
                     value.set({ ...value.get(), ...response })
