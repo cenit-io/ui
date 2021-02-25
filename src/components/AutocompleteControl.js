@@ -4,7 +4,6 @@ import TextField from "@material-ui/core/TextField";
 import { makeStyles } from "@material-ui/core/styles";
 import clsx from "clsx";
 import { useFormContext } from "./FormContext";
-import Random from "../util/Random";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -55,10 +54,14 @@ export default function AutocompleteControl({
         return () => subscription.unsubscribe();
     }, [value]);
 
+    const optionLabel = key => options && options.constructor === Object
+        ? options[key]
+        : key;
+
     if (readOnly) {
         return <TextField key={`readOnly_${state}`}
                           label={title}
-                          value={state || ''}
+                          value={optionLabel(state) || ''}
                           className="full-width"
                           variant="filled"
                           InputProps={{ readOnly, error }}/>;
@@ -84,10 +87,6 @@ export default function AutocompleteControl({
             ? options
             : Object.keys(options))
         : [];
-
-    const optionLabel = key => options && options.constructor === Object
-        ? options[key]
-        : key;
 
     return <Autocomplete options={selectableOptions}
                          freeSolo={freeSolo}

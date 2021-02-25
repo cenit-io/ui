@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Config } from "../common/Symbols";
 import AutocompleteControl from "./AutocompleteControl";
 
 export default function EnumControl({
