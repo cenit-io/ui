@@ -1,12 +1,9 @@
 import React from 'react';
 import SmtpAccountIcon from "@material-ui/icons/Email";
 import { arrayDiff } from "../../../common/arrays";
+import { Hidden, NotHidden } from '../../../common/constants';
 
 const fields = ['provider', 'authentication', 'user_name', 'from', 'password'];
-
-const Hidden = { hidden: true };
-
-const NotHidden = { hidden: false };
 
 export default {
     title: 'SMTP Account',
@@ -34,7 +31,7 @@ export default {
             title: 'Send e-mail as'
         }
     },
-    dynamicConfig: ({id}, state, _, { errors }) => {
+    dynamicConfig: ({ id }, state, _, { errors }) => {
         if ((id || errors) && state.provider?.hidden !== false) {
             return {
                 provider: NotHidden,
