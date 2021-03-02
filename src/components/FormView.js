@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import ObjectControl from "./ObjectControl";
 import { makeStyles, useTheme } from "@material-ui/core";
 import { catchError, switchMap, tap, map } from "rxjs/operators";
-import { of } from "rxjs";
+import { isObservable, of } from "rxjs";
 import zzip from "../util/zzip";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
@@ -116,9 +116,19 @@ const FormView = ({
 
             let seedSubscription;
             if (formDataType !== dataType && !rootId) {
-                seedSubscription = formDataType.config().subscribe(
-                    config => {
-                        const seed = (config.actions?.new?.seed);
+                seedSubscription = formDataType.config().pipe(
+                    switchMap(config => {
+                        let seed = config.actions?.new?.seed;
+                        if (typeof seed === 'function') {
+                            seed = seed(formDataType);
+                        }
+                        if (isObservable(seed)) {
+                            return seed;
+                        }
+                        return of(seed);
+                    })
+                ).subscribe(
+                    seed => {
                         if (seed) {
                             seed[FETCHED] = true;
                             value.set(seed);

@@ -5,19 +5,31 @@ import NewIcon from '@material-ui/icons/Add';
 import { DataTypeSubject } from "../services/subjects";
 import Loading from "../components/Loading";
 import { FETCHED } from "../common/Symbols";
+import { switchMap } from "rxjs/operators";
+import { isObservable, of } from "rxjs";
 
 const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
 
     const [seed, setSeed] = useState(null);
 
     useEffect(() => {
-        DataTypeSubject.for(dataType.id).config().subscribe(
-            config => {
-                const seed = (config.actions?.new?.seed) || {};
-                seed[FETCHED] = true;
-                setSeed(seed);
-            }
-        )
+        const subscription = DataTypeSubject.for(dataType.id).config().pipe(
+            switchMap(config => {
+                let seed = config.actions?.new?.seed;
+                if (typeof seed === 'function') {
+                    seed = seed(dataType);
+                }
+                if (isObservable(seed)) {
+                    return seed;
+                }
+                return of(seed || {});
+            })
+        ).subscribe(seed => {
+            seed[FETCHED] = true;
+            setSeed(seed);
+        });
+
+        return () => subscription.unsubscribe();
     }, [dataType]);
 
     if (seed) {
