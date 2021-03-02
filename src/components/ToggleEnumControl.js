@@ -4,6 +4,7 @@ import { useSpreadState } from "../common/hooks";
 import { makeStyles } from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
 import clsx from "clsx";
+import { Alert } from "@material-ui/lab";
 
 const useStyles = makeStyles(theme => ({
     option: {
@@ -60,7 +61,7 @@ export default function EnumControl({
 
     value.get();
 
-    const optionsControls = Object.keys(options).map(
+    let optionsControls = Object.keys(options).map(
         option => (
             <Button key={option}
                     variant={option === value.cache ? 'contained' : 'outlined'}
@@ -76,6 +77,14 @@ export default function EnumControl({
             </Button>
         )
     );
+
+    if (!optionsControls.length) {
+        optionsControls = (
+            <Alert severity="info">
+                No options available
+            </Alert>
+        )
+    }
 
     return (
         <div>
