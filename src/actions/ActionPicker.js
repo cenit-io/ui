@@ -44,7 +44,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
     const theme = useTheme();
     const classes = useToolbarStyles();
 
-    const { actions, width, moreEl } = state;
+    const { actions, width, moreEl, config } = state;
 
     const [containerState] = useContainerContext();
 
@@ -77,7 +77,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                     }
                 );
 
-                setState({ actions });
+                setState({ actions, config });
             });
 
             return () => subscription.unsubscribe();
@@ -99,6 +99,8 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
         max--;
     }
 
+    const iconFor = action => (config.actions && config.actions[action.key]?.icon) || action.icon;
+
     const actionsControls = [];
 
     let cursor = 0;
@@ -106,7 +108,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
         cursor++;
         const action = actions[i];
 
-        const Icon = action.icon;
+        const Icon = iconFor(action);
 
         const title = typeof action.title === "function"
             ? action.title.call(this, containerState)
@@ -137,7 +139,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
         menu = [];
         while (cursor < actions.length) {
             const action = actions[cursor];
-            const Icon = action.icon;
+            const Icon = iconFor(action);
             const title = typeof action.title === "function"
                 ? action.title.call(this, containerState)
                 : action.title;
