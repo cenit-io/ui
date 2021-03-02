@@ -73,6 +73,10 @@ Issues & next features
 
 - Add data type agent field to deletion task
 
+- Add file store migration progress viewer
+
+- Add seed contexts to e-mail notification forms 
+
 ### Optimizations
 
 - Cache for Liquid templates

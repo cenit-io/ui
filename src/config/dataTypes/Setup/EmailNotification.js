@@ -4,6 +4,7 @@ import { arrayDiff } from "../../../common/arrays";
 import API from "../../../services/ApiService";
 import { map } from "rxjs/operators";
 import { deepMergeObjectsOnly } from "../../../common/merge";
+import { Hidden, NotHidden } from "../../../common/constants";
 
 const fields = [
     'namespace', 'name', 'active', 'data_type', 'observers', 'transformation',
@@ -39,16 +40,17 @@ export default {
             }
         },
         observers: {
-            controlProps: {
-                disabled: true
-            }
+            ...Hidden,
+            title: 'Triggers'
         },
-        transformation: {
-            controlProps: {
-                disabled: true
-            }
+        transformation: Hidden,
+        email_channel: {
+            ...Hidden,
+            title: 'E-Mail Channel'
         },
         email_data_type: {
+            ...Hidden,
+            title: 'Type',
             controlProps: {
                 deleteDisabled: true,
                 editDisabled: true
@@ -57,18 +59,12 @@ export default {
     },
     dynamicConfig: ({ id, data_type, email_data_type }, state) => {
         let changed;
-        if ((id || data_type) && state.observers?.controlProps?.disabled !== false) {
+        if ((id || data_type) && state.observers?.hidden !== false) {
             state = deepMergeObjectsOnly(state, {
-                observers: {
-                    controlProps: {
-                        disabled: false
-                    }
-                },
-                transformation: {
-                    controlProps: {
-                        disabled: false
-                    }
-                }
+                observers: NotHidden,
+                transformation: NotHidden,
+                email_channel: NotHidden,
+                email_data_type: NotHidden
             });
             changed = true;
         }
