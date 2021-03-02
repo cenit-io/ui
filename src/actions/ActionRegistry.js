@@ -20,7 +20,7 @@ class ActionRegistryClass {
     byKey = key => this.actions[key];
 
     register = (action, props = {}) => {
-        props.key = Random.string();
+        props.key = props.key || Random.string();
         if (!props.hasOwnProperty('arity')) {
             props.arity = 0;
         }

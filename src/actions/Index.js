@@ -436,7 +436,7 @@ function Index(props) {
     }, [dataType]);
 
     if (config) {
-        const IndexComponent = config.indexComponent || DefaultIndex;
+        const IndexComponent = config.actions?.index?.component || DefaultIndex;
 
         return <IndexComponent {...props}/>;
     }
@@ -448,5 +448,6 @@ export default ActionRegistry.register(Index, {
     kind: ActionKind.collection,
     bulkable: true,
     icon: ListIcon,
-    title: 'List'
+    title: 'List',
+    key: 'index'
 });

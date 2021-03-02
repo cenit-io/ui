@@ -22,6 +22,10 @@ export const ActiveTenantIconFilled = () => (
 export default {
     title: 'Active Tenant',
     icon: <ActiveTenantIconFilled/>,
-    indexComponent: ActiveTenants,
+    actions: {
+        index: {
+            component: ActiveTenants
+        }
+    },
     onlyActions: [Index, CleanActiveTenants]
 };
