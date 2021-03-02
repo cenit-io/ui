@@ -7,15 +7,13 @@ import { FILE_TYPE } from "../services/DataTypeService";
 
 function DownloadFile({ dataType, record }) {
 
-    return API.get('setup', 'data_type', dataType.id, {
+    return API.get('setup', 'data_type', dataType.id, 'digest', 'download', {
         headers: {
-            'X-Template-Options': JSON.stringify({ viewport: '{ns_slug slug}' })
-        }
+            'X-Query-Selector': JSON.stringify({ id: record.id })
+        },
+        responseType: 'blob'
     }).pipe(
-        switchMap(({ ns_slug, slug }) => API.get(ns_slug, slug, record.id, 'digest', {
-            responseType: 'blob'
-        })),
-        tap(data => saveAs(data, record.filename))
+        tap(data => data && saveAs(data, record.filename))
     );
 }
 
