@@ -105,7 +105,7 @@ export class DataType {
         return this.find({ namespace, name }).pipe(
             switchMap(dataType => {
                 if (!dataType && name.startsWith('Dt')) {
-                    return DataType.getById(name.substring(3))
+                    return DataType.getById(name.substring(2))
                 }
 
                 return of(dataType);
@@ -503,7 +503,7 @@ export class DataType {
         return this.find_data_type(name, namespace).pipe(
             switchMap(dataType => {
                 if (!dataType && name.startsWith('Dt')) {
-                    return DataType.getById(name.substring(3))
+                    return DataType.getById(name.substring(2))
                 }
 
                 return of(dataType);
@@ -547,13 +547,15 @@ export class DataType {
                 }
             ),
             tap(dt => {
-                ns_hash[ref] = dt;
-                if (dt.namespace !== ns) {
-                    ns_hash = this.nss[dt.namespace];
-                    if (!ns_hash) {
-                        ns_hash = this.nss[dt.namespace] = {};
-                    }
+                if (dt) {
                     ns_hash[ref] = dt;
+                    if (dt.namespace !== ns) {
+                        ns_hash = this.nss[dt.namespace];
+                        if (!ns_hash) {
+                            ns_hash = this.nss[dt.namespace] = {};
+                        }
+                        ns_hash[ref] = dt;
+                    }
                 }
             }),
             share()
