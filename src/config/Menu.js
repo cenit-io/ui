@@ -3,7 +3,7 @@ import { DataTypeSubject } from "../services/subjects";
 import DataIcon from "../icons/DataIcon";
 import ConfigurationIcon from "../icons/ConfigurationIcon";
 import FlowsIcon from "../icons/FlowsIcon";
-import NotificationsIcon from "../icons/NotificationsIcon";
+import SystemNotificationIcon from "../icons/NotificationsIcon";
 import DataEventsIcon from "../icons/DataEventsIcon";
 import EmailChannelsIcon from "../icons/EmailChannelsIcon";
 import SchedulersIcon from "../icons/SchedulersIcon";
@@ -79,12 +79,19 @@ export default {
                 },
                 {
                     type: DataTypeSubject.type,
-                    title: 'Notifications',
+                    title: 'Notification Flows',
                     $ref: {
                         namespace: 'Setup',
-                        name: 'SystemNotification'
+                        name: 'NotificationFlow'
                     },
-                    icon: <NotificationsIcon/>
+                    icon: (
+                        <SvgIcon component="svg">
+                            <g>
+                                <path
+                                    d="M12,18.5c0.83,0,1.5-0.67,1.5-1.5h-3C10.5,17.83,11.17,18.5,12,18.5z M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10 c5.52,0,10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8c4.41,0,8,3.59,8,8S16.41,20,12,20z M16,11.39 c0-2.11-1.03-3.92-3-4.39V6.5c0-0.57-0.43-1-1-1s-1,0.43-1,1V7c-1.97,0.47-3,2.27-3,4.39V14H7v2h10v-2h-1V11.39z M14,14h-4v-3 c0-1.1,0.9-2,2-2s2,0.9,2,2V14z"/>
+                            </g>
+                        </SvgIcon>
+                    )
                 },
                 {
                     type: DataTypeSubject.type,
@@ -168,7 +175,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Resource'
                     },
-                    icon: <ResourceIcon/>
+                    icon: <ResourceIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -177,7 +184,7 @@ export default {
                         namespace: 'Setup',
                         name: 'EmailChannel'
                     },
-                    icon: <EmailChannelsIcon/>
+                    icon: <EmailChannelsIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -186,7 +193,7 @@ export default {
                         namespace: 'Setup',
                         name: 'SmtpProvider'
                     },
-                    icon: <EmailChannelsIcon/>
+                    icon: <EmailChannelsIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -195,7 +202,7 @@ export default {
                         namespace: 'Setup',
                         name: 'ApiSpec'
                     },
-                    icon: <ApiSpecsIcon/>
+                    icon: <ApiSpecsIcon component="svg"/>
                 }
             ]
         },
@@ -210,7 +217,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Algorithm'
                     },
-                    icon: <AlgorithmIcon/>
+                    icon: <AlgorithmIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -219,7 +226,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Application'
                     },
-                    icon: <ApplicationIcon/>
+                    icon: <ApplicationIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -228,7 +235,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Snippet'
                     },
-                    icon: <SnippetIcon/>
+                    icon: <SnippetIcon component="svg"/>
                 }
             ]
         },
@@ -243,7 +250,7 @@ export default {
                         namespace: 'Setup',
                         name: 'AuthorizationClient'
                     },
-                    icon: <AuthorizationClientsIcon/>
+                    icon: <AuthorizationClientsIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -252,7 +259,7 @@ export default {
                         namespace: 'Setup',
                         name: 'AuthorizationProvider'
                     },
-                    icon: <ProviderIcon/>
+                    icon: <ProviderIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -261,7 +268,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Authorization'
                     },
-                    icon: <AuthorizationIcon/>
+                    icon: <AuthorizationIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -270,7 +277,7 @@ export default {
                         namespace: 'Cenit',
                         name: 'OauthAccessGrant'
                     },
-                    icon: <AccessGrantIcon/>
+                    icon: <AccessGrantIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -279,7 +286,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Oauth2Scope'
                     },
-                    icon: <OauthScopesIcon/>
+                    icon: <OauthScopesIcon component="svg"/>
                 }
             ]
         },
@@ -294,7 +301,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Collection'
                     },
-                    icon: <CollectionIcon/>
+                    icon: <CollectionIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -303,7 +310,7 @@ export default {
                         namespace: 'Setup',
                         name: 'CrossSharedCollection'
                     },
-                    icon: <SharedCollectionIcon/>
+                    icon: <SharedCollectionIcon component="svg"/>
                 }
             ]
         },
@@ -318,16 +325,16 @@ export default {
                         namespace: 'Mongoid::Tracer',
                         name: 'Trace'
                     },
-                    icon: <TraceIcon/>
+                    icon: <TraceIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
-                    title: 'Notifications',
+                    title: 'System Notifications',
                     $ref: {
                         namespace: 'Setup',
                         name: 'SystemNotification'
                     },
-                    icon: <NotificationsIcon/>
+                    icon: <SystemNotificationIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -337,7 +344,7 @@ export default {
                         name: 'Task'
                     },
                     icon: (
-                        <SvgIcon>
+                        <SvgIcon component="svg">
                             <g>
                                 <path
                                     d="M14,2H6C4.9,2,4.01,2.9,4.01,4L4,20c0,1.1,0.89,2,1.99,2H18c1.1,0,2-0.9,2-2V8L14,2z M18,20H6V4h7v5h5V20z M8.82,13.05 L7.4,14.46L10.94,18l5.66-5.66l-1.41-1.41l-4.24,4.24L8.82,13.05z"/>
@@ -353,7 +360,7 @@ export default {
                         name: 'Storage'
                     },
                     icon: (
-                        <SvgIcon>
+                        <SvgIcon component="svg">
                             <g xmlns="http://www.w3.org/2000/svg">
                                 <path
                                     d="M14,2H6C4.9,2,4,2.9,4,4v16c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2V8L14,2z M18,20H6V4h8v4h4V20z M12,17L12,17 c-1.1,0-2-0.9-2-2l0-5.5C10,9.22,10.22,9,10.5,9h0C10.78,9,11,9.22,11,9.5V15h2V9.5C13,8.12,11.88,7,10.5,7h0C9.12,7,8,8.12,8,9.5 L8,15c0,2.21,1.79,4,4,4h0c2.21,0,4-1.79,4-4v-4h-2v4C14,16.1,13.1,17,12,17z"/>
@@ -374,7 +381,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Namespace'
                     },
-                    icon: <NamespaceIcon/>
+                    icon: <NamespaceIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -383,7 +390,7 @@ export default {
                         namespace: 'Setup',
                         name: 'DataTypeConfig'
                     },
-                    icon: <ConfigIcon/>
+                    icon: <ConfigIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -392,7 +399,7 @@ export default {
                         namespace: 'Setup',
                         name: 'FileStoreConfig'
                     },
-                    icon: <ConfigIcon/>
+                    icon: <ConfigIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -401,7 +408,7 @@ export default {
                         namespace: 'Setup',
                         name: 'FlowConfig'
                     },
-                    icon: <ConfigIcon/>
+                    icon: <ConfigIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
@@ -410,7 +417,7 @@ export default {
                         namespace: 'Setup',
                         name: 'Binding'
                     },
-                    icon: <ConfigIcon/>
+                    icon: <ConfigIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,

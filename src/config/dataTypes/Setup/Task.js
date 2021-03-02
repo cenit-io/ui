@@ -173,7 +173,7 @@ export const TasksHierarchy = [
     },
     {
         "namespace": "Setup",
-        "name": "NotificationExecution"
+        "name": "NotificationFlowExecution"
     },
     {
         "namespace": "Setup",
