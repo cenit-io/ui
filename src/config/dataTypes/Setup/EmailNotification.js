@@ -84,7 +84,7 @@ export default {
                         $or: [
                             {
                                 type: 'Export',
-                                source_data_type_id: data_type.id
+                                source_data_type_id: `$oid#${data_type.id}`
                             },
                             {
                                 type: 'Export',
@@ -96,8 +96,8 @@ export default {
                             },
                             {
                                 type: 'Conversion',
-                                source_data_type_id: data_type.id,
-                                target_data_type_id: email_data_type.id
+                                source_data_type_id: `$oid#${data_type.id}`,
+                                target_data_type_id: `$oid#${email_data_type.id}`
                             }
                         ]
                     }
