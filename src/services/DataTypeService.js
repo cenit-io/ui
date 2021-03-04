@@ -11,6 +11,7 @@ import deepDup from "../common/deepDup";
 import Hash from 'object-hash';
 import { Config as ConfigSymbol } from "../common/Symbols";
 import { titleize } from "../common/strutls";
+import FileDataTypeConfig from "../config/FileDataTypeConfig";
 
 const SimpleTypes = ['integer', 'number', 'string', 'boolean'];
 
@@ -1161,6 +1162,10 @@ export class FileDataType extends DataType {
         opts.headers['Content-Type'] = 'multipart/form-data';
 
         return API.post('setup', 'data_type', this.id, 'digest', 'upload', opts, formData);
+    }
+
+    config() {
+        return of(FileDataTypeConfig);
     }
 }
 
