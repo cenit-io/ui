@@ -130,7 +130,7 @@ function ObjectControl(props) {
 
     const {
         onChange, value, dataType, fetchPath, onFetched, config,
-        property, width, disabled, onStack, readOnly, errors
+        property, width, disabled, onStack, readOnly, errors, fetched
     } = props;
 
     const { rootId, rootDataType } = useFormContext();
@@ -164,7 +164,7 @@ function ObjectControl(props) {
     useEffect(() => {
         if (rootId) {
             const v = value.get();
-            if (!(v && v[FETCHED])) {
+            if (!fetched && !(v && v[FETCHED])) {
                 const subject = DataTypeSubject.for(getDataType().id);
                 const subscription = (subject?.config() || of({})).pipe(
                     switchMap(config => {
@@ -207,7 +207,7 @@ function ObjectControl(props) {
             value.set({ ...value.cache, [FETCHED]: true });
             setState({ ready: true });
         }
-    }, [getDataType, rootId, value, initialFormValue]);
+    }, [getDataType, rootId, value, initialFormValue, fetched]);
 
     useEffect(() => {
         if (orchestrator) {
@@ -285,7 +285,7 @@ function ObjectControl(props) {
     const context = rootId ? FormContex.edit : FormContex.new;
 
     if (properties) {
-        const fetching = value.get() && !value.cache[FETCHED];
+        const fetching = !fetched && (value.get() && !value.cache[FETCHED]);
 
         const configFields = controlConfig?.fields || {};
 

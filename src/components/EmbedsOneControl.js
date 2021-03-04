@@ -48,7 +48,10 @@ function PlaceHolder({ value, dataType, label, error, className }) {
     );
 }
 
-function EmbedsOneControl({ title, value, errors, property, dataType, onDelete, onChange, width, disabled, onStack, readOnly }) {
+function EmbedsOneControl({
+                              title, value, errors, property, dataType, onDelete, onChange,
+                              width, disabled, onStack, readOnly, fetched
+                          }) {
 
     const [state, setState] = useSpreadState();
 
@@ -103,7 +106,8 @@ function EmbedsOneControl({ title, value, errors, property, dataType, onDelete, 
                                            width={width}
                                            disabled={disabled}
                                            readOnly={readOnly}
-                                           onStack={handleStack}/>;
+                                           onStack={handleStack}
+                                           fetched={fetched}/>;
             actionButton =
                 <IconButton onClick={() => setOpen(false)} disabled={disabled}><ArrowDropUpIcon/></IconButton>;
         } else {
