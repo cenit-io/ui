@@ -71,7 +71,7 @@ function SwitchSchedulers({ selectedItems, record, dataType, containerContext, s
     } else if (selectedItems.length) {
         message = `The ${selectedItems.length} selected schedulers will be ${action}.`;
     } else {
-        message = `All the found schedulers will be ${action}`;
+        message = `All found schedulers will be ${action}`;
     }
 
     return containerContext.confirm({
