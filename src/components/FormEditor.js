@@ -431,6 +431,7 @@ const FormEditor = ({
                                         readOnly={readOnly}
                                         onStack={handleStack}
                                         seed={item.seed}
+                                        typesFilter={item.typesFilter}
                                         rootId={item.rootId}
                                         max={item.max}
                                         height={controlHeight}

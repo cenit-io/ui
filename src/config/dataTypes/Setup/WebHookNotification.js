@@ -47,7 +47,10 @@ export default {
                 const formValue = value.parent;
                 const source_data_type = formValue.propertyValue('data_type').get();
                 return { source_data_type };
-            }
+            },
+            typesFilter: dataTypes => dataTypes.filter(
+                ({ name }) => name.includes('Template')
+            )
         },
         template_options: Hidden
     },

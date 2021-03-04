@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import ObjectControl from "./ObjectControl";
 import { makeStyles, useTheme } from "@material-ui/core";
-import { catchError, switchMap, tap, map } from "rxjs/operators";
+import { catchError, switchMap, map } from "rxjs/operators";
 import { isObservable, of } from "rxjs";
 import zzip from "../util/zzip";
 import List from "@material-ui/core/List";
@@ -30,7 +30,7 @@ const useStyles = makeStyles(theme => ({
 
 const FormView = ({
                       rootId, submitter, viewport, dataType, width, height, value, _type,
-                      disabled, onStack, readOnly, onFormSubmit, onUpdate, seed
+                      disabled, onStack, readOnly, onFormSubmit, onUpdate, seed, typesFilter
                   }) => {
 
     const [state, setState] = useSpreadState({
@@ -75,31 +75,25 @@ const FormView = ({
                 switchMap(
                     descendants => zzip(...descendants.map(d => d.isAbstract())).pipe(
                         map(
-                            abstracts => descendants = descendants.filter((_, index) => !abstracts[index])
+                            abstracts => descendants.filter((_, index) => !abstracts[index])
                         ),
-                        tap(
-                            () => setState({ descendants })
-                        ),
-                        switchMap(
-                            () => zzip(...descendants.map(d => d.getTitle()))
-                        ),
-                        tap(
-                            titles => setState({ titles })
-                        ),
-                        switchMap(
-                            () => zzip(...descendants.map(d => d.config()))
-                        )
+                        map(types => (typesFilter && typesFilter(types)) || types),
+                        switchMap(types => zzip(
+                            of(types),
+                            zzip(...types.map(t => t.config())),
+                            zzip(...types.map(t => t.getTitle()))
+                        ))
                     )
                 )
             ).subscribe(
-                configs => setState({ configs })
+                ([descendants, configs, titles]) => setState({ descendants, titles, configs })
             );
         }
 
         if (subscription) {
             return () => subscription.unsubscribe();
         }
-    }, [dataType, rootId, _type]);
+    }, [dataType, rootId, _type, typesFilter]);
 
     useEffect(() => {
         if (formDataType) {

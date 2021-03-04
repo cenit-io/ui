@@ -59,7 +59,10 @@ export default {
                     target_data_type = formValue.propertyValue('email_data_type').get();
                 }
                 return { source_data_type, target_data_type };
-            }
+            },
+            typesFilter: dataTypes => dataTypes.filter(
+                ({ name }) => name.includes('Template') || name.includes('Converter')
+            )
         },
         email_channel: {
             ...Hidden,

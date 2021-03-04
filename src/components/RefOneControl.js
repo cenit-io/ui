@@ -85,6 +85,7 @@ function RefOneControl({
         onStack({
             value: new FormRootValue({ [FETCHED]: true }),
             seed,
+            typesFilter: config.typesFilter,
             dataType: property.dataType,
             title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
             callback: newValue => {

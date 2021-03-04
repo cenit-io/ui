@@ -61,6 +61,7 @@ export default function RefManyControl({
             onStack({
                 value: new FormRootValue({ [FETCHED]: true }),
                 seed,
+                typesFilter: config.typesFilter,
                 dataType: property.dataType,
                 title: itemValue => property.dataType.titleFor(itemValue).pipe(
                     map(itemTitle => `[${property.name} #${value.length}] ${itemTitle}`)
