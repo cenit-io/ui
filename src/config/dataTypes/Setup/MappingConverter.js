@@ -1,6 +1,6 @@
 import React from "react";
 import ConverterFilledIcon from "../../../icons/ConverterFilledIcon";
-import { DataType } from "../../../services/DataTypeService";
+import { DataType, FILE_TYPE } from "../../../services/DataTypeService";
 import JsonControl from "../../../components/JsonControl";
 import EmbedsOneControl from "../../../components/EmbedsOneControl";
 import { switchMap, map } from "rxjs/operators";
@@ -8,6 +8,8 @@ import zzip from "../../../util/zzip";
 import Random from "../../../util/Random";
 import { formConfigProperties } from "../../../components/ObjectControl";
 import sharedOriginFields from "../../orchestrators/sharedOriginFields";
+import { Config } from "../../../common/Symbols";
+import { of } from "rxjs";
 
 const SourceDataTypeID = Symbol.for('source_data_type_id');
 const TargetDataTypeID = Symbol.for('target_data_type_id');
@@ -16,67 +18,114 @@ const JsonMapping = Symbol.for('json_mapping');
 function dynamicConfig({ source_data_type, target_data_type }, state) {
     if (source_data_type?.id && target_data_type?.id) {
         if (
-            state[SourceDataTypeID] !== source_data_type.id ||
-            state[TargetDataTypeID] !== target_data_type.id
+            state.source_data_type_id !== source_data_type.id ||
+            state.target_data_type_id !== target_data_type.id
         ) {
-            return DataType.getById(target_data_type.id).pipe(
+            return zzip(
+                DataType.getById(source_data_type.id),
+                DataType.getById(target_data_type.id)
+            ).pipe(
                 switchMap(
-                    targetDataType => formConfigProperties(targetDataType).pipe(
-                        switchMap(
-                            ([, props]) => zzip(
-                                ...props.map(
-                                    p => p.isModel()
-                                )
-                            ).pipe(
-                                map(modelProps => {
-                                    const properties = {};
-                                    const modelPropsEnum = ['$', ...props.filter(
-                                        (_, index) => modelProps[index]
-                                    ).map(({ name }) => name)];
-                                    props.forEach((prop, index) => {
-                                        if (modelProps[index]) {
-                                            properties[prop.name] = {
-                                                type: 'object',
-                                                properties: {
-                                                    source: {
-                                                        type: 'string',
-                                                        enum: modelPropsEnum
-                                                    },
-                                                    transformation: {
-                                                        referenced: true,
-                                                        $ref: {
-                                                            namespace: 'Setup', name: 'Translator'
-                                                        }
-                                                    },
-                                                    options: {
-                                                        type: 'string'
-                                                    }
+                    dts => zzip(
+                        ...dts.map(dt => of(dt)),
+                        ...dts.map(dt => formConfigProperties(dt))
+                    )
+                ),
+                switchMap(([sourceDataType, targetDataType, [, sourceProps], [, targetProps]]) => zzip(
+                    zzip(
+                        ...sourceProps.map(p => p.isModel())
+                    ),
+                    zzip(
+                        ...targetProps.map(p => p.isModel())
+                    )
+                    ).pipe(
+                    map(([sourceModelFlags, targetModelFlags]) => [
+                        sourceModelFlags,
+                        sourceProps.filter((_, index) => sourceModelFlags[index]),
+                        targetProps.filter((_, index) => targetModelFlags[index])
+                    ]),
+                    map(([sourceModelFlags, sourceModelProps, targetModelProps]) => {
+                        const sourceModelPropsEnum = ['$', ...sourceModelProps.map(({ name }) => name)];
+                        let properties = {};
+                        const config = { fields: {} };
+                        if (targetDataType._type === FILE_TYPE) {
+                            properties = {
+                                id: {
+                                    type: 'string'
+                                },
+                                filename: {
+                                    type: 'string'
+                                },
+                                contentType: {
+                                    type: 'string'
+                                },
+                                data: {
+                                    type: 'object',
+                                    properties: {
+                                        source: {
+                                            type: 'string',
+                                            enum: sourceModelPropsEnum
+                                        },
+                                        transformation: {
+                                            referenced: true,
+                                            $ref: {
+                                                namespace: 'Setup', name: 'Template'
+                                            }
+                                        },
+                                        options: {
+                                            type: 'string'
+                                        }
+                                    }
+                                }
+                            };
+                            config.fields.data = { controlProps: { fetched: true } };
+                        } else {
+                            targetProps.forEach(({ name }, index) => {
+                                if (sourceModelFlags[index]) {
+                                    config.fields[name] = { controlProps: { fetched: true } };
+                                    properties[name] = {
+                                        type: 'object',
+                                        properties: {
+                                            source: {
+                                                type: 'string',
+                                                enum: sourceModelPropsEnum
+                                            },
+                                            transformation: {
+                                                referenced: true,
+                                                $ref: {
+                                                    namespace: 'Setup', name: 'Translator'
                                                 }
-                                            }
-                                        } else {
-                                            properties[prop.name] = { type: 'string' }
-                                        }
-                                    });
-                                    return {
-                                        [SourceDataTypeID]: source_data_type.id,
-                                        [TargetDataTypeID]: target_data_type.id,
-                                        mapping: {
-                                            key: Random.string(),
-                                            control: EmbedsOneControl,
-                                            controlProps: {
-                                                dataType: DataType.from({
-                                                    name: 'Mapping',
-                                                    schema: {
-                                                        type: 'object',
-                                                        properties
-                                                    }
-                                                })
+                                            },
+                                            options: {
+                                                type: 'string'
                                             }
                                         }
-                                    };
-                                })
-                            )
-                        )
+                                    }
+                                } else {
+                                    properties[name] = { type: 'string' }
+                                }
+                            });
+                        }
+                        return {
+                            source_data_type_id: source_data_type.id,
+                            target_data_type_id: target_data_type.id,
+                            mapping: {
+                                key: Random.string(),
+                                control: EmbedsOneControl,
+                                controlProps: {
+                                    fetched: true,
+                                    dataType: DataType.from({
+                                        name: 'Mapping',
+                                        schema: {
+                                            type: 'object',
+                                            properties
+                                        },
+                                        [Config]: config
+                                    })
+                                }
+                            }
+                        };
+                    })
                     )
                 )
             );
