@@ -72,23 +72,35 @@ function RefOneControl({
         onPicked && onPicked(record);
     };
 
-    const handleAddNew = () => onStack({
-        value: new FormRootValue({ [FETCHED]: true }),
-        dataType: property.dataType,
-        title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
-        callback: newValue => {
-            property.dataType.titleFor(newValue).subscribe(
-                title => {
-                    newValue = refValue(newValue);
-                    newValue[Title] = title;
-                    value.set(newValue);
-                    value.changed().next(newValue);
-                    onChange(newValue);
-                }
-            );
-        },
-        max: 1
-    });
+    const handleAddNew = () => {
+        const newSeed = config?.newSeed;
+        let seed
+        if (newSeed) {
+            if (typeof newSeed === 'function') {
+                seed = dataType => newSeed(value, dataType);
+            } else {
+                seed = newSeed;
+            }
+        }
+        onStack({
+            value: new FormRootValue({ [FETCHED]: true }),
+            seed,
+            dataType: property.dataType,
+            title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
+            callback: newValue => {
+                property.dataType.titleFor(newValue).subscribe(
+                    title => {
+                        newValue = refValue(newValue);
+                        newValue[Title] = title;
+                        value.set(newValue);
+                        value.changed().next(newValue);
+                        onChange(newValue);
+                    }
+                );
+            },
+            max: 1
+        });
+    };
 
     const handleEdit = () => onStack({
         value: new FormRootValue(value.get()),

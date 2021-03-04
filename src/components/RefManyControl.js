@@ -18,7 +18,7 @@ import { ReactSortable } from "react-sortablejs";
 
 export default function RefManyControl({
                                            title, property, value, onChange, onStack, onDelete, disabled,
-                                           readOnly, config, additionalViewportProps
+                                           readOnly, config, additionalViewportProps, seed
                                        }) {
 
     const [state, setState] = useSpreadState();
@@ -49,8 +49,18 @@ export default function RefManyControl({
 
     const addNew = () => {
         if (value.get()) {
+            const newSeed = config?.newSeed;
+            let seed
+            if (newSeed) {
+                if (typeof newSeed === 'function') {
+                    seed = dataType => newSeed(value, dataType);
+                } else {
+                    seed = newSeed;
+                }
+            }
             onStack({
                 value: new FormRootValue({ [FETCHED]: true }),
+                seed,
                 dataType: property.dataType,
                 title: itemValue => property.dataType.titleFor(itemValue).pipe(
                     map(itemTitle => `[${property.name} #${value.length}] ${itemTitle}`)

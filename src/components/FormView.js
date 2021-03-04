@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import ObjectControl from "./ObjectControl";
 import { makeStyles, useTheme } from "@material-ui/core";
 import { catchError, switchMap, tap, map } from "rxjs/operators";
@@ -30,7 +30,7 @@ const useStyles = makeStyles(theme => ({
 
 const FormView = ({
                       rootId, submitter, viewport, dataType, width, height, value, _type,
-                      disabled, onStack, readOnly, onFormSubmit, onUpdate
+                      disabled, onStack, readOnly, onFormSubmit, onUpdate, seed
                   }) => {
 
     const [state, setState] = useSpreadState({
@@ -38,6 +38,8 @@ const FormView = ({
     });
     const classes = useStyles();
     const theme = useTheme();
+
+    const seeded = useRef(false);
 
     const {
         formDataType, dataTypeConfig, errors, initialFormValue,
@@ -115,10 +117,13 @@ const FormView = ({
             });
 
             let seedSubscription;
-            if (formDataType !== dataType && !rootId) {
-                seedSubscription = formDataType.config().pipe(
-                    switchMap(config => {
-                        let seed = config.actions?.new?.seed;
+            if (!rootId && !seeded.current) {
+                const seedObservable = seed
+                    ? of(seed)
+                    : formDataType.config().pipe(map(config => config.actions?.new?.seed));
+
+                seedSubscription = seedObservable.pipe(
+                    switchMap(seed => {
                         if (typeof seed === 'function') {
                             seed = seed(formDataType);
                         }
@@ -127,14 +132,13 @@ const FormView = ({
                         }
                         return of(seed);
                     })
-                ).subscribe(
-                    seed => {
-                        if (seed) {
-                            seed[FETCHED] = true;
-                            value.set(seed);
-                        }
+                ).subscribe(seed => {
+                    seeded.current = true;
+                    if (seed) {
+                        seed[FETCHED] = true;
+                        value.set(seed);
                     }
-                );
+                });
             }
 
             return () => {
@@ -145,7 +149,7 @@ const FormView = ({
                 }
             }
         }
-    }, [value, submitter, viewport, formDataType, rootId, onFormSubmit, dataTypeConfig]);
+    }, [value, submitter, viewport, formDataType, rootId, onFormSubmit, dataTypeConfig, seed]);
 
     useEffect(() => {
         if (dataTypeConfig) {
@@ -186,11 +190,12 @@ const FormView = ({
                                    onStack={onStack}
                                    onFetched={handleFetched}/>;
     } else {
-        const textSkeleton = <Skeleton variant="text"/>;
+        const textSkeleton = <Skeleton variant="text" component="div"/>;
         if (configs) {
             control = configs.map(
                 (config, index) => ((!config.crud || config.crud.includes(CRUD.create)) &&
                     <ListItem button
+                              component="li"
                               key={descendants[index].id}
                               onClick={() => setState({ formDataType: descendants[index] })}>
                         <ListItemIcon>
@@ -202,12 +207,13 @@ const FormView = ({
             ).filter(item => item);
         } else if (descendantsCount) {
             const iconSkeleton = <Skeleton variant="circle"
+                                           component="div"
                                            width={theme.spacing(3)}
                                            height={theme.spacing(3)}/>;
             control = [];
             for (let i = 0; i < descendantsCount; i++) {
                 control.push(
-                    <ListItem key={`sk_${i}`}>
+                    <ListItem key={`sk_${i}`} component="li">
                         <ListItemIcon>
                             {iconSkeleton}
                         </ListItemIcon>
@@ -220,9 +226,9 @@ const FormView = ({
         }
         control = (
             <div className="flex column full-width justify-content-center">
-                <List style={{ height: `calc(${formHeight})` }}>
-                    <ListSubheader className={classes.bgPaper}>
-                        <Typography variant="h6">
+                <List style={{ height: `calc(${formHeight})` }} component="ul">
+                    <ListSubheader className={classes.bgPaper} component="li">
+                        <Typography variant="h6" component="h6">
                             {titles ? 'Pick a type' : textSkeleton}
                         </Typography>
                     </ListSubheader>

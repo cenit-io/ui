@@ -42,9 +42,25 @@ export default {
         },
         observers: {
             ...Hidden,
-            title: 'Triggers'
+            title: 'Triggers',
+            newSeed: value => {
+                const formValue = value.parent;
+                const data_type = formValue.propertyValue('data_type').get();
+                return { data_type };
+            }
         },
-        transformation: Hidden,
+        transformation: {
+            ...Hidden,
+            newSeed: (value, dataType) => {
+                const formValue = value.parent;
+                const source_data_type = formValue.propertyValue('data_type').get();
+                let target_data_type;
+                if (dataType && dataType.name.includes('Converter')) {
+                    target_data_type = formValue.propertyValue('email_data_type').get();
+                }
+                return { source_data_type, target_data_type };
+            }
+        },
         email_channel: {
             ...Hidden,
             title: 'E-Mail Channel'

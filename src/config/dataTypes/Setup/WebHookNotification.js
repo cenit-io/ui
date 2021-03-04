@@ -16,7 +16,12 @@ export default {
         index: {
             fields: [...arrayDiff(fields, 'transformation'), 'updated_at']
         },
-        new: { fields }
+        new: {
+            fields,
+            seed: {
+                observers: []
+            }
+        }
     },
     fields: {
         data_type: {
@@ -26,13 +31,23 @@ export default {
         },
         observers: {
             ...Hidden,
-            title: 'Triggers'
+            title: 'Triggers',
+            newSeed: value => {
+                const formValue = value.parent;
+                const data_type = formValue.propertyValue('data_type').get();
+                return { data_type };
+            }
         },
         url: Hidden,
         hook_method: Hidden,
         transformation: {
             ...Hidden,
-            title: 'Template'
+            title: 'Template',
+            newSeed: value => {
+                const formValue = value.parent;
+                const source_data_type = formValue.propertyValue('data_type').get();
+                return { source_data_type };
+            }
         },
         template_options: Hidden
     },

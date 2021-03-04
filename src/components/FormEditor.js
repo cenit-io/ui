@@ -288,7 +288,7 @@ const FormEditor = ({
                     stack[index].dataType._type === FILE_TYPE
                         ? FileUploader
                         : FormView)
-            )
+            );
             setStackControls(controls);
         });
 
@@ -430,6 +430,7 @@ const FormEditor = ({
                                         disabled={saving}
                                         readOnly={readOnly}
                                         onStack={handleStack}
+                                        seed={item.seed}
                                         rootId={item.rootId}
                                         max={item.max}
                                         height={controlHeight}
