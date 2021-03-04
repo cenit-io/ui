@@ -22,13 +22,14 @@ export default {
             fields,
             seed: dataType => API.get('setup', 'data_type', dataType.id, 'digest', 'email_data_type').pipe(
                 map(data => {
+                    const seed = {
+                        observers: []
+                    };
                     if (data) {
                         const { id, namespace, name } = data;
-                        return {
-                            email_data_type: { _reference: true, id, namespace, name }
-                        };
+                        seed.email_data_type = { _reference: true, id, namespace, name };
                     }
-                    return {};
+                    return seed;
                 })
             )
         }
