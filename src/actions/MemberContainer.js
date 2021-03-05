@@ -41,6 +41,8 @@ import './ProcessFlow';
 import './Oauth2AuthorizationAccess';
 import './Oauth1AuthorizationAccess';
 import './AccessTokens';
+import './RunScript';
+import './RunAlgorithm';
 
 const useActionContainerStyles = makeStyles(theme => ({
     toolbar: {

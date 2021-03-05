@@ -122,7 +122,7 @@ export default function ({ onToggle }) {
                 right: 0,
                 width: 'max-content'
             }}>
-                <UserCard idToken={idToken}/>
+                <UserCard idToken={idToken} onClose={handleClose}/>
             </Paper>
         </ClickAwayListener>;
     }

@@ -56,12 +56,17 @@ const UserCard = ({ idToken, onClose }) => {
         AuthorizationService.logout();
     };
 
+    const handleSwitchSudo = () => {
+        setTenantState({ switchSudo: true });
+        onClose && onClose();
+    };
+
     let sudoControl;
     if (isSuperUser) {
         const superEnabled = user.super_admin_enabled;
         const action = superEnabled ? 'Disable' : 'Enable';
         sudoControl = (
-            <ListItem button onClick={() => setTenantState({ switchSudo: true })}>
+            <ListItem button onClick={handleSwitchSudo}>
                 <ListItemIcon className={superEnabled ? classes.safe : classes.warn}>
                     <SudoIcon/>
                 </ListItemIcon>

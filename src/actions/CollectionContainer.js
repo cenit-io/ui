@@ -17,6 +17,7 @@ import './SendToFlow';
 import './Cross';
 import './PullImport';
 import './CleanActiveTenants';
+import './CancelConsumers';
 
 import CollectionActionsToolbar from "./CollectionActionsToolbar";
 import Random from "../util/Random";

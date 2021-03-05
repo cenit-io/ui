@@ -35,8 +35,18 @@ import WorkflowIcon from "../icons/WorkflowIcon";
 import ResourceIcon from "@material-ui/icons/WorkOutline";
 import TraceIcon from "@material-ui/icons/HistoryToggleOff";
 import SvgIcon from "@material-ui/core/SvgIcon";
-import NamespaceIcon from "@material-ui/icons/Dns";
+import NamespaceIcon from "@material-ui/icons/DnsOutlined";
 import ConfigIcon from "@material-ui/icons/Settings";
+import TenantIcon from "@material-ui/icons/HomeOutlined";
+import AdministrationIcon from "@material-ui/icons/AdminPanelSettingsOutlined";
+import { RoleMenuIcon } from "./dataTypes/Role";
+import { UserMenuIcon } from "./dataTypes/User";
+import { ScriptMenuIcon } from "./dataTypes/Script";
+import { TaskMenuIcon } from "./dataTypes/Setup/Task";
+import { ActiveTenantMenuIcon } from "./dataTypes/Cenit/ActiveTenant";
+import { RabbitConsumerMenuIcon } from "./dataTypes/RabbitConsumer";
+import { SystemReportMenuIcon } from "./dataTypes/Setup/SystemReport";
+import { DelayedMessageMenuIcon } from "./dataTypes/Setup/DelayedMessage";
 
 export default {
     groups: [
@@ -430,5 +440,110 @@ export default {
                 }
             ]
         },
+        {
+            title: 'Administration',
+            IconComponent: AdministrationIcon,
+            items: [
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Tenants',
+                    $ref: {
+                        namespace: '',
+                        name: 'Account'
+                    },
+                    icon: <TenantIcon component="svg"/>
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Configuration',
+                    $ref: {
+                        namespace: 'Setup',
+                        name: 'Configuration'
+                    },
+                    icon: <ConfigIcon component="svg"/>,
+                    superUser: true
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Users',
+                    $ref: {
+                        namespace: '',
+                        name: 'User'
+                    },
+                    icon: <UserMenuIcon component="svg"/>,
+                    superUser: true
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Roles',
+                    $ref: {
+                        namespace: '',
+                        name: 'Role'
+                    },
+                    icon: <RoleMenuIcon component="svg"/>,
+                    superUser: true
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Scripts',
+                    $ref: {
+                        namespace: '',
+                        name: 'Script'
+                    },
+                    icon: <ScriptMenuIcon component="svg"/>,
+                    superUser: true
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Scripts Executions',
+                    $ref: {
+                        namespace: '',
+                        name: 'ScriptExecution'
+                    },
+                    icon: <TaskMenuIcon component="svg"/>,
+                    superUser: true
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Active Tenants',
+                    $ref: {
+                        namespace: 'Cenit',
+                        name: 'ActiveTenant'
+                    },
+                    icon: <ActiveTenantMenuIcon component="svg"/>,
+                    superUser: true
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Rabbit Consumers',
+                    $ref: {
+                        namespace: '',
+                        name: 'RabbitConsumer'
+                    },
+                    icon: <RabbitConsumerMenuIcon component="svg"/>,
+                    superUser: true
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Delayed Messages',
+                    $ref: {
+                        namespace: 'Setup',
+                        name: 'DelayedMessage'
+                    },
+                    icon: <DelayedMessageMenuIcon component="svg"/>,
+                    superUser: true
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'System Reports',
+                    $ref: {
+                        namespace: 'Setup',
+                        name: 'SystemReport'
+                    },
+                    icon: <SystemReportMenuIcon component="svg"/>,
+                    superUser: true
+                }
+            ]
+        }
     ]
 };

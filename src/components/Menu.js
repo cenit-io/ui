@@ -1,5 +1,4 @@
-import React, { useEffect, useReducer } from 'react';
-import spreadReducer from "../common/spreadReducer";
+import React, { useEffect } from 'react';
 import Loading from "./Loading";
 import { fade, makeStyles, useTheme } from "@material-ui/core/styles";
 import clsx from "clsx";
@@ -9,11 +8,12 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import List from "@material-ui/core/List";
-import Random from "../util/Random";
 import Typography from "@material-ui/core/Typography";
 import Search from "./Search";
 import { DataTypeSelector } from "../layout/AppBar";
 import FrezzerLoader from "./FrezzerLoader";
+import { useSpreadState } from "../common/hooks";
+import { useTenantContext } from "../layout/TenantContext";
 
 const useStyles = makeStyles(theme => ({
     header: {
@@ -69,9 +69,17 @@ const useStyles = makeStyles(theme => ({
 
 export default function ({ subject, height }) {
 
-    const [state, setState] = useReducer(spreadReducer, {});
+    const [state, setState] = useSpreadState();
     const classes = useStyles();
     const theme = useTheme();
+
+    const [tenantState] = useTenantContext();
+
+    const { user } = tenantState;
+
+    const userRoles = user.roles || [];
+
+    const isSuperUser = user.super_admin_enabled && !!userRoles.find(({ name }) => name === 'super_admin');
 
     const { config, item } = state;
 
@@ -101,19 +109,31 @@ export default function ({ subject, height }) {
         return <Loading/>;
     }
 
-    const subjectFor = ({ $ref }) => DataType.find($ref);
-
     const handleSelect = item => () => setState({ item });
 
     const handleDataTypeSelected = ({ id }) => TabsSubject.next(DataTypeSubject.for(id).key);
 
-    const groups = config.groups.sort(
+    const userConfig = {
+        ...config,
+        groups: (config.groups || []).map(group => ({
+            ...group,
+            items: (group.items || []).filter(
+                ({ superUser, roles }) => (
+                    (!superUser || isSuperUser) &&
+                    (!roles || userRoles.find(role => roles.includes(role)))
+                )
+            )
+        }))
+    };
+
+    const groups = userConfig.groups.sort(
         (g1, g2) => g1.items.length - g2.items.length
     ).map(
         (group, gIndex) => {
             const items = group.items.map(
                 (item, iIndex) => (
                     <ListItem button
+                              component="li"
                               className={classes.item}
                               key={`g_${gIndex}_${iIndex}`}
                               onClick={handleSelect(item)}>
@@ -137,7 +157,7 @@ export default function ({ subject, height }) {
                             </div>
                         </div>
                         <div className={classes.groupItems}>
-                            <List className={classes.items}>
+                            <List className={classes.items} component="ul">
                                 {items}
                             </List>
                         </div>
@@ -155,7 +175,7 @@ export default function ({ subject, height }) {
     return (
         <div className="relative" style={{ height: `calc(${height})` }}>
             <div className={classes.header}>
-                <Typography variant="h6" className={classes.title}>
+                <Typography variant="h6" className={classes.title} component="h6">
                     Menu
                 </Typography>
                 <div className="grow-1"/>
