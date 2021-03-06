@@ -1233,6 +1233,8 @@ export class Property {
             }));
     }
 
+    getDescription = () => this.getSchemaEntry('description');
+
     isReadOnly(context) {
         return context === FormContext.edit && (this.name === '_id' || this.name === 'id');
     }

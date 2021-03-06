@@ -116,9 +116,10 @@ function PropertyControl(props) {
     useEffect(() => {
         const subscription = zzip(
             property.getSchema(),
-            (config.title && of(config.title)) || property.getTitle()
+            (config.title && of(config.title)) || property.getTitle(),
+            (config.description && of(config.description)) || property.getDescription()
         ).subscribe(
-            ([schema, title]) => setState({ schema, title })
+            ([schema, title, description]) => setState({ schema, title, description })
         );
 
         return () => subscription.unsubscribe();

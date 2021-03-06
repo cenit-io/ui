@@ -4,6 +4,7 @@ import ClearIcon from "@material-ui/icons/Clear";
 import FilledInput from "@material-ui/core/FilledInput";
 import reactiveControlFor from "./reactiveControlFor";
 import OutlinedInput from "@material-ui/core/OutlinedInput";
+import FormHelperText from "@material-ui/core/FormHelperText";
 
 const InputControl = reactiveControlFor(
     ({
@@ -21,7 +22,8 @@ const InputControl = reactiveControlFor(
          type,
          multiline,
          variant,
-         autoComplete
+         autoComplete,
+         description
      }) => {
         if (variant !== 'outlined') {
             variant = 'filled';
@@ -56,6 +58,9 @@ const InputControl = reactiveControlFor(
                                   </InputAdornment>
                               }
                               variant={variant}/>
+                <FormHelperText>
+                    {description}
+                </FormHelperText>
             </FormControl>
         );
     }
