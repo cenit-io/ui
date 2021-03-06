@@ -97,9 +97,15 @@ const FormView = ({
 
     useEffect(() => {
         if (formDataType) {
-            const configSubscription = formDataType.config().subscribe(
+            const subscription = formDataType.config().subscribe(
                 dataTypeConfig => setState({ dataTypeConfig })
             );
+            return () => subscription.unsubscribe();
+        }
+    }, [formDataType]);
+
+    useEffect(() => {
+        if (formDataType && dataTypeConfig) {
             let submitSubscription;
             const submitterSubscription = submitter.subscribe(() => {
                 submitSubscription = onFormSubmit(formDataType, value, dataTypeConfig.formSanitizer).pipe(
@@ -112,10 +118,7 @@ const FormView = ({
 
             let seedSubscription;
             if (!rootId && !seeded.current) {
-                const seedObservable = seed
-                    ? of(seed)
-                    : formDataType.config().pipe(map(config => config.actions?.new?.seed));
-
+                const seedObservable = of(seed || dataTypeConfig.actions?.new?.seed);
                 seedSubscription = seedObservable.pipe(
                     switchMap(seed => {
                         if (typeof seed === 'function') {
@@ -136,7 +139,6 @@ const FormView = ({
             }
 
             return () => {
-                configSubscription.unsubscribe();
                 submitterSubscription.unsubscribe();
                 if (seedSubscription) {
                     seedSubscription.unsubscribe();
