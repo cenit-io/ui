@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import {
     AppBar,
     Avatar,
@@ -20,6 +20,12 @@ import MenuIcon from "../icons/MenuIcon";
 import QuickAccessIcon from "../icons/QuickAccessIcon";
 import { useTenantContext } from "./TenantContext";
 import { useMainContext } from "./MainContext";
+import zzip from "../util/zzip";
+import { DataType } from "../services/DataTypeService";
+import { useSpreadState } from "../common/hooks";
+import NotificationsIcon from "../icons/NotificationsIcon";
+import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
+import { TenantMenuIcon } from "../config/dataTypes/Account";
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
@@ -71,9 +77,9 @@ export const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
 export default function ({ onToggle }) {
 
-    const { idToken } = useMainContext()[0];
+    const [state, setState] = useSpreadState();
 
-    const [open, setOpen] = useState(false);
+    const { idToken } = useMainContext()[0];
 
     const [tenantState] = useTenantContext();
 
@@ -84,12 +90,29 @@ export default function ({ onToggle }) {
     const theme = useTheme();
     const smUp = useMediaQuery(theme.breakpoints.up('sm'));
 
+    const { open, tenantDataType, notificationDataType, taskDataType } = state;
+
+    useEffect(() => {
+        const subscription = zzip(
+            DataType.find({ namespace: '', name: 'Account' }),
+            DataType.find({ namespace: 'Setup', name: 'SystemNotification' }),
+            DataType.find({ namespace: 'Setup', name: 'Task' })
+        ).subscribe(
+            ([tenantDataType, notificationDataType, taskDataType]) => setState({
+                tenantDataType,
+                notificationDataType,
+                taskDataType
+            })
+        );
+        return () => subscription.unsubscribe();
+    }, []);
+
     function handleClick(e) {
-        setOpen(e.currentTarget);
+        setState({ open: Boolean(e.currentTarget) });
     }
 
     function handleClose() {
-        setOpen(null);
+        setState({ open: false });
     }
 
     if (!smUp && open) {
@@ -101,6 +124,12 @@ export default function ({ onToggle }) {
     }
 
     const handleDataTypeSelected = ({ id }) => TabsSubject.next(DataTypeSubject.for(id).key);
+
+    const handlePickNotifications = () => TabsSubject.next(DataTypeSubject.for(notificationDataType.id).key);
+
+    const handlePickTasks = () => TabsSubject.next(DataTypeSubject.for(taskDataType.id).key);
+
+    const handlePickTenants = () => TabsSubject.next(DataTypeSubject.for(tenantDataType.id).key);
 
     const handleTenantSelected = ({ id }) => {
         if (ConfigService.state().tenant_id !== id) {
@@ -127,12 +156,33 @@ export default function ({ onToggle }) {
         </ClickAwayListener>;
     }
 
-    const avatar = smUp && <div style={{ position: 'relative' }}>
-        <IconButton onClick={handleClick}>
-            <Avatar alt={idToken.name} src={idToken.picture}/>
+    const avatar = smUp && (
+        <div style={{ position: 'relative' }}>
+            <IconButton onClick={handleClick}>
+                <Avatar alt={idToken.name} src={idToken.picture}/>
+            </IconButton>
+            {menu}
+        </div>
+    );
+
+    const dataTypeSearch = smUp && (
+        <Search dataTypeSelector={DataTypeSelector}
+                onSelect={({ record }) => handleDataTypeSelected(record)}
+                disabled={loading}/>
+    );
+
+    const tenantSearch = smUp && (
+        <Search searchIcon={<HomeIcon/>}
+                selectorComponent={TenantSelector}
+                onSelect={handleTenantSelected}
+                disabled={loading}/>
+    ) || (
+        <IconButton color="inherit"
+                    disabled={loading}
+                    onClick={handlePickTenants}>
+            <TenantMenuIcon/>
         </IconButton>
-        {menu}
-    </div>;
+    );
 
     return <AppBar position="fixed">
         <Toolbar>
@@ -155,14 +205,19 @@ export default function ({ onToggle }) {
                         onClick={handleQuickAccess}>
                 <QuickAccessIcon/>
             </IconButton>
-            <Search dataTypeSelector={DataTypeSelector}
-                    onSelect={({ record }) => handleDataTypeSelected(record)}
-                    disabled={loading}/>
+            {dataTypeSearch}
             <div className={classes.grow}/>
-            <Search searchIcon={<HomeIcon/>}
-                    selectorComponent={TenantSelector}
-                    onSelect={handleTenantSelected}
-                    disabled={loading}/>
+            <IconButton color="inherit"
+                        disabled={loading}
+                        onClick={handlePickNotifications}>
+                <NotificationsIcon/>
+            </IconButton>
+            <IconButton color="inherit"
+                        disabled={loading}
+                        onClick={handlePickTasks}>
+                <TaskMenuIcon/>
+            </IconButton>
+            {tenantSearch}
             {avatar}
         </Toolbar>
     </AppBar>

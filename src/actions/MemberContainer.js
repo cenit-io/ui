@@ -43,6 +43,7 @@ import './Oauth1AuthorizationAccess';
 import './AccessTokens';
 import './RunScript';
 import './RunAlgorithm';
+import './SwitchTenant';
 
 const useActionContainerStyles = makeStyles(theme => ({
     toolbar: {

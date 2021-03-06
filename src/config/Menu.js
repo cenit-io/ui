@@ -37,7 +37,6 @@ import TraceIcon from "@material-ui/icons/HistoryToggleOff";
 import SvgIcon from "@material-ui/core/SvgIcon";
 import NamespaceIcon from "@material-ui/icons/DnsOutlined";
 import ConfigIcon from "@material-ui/icons/Settings";
-import TenantIcon from "@material-ui/icons/HomeOutlined";
 import AdministrationIcon from "@material-ui/icons/AdminPanelSettingsOutlined";
 import { RoleMenuIcon } from "./dataTypes/Role";
 import { UserMenuIcon } from "./dataTypes/User";
@@ -47,6 +46,7 @@ import { ActiveTenantMenuIcon } from "./dataTypes/Cenit/ActiveTenant";
 import { RabbitConsumerMenuIcon } from "./dataTypes/RabbitConsumer";
 import { SystemReportMenuIcon } from "./dataTypes/Setup/SystemReport";
 import { DelayedMessageMenuIcon } from "./dataTypes/Setup/DelayedMessage";
+import { TenantMenuIcon } from "./dataTypes/Account";
 
 export default {
     groups: [
@@ -451,7 +451,7 @@ export default {
                         namespace: '',
                         name: 'Account'
                     },
-                    icon: <TenantIcon component="svg"/>
+                    icon: <TenantMenuIcon component="svg"/>
                 },
                 {
                     type: DataTypeSubject.type,
