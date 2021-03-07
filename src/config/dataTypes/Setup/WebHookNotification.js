@@ -3,6 +3,7 @@ import { arrayDiff } from "../../../common/arrays";
 import { deepMergeObjectsOnly } from "../../../common/merge";
 import { Hidden, NotHidden } from "../../../common/constants";
 import WebhookFilledIcon from "../../../icons/WebhookFilledIcon";
+import ViewerControl from "../../../components/ViewerControl";
 
 const fields = [
     'namespace', 'name', 'active', 'data_type', 'observers', 'url', 'hook_method',
@@ -36,7 +37,8 @@ export default {
                 const formValue = value.parent;
                 const data_type = formValue.propertyValue('data_type').get();
                 return { data_type };
-            }
+            },
+            formConfig: () => ({ fields: { data_type: { control: ViewerControl } } })
         },
         url: Hidden,
         hook_method: Hidden,
@@ -50,7 +52,8 @@ export default {
             },
             typesFilter: dataTypes => dataTypes.filter(
                 ({ name }) => name.includes('Template')
-            )
+            ),
+            formConfig: { fields: { source_data_type: { control: ViewerControl } } }
         },
         template_options: Hidden
     },

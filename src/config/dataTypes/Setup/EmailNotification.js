@@ -5,6 +5,7 @@ import API from "../../../services/ApiService";
 import { map } from "rxjs/operators";
 import { deepMergeObjectsOnly } from "../../../common/merge";
 import { Hidden, NotHidden } from "../../../common/constants";
+import ViewerControl from "../../../components/ViewerControl";
 
 const fields = [
     'namespace', 'name', 'active', 'data_type', 'observers', 'transformation',
@@ -48,7 +49,7 @@ export default {
                 const data_type = formValue.propertyValue('data_type').get();
                 return { data_type };
             },
-            formConfig: () => ({ fields: { data_type: { readOnly: true } } })
+            formConfig: () => ({ fields: { data_type: { control: ViewerControl } } })
         },
         transformation: {
             ...Hidden,
@@ -65,9 +66,9 @@ export default {
                 ({ name }) => name.includes('Template') || name.includes('Converter')
             ),
             formConfig: dataType => {
-                const config = { fields: { source_data_type: { readOnly: true } } };
+                const config = { fields: { source_data_type: { control: ViewerControl } } };
                 if (dataType.name.includes('Converter')) {
-                    config.fields.target_data_type = { readOnly: true };
+                    config.fields.target_data_type = { control: ViewerControl };
                 }
                 return config;
             }
