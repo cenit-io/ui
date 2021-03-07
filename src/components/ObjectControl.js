@@ -13,6 +13,7 @@ import { useFormContext } from "./FormContext";
 import FrezzerLoader from "./FrezzerLoader";
 import zzip from "../util/zzip";
 import { useSpreadState } from "../common/hooks";
+import { deepMergeObjectsOnly } from "../common/merge";
 
 function editFields(config) {
     const editConfig = config.actions?.edit;
@@ -145,7 +146,7 @@ function ObjectControl(props) {
         ).subscribe(([sConfig, properties]) => {
             setState({
                 properties,
-                controlConfig: { ...sConfig, ...config },
+                controlConfig: deepMergeObjectsOnly(sConfig, config || {}),
                 orchestrator: ( // TODO can be new with rootId in EmbedsManyControl
                     editMode
                         ? sConfig?.actions?.edit?.orchestrator

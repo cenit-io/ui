@@ -30,7 +30,8 @@ const useStyles = makeStyles(theme => ({
 
 const FormView = ({
                       rootId, submitter, viewport, dataType, width, height, value, _type,
-                      disabled, onStack, readOnly, onFormSubmit, onUpdate, seed, typesFilter
+                      disabled, onStack, readOnly, onFormSubmit, onUpdate, seed, typesFilter,
+                      formViewControlConfig
                   }) => {
 
     const [state, setState] = useSpreadState({
@@ -173,11 +174,16 @@ const FormView = ({
 
     let control;
 
-    if (dataType && dataTypeConfig) {
+    if (formDataType && dataTypeConfig) {
         const FormViewControl = dataTypeConfig.formViewControl || ObjectControl;
+        let config = formViewControlConfig;
+        if (typeof formViewControlConfig === 'function') {
+            config = formViewControlConfig(formDataType);
+        }
         control = <FormViewControl disabled={disabled}
                                    readOnly={readOnly}
                                    {...configProps}
+                                   config={config}
                                    dataType={formDataType}
                                    width={width}
                                    height={formHeight}

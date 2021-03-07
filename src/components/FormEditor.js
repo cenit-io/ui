@@ -423,29 +423,33 @@ const FormEditor = ({
         (Control, index) => {
             if (index) {
                 const item = stack[index];
-                return item && <Control key={`form_${index}`}
-                                        dataType={item.dataType}
-                                        value={item.value}
-                                        _type={item.value && item.value._type}
-                                        disabled={saving}
-                                        readOnly={readOnly}
-                                        onStack={handleStack}
-                                        seed={item.seed}
-                                        typesFilter={item.typesFilter}
-                                        rootId={item.rootId}
-                                        max={item.max}
-                                        height={controlHeight}
-                                        submitter={item.submitter}
-                                        onSubmitDone={onSubmitDone}
-                                        onSubjectPicked={onSubjectPicked}
-                                        viewport={item.viewport}
-                                        onUpdate={onUpdate}
-                                        onFormSubmit={defaultFormProcessor(
-                                            item.viewport,
-                                            item.rootId,
-                                            index === 1 && onFormSubmit, // TODO Improve this
-                                            onSubmitDone
-                                        )}/>
+                if (item) {
+                    const { controlConfig } = item;
+                    return <Control key={`form_${index}`}
+                                    dataType={item.dataType}
+                                    value={item.value}
+                                    _type={item.value && item.value._type}
+                                    disabled={saving}
+                                    readOnly={readOnly}
+                                    onStack={handleStack}
+                                    seed={item.seed}
+                                    typesFilter={item.typesFilter}
+                                    formViewControlConfig={controlConfig}
+                                    rootId={item.rootId}
+                                    max={item.max}
+                                    height={controlHeight}
+                                    submitter={item.submitter}
+                                    onSubmitDone={onSubmitDone}
+                                    onSubjectPicked={onSubjectPicked}
+                                    viewport={item.viewport}
+                                    onUpdate={onUpdate}
+                                    onFormSubmit={defaultFormProcessor(
+                                        item.viewport,
+                                        item.rootId,
+                                        index === 1 && onFormSubmit, // TODO Improve this
+                                        onSubmitDone
+                                    )}/>
+                }
             }
 
             if (submitResponse) {

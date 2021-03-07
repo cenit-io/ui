@@ -74,7 +74,7 @@ function RefOneControl({
 
     const handleAddNew = () => {
         const newSeed = config?.newSeed;
-        let seed
+        let seed;
         if (newSeed) {
             if (typeof newSeed === 'function') {
                 seed = dataType => newSeed(value, dataType);
@@ -85,6 +85,7 @@ function RefOneControl({
         onStack({
             value: new FormRootValue({ [FETCHED]: true }),
             seed,
+            controlConfig: config?.formConfig,
             typesFilter: config.typesFilter,
             dataType: property.dataType,
             title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),

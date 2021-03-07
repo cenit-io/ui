@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Chip, IconButton, LinearProgress } from "@material-ui/core";
+import React  from 'react';
+import { IconButton } from "@material-ui/core";
 import ClearIcon from '@material-ui/icons/Clear';
 import AddIcon from '@material-ui/icons/Add';
 import CreateIcon from '@material-ui/icons/AddCircleOutline';
@@ -18,7 +18,7 @@ import { ReactSortable } from "react-sortablejs";
 
 export default function RefManyControl({
                                            title, property, value, onChange, onStack, onDelete, disabled,
-                                           readOnly, config, additionalViewportProps, seed
+                                           readOnly, config, additionalViewportProps
                                        }) {
 
     const [state, setState] = useSpreadState();
@@ -26,8 +26,6 @@ export default function RefManyControl({
     const { initialFormValue } = useFormContext();
 
     const { open } = state;
-
-    const setFocused = focused => setState({ focused });
 
     const handlePick = ({ record, title }) => {
         const aValue = [...(value.get() || [])];
@@ -50,7 +48,7 @@ export default function RefManyControl({
     const addNew = () => {
         if (value.get()) {
             const newSeed = config?.newSeed;
-            let seed
+            let seed;
             if (newSeed) {
                 if (typeof newSeed === 'function') {
                     seed = dataType => newSeed(value, dataType);
@@ -61,6 +59,7 @@ export default function RefManyControl({
             onStack({
                 value: new FormRootValue({ [FETCHED]: true }),
                 seed,
+                controlConfig: config?.formConfig,
                 typesFilter: config.typesFilter,
                 dataType: property.dataType,
                 title: itemValue => property.dataType.titleFor(itemValue).pipe(

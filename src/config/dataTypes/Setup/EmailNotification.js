@@ -47,7 +47,8 @@ export default {
                 const formValue = value.parent;
                 const data_type = formValue.propertyValue('data_type').get();
                 return { data_type };
-            }
+            },
+            formConfig: () => ({ fields: { data_type: { readOnly: true } } })
         },
         transformation: {
             ...Hidden,
@@ -62,7 +63,14 @@ export default {
             },
             typesFilter: dataTypes => dataTypes.filter(
                 ({ name }) => name.includes('Template') || name.includes('Converter')
-            )
+            ),
+            formConfig: dataType => {
+                const config = { fields: { source_data_type: { readOnly: true } } };
+                if (dataType.name.includes('Converter')) {
+                    config.fields.target_data_type = { readOnly: true };
+                }
+                return config;
+            }
         },
         email_channel: {
             ...Hidden,
