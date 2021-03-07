@@ -12,9 +12,11 @@ import { Config } from "../../../common/Symbols";
 import { of } from "rxjs";
 import { titleize } from "../../../common/strutls";
 
-const SourceDataTypeID = Symbol.for('source_data_type_id');
-const TargetDataTypeID = Symbol.for('target_data_type_id');
 const JsonMapping = Symbol.for('json_mapping');
+
+const idDescription = 'Match an existing ID to update an existing record';
+
+const filePlainProperties = ['id', 'filename', 'contentType'];
 
 function dynamicConfig({ source_data_type, target_data_type }, state) {
     if (source_data_type?.id && target_data_type?.id) {
@@ -46,19 +48,42 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                         targetProps.filter((_, index) => targetModelFlags[index])
                     ]),
                     map(([targetModelFlags, sourceModelProps, targetModelProps]) => {
-                        const autoSuggest = {
-                            anchor: '{{',
-                            values: sourceProps.map(({ name }) => name),
-                            tail: '}}'
+                        const autoSuggestProps = {
+                            controlProps: {
+                                autoSuggest: {
+                                    anchor: '{{',
+                                    values: sourceProps.map(({ name }) => name),
+                                    tail: '}}'
+                                }
+                            }
                         };
                         const sourceModelPropsEnum = ['$', ...sourceModelProps.map(({ name }) => name)];
+                        const subMappingSchema = {
+                            type: 'object',
+                            properties: {
+                                source: {
+                                    type: 'string',
+                                    enum: sourceModelPropsEnum,
+                                    default: '$'
+                                },
+                                transformation: {
+                                    referenced: true,
+                                    $ref: {
+                                        namespace: 'Setup', name: 'Translator'
+                                    }
+                                },
+                                options: {
+                                    type: 'string'
+                                }
+                            }
+                        };
                         let properties = {};
-                        const config = { fields: {} };
+                        const config = { fields: { id: { readOnly: false } } };
                         if (targetDataType._type === FILE_TYPE) {
                             properties = {
                                 id: {
                                     type: 'string',
-                                    description: 'Match an existing ID to update an existing record'
+                                    description: idDescription
                                 },
                                 filename: {
                                     type: 'string'
@@ -87,41 +112,23 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                                     }
                                 }
                             };
-                            config.fields.filename = { controlProps: { autoSuggest } };
+                            filePlainProperties.forEach(p => config.fields[p] = autoSuggestProps);
                             config.fields.data = { controlProps: { fetched: true } };
                         } else {
                             targetProps.forEach(({ name }, index) => {
                                 if (targetModelFlags[index]) {
                                     config.fields[name] = { controlProps: { fetched: true } };
                                     properties[name] = {
-                                        type: 'object',
                                         label: `${titleize(name)} mapping`,
-                                        properties: {
-                                            source: {
-                                                type: 'string',
-                                                enum: sourceModelPropsEnum,
-                                                default: '$'
-                                            },
-                                            transformation: {
-                                                referenced: true,
-                                                $ref: {
-                                                    namespace: 'Setup', name: 'Translator'
-                                                }
-                                            },
-                                            options: {
-                                                type: 'string'
-                                            }
-                                        }
+                                        ...subMappingSchema
                                     }
                                 } else {
-                                    properties[name] = { type: 'string' }
+                                    properties[name] = { type: 'string' };
                                     if (name === 'id' || name === '_id') {
-                                        properties[name].description = 'Match an existing ID to update an existing record';
-                                    }
-                                    config[name] = {
-                                        controlProps: {
-                                            autoSuggest
-                                        }
+                                        properties[name].description = idDescription;
+                                        config.fields[name].controlProps = autoSuggestProps.controlProps;
+                                    } else {
+                                        config.fields[name] = autoSuggestProps
                                     }
                                 }
                             });
