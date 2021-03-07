@@ -1,7 +1,6 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Random from "../util/Random";
 import { Failed } from "../common/Symbols";
-import spreadReducer from "../common/spreadReducer";
 import { useSpreadState } from "../common/hooks";
 import { useFormContext } from "./FormContext";
 
@@ -10,17 +9,28 @@ const reactiveControlFor = Control => function (props) {
     const { value, errors, onDelete, onChange, parser, validator, onError } = props;
 
     const [state, setState] = useSpreadState({
-        key: Random.string()
+        key: Random.string(),
+        controlledValue: value.get()
     });
+
+    const refValue = useRef(value.cache);
 
     const { initialFormValue } = useFormContext();
 
-    const { key, autoFocus } = state;
+    const { key, autoFocus, controlledValue } = state;
 
     useEffect(() => {
         setState({ key: Random.string() });
         const subscription = value.changed().subscribe(
-            v => setState({ key: Random.string() })
+            v => {
+                if (v !== refValue.current) {
+                    refValue.current = v;
+                    setState({
+                        key: Random.string(),
+                        controlledValue: v
+                    })
+                }
+            }
         );
         return () => subscription.unsubscribe();
     }, [value]);
@@ -32,12 +42,7 @@ const reactiveControlFor = Control => function (props) {
         } else {
             parsedValue = v;
         }
-        if (parsedValue === Failed) {
-            setState({
-                key: Random.string(),
-                autoFocus: true
-            });
-        } else {
+        if (parsedValue !== Failed) {
             const newState = {};
             if (validator) {
                 let errors = validator(parsedValue);
@@ -52,6 +57,8 @@ const reactiveControlFor = Control => function (props) {
                     onError(null);
                 }
             }
+            refValue.current = parsedValue;
+            setState({ controlledValue: parsedValue });
             value.set(parsedValue);
             setState(newState);
             onChange && onChange(parsedValue);
@@ -60,37 +67,29 @@ const reactiveControlFor = Control => function (props) {
 
     const handleClear = () => {
         const initialValue = value.valueFrom(initialFormValue);
+        let controlledValue;
         if (initialValue !== undefined && initialValue !== null) {
+            refValue.current = null;
+            setState({ controlledValue: null });
             value.set(null);
         } else {
+            refValue.current = undefined;
+            setState({ controlledValue: undefined });
             value.delete();
         }
         onDelete();
-        setState({
-            key: Random.string(),
-            autoFocus: false
-        })
     };
-
-    const handleBlur = () => setState({
-        key: Random.string(),
-        autoFocus: false
-    });
 
     const error = Boolean(errors && errors.length);
 
     return (
         <Control {...props}
-                 value={value.get()}
+                 value={controlledValue}
                  dynamicKey={key}
                  error={error}
                  onChange={handleChange}
-                 onBlur={handleBlur}
                  autoFocus={autoFocus}
-                 onClear={handleClear}
-                 onFocus={() => setState({
-                     autoFocus: true
-                 })}/>
+                 onClear={handleClear}/>
     );
 };
 

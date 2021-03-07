@@ -10,6 +10,7 @@ import { formConfigProperties } from "../../../components/ObjectControl";
 import sharedOriginFields from "../../orchestrators/sharedOriginFields";
 import { Config } from "../../../common/Symbols";
 import { of } from "rxjs";
+import { titleize } from "../../../common/strutls";
 
 const SourceDataTypeID = Symbol.for('source_data_type_id');
 const TargetDataTypeID = Symbol.for('target_data_type_id');
@@ -45,13 +46,19 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                         targetProps.filter((_, index) => targetModelFlags[index])
                     ]),
                     map(([sourceModelFlags, sourceModelProps, targetModelProps]) => {
+                        const autoSuggest = {
+                            anchor: '{{',
+                            values: sourceProps.map(({ name }) => name),
+                            tail: '}}'
+                        };
                         const sourceModelPropsEnum = ['$', ...sourceModelProps.map(({ name }) => name)];
                         let properties = {};
                         const config = { fields: {} };
                         if (targetDataType._type === FILE_TYPE) {
                             properties = {
                                 id: {
-                                    type: 'string'
+                                    type: 'string',
+                                    description: 'Match an existing ID to update an existing record'
                                 },
                                 filename: {
                                     type: 'string'
@@ -61,10 +68,12 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                                 },
                                 data: {
                                     type: 'object',
+                                    label: 'Data mapping',
                                     properties: {
                                         source: {
                                             type: 'string',
-                                            enum: sourceModelPropsEnum
+                                            enum: sourceModelPropsEnum,
+                                            default: '$'
                                         },
                                         transformation: {
                                             referenced: true,
@@ -78,6 +87,7 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                                     }
                                 }
                             };
+                            config.fields.filename = { controlProps: { autoSuggest } };
                             config.fields.data = { controlProps: { fetched: true } };
                         } else {
                             targetProps.forEach(({ name }, index) => {
@@ -85,10 +95,12 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                                     config.fields[name] = { controlProps: { fetched: true } };
                                     properties[name] = {
                                         type: 'object',
+                                        label: `${titleize(name)} mapping`,
                                         properties: {
                                             source: {
                                                 type: 'string',
-                                                enum: sourceModelPropsEnum
+                                                enum: sourceModelPropsEnum,
+                                                default: '$'
                                             },
                                             transformation: {
                                                 referenced: true,
@@ -103,6 +115,14 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                                     }
                                 } else {
                                     properties[name] = { type: 'string' }
+                                    if (name === 'id' || name === '_id') {
+                                        properties[name].description = 'Match an existing ID to update an existing record';
+                                    }
+                                    config[name] = {
+                                        controlProps: {
+                                            autoSuggest
+                                        }
+                                    }
                                 }
                             });
                         }
@@ -118,6 +138,7 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                                         name: 'Mapping',
                                         schema: {
                                             type: 'object',
+                                            label: 'Mapping',
                                             properties
                                         },
                                         [Config]: config
