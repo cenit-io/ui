@@ -41,11 +41,11 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                     )
                     ).pipe(
                     map(([sourceModelFlags, targetModelFlags]) => [
-                        sourceModelFlags,
+                        targetModelFlags,
                         sourceProps.filter((_, index) => sourceModelFlags[index]),
                         targetProps.filter((_, index) => targetModelFlags[index])
                     ]),
-                    map(([sourceModelFlags, sourceModelProps, targetModelProps]) => {
+                    map(([targetModelFlags, sourceModelProps, targetModelProps]) => {
                         const autoSuggest = {
                             anchor: '{{',
                             values: sourceProps.map(({ name }) => name),
@@ -91,7 +91,7 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                             config.fields.data = { controlProps: { fetched: true } };
                         } else {
                             targetProps.forEach(({ name }, index) => {
-                                if (sourceModelFlags[index]) {
+                                if (targetModelFlags[index]) {
                                     config.fields[name] = { controlProps: { fetched: true } };
                                     properties[name] = {
                                         type: 'object',
