@@ -17,9 +17,9 @@ export default function EmbedsManyViewer({ prop, value }) {
     if (value) {
         const viewers = value.map(
             (v, index) => <EmbedsOneViewer key={index}
-                                            className={classes.chip}
-                                            value={v}
-                                            prop={prop}/>
+                                           className={classes.chip}
+                                           value={v}
+                                           prop={prop}/>
         );
 
         return (

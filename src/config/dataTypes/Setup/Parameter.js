@@ -22,8 +22,10 @@ export default {
             fields: editFields
         }
     },
-    viewers: {
-        parent: recordViewer(p => p?.parent_data_type)
+    fields: {
+        parent: {
+            viewer: recordViewer(p => p?.parent_data_type)
+        }
     },
     crud: [CRUD.read, CRUD.delete]
 };

@@ -16,10 +16,12 @@ export default {
             fields: ['name', 'notification_level', 'time_zone']
         }
     },
-    viewers: {
-        notification_level: ErrorLevelViewer(
-            ({ notification_level }) => notification_level,
-            'background'
-        )
+    fields: {
+        notification_level: {
+            viewer: ErrorLevelViewer(
+                ({ notification_level }) => notification_level,
+                'background'
+            )
+        }
     }
 };

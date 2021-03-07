@@ -1,5 +1,6 @@
 import React from 'react';
 import AttachmentViewer from "../../../viewers/AttachmentViewer";
+import ViewerControl from "../../../components/ViewerControl";
 
 export default {
     title: 'Execution',
@@ -8,7 +9,10 @@ export default {
             fields: ['created_at', 'started_at', 'time_span', 'status', 'attachment', 'task']
         }
     },
-    viewers: {
-        attachment: AttachmentViewer
+    fields: {
+        attachment: {
+            viewer: AttachmentViewer,
+            control: ViewerControl
+        }
     }
 };

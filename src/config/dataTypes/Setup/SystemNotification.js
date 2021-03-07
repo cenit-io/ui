@@ -17,22 +17,20 @@ export default {
     },
     fields: {
         type: {
-            control: ViewerControl
+            control: ViewerControl,
+            viewer: ErrorLevelViewer(LevelProjection, 'background')
         },
         attachment: {
-            control: ViewerControl
+            control: ViewerControl,
+            viewer: AttachmentViewer
         },
         message: {
-            control: ViewerControl
+            control: ViewerControl,
+            viewer: ErrorLevelViewer(LevelProjection)
         },
         task: {
             control: ViewerControl
         }
-    },
-    viewers: {
-        type: ErrorLevelViewer(LevelProjection, 'background'),
-        message: ErrorLevelViewer(LevelProjection),
-        attachment: AttachmentViewer
     },
     crud: [CRUD.read, CRUD.delete]
 };

@@ -25,10 +25,12 @@ export default {
             control: ViewerControl
         },
         target: {
-            control: ViewerControl
+            control: ViewerControl,
+            viewer: recordViewer(trace => trace?.data_type)
         },
         action: {
-            control: ViewerControl
+            control: ViewerControl,
+            viewer: TraceActionViewer(ActionProjection, 'background')
         },
         message: {
             controlProps: {
@@ -38,10 +40,6 @@ export default {
         changes_set: {
             control: ChangesSetControl
         }
-    },
-    viewers: {
-        target: recordViewer(trace => trace?.data_type),
-        action: TraceActionViewer(ActionProjection, 'background')
     },
     crud: [CRUD.read, CRUD.delete]
 };

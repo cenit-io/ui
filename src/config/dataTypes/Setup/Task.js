@@ -92,8 +92,10 @@ export default {
         index: { fields },
         new: { fields }
     },
-    viewers: {
-        status: TaskStatusViewer
+    fields: {
+        status: {
+            viewer: TaskStatusViewer
+        }
     },
     crud: [CRUD.read, CRUD.delete]
 };

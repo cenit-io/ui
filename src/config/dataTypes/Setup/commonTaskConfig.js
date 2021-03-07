@@ -12,18 +12,6 @@ const CommonFields = [
 export default function (title, customFields) {
     customFields = customFields || {};
     const fields = [...Object.keys(customFields), ...CommonFields];
-    const customViewers = {};
-    const fieldsConfig = {};
-    Object.keys(customFields).forEach(field => {
-        const fieldConfig = { ...customFields[field] };
-        if (fieldConfig.viewer) {
-            customViewers[field] = fieldConfig.viewer;
-            delete fieldConfig.viewer;
-        }
-        if (Object.keys(fieldConfig).length) {
-            fieldsConfig[field] = fieldConfig;
-        }
-    });
 
     return {
         title,
@@ -32,15 +20,12 @@ export default function (title, customFields) {
             index: { fields },
             new: { fields }
         },
-        viewers: {
-            status: TaskStatusViewer,
-            ...customViewers
-        },
         fields: {
             status: {
-                control: ViewerControl
+                control: ViewerControl,
+                viewer: TaskStatusViewer
             },
-            ...fieldsConfig
+            ...customFields
         },
         crud: [CRUD.read, CRUD.delete]
     };

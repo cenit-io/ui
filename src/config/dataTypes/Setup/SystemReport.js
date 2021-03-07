@@ -16,9 +16,15 @@ export default {
             fields: ['created_at', 'tenant', 'type', 'message', 'attachment']
         }
     },
-    viewers: {
-        type: ErrorLevelViewer(LevelProjection, 'background'),
-        message: ErrorLevelViewer(LevelProjection),
-        attachment: AttachmentViewer
+    fields: {
+        type: {
+            viewer: ErrorLevelViewer(LevelProjection, 'background')
+        },
+        message: {
+            viewer: ErrorLevelViewer(LevelProjection)
+        },
+        attachment: {
+            viewer: AttachmentViewer
+        }
     }
 };

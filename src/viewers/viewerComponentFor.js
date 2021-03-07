@@ -9,12 +9,12 @@ import JsonViewer from "./JsonViewer";
 import TypePropertyViewer from "./TypePropertyViewer";
 
 export default function viewerComponentFor(property, config) {
-    let configViewer = config?.viewers;
+    let configViewer = config?.fields;
     if (configViewer) {
-        configViewer = configViewer[property.name];
-        if (configViewer) {
-            return configViewer;
-        }
+        configViewer = configViewer[property.name]?.viewer;
+    }
+    if (configViewer) {
+        return configViewer;
     }
 
     if (property.name === '_type') {

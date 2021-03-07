@@ -2,6 +2,7 @@ import React from 'react';
 import recordViewer from "../../../viewers/recordViewer";
 import SvgIcon from "@material-ui/core/SvgIcon";
 import { CRUD } from "../../../actions/ActionRegistry";
+import ViewerControl from "../../../components/ViewerControl";
 
 const StorageIcon = props => (
     <SvgIcon {...props}>
@@ -10,16 +11,23 @@ const StorageIcon = props => (
     </SvgIcon>
 );
 
+const fields = ['storer_data_type', 'storer_object', 'storer_property', 'contentType', 'length'];
+
 export default {
     title: 'Storage',
     icon: <StorageIcon/>,
     actions: {
-        index: {
-            fields: ['storer_data_type', 'storer_object', 'storer_property', 'contentType', 'length']
-        }
+        index: { fields },
+        edit: { fields }
     },
-    viewers: {
-        storer_object: recordViewer(storage => storage?.storer_data_type)
+    fields: {
+        storer_data_type: {
+            control: ViewerControl
+        },
+        storer_object: {
+            viewer: recordViewer(storage => storage?.storer_data_type),
+            control: ViewerControl
+        }
     },
     crud: [CRUD.read, CRUD.delete]
 };

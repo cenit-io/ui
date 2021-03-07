@@ -2,6 +2,7 @@ import React from 'react';
 import { CRUD } from "../../../actions/ActionRegistry";
 import recordViewer from "../../../viewers/recordViewer";
 import BindingIcon from "@material-ui/icons/Settings";
+import { deepMergeObjectsOnly } from "../../../common/merge";
 
 const BinderProperties = [
     'flow_binder', 'connection_binder', 'webhook_binder', 'algorithm_binder',
@@ -25,13 +26,16 @@ export default {
             fields: ['binder_data_type', 'binder', 'bind_data_type', 'bind', 'updated_at']
         }
     },
-    fields: {
+    fields: deepMergeObjectsOnly({
         ...BindingProperties.reduce((config, prop) => (config[prop] = Hidden) && config, {})
-    },
-    viewers: {
-        binder: recordViewer(p => p?.binder_data_type),
-        bind: recordViewer(p => p?.bind_data_type)
-    },
+    }, {
+        binder: {
+            viewer: recordViewer(p => p?.binder_data_type)
+        },
+        bind: {
+            viewer: recordViewer(p => p?.bind_data_type)
+        }
+    }),
     dynamicConfig: (value, state) => {
         const newState = {};
         BindingProperties.filter(p => value.hasOwnProperty(p)).forEach(prop => {
