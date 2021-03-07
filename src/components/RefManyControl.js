@@ -111,6 +111,7 @@ export default function RefManyControl({
         onStack({
             value: new FormRootValue({ id: value.indexValue(index).get().id }),
             dataType: property.dataType,
+            controlConfig: config?.formConfig,
             title: v => property.dataType.titleFor(v).pipe(map(title => `[${property.name} #${index}] ${title}`)),
             callback: item => property.dataType.titleFor(item).subscribe( //TODO sanitize with unsubscribe
                 title => {

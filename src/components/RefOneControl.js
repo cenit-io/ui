@@ -107,6 +107,7 @@ function RefOneControl({
     const handleEdit = () => onStack({
         value: new FormRootValue(value.get()),
         dataType: property.dataType,
+        controlConfig: config?.formConfig,
         title: value => property.dataType.titleFor(value).pipe(map(title => `[${property.name}] ${title}`)),
         callback: newValue => {
             property.dataType.titleFor(newValue).subscribe(
