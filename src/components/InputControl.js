@@ -56,7 +56,7 @@ const InputControl = reactiveControlFor(
          autoSuggest
      }) => {
 
-        value = value || '';
+        const inputValue = value || '';
 
         const [state, setState] = useSpreadState({
             options: [],
@@ -76,14 +76,14 @@ const InputControl = reactiveControlFor(
                 const newState = { caretPosition };
                 const pos = inputRef.current.selectionStart;
                 const anchorSize = autoSuggest.anchor.length;
-                const anchorLookBack = value.substring(pos - anchorSize, pos);
+                const anchorLookBack = inputValue.substring(pos - anchorSize, pos);
                 if (anchorLookBack === anchor) {
                     anchorStart.current = pos;
                 }
                 const start = anchorStart.current;
                 if (start !== -1) {
                     if (pos >= start) {
-                        const partial = value.substring(start, pos);
+                        const partial = inputValue.substring(start, pos);
                         newState.options = partial.length
                             ? values.filter(value => value.includes(partial))
                             : values;
@@ -94,7 +94,7 @@ const InputControl = reactiveControlFor(
                 }
                 setState(newState);
             }
-        }, [value, autoSuggest]);
+        }, [inputValue, autoSuggest]);
 
         const handleBlur = e => {
             anchorStart.current = -1;
@@ -106,10 +106,10 @@ const InputControl = reactiveControlFor(
 
         const selectOption = index => () => {
             if (0 <= index && index < options.length) {
-                let str = value.substring(0, anchorStart.current) +
+                let str = inputValue.substring(0, anchorStart.current) +
                     options[index] + (autoSuggest.tail || '');
                 const newPos = str.length;
-                str += value.substring(caretPosition.pos, value.length);
+                str += inputValue.substring(caretPosition.pos, inputValue.length);
                 if (onChange) {
                     onChange(str);
                 } else {
@@ -187,7 +187,7 @@ const InputControl = reactiveControlFor(
                               type={type}
                               readOnly={readOnly}
                               error={error}
-                              value={value}
+                              value={inputValue}
                               onChange={e => onChange(e.target.value)}
                               onBlur={handleBlur}
                               onKeyDown={handleKeyDown}
