@@ -16,6 +16,7 @@ import EnumControl from "./EnumControl";
 import DateTimeControl from "./DateTimeControl";
 import { useSpreadState } from "../common/hooks";
 import { of } from "rxjs";
+import FormHelperText from "@material-ui/core/FormHelperText";
 
 function controlComponentFor(property) {
     if (property.propertySchema.enum) {
@@ -113,6 +114,8 @@ function PropertyControl(props) {
     const { schema, controlErrors } = state;
     const classes = useStyles();
 
+    const { description } = state;
+
     useEffect(() => {
         const subscription = zzip(
             property.getSchema(),
@@ -152,6 +155,9 @@ function PropertyControl(props) {
             <div className={classes.control}>
                 <ErrorMessages errors={currentErrors}>
                     {control}
+                    <FormHelperText component="p">
+                        {description}
+                    </FormHelperText>
                 </ErrorMessages>
             </div>
         );

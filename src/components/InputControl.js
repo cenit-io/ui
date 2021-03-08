@@ -52,7 +52,6 @@ const InputControl = reactiveControlFor(
          multiline,
          variant,
          autoComplete,
-         description,
          autoSuggest
      }) => {
 
@@ -204,9 +203,6 @@ const InputControl = reactiveControlFor(
                                   </InputAdornment>
                               }
                               variant={variant}/>
-                <FormHelperText component="p">
-                    {description}
-                </FormHelperText>
                 {anchorMenu}
             </FormControl>
         );
