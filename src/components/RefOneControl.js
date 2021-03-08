@@ -140,7 +140,7 @@ function RefOneControl({
             value.delete();
         }
         onDelete();
-        setState({}); // to refresh
+        setState({ text: '' });
     };
 
     let addButton, editButton, deleteButton;
