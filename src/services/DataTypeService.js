@@ -160,6 +160,14 @@ export class DataType {
         return get;
     }
 
+    asRef() {
+        const { id, name, namespace, _type } = this;
+        return {
+            _reference: true,
+            id, namespace, name, _type
+        };
+    }
+
     type_name() {
         if (this._type === CENIT_TYPE) {
             if (this.namespace) {
@@ -1222,6 +1230,10 @@ export class Property {
         return this.getSchema().pipe(map(schema => schema['type'] === 'array'));
     }
 
+    isTypeMany() {
+        return this.type?.includes('Many')
+    }
+
     getTitle() {
         return this.getSchema().pipe(
             switchMap(schema => {
@@ -1239,7 +1251,10 @@ export class Property {
         return context === FormContext.edit && (this.name === '_id' || this.name === 'id');
     }
 
-    isModel() {
+    isModel(andTrueDataType = false) {
+        if (andTrueDataType && !this.dataType.id) {
+            return of(false);
+        }
         return this.getSchema().pipe(
             switchMap(
                 schema => {
