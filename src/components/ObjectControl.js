@@ -147,12 +147,14 @@ function ObjectControl(props) {
             setState({
                 properties,
                 controlConfig: deepMergeObjectsOnly(sConfig, config || {}),
-                orchestrator: ( // TODO can be new with rootId in EmbedsManyControl
+                orchestrator: config?.orchestrator || (
+                    // TODO can be new with rootId in EmbedsManyControl
                     editMode
                         ? sConfig?.actions?.edit?.orchestrator
                         : sConfig?.actions?.new?.orchestrator
                 ) || sConfig?.orchestrator,
-                dynamicConfig: ( // TODO can be new with rootId in EmbedsManyControl
+                dynamicConfig: config?.dynamicConfig || (
+                    // TODO can be new with rootId in EmbedsManyControl
                     editMode
                         ? sConfig?.actions?.edit?.dynamicConfig
                         : sConfig?.actions?.new?.dynamicConfig

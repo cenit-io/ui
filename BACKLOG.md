@@ -43,6 +43,8 @@ Issues & next features
 
 - Clean up tenant configuration after tenant shredding
 
+- Seed for embedded forms
+
 ### Cenit side Issues
 
 - Make build-in data types `$ref` referenced by default.
@@ -77,6 +79,10 @@ Issues & next features
 
 - Add seed contexts to e-mail notification forms 
 
+- Storage updated_at property at index
+
 ### Optimizations
 
 - Cache for Liquid templates
+
+- Pre-cache all build-in data types
