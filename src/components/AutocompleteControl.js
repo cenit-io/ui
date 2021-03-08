@@ -39,7 +39,8 @@ export default function AutocompleteControl({
                                                 error,
                                                 onChange,
                                                 options,
-                                                freeSolo
+                                                freeSolo,
+                                                deleteDisabled
                                             }) {
     const [state, setState] = useState(null);
     const classes = useStyles();
@@ -94,6 +95,7 @@ export default function AutocompleteControl({
                          disabled={disabled}
                          value={state}
                          onChange={handleChange}
+                         disableClearable={deleteDisabled}
                          renderInput={
                              params => <TextField {...params}
                                                   readOnly={readOnly}

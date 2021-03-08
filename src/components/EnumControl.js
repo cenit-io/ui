@@ -8,7 +8,8 @@ export default function EnumControl({
                                         readOnly,
                                         error,
                                         onChange,
-                                        property
+                                        property,
+                                        deleteDisabled
                                     }) {
     const [options, setOptions] = useState({});
 
@@ -28,5 +29,6 @@ export default function EnumControl({
                                 disabled={disabled}
                                 readOnly={readOnly}
                                 error={error}
-                                onChange={onChange}/>;
+                                onChange={onChange}
+                                deleteDisabled={deleteDisabled}/>;
 }
