@@ -3,6 +3,7 @@ import recordViewer from "../../../viewers/recordViewer";
 import SvgIcon from "@material-ui/core/SvgIcon";
 import { CRUD } from "../../../actions/ActionRegistry";
 import ViewerControl from "../../../components/ViewerControl";
+import FileSizeViewer from "../../../viewers/FileSizeViewer";
 
 const StorageIcon = props => (
     <SvgIcon {...props}>
@@ -27,6 +28,13 @@ export default {
         storer_object: {
             viewer: recordViewer(storage => storage?.storer_data_type),
             control: ViewerControl
+        },
+        contentType: {
+            title: 'Content type'
+        },
+        length: {
+            title: 'Size',
+            viewer: FileSizeViewer
         }
     },
     crud: [CRUD.read, CRUD.delete]
