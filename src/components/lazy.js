@@ -80,12 +80,12 @@ const lazy = (Control, opts = {}) => function (props) {
                 jsonPath: value.jsonPath()
             }).subscribe(
                 v => {
-                    setState({ fetching: false, fetched: true });
                     if (skipChanges) {
                         lazyValue.current.set(v, true);
                     } else {
                         value.set(v, true);
                     }
+                    setState({ fetching: false, fetched: true });
                 }
             );
             return () => subscription.unsubscribe();
