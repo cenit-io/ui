@@ -7,6 +7,7 @@ import DateTimeViewer from "./DateTimeViewer";
 import StringViewer from "./StringViewer";
 import JsonViewer from "./JsonViewer";
 import TypePropertyViewer from "./TypePropertyViewer";
+import EnumViewer from "./EnumViewer";
 
 export default function viewerComponentFor(property, config) {
     let configViewer = config?.fields;
@@ -19,6 +20,10 @@ export default function viewerComponentFor(property, config) {
 
     if (property.name === '_type') {
         return TypePropertyViewer;
+    }
+
+    if (property.propertySchema.enum) {
+        return EnumViewer
     }
 
     switch (property.type) {
