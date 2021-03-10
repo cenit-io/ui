@@ -1,4 +1,3 @@
-
 export function underscore(str) {
     return str.split(/(?=[A-Z])/).join('_').toLowerCase();
 }
@@ -8,7 +7,8 @@ export function capitalize(str) {
 }
 
 export function titleize(str) {
-    return str.split(/\s|-|_/)
+    return underscore(str)
+        .split(/\s|-|_/)
         .map(token => token.trim())
         .filter(token => token)
         .map(token => capitalize(token))

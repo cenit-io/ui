@@ -1173,7 +1173,9 @@ export class FileDataType extends DataType {
     }
 
     config() {
-        return of(FileDataTypeConfig);
+        return of(FileDataTypeConfig).pipe(
+            map(config => ({ title: titleize(this.name), ...config }))
+        );
     }
 }
 
