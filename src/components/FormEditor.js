@@ -25,6 +25,7 @@ import useTheme from "@material-ui/core/styles/useTheme";
 import SuccessAlert from "../actions/SuccessAlert";
 import { Status } from "../common/Symbols";
 import InfoAlert from "../actions/InfoAlert";
+import Random from "../util/Random";
 
 function withForm(item) {
     item.submitter = new Subject();
@@ -465,7 +466,7 @@ const FormEditor = ({
                                        value={submitResponse}/>;
             }
 
-            return <SuccessAlert key="notSubmitted" mainIcon={WaitingIcon}/>;
+            return <SuccessAlert key={Random.string()} mainIcon={WaitingIcon}/>;
         }
     ).filter(c => c);
 
