@@ -133,7 +133,7 @@ const MinItemsPerPage = 5;
 
 const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
-function ListView({ height, dataType }) {
+function ListView({ height, dataType, config }) {
 
     const [state, setState] = useSpreadState({
         order: 'asc',
@@ -149,19 +149,7 @@ function ListView({ height, dataType }) {
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
-    const { dense, order, orderBy, config } = state;
-
-    useEffect(() => {
-        const subscription = dataType.config().subscribe(
-            config => setState({ config })
-        );
-
-        return () => subscription.unsubscribe();
-    }, [dataType]);
-
-    if (!config) {
-        return <div/>;
-    }
+    const { dense, order, orderBy } = state;
 
     const select = selectedItems => setContainerState({ selectedItems });
 
@@ -272,7 +260,7 @@ function ListView({ height, dataType }) {
     );
 }
 
-function DefaultIndex({ dataType, subject, height }) {
+function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
 
     const [containerState, setContainerState] = useContainerContext();
 
@@ -416,9 +404,14 @@ function DefaultIndex({ dataType, subject, height }) {
         );
     }
 
+    const View = dataTypeConfig.actions?.index?.viewComponent || ListView;
+
     return (
         <>
-            <ListView height={viewHeight} dataType={dataType}/>
+            <View height={viewHeight}
+                  width={width}
+                  dataType={dataType}
+                  config={dataTypeConfig}/>
             {pagination}
         </>
     );
@@ -438,7 +431,7 @@ function Index(props) {
     if (config) {
         const IndexComponent = config.actions?.index?.component || DefaultIndex;
 
-        return <IndexComponent {...props}/>;
+        return <IndexComponent  dataTypeConfig={config} {...props}/>;
     }
 
     return <Loading/>;
