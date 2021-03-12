@@ -87,15 +87,20 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
     const handleFormSubmit = (_, value) => {
         const { data_type, data, task_description } = value.get();
         let formData;
+        const headers = {};
         if (data.type === 'file') {
-            if ((formData = data.file)) {
-                formData = Object.values(formData)[0];
+            let { file } = data;
+            if (file) {
+                file = Object.values(file)[0];
+                formData = new FormData();
+                formData.append('data', file);
+                headers['Content-Type'] = 'multipart/form-data';
             }
         } else {
             formData = data.plain_data;
         }
-        return of(true).pipe(
-            switchMap(() => {
+        return of(headers).pipe(
+            switchMap(headers => {
                 let error;
                 if (!formData) {
                     error = { data: ['is required'] };
@@ -108,7 +113,8 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
                     headers: {
                         'X-Digest-Options': JSON.stringify({
                             task_description: task_description.trim() || null
-                        })
+                        }),
+                        ...headers
                     }
                 }, formData);
             })
@@ -124,7 +130,7 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
             <FormEditor docked={docked}
                         dataType={formDataType}
                         height={height}
-                        submitIcon={<PullImportIcon/>}
+                        submitIcon={<PullImportIcon component="svg"/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={ExecutionMonitor}
