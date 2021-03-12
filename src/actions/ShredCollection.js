@@ -39,7 +39,7 @@ const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) =
             <FormEditor docked={docked}
                         dataType={formDataType.current}
                         height={height}
-                        submitIcon={<ShredIcon/>}
+                        submitIcon={<ShredIcon component="svg"/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         noJSON={true}/>
