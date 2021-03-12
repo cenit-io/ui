@@ -64,15 +64,20 @@ const Import = ({ docked, dataType, onSubjectPicked, height }) => {
     const handleFormSubmit = (_, value) => {
         const { data_type, parser, data } = value.get();
         let formData;
+        const headers = {};
         if (data.type === 'file') {
-            if ((formData = data.file)) {
-                formData = Object.values(formData)[0];
+            let { file } = data;
+            if (file) {
+                file = Object.values(file)[0];
+                formData = new FormData();
+                formData.append('data', file);
+                headers['Content-Type'] = 'multipart/form-data';
             }
         } else {
             formData = data.plain_data;
         }
-        return of(true).pipe(
-            switchMap(() => {
+        return of(headers).pipe(
+            switchMap(headers => {
                 let error;
                 if (!parser?.id) {
                     error = { parser: ['is required'] };
@@ -86,7 +91,8 @@ const Import = ({ docked, dataType, onSubjectPicked, height }) => {
 
                 return API.post('setup', 'parser_transformation', parser.id, 'digest', {
                     headers: {
-                        'X-Digest-Options': JSON.stringify({ target_data_type_id: data_type.id })
+                        'X-Digest-Options': JSON.stringify({ target_data_type_id: data_type.id }),
+                        ...headers
                     }
                 }, formData)
             })

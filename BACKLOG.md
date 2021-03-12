@@ -11,8 +11,6 @@ Issues & next features
 
 - Pull-import execution monitor leaks
 
-- "\xC3" from ASCII-8BIT to UTF-8
-
 - Filter PUSH target collections by origins depending on the super user status.
 
 - Fix xs view for large breadcrumb on actions toolbar.
