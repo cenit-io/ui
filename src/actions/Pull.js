@@ -19,7 +19,7 @@ function pullParametersSchema(pull_parameters) {
     const requiredProperties = [];
     const schema = { type: 'object', properties, required: requiredProperties };
     pull_parameters.forEach(({ id, label, type, many, required, description }) => {
-        const propertySchema = properties[id] = { label, description };
+        const propertySchema = properties[id] = { title: label, description };
         if (many) {
             propertySchema.type = 'array';
             if (type) {
@@ -100,7 +100,7 @@ const Pull = ({ dataType, docked, record, onSubjectPicked, height }) => {
                 <FormEditor docked={docked}
                             dataType={formDataType}
                             height={height}
-                            submitIcon={<PullIcon/>}
+                            submitIcon={<PullIcon component="svg"/>}
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
                             successControl={ExecutionMonitor}

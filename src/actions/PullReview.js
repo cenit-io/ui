@@ -287,7 +287,7 @@ export function pullParametersSchema(pull_parameters) {
     const requiredProperties = [];
     const schema = { type: 'object', properties, required: requiredProperties };
     pull_parameters.forEach(({ id, label, type, many, required, description }) => {
-        const propertySchema = properties[id] = { label, description };
+        const propertySchema = properties[id] = { title: label, description };
         if (many) {
             propertySchema.type = 'array';
             if (type) {
