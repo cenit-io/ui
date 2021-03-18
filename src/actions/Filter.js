@@ -7,13 +7,11 @@ import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import { Config } from "../common/Symbols";
 import { useContainerContext } from "./ContainerContext";
-import { of } from "rxjs";
-import { delay, tap } from "rxjs/operators";
 import { makeStyles } from "@material-ui/core";
 import Fab from "@material-ui/core/Fab";
 
 export const FilterIcon = ({ fontSize }) => (
-    <SvgIcon fontSize={fontSize}>
+    <SvgIcon fontSize={fontSize} component="svg">
         <g xmlns="http://www.w3.org/2000/svg">
             <path d="M0,0h24 M24,24H0" fill="none"/>
             <path

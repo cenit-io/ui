@@ -5,7 +5,7 @@ export function onMergeOverride(target, source, options) {
 }
 
 export function deepMergeObjectsOnly(target, source) {
-    return merge(target, source, { arrayMerge: onMergeOverride })
+    return merge(target, source, { arrayMerge: onMergeOverride, clone: false })
 }
 
 export function deepMergeArrayConcat(target, source) {

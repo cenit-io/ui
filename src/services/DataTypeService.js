@@ -680,7 +680,7 @@ export class DataType {
                 let mergedSchema;
                 // Not referenced schema
                 if (dataType) {
-                    mergedSchema = dataType.mergeSchema(schema);
+                    mergedSchema = zzip(of(dataType), dataType.mergeSchema(schema));
                 } else {
                     mergedSchema = this.mergeSchema(schema).pipe(
                         map(mergedSchema => {
@@ -690,18 +690,18 @@ export class DataType {
                             } else {
                                 typeSchema = mergedSchema;
                             }
-                            dataType = new DataType();
-                            dataType._type = JSON_TYPE;
-                            dataType.name = this.name + '::' + name;
-                            dataType.schema = typeSchema;
+                            dataType = DataType.from({
+                                name: this.name + '::' + name,
+                                schema: typeSchema
+                            });
 
-                            return mergedSchema;
+                            return [dataType, mergedSchema];
                         })
                     );
                 }
 
                 return mergedSchema.pipe(
-                    map(mergedSchema => {
+                    map(([dataType, mergedSchema]) => {
                         const prop = new Property();
                         prop.name = name;
                         prop.jsonKey = (mergedSchema.edi && mergedSchema.edi.segment) || name;
