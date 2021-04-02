@@ -21,18 +21,21 @@ const reactiveControlFor = Control => function (props) {
 
     useEffect(() => {
         setState({ key: Random.string() });
-        const subscription = value.changed().subscribe(
-            v => {
-                if (v !== refValue.current) {
-                    refValue.current = v;
-                    setState({
-                        key: Random.string(),
-                        controlledValue: v
-                    })
+        if (value) {
+            const subscription = value.changed().subscribe(
+                v => {
+                    if (v !== refValue.current) {
+                        refValue.current = v;
+                        setState({
+                            key: Random.string(),
+                            controlledValue: v
+                        })
+                    }
                 }
-            }
-        );
-        return () => subscription.unsubscribe();
+            );
+            value.changed().next(value.get());
+            return () => subscription.unsubscribe();
+        }
     }, [value]);
 
     const handleChange = v => {
