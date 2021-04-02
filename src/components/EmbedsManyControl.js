@@ -25,7 +25,8 @@ function EmbedsManyControl({
 
     const [state, setState] = useSpreadState({
         open: false,
-        selectedIndex: -1
+        selectedIndex: -1,
+        items: value.get()
     });
     const indexed = useRef(false);
 
@@ -39,38 +40,48 @@ function EmbedsManyControl({
         propertySchema: schema
     }));
 
-    const { open, selectedIndex } = state;
+    const { open, selectedIndex, items } = state;
 
-    const eValue = value.get();
     const controlProperty = controlPropertyRef.current;
+
+    useEffect(() => {
+        if (value) {
+            const subscription = value.changed().subscribe(
+                items => setState({ items })
+            );
+
+            value.changed().next(value.get());
+            return () => subscription.unsubscribe();
+        }
+    }, [value]);
 
     useEffect(() => {
         if (ready && !indexed.current) {
             indexed.current = true;
-            if (eValue) {
-                eValue.forEach((item, index) => item[INDEX] = index);
+            if (items) {
+                items.forEach((item, index) => item[INDEX] = index);
             }
         }
-    }, [eValue, ready]);
+    }, [items, ready]);
 
 
     const addNew = () => {
-        let eValue = value.get();
-        if (eValue) {
-            value.set(eValue = [...eValue, {
+        let items = value.get();
+        if (items) {
+            value.set(items = [...items, {
                 [NEW]: true,
                 [FETCHED]: true
             }]);
         } else {
-            eValue = [];
+            items = [];
         }
-        setSelectedIndex(eValue.length - 1);
-        if (eValue.length > 0) {
+        setSelectedIndex(items.length - 1);
+        if (items.length > 0) {
             setOpen(true);
         }
-        value.set(eValue);
-        setState({}); // to refresh
-        onChange(eValue);
+        value.set(items);
+        setState({ items });
+        onChange(items);
     };
 
     const deleteIndex = index => {
@@ -83,7 +94,6 @@ function EmbedsManyControl({
         } else if (selectedIndex === newValue.length) {
             setSelectedIndex(newValue.length - 1);
         }
-        setState({}); // for refresh
         onChange(newValue);
     };
 
@@ -109,7 +119,7 @@ function EmbedsManyControl({
             value.delete();
         }
         onDelete();
-        setState({}); // to refresh
+        setState({ items: undefined });
     };
 
     const selectItem = index => () => setSelectedIndex(index);
@@ -132,55 +142,57 @@ function EmbedsManyControl({
     });
 
     const sort = indices => {
-        indices = indices.map(({id}) => parseInt(id));
-        const newValue = new Array(value.get());
-        let newSelectedIndex = selectedIndex;
+        const hash = {};
+        value.get().forEach(item => hash[item[Key]] = item);
+        const selectedKey = selectedIndex === -1
+            ? null
+            : value.cache[selectedIndex][Key];
         let modified = false;
-        indices.forEach((oldIndex, index) => {
-            modified =  modified || oldIndex !== index;
-            if (selectedIndex === oldIndex) {
+        let newSelectedIndex = -1;
+        const items = indices.map(({ id: key }, index) => {
+            modified = modified || key !== value.cache[index][Key];
+            if (key === selectedKey) {
                 newSelectedIndex = index;
             }
-            newValue[index] = value.cache[oldIndex];
+            return hash[key];
         });
         if (modified) {
-            value.set(newValue);
-            onChange(newValue);
-            if (newSelectedIndex !== selectedIndex) {
-                setState({ selectedIndex: newSelectedIndex });
-            }
+            value.set(items);
+            onChange(items);
+            setState({
+                items,
+                selectedIndex: newSelectedIndex
+            });
         }
     };
 
-    if (eValue) {
+    if (items) {
         if (open) {
-            itemChips = eValue.map(
-                (item, index) => {
-                    if (!item[Key]) {
-                        item[Key] = Random.string();
-                    }
-
-                    return <ItemChip key={`item_${index}`}
-                                     dataType={property.dataType}
-                                     item={value.indexValue(index)}
-                                     onSelect={selectItem(index)}
-                                     onDelete={deleteItem(index)}
-                                     selected={selectedIndex === index}
-                                     disabled={disabled}
-                                     readOnly={readOnly || deleteDisabled}/>;
+            itemChips = items.map((item, index) => {
+                if (!item[Key]) {
+                    item[Key] = Random.string();
                 }
-            );
+
+                return <ItemChip key={`item_${item[Key]}`}
+                                 dataType={property.dataType}
+                                 item={value.indexValue(index)}
+                                 onSelect={selectItem(index)}
+                                 onDelete={deleteItem(index)}
+                                 selected={selectedIndex === index}
+                                 disabled={disabled}
+                                 readOnly={readOnly || deleteDisabled}/>;
+            });
 
             if (!readOnly && !disabled && !sortDisabled) {
                 itemChips = (
-                    <ReactSortable list={Object.keys(eValue).map(id => ({ id }))}
+                    <ReactSortable list={items.map(item => ({ id: item[Key] }))}
                                    setList={sort}>
                         {itemChips}
                     </ReactSortable>
                 );
             }
 
-            dropButton = eValue.length > 0 && (
+            dropButton = items.length > 0 && (
                 <IconButton onClick={() => setOpen(false)} disabled={disabled}>
                     <ArrowDropUpIcon/>
                 </IconButton>
@@ -192,7 +204,7 @@ function EmbedsManyControl({
                 controlProperty.jsonKey = controlProperty.name = selectedIndex;
                 itemControl = (
                     <ObjectControl property={controlProperty}
-                                   fetchPath={`${value.jsonPath()}[${eValue[selectedIndex][INDEX]}]`}
+                                   fetchPath={`${value.jsonPath()}[${items[selectedIndex][INDEX]}]`}
                                    value={value.indexValue(selectedIndex)}
                                    errors={errors && errors[String(selectedIndex)]}
                                    onChange={handleChange}
@@ -211,7 +223,7 @@ function EmbedsManyControl({
                 </div>
             );
         } else {
-            dropButton = eValue.length > 0 &&
+            dropButton = items.length > 0 &&
                 <IconButton onClick={() => setOpen(true)} disabled={disabled}>
                     <ArrowDropDownIcon/>
                 </IconButton>;
@@ -223,13 +235,13 @@ function EmbedsManyControl({
 
     let addButton;
     if (!readOnly && !addDisabled) {
-        const AddNewIcon = eValue ? AddIcon : CreateIcon;
+        const AddNewIcon = items ? AddIcon : CreateIcon;
         addButton = <IconButton onClick={addNew} disabled={disabled}><AddNewIcon/></IconButton>;
     }
 
-    const itemsCount = eValue ? `${eValue.length} items` : '';
+    const itemsCount = items ? `${items.length} items` : '';
 
-    const placeholder = itemsCount || String(eValue) || itemsCount;
+    const placeholder = itemsCount || String(items) || itemsCount;
 
     return (
         <div className='flex full-width column'>

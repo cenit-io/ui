@@ -14,7 +14,6 @@ const useStyles = makeStyles(theme => ({
 export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, disabled, readOnly }) => {
     const classes = useStyles();
     const [title, setTitle] = useState(null);
-    const flag = useRef(true);
 
     const theme = useTheme();
 
@@ -32,10 +31,7 @@ export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, 
                 }
             )
         ).subscribe(t => setTitle(t));
-        if (flag.current) {
-            flag.current = false;
-            item.changed().next(item.get());
-        }
+        item.changed().next(item.get());
         return () => subscription.unsubscribe();
     }, [dataType, item]);
 
