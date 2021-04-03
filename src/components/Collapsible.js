@@ -18,6 +18,11 @@ const useStyles = makeStyles(theme => ({
     },
     error: {
         color: theme.palette.error.main
+    },
+    icon: {
+        margin: theme.spacing(0, 4, 0, 1),
+        display: 'flex',
+        alignItems: 'center'
     }
 }));
 
@@ -27,8 +32,7 @@ const HeaderButton = withStyles({
         width: '100%'
     }
 })(Button);
-
-export default function Collapsible({ title, children, error, variant, defaultCollapsed }) {
+export default function Collapsible({ title, children, error, variant, defaultCollapsed, icon }) {
     const [collapsed, setCollapsed] = useState(defaultCollapsed === undefined ? true : Boolean(defaultCollapsed));
 
     const classes = useStyles();
@@ -39,10 +43,19 @@ export default function Collapsible({ title, children, error, variant, defaultCo
 
     const errorClass = error && classes.error;
 
+    if (icon) {
+        icon = (
+            <div className={classes.icon}>
+                {icon}
+            </div>
+        );
+    }
+
     return (
         <div className="flex column">
             <div className={classes.header}>
                 <HeaderButton onClick={switchCollapsed}>
+                    {icon}
                     <Typography variant={variant || 'h6'} className={clsx(classes.title, errorClass)}>
                         {title}
                     </Typography>
