@@ -11,6 +11,7 @@ import Subjects, { NavSubject } from "../services/subjects";
 import { delay } from "rxjs/operators";
 import MainContext, { useMainContext } from "./MainContext";
 import TenantContext from "./TenantContext";
+import { ThemeProvider, createMuiTheme } from "@material-ui/core";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -122,12 +123,25 @@ function MainLayout() {
     );
 }
 
+const theme = createMuiTheme({
+    palette: {
+        primary: {
+            main: '#447797'
+        },
+        secondary: {
+            main: '#447797'
+        }
+    },
+});
+
 export default function Main() {
     return (
-        <MainContext>
-            <TenantContext>
-                <MainLayout/>
-            </TenantContext>
-        </MainContext>
+        <ThemeProvider theme={theme}>
+            <MainContext>
+                <TenantContext>
+                    <MainLayout/>
+                </TenantContext>
+            </MainContext>
+        </ThemeProvider>
     )
 }
