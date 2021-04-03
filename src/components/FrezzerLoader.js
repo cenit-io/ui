@@ -17,7 +17,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-export default function ({ backdropClass }) {
+export default function FrezzerLoader({ backdropClass }) {
     const classes = useStyles();
     return (
         <div className={clsx(classes.loader, backdropClass)}>
