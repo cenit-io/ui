@@ -17,6 +17,7 @@ import { useMainContext } from "./MainContext";
 import Menu from "../config/Menu";
 import { DataType } from "../services/DataTypeService";
 import FrezzerLoader from "../components/FrezzerLoader";
+import { useTenantContext } from "./TenantContext";
 
 function NavItem({ icon, onClick, disabled, text }) {
     return (
@@ -121,7 +122,22 @@ const useItemStyles = makeStyles(theme => ({
 
 function NavGroup({ title, IconComponent, items, open, onClick, onSelect }) {
 
+    const [tenantState] = useTenantContext();
+
+    const { user } = tenantState;
+
+    const userRoles = user.roles || [];
+
+    const isSuperUser = user.super_admin_enabled && !!userRoles.find(({ name }) => name === 'super_admin');
+
     const itemClasses = useItemStyles();
+
+    items = (items || []).filter(
+        ({ superUser, roles }) => (
+            (!superUser || isSuperUser) &&
+            (!roles || userRoles.find(role => roles.includes(role)))
+        )
+    );
 
     return (
         <>
