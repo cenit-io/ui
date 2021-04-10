@@ -12,6 +12,9 @@ import { delay } from "rxjs/operators";
 import MainContext, { useMainContext } from "./MainContext";
 import TenantContext from "./TenantContext";
 import { ThemeProvider, createMuiTheme } from "@material-ui/core";
+import { AppGateway } from "../services/AuthorizationService";
+import { DataType } from "../services/DataTypeService";
+import { from } from "rxjs";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -45,6 +48,14 @@ function MainLayout() {
 
     const { docked } = mainContextState;
     const setDocked = docked => setMainContextState({ docked });
+
+    useEffect(() => {
+        const subscription = from(AppGateway.get('build_in_types')).subscribe(
+            ({ data }) => DataType.initBuildIns(data)
+        );
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     useEffect(() => {
         const subscription = NavSubject.pipe(

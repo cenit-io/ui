@@ -49,6 +49,14 @@ export class DataType {
     static criteria = {};
     static gets = {};
 
+    static initBuildIns(buildIns) {
+        buildIns.forEach(dataType => {
+            const { id, namespace, name } = dataType;
+            DataType.dataTypes[id] = DataType.from(dataType);
+            DataType.criteria[DataType.criteriaKey({ namespace, name })] = id;
+        });
+    }
+
     static from(spec) {
         if (spec._type === JSON_TYPE) {
             delete spec.schema;
@@ -114,11 +122,15 @@ export class DataType {
         );
     }
 
+    static criteriaKey(criteria) {
+        return Object.keys(criteria)
+            .sort()
+            .map(key => `${key}(${JSON.stringify(criteria[key])})`)
+            .join();
+    }
+
     static find(criteria) {
-        let key = Object.keys(criteria).sort()
-            .map(
-                key => `${key}(${JSON.stringify(criteria[key])})`
-            ).join();
+        let key = DataType.criteriaKey(criteria);
 
         let id = DataType.criteria[key];
 

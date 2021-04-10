@@ -20,7 +20,7 @@ Config.getCenitHost = function () {
     return localStorage.getItem(CenitHostKey) || this.cenitHost;
 };
 
-const appGateway = axios.create({
+export const AppGateway = axios.create({
     baseURL: `${Config.getCenitHost()}/app/${Config.appIdentifier}`,
     timeout: Config.timeoutSpan,
 });
@@ -76,7 +76,7 @@ const AuthorizationService = {
     },
 
     getAccessWith: params => {
-        return from(appGateway.post('token', params.code)).pipe(
+        return from(AppGateway.post('token', params.code)).pipe(
             map(response => {
                 const access = response.data;
 
@@ -131,7 +131,7 @@ const AuthorizationService = {
     config: function (data = {}) {
         return this.getAccess().pipe(
             switchMap(access => from(
-                appGateway.post('config', data, {
+                AppGateway.post('config', data, {
                     headers: { Authorization: `Bearer ${access.access_token}` }
                 })
             ).pipe(map(response => response.data)))
