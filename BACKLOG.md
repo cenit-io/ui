@@ -47,7 +47,11 @@ Issues & next features
 
 - Make build-in data types `$ref` referenced by default.
 
-- When filtering booleans (and probably other types) $eq: null cats null to false and filter does not work
+- When filtering booleans (and probably other types) $eq: null cast null to false and filter does not work
+
+- Dhow flash messages...
+
+- Login form in mobile landspace (remove align items center via javascript)
 
 ### Features
 
@@ -82,5 +86,3 @@ Issues & next features
 ### Optimizations
 
 - Cache for Liquid templates
-
-- Pre-cache all build-in data types

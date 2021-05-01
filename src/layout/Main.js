@@ -50,14 +50,6 @@ function MainLayout() {
     const setDocked = docked => setMainContextState({ docked });
 
     useEffect(() => {
-        const subscription = from(AppGateway.get('build_in_types')).subscribe(
-            ({ data }) => DataType.initBuildIns(data)
-        );
-
-        return () => subscription.unsubscribe();
-    }, []);
-
-    useEffect(() => {
         const subscription = NavSubject.pipe(
             delay(3000)
         ).subscribe(

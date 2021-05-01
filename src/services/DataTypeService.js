@@ -4,7 +4,7 @@ import { catchError, map, share, switchMap, tap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import FormContext from "./FormContext";
 import LiquidEngine from "./LiquidEngine";
-import { Config } from "./AuthorizationService";
+import { AppGateway, Config } from "./AuthorizationService";
 import { Async } from "../common/Symbols";
 import { deepMergeArrayConcat, deepMergeObjectsOnly } from "../common/merge";
 import deepDup from "../common/deepDup";
@@ -45,9 +45,31 @@ function injectCommonProperties(schema) {
 
 export class DataType {
 
+    static loaded;
+    static loading;
     static dataTypes = {}; // TODO Store data types cache using a pair key tenant.id -> dataType.id
     static criteria = {};
     static gets = {};
+
+    static load(obs) {
+        if (DataType.loaded === true) {
+            return obs
+        }
+
+        if (!DataType.loading) {
+            DataType.loading = from(AppGateway.get('build_in_types')).pipe(
+                tap(({ data }) => {
+                    DataType.initBuildIns(data);
+                    DataType.loaded = true;
+                    DataType.loading = null;
+                })
+            );
+        }
+
+        return DataType.loading.pipe(
+            switchMap(() => obs)
+        );
+    }
 
     static initBuildIns(buildIns) {
         buildIns.forEach(dataType => {
@@ -78,17 +100,19 @@ export class DataType {
         }
         dataType = DataType.gets[id];
         if (!dataType) {
-            dataType = API.get('setup', 'data_type', id, {
-                headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
-            }).pipe(
-                tap(dataType => {
-                    if (dataType) {
-                        DataType.dataTypes[id] = DataType.from(dataType);
-                    }
-                    delete DataType.gets[id];
-                    return dataType;
-                }),
-                share()
+            dataType = DataType.load(
+                API.get('setup', 'data_type', id, {
+                    headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
+                }).pipe(
+                    tap(dataType => {
+                        if (dataType) {
+                            DataType.dataTypes[id] = DataType.from(dataType);
+                        }
+                        delete DataType.gets[id];
+                        return dataType;
+                    }),
+                    share()
+                )
             );
         }
 
@@ -143,28 +167,30 @@ export class DataType {
         let get = DataType.gets[key];
 
         if (!get) {
-            get = API.get('setup', 'data_type', {
-                params: { limit: 1 },
-                headers: {
-                    'X-Template-Options': JSON.stringify({ viewport: '{_id}' }),
-                    'X-Query-Selector': JSON.stringify(criteria)
-                }
-            }).pipe(
-                switchMap(response => {
-
-                    delete DataType.gets[key];
-
-                    const item = response && response['items'][0];
-
-                    if (item) {
-                        DataType.criteria[key] = item['id'];
-
-                        return this.getById(item['id']);
+            get = DataType.load(
+                API.get('setup', 'data_type', {
+                    params: { limit: 1 },
+                    headers: {
+                        'X-Template-Options': JSON.stringify({ viewport: '{_id}' }),
+                        'X-Query-Selector': JSON.stringify(criteria)
                     }
+                }).pipe(
+                    switchMap(response => {
 
-                    return of(null);
-                }),
-                share()
+                        delete DataType.gets[key];
+
+                        const item = response && response['items'][0];
+
+                        if (item) {
+                            DataType.criteria[key] = item['id'];
+
+                            return this.getById(item['id']);
+                        }
+
+                        return of(null);
+                    }),
+                    share()
+                )
             );
             DataType.gets[key] = get;
         }
