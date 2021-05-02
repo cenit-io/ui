@@ -1014,7 +1014,7 @@ export class DataType {
                                         'X-Template-Options': JSON.stringify({ viewport }),
                                         'X-Query-Selector': JSON.stringify({ _id: { '$in': missingIds } })
                                     }
-                                }).pipe(map(response => response.items))
+                                }).pipe(map(response => response?.items || []))
                             ));
                     } else {
                         completeItems = of([]);

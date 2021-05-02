@@ -111,7 +111,8 @@ const FormView = ({
             const submitterSubscription = submitter.subscribe(() => {
                 submitSubscription = onFormSubmit(formDataType, value, dataTypeConfig.formSanitizer).pipe(
                     catchError(error => {
-                        setState({ errors: error.response.data });
+                        const errors = error?.response?.data || { $: ['Operation failed'] };
+                        setState({ errors });
                         return of(null);
                     })
                 ).subscribe();
