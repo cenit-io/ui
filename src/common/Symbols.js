@@ -11,7 +11,9 @@ export const TabKey = Symbol.for('_tabKey');
 
 export const DataTypeId = Symbol.for('_dataTypeId');
 
-export const TitleSubject = Symbol.for('_titleSubject');
+export const TitleObservable = Symbol.for('_titleObservable');
+
+export const TitleSubscription = Symbol.for('_titleSubscription');
 
 export const Failed = Symbol.for('_failed');
 

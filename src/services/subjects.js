@@ -6,7 +6,14 @@ import Random from "../util/Random";
 import ConfigService from "./ConfigService";
 import CollectionContainer from "../actions/CollectionContainer";
 import MemberContainer from "../actions/MemberContainer";
-import { Cache, Config, Subject as subj, TitlePipe as titlePipe } from '../common/Symbols';
+import {
+    Cache,
+    Config,
+    Subject as subj,
+    TitleObservable,
+    TitlePipe as titlePipe,
+    TitleSubscription
+} from '../common/Symbols';
 import zzip from "../util/zzip";
 import pluralize from 'pluralize';
 import Menu from "../components/Menu";
@@ -79,14 +86,17 @@ class BasicSubject {
     }
 
     computeTitle(target) {
-        if (target || !this.titleObs) {
-            this.titleObs = this.titleObservable(target);
+        if (target || !this[TitleObservable]) {
+            this[TitleObservable] = this.titleObservable(target);
         }
-        this.titleObs.subscribe(
+        if (this[TitleSubscription]) {
+            this[TitleSubscription].unsubscribe();
+        }
+        this[TitleSubscription] = this[TitleObservable].subscribe(
             title => {
                 this.titleCache = title;
                 this.next({ type: 'title', title });
-                delete this.titleObs;
+                delete this[TitleObservable];
             }
         )
     }
