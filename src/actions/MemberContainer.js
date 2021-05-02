@@ -18,6 +18,8 @@ import FrezzerLoader from "../components/FrezzerLoader";
 import ContainerContext, { useContainerContext } from "./ContainerContext";
 import { useTenantContext } from "../layout/TenantContext";
 import * as pluralize from "pluralize";
+import Button from "@material-ui/core/Button";
+import ReloadIcon from "@material-ui/icons/Refresh";
 
 import "./Records";
 import "./DataType";
@@ -90,27 +92,29 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
     const setError = error => setState({ error });
 
     useEffect(() => {
-        const subscription = subject.dataTypeSubject().dataType().pipe(
-            tap(dataType => setContainerState({ dataType, record: null, selectedItems: [] })),
-            switchMap(
-                dataType => {
-                    if (dataType) {
-                        return dataType.get(subject.id);
+        if (!error) {
+            const subscription = subject.dataTypeSubject().dataType().pipe(
+                tap(dataType => setContainerState({ dataType, record: null, selectedItems: [] })),
+                switchMap(
+                    dataType => {
+                        if (dataType) {
+                            return dataType.get(subject.id);
+                        }
+                        setError(`Data type with ID ${subject.dataTypeId} not found!`);
+                        return of(null);
                     }
-                    setError(`Data type with ID ${subject.dataTypeId} not found!`);
-                    return of(null);
+                )
+            ).subscribe(record => {
+                if (record) {
+                    setContainerState({ record, selectedItems: [record] });
+                    subject.updateCache(record);
+                } else {
+                    setError(`Record with ID ${subject.id} not found!`);
                 }
-            )
-        ).subscribe(record => {
-            if (record) {
-                setContainerState({ record, selectedItems: [record] });
-                subject.updateCache(record);
-            } else {
-                setError(`Record with ID ${subject.id} not found!`);
-            }
-        });
-        return () => subscription.unsubscribe();
-    }, [subject]);
+            });
+            return () => subscription.unsubscribe();
+        }
+    }, [subject, error]);
 
     useEffect(() => {
         const s1 = subject.title().subscribe(
@@ -128,7 +132,16 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
     }, [subject]);
 
     if (error) {
-        return <Alert message={error}/>;
+        return (
+            <Alert message={error}>
+                <Button variant="outlined"
+                        color="primary"
+                        endIcon={<ReloadIcon component="svg"/>}
+                        onClick={() => setError(null)}>
+                    Reload
+                </Button>
+            </Alert>
+        );
     }
 
     if (!record) {

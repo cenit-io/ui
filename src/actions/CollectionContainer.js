@@ -25,6 +25,9 @@ import { DataType } from "../services/DataTypeService";
 import FrezzerLoader from "../components/FrezzerLoader";
 import ContainerContext, { useContainerContext } from "./ContainerContext";
 import { useSpreadState } from "../common/hooks";
+import Alert from "./Alert";
+import Button from "@material-ui/core/Button";
+import ReloadIcon from "@material-ui/icons/Refresh";
 
 const miniDrawerStyles = makeStyles(theme => ({
     drop: {
@@ -120,7 +123,7 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
     const theme = useTheme();
     const classes = actionContainerStyles();
 
-    const { dataType, title } = state;
+    const { dataType, title, error } = state;
     const { dataTypeId } = subject;
 
     useEffect(() => {
@@ -132,11 +135,35 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
     }, [subject]);
 
     useEffect(() => {
-        const subscription = DataType.getById(dataTypeId).subscribe(
-            dataType => setState({ dataType })
+        if (!error) {
+            const subscription = DataType.getById(dataTypeId).subscribe(
+                dataType => {
+                    if (dataType) {
+                        setState({ dataType });
+                    } else {
+                        setState({
+                            error: `Data type with ID ${dataTypeId} not found!`
+                        });
+                    }
+                }
+            );
+
+            return () => subscription.unsubscribe();
+        }
+    }, [dataTypeId, error]);
+
+    if (error) {
+        return (
+            <Alert message={error}>
+                <Button variant="outlined"
+                        color="primary"
+                        endIcon={<ReloadIcon component="svg"/>}
+                        onClick={() => setState({ error: null })}>
+                    Reload
+                </Button>
+            </Alert>
         );
-        return () => subscription.unsubscribe();
-    }, [dataTypeId]);
+    }
 
     if (!dataType) {
         return <Loading/>;
