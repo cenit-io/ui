@@ -107,7 +107,7 @@ const API = {
                 if (axios.isCancel(e)) {
                     throw e;
                 }
-                if (e.response && e.response.status !== 404) {
+                if (e.response && e.response.status !== 404 && e.response.status !== 403) {
                     ErrorCallbacks.forEach(callback => callback(e));
                 }
                 return of(null);
@@ -123,6 +123,7 @@ const API = {
                     switch (e.response.status) {
                         case 404:
                             break;
+                        case 403:
                         case 422:
                             throw e;
                         default:
