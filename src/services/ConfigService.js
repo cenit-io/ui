@@ -1,12 +1,26 @@
 import BLoC from "./BLoC";
 import AuthorizationService from "./AuthorizationService";
-import { debounce, switchMap } from "rxjs/operators";
+import { debounce, switchMap, map } from "rxjs/operators";
 import { interval } from "rxjs";
+
+function sanitize(config) {
+    const { navigation, subjects, tabs } = config;
+    const hash = {};
+    (tabs || []).forEach(key => hash[key] = true);
+    (navigation || []).forEach(({key}) => hash[key] = true);
+    Object.keys(subjects || {}).forEach(key => {
+        if (typeof subjects[key] !== 'function' && !hash[key]) {
+            delete subjects[key];
+        }
+    });
+    return config;
+}
 
 const configBLoC = new BLoC();
 
 configBLoC.on(config => config).pipe(
     debounce(() => interval(5000)),
+    map(config => sanitize(config)),
     switchMap(config => AuthorizationService.config(config))
 ).subscribe(
     () => console.log('Config updated!')

@@ -319,6 +319,11 @@ const Subjects = {
     },
 
     syncWith: function (subjects) {
+        Object.keys(this).forEach(key => {
+           if (typeof this[key] !== 'function') {
+               delete this.key;
+           }
+        });
         Object.keys(subjects || {}).forEach(
             key => {
                 const attrs = subjects[key];
@@ -332,11 +337,9 @@ const Subjects = {
                 if (attrs.type === MenuSubject.type) {
                     s = MenuSubject.instance();
                 }
-                s.key = key;
                 if (s) {
+                    s.key = key;
                     this[key] = s;
-                } else {
-                    delete this[key];
                 }
             }
         );
