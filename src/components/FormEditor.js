@@ -158,7 +158,7 @@ const defaultFormProcessor = (viewport, rootId, onFormSubmit, onSubmitDone) => (
         );
 
     return submitAction.pipe(
-        tap(response => setTimeout(() => onSubmitDone(response))),
+        tap(response => setTimeout(() => onSubmitDone(response, formDataType))),
         catchError(error => {
             setTimeout(() => onSubmitDone());
             throw error
@@ -242,9 +242,9 @@ const FormEditor = ({
             dataType,
             title: value => dataType.titleFor(value),
             viewport: dataType.titleViewport('_id'),
-            callback: value => {
+            callback: (value, dataType) => {
                 setId(value.id);
-                setSubmitResponse(value);
+                setSubmitResponse({ value, dataType });
                 if ((!value[Status] || value[Status] === 200 || value[Status] === 201) && onUpdate && rootId) {
                     onUpdate(value);
                 }
@@ -303,13 +303,13 @@ const FormEditor = ({
         setDone(false);
     }, [stack]);
 
-    const onSubmitDone = useCallback(response => {
+    const onSubmitDone = useCallback((response, responseDataType) => {
         if (response) {
             setDone(true);
             setTimeout(() => {
                 handleBack();
                 if (current.callback) {
-                    current.callback(response);
+                    current.callback(response, responseDataType);
                 }
                 setSaving(false);
             }, 1000);
@@ -461,9 +461,9 @@ const FormEditor = ({
                                        title={stackTitles[1]}
                                        rootId={rootId}
                                        onSubjectPicked={onSubjectPicked}
-                                       dataType={dataType}
+                                       dataType={submitResponse.dataType}
                                        id={id}
-                                       value={submitResponse}/>;
+                                       value={submitResponse.value}/>;
             }
 
             return <SuccessAlert key={Random.string()} mainIcon={WaitingIcon}/>;
