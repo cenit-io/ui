@@ -6,8 +6,24 @@ import { interval } from "rxjs";
 function sanitize(config) {
     const { navigation, subjects, tabs } = config;
     const hash = {};
-    (tabs || []).forEach(key => hash[key] = true);
-    (navigation || []).forEach(({key}) => hash[key] = true);
+    let i = 0;
+    [...(tabs || [])].forEach(key => {
+        if (subjects && !subjects[key]) {
+            tabs.splice(i, 1);
+        } else {
+            i++;
+            hash[key] = true;
+        }
+    });
+    i = 0;
+    [...(navigation || [])].forEach(({key}) => {
+        if (subjects && !subjects[key]) {
+            navigation.splice(i);
+        } else {
+            i++;
+            hash[key] = true;
+        }
+    });
     Object.keys(subjects || {}).forEach(key => {
         if (typeof subjects[key] !== 'function' && !hash[key]) {
             delete subjects[key];
@@ -42,7 +58,7 @@ const ConfigService = {
     update: function (config) {
         if (config.tenant_id && config.tenant_id !== configBLoC.state.tenant_id) {
             AuthorizationService.config(config).subscribe(
-                newConfig => configBLoC.set(newConfig)
+                newConfig => configBLoC.set(sanitize(newConfig))
             )
         } else {
             configBLoC.update(config);
