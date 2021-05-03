@@ -115,7 +115,8 @@ const Delete = ({ dataType, onCancel, onClose }) => {
                     ? { _id: { $in: selectedItems.map(({ id }) => id) } }
                     : selector || {};
                 const subscription = dataType.bulkDelete(selection).subscribe(
-                    () => setStatus(Status.destroyed)
+                    () => setStatus(Status.destroyed),
+                    () => setStatus(Status.failed)
                 );
                 return () => subscription.unsubscribe();
             }
@@ -162,6 +163,10 @@ const Delete = ({ dataType, onCancel, onClose }) => {
         case Status.destroyed:
             statusUI = <CheckIcon className={classes.infoIcon} color="secondary"/>;
             text = `Done!`;
+            break;
+        case Status.failed:
+            statusUI = <WarningIcon className={classes.infoIcon} color="secondary"/>;
+            text = 'Operation failed';
             break;
         default:
             statusUI = <CircularProgress size={110} className={classes.loading}/>;

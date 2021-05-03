@@ -5,8 +5,6 @@ Issues & next features
 
 ### Issues
 
-- Uprocessable entity for delete action
-
 - Pull-import execution monitor leaks
 
 - Filter PUSH target collections by origins depending on the super user status.
