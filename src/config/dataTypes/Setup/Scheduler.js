@@ -3,6 +3,7 @@ import SchedulerFilledIcon from "../../../icons/SchedulerFilledIcon";
 import SchedulerExpressionControl from "../../../components/SchedulerExpressionControl";
 
 import '../../../actions/SwitchSchedulers';
+import ViewerControl from "../../../components/ViewerControl";
 
 const fields = ['namespace', 'name', 'activated', 'expression'];
 
@@ -25,7 +26,7 @@ export default {
             control: SchedulerExpressionControl
         },
         activated: {
-            readOnly: true
+            control: ViewerControl
         }
     }
 };
