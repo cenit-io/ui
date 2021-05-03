@@ -11,25 +11,17 @@ Issues & next features
 
 - Fix xs view for large breadcrumb on actions toolbar.
 
-- Tab recovery from Not Found responses.
-
 - Refresh Index when redirected from delete callback.
 
 - Prevent recursive referenced items edition.
  
 - Many-ref control should excludes from search the ids already included in the association
 
-- Codemirror code controls do not expand within new action.
-
 - Data types and records names
-
-- Brake large titles with ellipsis.
 
 - Updating container context record on forms onUpdate
 
 - Mapping converters
-
-- Customize all tasks models for show action view
 
 - Refresh task record before and after schedule action
 
@@ -46,8 +38,6 @@ Issues & next features
 - When filtering booleans (and probably other types) $eq: null cast null to false and filter does not work
 
 - Dhow flash messages...
-
-- Login form in mobile landspace (remove align items center via javascript)
 
 ### Features
 
