@@ -9,12 +9,6 @@ Issues & next features
 
 - Filter PUSH target collections by origins depending on the super user status.
 
-- Fix xs view for large breadcrumb on actions toolbar.
-
-- Refresh Index when redirected from delete callback.
-
-- Prevent recursive referenced items edition.
- 
 - Many-ref control should excludes from search the ids already included in the association
 
 - Data types and records names
@@ -27,19 +21,29 @@ Issues & next features
 
 - Handle errors from executable actions observers
 
-- Clean up tenant configuration after tenant shredding
-
 - Seed for embedded forms
 
 ### Cenit side Issues
-
-- Make build-in data types `$ref` referenced by default.
 
 - When filtering booleans (and probably other types) $eq: null cast null to false and filter does not work
 
 - Dhow flash messages...
 
-### Features
+### Optimizations
+
+- Cache for Liquid templates
+
+- Prevent recursive referenced items edition.
+
+- Refresh Index when redirected from delete callback.
+
+- Clean up tenant configuration after tenant shredding
+
+### Next Features
+
+- Action to config tasks description and auto-retry
+
+- Add breadcrumb when navigating through references properties on forms editors.
 
 - Add attachment filter option for notifications and executions.
 
@@ -50,10 +54,6 @@ Issues & next features
 - Tasks and executions agents through API.
 
 - Extend support for tasks descriptions across all executions APIs
-
-- Action to config tasks description and auto-retry
-
-- Config Authorization models
 
 - Use the data type title to customize ref-picker loading message.
 
@@ -68,7 +68,3 @@ Issues & next features
 - Add seed contexts to e-mail notification forms 
 
 - Storage updated_at property at index
-
-### Optimizations
-
-- Cache for Liquid templates

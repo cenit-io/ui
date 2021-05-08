@@ -479,11 +479,16 @@ const FormEditor = ({
             </SwipeableViews>
         );
     }
+
+    const breadCrumb = false && ( // TODO Breadcrumb
+        <div ref={stackHeaderRef} className={classes.stackHeader}>
+            {stack.length > 1 && stackTitles.join(' ')}
+        </div>
+    );
+
     return (
         <div className={classes.root}>
-            <div ref={stackHeaderRef} className={classes.stackHeader}>
-                {stack.length > 1 && stackTitles.join(' ')}
-            </div>
+            {breadCrumb}
             <div style={{ display: 'flex', position: 'relative' }}>
                 <div ref={ref}
                      className={clsx(
