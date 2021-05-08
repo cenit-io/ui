@@ -54,7 +54,9 @@ function JsonControl({ onChange, onError, value, ...otherProps }) {
     }, [errorDebounce, onError]);
 
     useEffect(() => {
-        const subscription = valueProxy.current.changed().subscribe(
+        const subscription = valueProxy.current.changed().pipe(
+            debounce(() => interval(1500))
+        ).subscribe(
             json => {
                 const blank = json === '' || json === undefined || json === null;
                 const errorBeforeChange = error.current;

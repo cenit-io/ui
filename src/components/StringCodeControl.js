@@ -6,9 +6,7 @@ import CodeMirrorControl from "./CodeMirrorControl";
 function StringCodeControl(props) {
 
     return (
-        <CodeMirrorControl lineNumbers={true}
-                           {...props}
-                           validator={StringValidator(props.schema)}/>
+        <CodeMirrorControl lineNumbers={true} {...props}/>
     );
 }
 

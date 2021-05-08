@@ -106,11 +106,6 @@ export default function CodeMirrorControl({
         value.changed().next(value.get());
     };
 
-    useEffect(() => {
-        const subscription = value.changed().subscribe(controlValue => setState({ controlValue }));
-        return () => subscription.unsubscribe();
-    }, [value]);
-
     const handleDelete = () => {
         const initialValue = value.valueFrom(initialFormValue);
         if (initialValue !== undefined && initialValue !== null) {
