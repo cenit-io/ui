@@ -17,8 +17,6 @@ Issues & next features
 
 - Mapping converters
 
-- Refresh task record before and after schedule action
-
 - Handle errors from executable actions observers
 
 - Seed for embedded forms
