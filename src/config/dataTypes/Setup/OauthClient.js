@@ -2,7 +2,7 @@ import React from 'react';
 import AuthorizationClientsFilledIcon from "../../../icons/AuthorizationClientsFilledIcon";
 import itemLabelFor from "../../itemLabelFor";
 
-const title = 'Authorization Client';
+const title = 'OAuth Client';
 
 export default {
     title,

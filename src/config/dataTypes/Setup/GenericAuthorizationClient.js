@@ -16,6 +16,7 @@ const fields = [
 export default {
     title,
     icon: <AuthorizationClientsFilledIcon/>,
+    titleViewport: '{provider {namespace name} name',
     actions: {
         index: {
             fields: ['provider', 'name', 'updated_at'],
