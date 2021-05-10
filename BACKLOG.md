@@ -9,10 +9,6 @@ Issues & next features
 
 - Filter PUSH target collections by origins depending on the super user status.
 
-- Many-ref control should excludes from search the ids already included in the association
-
-- Data types and records names
-
 - Updating container context record on forms onUpdate
 
 - Mapping converters

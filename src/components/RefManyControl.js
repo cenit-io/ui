@@ -1,4 +1,4 @@
-import React  from 'react';
+import React, { useEffect } from 'react';
 import { IconButton } from "@material-ui/core";
 import ClearIcon from '@material-ui/icons/Clear';
 import AddIcon from '@material-ui/icons/Add';
@@ -14,6 +14,7 @@ import { FETCHED, Title } from "../common/Symbols";
 import { ItemChip } from "./ItemChip";
 import { useFormContext } from "./FormContext";
 import { ReactSortable } from "react-sortablejs";
+import Loading from "./Loading";
 
 
 export default function RefManyControl({
@@ -25,7 +26,23 @@ export default function RefManyControl({
 
     const { initialFormValue } = useFormContext();
 
-    const { open } = state;
+    const { open, idMapper } = state;
+
+    useEffect(() => {
+        const subsciption = property.dataType.getProperty('_id').subscribe(
+            p => setState({
+                idMapper: p?.type
+                    ? ({ id }) => id
+                    : ({ id }) => `$oid#${id}`
+            })
+        );
+
+        return () => subsciption.unsubscribe();
+    }, [property]);
+
+    if (!idMapper) {
+        return <Loading/>;
+    }
 
     const handlePick = ({ record, title }) => {
         const aValue = [...(value.get() || [])];
@@ -181,6 +198,16 @@ export default function RefManyControl({
 
     const placeholder = itemsText || String(aValue);
 
+    let selector = config?.selector;
+    if (aValue?.length) {
+        const ids = {
+            _id: { $nin: aValue.map(idMapper) }
+        };
+        selector = selector
+            ? { $and: [selector, ids] }
+            : ids
+    }
+
     return (
         <div className='flex column'>
             <div className='flex'>
@@ -191,7 +218,7 @@ export default function RefManyControl({
                            placeholder={placeholder}
                            disabled={disabled}
                            readOnly={readOnly || !aValue}
-                           baseSelector={config?.selector}
+                           baseSelector={selector}
                            additionalViewportProps={additionalViewportProps}/>
                 {dropButton}
                 {addButton}
