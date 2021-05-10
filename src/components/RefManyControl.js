@@ -18,7 +18,7 @@ import Loading from "./Loading";
 
 
 export default function RefManyControl({
-                                           title, property, value, onChange, onStack, onDelete, disabled,
+                                           title, property, value, onChange, onStack, onDelete, disabled, sortDisabled,
                                            readOnly, config, additionalViewportProps
                                        }) {
 
@@ -142,16 +142,16 @@ export default function RefManyControl({
     };
 
     const sort = indices => {
-        indices = indices.map(({ id }) => parseInt(id));
-        const newValue = new Array(value.get());
+        const hash = aValue.reduce((h, item) => (h[item.id] = item) && h, {});
         let modified = false;
-        indices.forEach((oldIndex, index) => {
-            modified = modified || oldIndex !== index;
-            newValue[index] = value.cache[oldIndex];
+        const newValue = indices.map(({id}, index) => {
+            modified = modified || id !== aValue[index].id;
+            return hash[id];
         });
         if (modified) {
             value.set(newValue);
             onChange(newValue);
+            setState({}); // To refresh
         }
     };
 
@@ -163,20 +163,23 @@ export default function RefManyControl({
             dropButton = aValue.length > 0 &&
                 <IconButton onClick={() => setOpen(false)}><ArrowDropUpIcon/></IconButton>;
             itemsControls = aValue.map(
-                (_, index) => <ItemChip key={`item_${index}`}
-                                        dataType={property.dataType}
-                                        item={value.indexValue(index)}
-                                        onSelect={handleSelect(index)}
-                                        onDelete={(!readOnly && handleDelete(index)) || null}
-                                        disabled={disabled}
-                                        readOnly={readOnly}/>
+                ({ id }, index) => <ItemChip key={`item_${id}`}
+                                             dataType={property.dataType}
+                                             item={value.indexValue(index)}
+                                             onSelect={handleSelect(index)}
+                                             onDelete={(!readOnly && handleDelete(index)) || null}
+                                             disabled={disabled}
+                                             readOnly={readOnly}/>
             );
-            itemsControls = (
-                <ReactSortable list={Object.keys(aValue).map(id => ({ id }))}
-                               setList={sort}>
-                    {itemsControls}
-                </ReactSortable>
-            );
+
+            if (!readOnly && !disabled && !sortDisabled) {
+                itemsControls = (
+                    <ReactSortable list={aValue.map(({ id }) => ({ id }))}
+                                   setList={sort}>
+                        {itemsControls}
+                    </ReactSortable>
+                );
+            }
         } else {
             dropButton = aValue.length > 0 &&
                 <IconButton onClick={() => setOpen(true)}>
