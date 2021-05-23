@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useRef } from 'react';
 import { Subject } from "rxjs";
 import { useSpreadState } from "../common/hooks";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
@@ -20,43 +20,47 @@ export default function ContainerContext({ initialState, children }) {
 
     const [state, setState] = value;
 
-    const { confirmationSubject, confirmOptions } = state;
+    const { confirm } = state;
 
-    value.confirm = confirmOptions => {
-        const confirmationSubject = new Subject();
-        setState({
-            confirmationSubject,
-            confirmOptions: confirmOptions || {}
-        });
-        return confirmationSubject;
+    const confirmationSubject = useRef(new Subject());
+    const confirmOptions = useRef({});
+
+    value.confirm = options => {
+        confirmOptions.current = options || {};
+        setState({ confirm: true });
+        return confirmationSubject.current;
     };
 
     const closeDialog = ok => () => {
-        confirmationSubject?.next(ok);
-        confirmationSubject.complete();
-        setState({
-            confirmationSubject: null,
-            confirmOptions: null
-        });
+        confirmationSubject.current.next(ok);
+        confirmationSubject.current.complete();
+        confirmationSubject.current = new Subject();
+        setState({ confirm: false });
     };
 
     let dialogContent;
-    if (confirmationSubject) {
-        let { title, message, cancelText, okText } = confirmOptions;
+    if (confirm) {
+        let { title, message, abortText, okText, justOk } = confirmOptions.current;
         title = title && <DialogTitle>{title}</DialogTitle>;
         message = message && (
             <DialogContent>
                 <DialogContentText>{message}</DialogContentText>
             </DialogContent>
         );
+        let abort;
+        if (!justOk) {
+            abort = (
+                <Button onClick={closeDialog(false)}>
+                    {abortText || 'Abort'}
+                </Button>
+            );
+        }
         dialogContent = (
             <>
                 {title}
                 {message}
                 <DialogActions>
-                    <Button onClick={closeDialog(false)}>
-                        {cancelText || 'Cancel'}
-                    </Button>
+                    {abort}
                     <Button onClick={closeDialog(true)} color="primary" autoFocus>
                         {okText || 'Ok'}
                     </Button>
@@ -68,7 +72,7 @@ export default function ContainerContext({ initialState, children }) {
     return (
         <CC.Provider value={value}>
             {children}
-            <Dialog open={Boolean(confirmationSubject)}
+            <Dialog open={Boolean(confirm)}
                     onClose={closeDialog(false)}
                     maxWidth="sm">
                 {dialogContent}

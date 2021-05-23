@@ -29,7 +29,6 @@ function ApplicationAccess({ record, containerContext }) {
             return containerContext.confirm({
                 title: 'Access grant confirmation',
                 message: 'This application does not have access. Grant it?',
-                cancelText: 'Abort',
             }).pipe(
                 switchMap(ok => {
                     if (ok) {

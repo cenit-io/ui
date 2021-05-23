@@ -5,7 +5,7 @@ import ActionPicker from "./ActionPicker";
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { isObservable, of } from "rxjs";
 import Random from "../util/Random";
-import { switchMap } from "rxjs/operators";
+import { catchError, switchMap } from "rxjs/operators";
 import { RecordSubject } from "../services/subjects";
 import { useContainerContext } from "./ContainerContext";
 import Index from "./Index";
@@ -48,7 +48,13 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
         });
         if (isObservable(r)) {
             setContainerState({ loading: true });
-            actionSubscription.current = r.subscribe(() => {
+            actionSubscription.current = r.pipe(
+                catchError(e => containerContext.confirm({
+                    title: 'Error',
+                    message: `An error occurred: ${e.message}`,
+                    justOk: true
+                }))
+            ).subscribe(() => {
                 setContainerState({
                     loading: false,
                     actionKey: Index.key,
@@ -93,7 +99,13 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                                         selector
                                     });
                                     if (isObservable(r)) {
-                                        return r;
+                                        return r.pipe(
+                                            catchError(e => containerContext.confirm({
+                                                title: 'Error',
+                                                message: `An error occurred: ${e.message}`,
+                                                justOk: true
+                                            }))
+                                        );
                                     }
                                 } else {
                                     onSubjectPicked(RecordSubject.for(dataType.id, id).key);

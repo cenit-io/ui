@@ -9,7 +9,6 @@ function CleanActiveTenants({ dataType, containerContext }) {
     return containerContext.confirm({
         title: 'Clean confirmation',
         message: 'All the active tenants will be reset',
-        cancelText: 'Abort',
     }).pipe(
         switchMap(ok => {
             if (ok) {

@@ -28,7 +28,6 @@ function CancelConsumers({ selectedItems, record, dataType, containerContext, se
     return containerContext.confirm({
         title: 'Cancel confirmation',
         message,
-        cancelText: 'Abort',
     }).pipe(
         switchMap(ok => {
             if (ok) {

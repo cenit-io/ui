@@ -89,7 +89,6 @@ function Oauth1AuthorizationAccess({ docked, dataType, record, onSubjectPicked, 
         return containerContext.confirm({
             title: 'Access UPDATE alert',
             message: 'The authorization access information will be updated with this action!',
-            cancelText: 'Abort',
         }).pipe(
             switchMap(ok => {
                 if (ok) {

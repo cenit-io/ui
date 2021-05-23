@@ -11,8 +11,6 @@ Issues & next features
 
 - Mapping converters
 
-- Handle errors from executable actions observers
-
 ### Cenit side Issues
 
 - When filtering booleans (and probably other types) $eq: null cast null to false and filter does not work

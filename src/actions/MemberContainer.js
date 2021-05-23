@@ -6,7 +6,7 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
 import Show from "./Show";
 import Random from "../util/Random";
-import { switchMap, tap } from "rxjs/operators";
+import { catchError, switchMap, tap } from "rxjs/operators";
 import { isObservable, of } from "rxjs";
 import ChevronRight from "@material-ui/icons/ChevronRight";
 import ActionPicker from "./ActionPicker";
@@ -161,7 +161,13 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
                 });
                 if (isObservable(r)) {
                     setState({ loading: true });
-                    actionSubscription.current = r.subscribe(
+                    actionSubscription.current = r.pipe(
+                        catchError(e => containerContext.confirm({
+                            title: 'Error',
+                            message: `An error occurred: ${e.message}`,
+                            justOk: true
+                        }))
+                    ).subscribe(
                         () => setContainerState({
                             loading: false,
                             actionKey: Show.key,
