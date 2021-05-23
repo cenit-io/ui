@@ -9,13 +9,9 @@ Issues & next features
 
 - Filter PUSH target collections by origins depending on the super user status.
 
-- Updating container context record on forms onUpdate
-
 - Mapping converters
 
 - Handle errors from executable actions observers
-
-- Seed for embedded forms
 
 ### Cenit side Issues
 
@@ -34,6 +30,8 @@ Issues & next features
 - Clean up tenant configuration after tenant shredding
 
 ### Next Features
+
+- Seed for embedded forms
 
 - Action to config tasks description and auto-retry
 
