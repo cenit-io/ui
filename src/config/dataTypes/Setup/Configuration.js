@@ -9,7 +9,7 @@ export default {
     icon: <ConfigurationIcon component="svg"/>,
     actions: {
         edit: {
-            fields: ['email_data_type', 'observer_tenant']
+            fields: ['email_data_type', 'observer_tenant', 'default_build_in_tenant']
         },
         index: {
             component: Configuration,
