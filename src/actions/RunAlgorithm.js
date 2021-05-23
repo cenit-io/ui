@@ -12,6 +12,7 @@ import LoadingButton from "../components/LoadingButton";
 import { catchError, tap } from "rxjs/operators";
 import { of } from "rxjs";
 import { ExecutionMonitor } from "./ExecutionMonitor";
+import Alert from "./Alert";
 
 function parametersSchema(parameters) {
     const properties = {};
@@ -35,17 +36,14 @@ function parametersSchema(parameters) {
 export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
     const [state, setState] = useSpreadState();
 
-    const { submitting, errors, success } = state;
+    const { submitting, error, success } = state;
 
     useEffect(() => {
         if (submitting) {
             const subscription = onFormSubmit(dataType, value).pipe(
                 tap(() => setState({ success: true })),
                 catchError(error => {
-                    setState({
-                        errors: error.response.data,
-                        submitting: false
-                    });
+                    setState({ submitting: false });
                     return of(null);
                 })
             ).subscribe();
@@ -70,25 +68,30 @@ export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
 const RunAlgorithm = ({ docked, dataType, record, onSubjectPicked, height }) => {
     const [state, setState] = useSpreadState();
 
-    const { parameters, paramsDataType } = state;
+    const { parameters, paramsDataType, error } = state;
 
     useEffect(() => {
         const subscription = dataType.get(record.id, {
             viewport: '{parameters}'
         }).subscribe(
-            ({ parameters }) => {
-                const paramsDataType = DataType.from({
-                    name: 'Parameters',
-                    schema: parametersSchema(parameters)
-                });
+            alg => {
+                const parameters = alg?.parameters;
+                if (parameters) {
+                    const paramsDataType = DataType.from({
+                        name: 'Parameters',
+                        schema: parametersSchema(parameters)
+                    });
 
-                if (!parameters.length) {
-                    paramsDataType[Config] = {
-                        formViewComponent: ClickAndRun
-                    };
+                    if (!parameters.length) {
+                        paramsDataType[Config] = {
+                            formViewComponent: ClickAndRun
+                        };
+                    }
+
+                    setState({ parameters, paramsDataType });
+                } else {
+                    setState({ error: 'Algorithm not found!'})
                 }
-
-                setState({ parameters, paramsDataType });
             }
         );
 
@@ -98,6 +101,10 @@ const RunAlgorithm = ({ docked, dataType, record, onSubjectPicked, height }) => 
     const handleFormSubmit = (_, value) => API.post(
         'setup', 'algorithm', record.id, 'digest', value.get()
     );
+
+    if (error) {
+        return <Alert message={error}/>;
+    }
 
     if (parameters && paramsDataType) {
         return (

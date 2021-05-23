@@ -51,7 +51,9 @@ const DefaultIconColor = [
     'inherit', 'primary', 'secondary', 'action', 'error', 'disabled'
 ].reduce((hash, color) => (hash[color] = true) && hash, {});
 
-function Alert({ title, message, children, mainIcon, mainIconColor, smallIcon, smallIconColor, background }) {
+export default function Alert(
+    { title, message, children, mainIcon, mainIconColor, smallIcon, smallIconColor, background }
+) {
     const classes = alertStyles();
     const theme = useTheme();
 
@@ -88,5 +90,3 @@ function Alert({ title, message, children, mainIcon, mainIconColor, smallIcon, s
         </div>
     </ResponsiveContainer>;
 }
-
-export default Alert;

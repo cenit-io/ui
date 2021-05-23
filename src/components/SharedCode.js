@@ -8,6 +8,7 @@ import LinearProgress from "@material-ui/core/LinearProgress";
 import zzip from "../util/zzip";
 import { DataType } from "../services/DataTypeService";
 import RefOneViewer from "../viewers/RefOneViewer";
+import ErrorAlert from "../actions/Alert";
 
 const useStyles = makeStyles(theme => ({
     box: {
@@ -34,7 +35,7 @@ export default function SharedCode(props) {
 
     const {
         rootDataTypeTitle, snippetDataType, snippet, default_snippet,
-        creator_access, snippet_ref_binding
+        creator_access, snippet_ref_binding, error
     } = state;
 
     useEffect(() => {
@@ -49,21 +50,32 @@ export default function SharedCode(props) {
                     viewport: '{snippet {id namespace name origin} ' +
                         'default_snippet {id namespace name origin} creator_access snippet_ref_binding {id}}'
                 })
-            ).subscribe(([
-                             rootDataTypeTitle, snippetDataType, {
-                    snippet, default_snippet, creator_access, snippet_ref_binding
-                }]) => setState({
-                rootDataTypeTitle,
-                snippetDataType,
-                snippet,
-                default_snippet,
-                creator_access,
-                snippet_ref_binding
-            }));
+            ).subscribe(([rootDataTypeTitle, snippetDataType, snippetCoded]) => {
+                if (snippetCoded) {
+                    const {
+                        snippet, default_snippet, creator_access, snippet_ref_binding
+                    } = snippetCoded;
+
+                    setState({
+                        rootDataTypeTitle,
+                        snippetDataType,
+                        snippet,
+                        default_snippet,
+                        creator_access,
+                        snippet_ref_binding
+                    });
+                } else {
+                    setState({ error: 'Record not found' });
+                }
+            });
 
             return () => subscription.unsubscribe();
         }
     }, [rootId, rootDataType]);
+
+    if (error) {
+        return <ErrorAlert message={error}/>;
+    }
 
     const { alertsOnly, value, readOnly } = props;
 
@@ -152,7 +164,8 @@ export default function SharedCode(props) {
                 }
             } else if (snippet.id !== default_snippet?.id) {
                 alerts.push(
-                    <Alert key="current_snippet_link" severity={readOnly ? 'success' : 'warning'} className={classes.box}>
+                    <Alert key="current_snippet_link" severity={readOnly ? 'success' : 'warning'}
+                           className={classes.box}>
                         This code is from {currentLink} {readOnly ? '' : " and is being edited now."}
                     </Alert>
                 );
