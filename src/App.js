@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import QueryString from 'querystring';
-import AuthorizationService, { AccessKey, CenitHostKey } from "./services/AuthorizationService";
+import AuthorizationService, { CenitHostKey } from "./services/AuthorizationService";
 import { CircularProgress } from "@material-ui/core";
 import Main from "./layout/Main";
 import API from "./services/ApiService";
-import ErrorBoundary from "./components/ErrorBoundary";
 import { catchError } from "rxjs/operators";
 import { of } from "rxjs";
 import './common/FlexBox.css';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
+import Dialog from "@material-ui/core/Dialog";
+import ExpiredIcon from "@material-ui/icons/HourglassEmpty";
+import AlertTitle from "@material-ui/lab/AlertTitle";
+import { Alert } from "@material-ui/lab";
 
-API.onError(e => AuthorizationService.authorize());
+API.onError(() => AuthorizationService.authorize());
 
 function App() {
 
@@ -19,9 +22,11 @@ function App() {
     const [error, setError] = useState(false);
 
     useEffect(() => {
-        if (authorizing) {
-            API.onError(e => setError(true));
+        API.onError(() => setError(true));
+    }, []);
 
+    useEffect(() => {
+        if (authorizing) {
             const params = QueryString.parse(window.location.search.slice(1, window.location.search.length));
 
             if (params.cenitHost) {
@@ -36,7 +41,7 @@ function App() {
             }
 
             const subscription = authorize.pipe(
-                catchError(error => {
+                catchError(() => {
                     setError(true);
                     return of(null);
                 })
@@ -48,11 +53,6 @@ function App() {
         }
     }, [authorizing]);
 
-
-    if (error) {
-        return <ErrorBoundary/>
-    }
-
     if (authorizing) {
         return <div className='flex full-width full-v-height justify-content-center align-items-center'>
             <CircularProgress/>
@@ -60,11 +60,18 @@ function App() {
     }
 
     return (
-        <ErrorBoundary>
-            <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                <Main/>
-            </MuiPickersUtilsProvider>
-        </ErrorBoundary>
+        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <Main/>
+            <Dialog maxWidth="xs"
+                    open={error}>
+                <Alert severity="error" icon={<ExpiredIcon component="svg"/>}>
+                    <AlertTitle>
+                        <b>Session Expired</b>
+                    </AlertTitle>
+                    The app will reboot in a few seconds, reload manually if not.
+                </Alert>
+            </Dialog>
+        </MuiPickersUtilsProvider>
     );
 }
 
