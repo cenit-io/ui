@@ -8,6 +8,8 @@ import { of } from "rxjs";
 import { switchMap } from "rxjs/operators";
 import SvgIcon from "@material-ui/core/SvgIcon";
 import { ExecutionMonitor } from "./ExecutionMonitor";
+import { useTenantContext } from "../layout/TenantContext";
+import { Config } from "../common/Symbols";
 
 const PushIcon = () => (
     <SvgIcon style={{ display: 'block', transform: 'rotate(180deg)' }}>
@@ -25,6 +27,14 @@ const PushCollection = ({ docked, record, onSubjectPicked, height }) => {
         }
     }));
 
+    const [tenantState] = useTenantContext();
+
+    const { user } = tenantState;
+
+    const userRoles = user.roles || [];
+
+    const isSuperUser = user.super_admin_enabled && !!userRoles.find(({ name }) => name === 'super_admin');
+
     const formDataType = useRef(DataType.from({
         name: 'Push',
         schema: {
@@ -34,8 +44,15 @@ const PushCollection = ({ docked, record, onSubjectPicked, height }) => {
                     referenced: true,
                     $ref: {
                         namespace: 'Setup',
-                        name: 'CrossSharedCollection'
+                        name: 'CrossSharedCollection',
                     }
+                }
+            }
+        },
+        [Config]: {
+            fields: {
+                shared_collection: {
+                    selector: isSuperUser ? {} : { origin: 'owner' }
                 }
             }
         }

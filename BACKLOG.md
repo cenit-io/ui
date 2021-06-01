@@ -7,8 +7,6 @@ Issues & next features
 
 - Pull-import execution monitor leaks
 
-- Filter PUSH target collections by origins depending on the super user status.
-
 - Mapping converters
 
 ### Cenit side Issues
