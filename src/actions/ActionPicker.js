@@ -10,6 +10,7 @@ import MoreIcon from "@material-ui/icons/MoreVert";
 import MenuItem from "@material-ui/core/MenuItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import Menu from "@material-ui/core/Menu";
+import clsx from "clsx";
 
 const useToolbarStyles = makeStyles(theme => ({
     actions: {
@@ -20,6 +21,9 @@ const useToolbarStyles = makeStyles(theme => ({
         overflow: 'hidden',
         paddingLeft: theme.spacing(0.5),
         justifyContent: 'flex-end'
+    },
+    selected: {
+        background: theme.palette.background.default
     }
 }));
 
@@ -120,7 +124,8 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                 <IconButton aria-label={action.title}
                             color={selectedKey === action.key ? (action.activeColor || 'primary') : 'default'}
                             onClick={handleAction(action.key)}
-                            disabled={disabled}>
+                            disabled={disabled}
+                            className={clsx(selectedKey === action.key && classes.selected)}>
                     <Icon/>
                 </IconButton>
             </Tooltip>

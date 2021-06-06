@@ -108,7 +108,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                                         );
                                     }
                                 } else {
-                                    onSubjectPicked(RecordSubject.for(dataType.id, id).key);
+                                    onSubjectPicked(RecordSubject.for(dataType.id, id).key, actionKey);
                                 }
                                 return of(true);
                             }

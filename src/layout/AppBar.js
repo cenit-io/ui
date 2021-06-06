@@ -123,13 +123,21 @@ export default function ({ onToggle }) {
         return <CircularProgress/>
     }
 
-    const handleDataTypeSelected = ({ id }) => TabsSubject.next(DataTypeSubject.for(id).key);
+    const handleDataTypeSelected = ({ id }) => TabsSubject.next({
+        key: DataTypeSubject.for(id).key
+    });
 
-    const handlePickNotifications = () => TabsSubject.next(DataTypeSubject.for(notificationDataType.id).key);
+    const handlePickNotifications = () => TabsSubject.next({
+        key: DataTypeSubject.for(notificationDataType.id).key
+    });
 
-    const handlePickTasks = () => TabsSubject.next(DataTypeSubject.for(taskDataType.id).key);
+    const handlePickTasks = () => TabsSubject.next({
+        key: DataTypeSubject.for(taskDataType.id).key
+    });
 
-    const handlePickTenants = () => TabsSubject.next(DataTypeSubject.for(tenantDataType.id).key);
+    const handlePickTenants = () => TabsSubject.next({
+        key: DataTypeSubject.for(tenantDataType.id).key
+    });
 
     const handleTenantSelected = ({ id }) => {
         if (ConfigService.state().tenant_id !== id) {
@@ -137,7 +145,9 @@ export default function ({ onToggle }) {
         }
     };
 
-    const handleQuickAccess = () => TabsSubject.next(MenuSubject.instance().key);
+    const handleQuickAccess = () => TabsSubject.next({
+        key: MenuSubject.instance().key
+    });
 
     let menu;
 

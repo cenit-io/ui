@@ -29,7 +29,9 @@ export default function RefOneViewer({ prop, value, className, refDataType, vari
         }
     }, [refDataType, prop, value]);
 
-    const handleClick = () => TabsSubject.next(RecordSubject.for(dataType.id, value.id).key);
+    const handleClick = () => TabsSubject.next({
+        key: RecordSubject.for(dataType.id, value.id).key
+    });
 
     if (value) {
         if (title) {

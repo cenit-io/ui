@@ -181,7 +181,9 @@ export default function Navigation({ xs }) {
                         setMainContextState({ docked: false });
                     }
                     if (dt) {
-                        TabsSubject.next(DataTypeSubject.for(dt.id).key)
+                        TabsSubject.next({
+                            key: DataTypeSubject.for(dt.id).key
+                        });
                     }
                     setState({ item: null });
                 }
@@ -208,7 +210,7 @@ export default function Navigation({ xs }) {
         if (xs) {
             setMainContextState({ docked: false });
         }
-        TabsSubject.next(key);
+        TabsSubject.next({ key});
     };
 
     const selectItem = item => setState({ item });

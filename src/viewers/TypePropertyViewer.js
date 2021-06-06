@@ -32,7 +32,9 @@ export default function TypePropertyViewer({ value }) {
     if (dataType) {
         return <Chip label={title}
                      component="div"
-                     onClick={() => TabsSubject.next(DataTypeSubject.for(dataType.id).key)}/>;
+                     onClick={() => TabsSubject.next({
+                         key: DataTypeSubject.for(dataType.id).key
+                     })}/>;
     }
 
     if (title) {

@@ -96,7 +96,9 @@ export default function ({ subject, height }) {
             const subscription = DataType.find(item.$ref).subscribe(
                 dt => {
                     if (dt) {
-                        TabsSubject.next(DataTypeSubject.for(dt.id).key)
+                        TabsSubject.next({
+                            key: DataTypeSubject.for(dt.id).key
+                        });
                     }
                     setState({ item: null });
                 }
@@ -111,7 +113,9 @@ export default function ({ subject, height }) {
 
     const handleSelect = item => () => setState({ item });
 
-    const handleDataTypeSelected = ({ id }) => TabsSubject.next(DataTypeSubject.for(id).key);
+    const handleDataTypeSelected = ({ id }) => TabsSubject.next({
+        key: DataTypeSubject.for(id).key
+    });
 
     const userConfig = {
         ...config,

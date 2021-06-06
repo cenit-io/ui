@@ -3,7 +3,9 @@ import ListIcon from '@material-ui/icons/List';
 import { DataTypeSubject, TabsSubject } from "../services/subjects";
 
 function Records({ dataType, record }) {
-    TabsSubject.next(DataTypeSubject.for(record.id).key);
+    TabsSubject.next({
+        key: DataTypeSubject.for(record.id).key
+    });
 }
 
 export default ActionRegistry.register(Records, {

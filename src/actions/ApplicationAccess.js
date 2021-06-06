@@ -12,7 +12,9 @@ function openAccess(access) {
         name: 'OauthAccessGrant'
     }).pipe(
         map(accessDataType => {
-                TabsSubject.next(RecordSubject.for(accessDataType.id, access.id).key);
+                TabsSubject.next({
+                    key: RecordSubject.for(accessDataType.id, access.id).key
+                });
                 return of(true);
             }
         )

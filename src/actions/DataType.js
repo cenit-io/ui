@@ -44,7 +44,9 @@ function DataType({ dataType }) {
         tap(
             dt => {
                 if (dt) {
-                    TabsSubject.next(RecordSubject.for(dt.id, dataType.id).key);
+                    TabsSubject.next({
+                        key: RecordSubject.for(dt.id, dataType.id).key
+                    });
                 }
             }
         )

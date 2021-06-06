@@ -74,6 +74,7 @@ export default function NavTabs({ docked, width }) {
         tabs: [],
         tabIndex: 0
     });
+    const [actionsKeys, setActionKeys] = useSpreadState();
 
     const { tabs, tabIndex } = state;
 
@@ -98,7 +99,7 @@ export default function NavTabs({ docked, width }) {
 
     useEffect(() => {
         const subscription = TabsSubject.subscribe(
-            key => {
+            ({ key, actionKey }) => {
                 const tabIndex = tabs.indexOf(key);
                 let config;
                 if (tabIndex !== -1) {
@@ -110,6 +111,7 @@ export default function NavTabs({ docked, width }) {
                     };
                 }
                 setState(config);
+                setActionKeys({ [key]: actionKey });
                 ConfigService.update(config);
                 NavSubject.next(key); // TODO Notify Nav only if the subject is resolved
             }
@@ -124,13 +126,14 @@ export default function NavTabs({ docked, width }) {
         if (index <= newIndex) {
             newIndex = Math.max(0, newIndex - 1);
         }
-        tabs.splice(index, 1);
+        const [key] = tabs.splice(index, 1);
         const config = { tabs, tabIndex: newIndex };
         setState(config);
+        setActionKeys({ [key]: undefined });
         ConfigService.update(config)
     };
 
-    const onSubjectPicked = key => TabsSubject.next(key);
+    const onSubjectPicked = (key, actionKey) => TabsSubject.next({ key, actionKey });
 
     const itemTabs = tabs.map(
         (key, index) => <ItemTab key={`tab_${key}`}
@@ -153,7 +156,8 @@ export default function NavTabs({ docked, width }) {
                                   height={containerHeight}
                                   width={width}
                                   onSubjectPicked={onSubjectPicked}
-                                  onClose={handleClose(index)}/>
+                                  onClose={handleClose(index)}
+                                  activeActionKey={actionsKeys[key]}/>
                 </div>
             );
         }

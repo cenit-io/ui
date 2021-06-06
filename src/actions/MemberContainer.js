@@ -72,7 +72,7 @@ const useActionContainerStyles = makeStyles(theme => ({
     }
 }));
 
-function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked, onClose, onUpdate }) {
+function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked, onClose, onUpdate, activeActionKey }) {
     const [state, setState] = useSpreadState();
 
     const containerContext = useContainerContext();
@@ -90,6 +90,12 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
     const { dataTypeTitle, title, error, disabled } = state;
 
     const setError = error => setState({ error });
+
+    useEffect(() => {
+        if (activeActionKey) {
+            setContainerState({ actionKey: activeActionKey });
+        }
+    }, [activeActionKey]);
 
     useEffect(() => {
         if (!error) {
@@ -234,7 +240,8 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
                               arity={1}
                               onAction={handleAction}
                               disabled={disabled}
-                              dataType={dataType}/>
+                              dataType={dataType}
+                              selectedKey={actionKey}/>
             </Toolbar>
             <div className={classes.actionContainer}
                  style={{ height: `calc(${componentHeight})` }}>

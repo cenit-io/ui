@@ -33,7 +33,9 @@ export default function (dataTypeProjection) {
             }
         }, [item]);
 
-        const handleClick = () => TabsSubject.next(RecordSubject.for(dataType.id, value.id).key);
+        const handleClick = () => TabsSubject.next({
+            key: RecordSubject.for(dataType.id, value.id).key
+        });
 
         if (empty || dataType) {
             if (title) {

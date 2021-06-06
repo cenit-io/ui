@@ -213,9 +213,9 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
                         {notification.message}
                         <div>
                             <IconButton size="small"
-                                        onClick={() => TabsSubject.next(
-                                            RecordSubject.for(notificationDataType.id, notification.id).key
-                                        )}>
+                                        onClick={() => TabsSubject.next({
+                                            key: RecordSubject.for(notificationDataType.id, notification.id).key
+                                        })}>
                                 <OpenIcon className={classes[notificationType]}/>
                             </IconButton>
                         </div>
@@ -225,9 +225,9 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
         }
     });
 
-    const openExecution = () => TabsSubject.next(
-        RecordSubject.for(taskDataType.id, task.id).key
-    );
+    const openExecution = () => TabsSubject.next({
+        key: RecordSubject.for(taskDataType.id, task.id).key
+    });
 
     let refresh;
     if (refreshing) {

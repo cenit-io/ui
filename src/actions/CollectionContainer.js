@@ -113,7 +113,7 @@ const InitialState = {
     selector: {}
 };
 
-function CollectionContainerLayout({ docked, subject, height, width, onSubjectPicked }) {
+function CollectionContainerLayout({ docked, subject, height, width, onSubjectPicked, activeActionKey }) {
     const [state, setState] = useSpreadState();
 
     const [containerState, setContainerState] = useContainerContext();
@@ -125,6 +125,12 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
 
     const { dataType, title, error } = state;
     const { dataTypeId } = subject;
+
+    useEffect(() => {
+        if (activeActionKey) {
+            setContainerState({ actionKey: activeActionKey });
+        }
+    }, [activeActionKey]);
 
     useEffect(() => {
         const subscription = subject.title(2).subscribe(
@@ -216,7 +222,8 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
             <CollectionActionsToolbar dataType={dataType}
                                       title={title}
                                       onRefresh={() => setState({ actionComponentKey: Random.string() })}
-                                      onSubjectPicked={onSubjectPicked}/>
+                                      onSubjectPicked={onSubjectPicked}
+                                      selectedKey={actionKey}/>
             <div className={classes.actionContainer}
                  style={{ height: `calc(${componentHeight})` }}>
                 {action}

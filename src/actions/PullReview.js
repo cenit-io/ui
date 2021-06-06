@@ -81,9 +81,9 @@ function RecordsView({ entry, records, collectionDataType }) {
                     dataType.findByName(_type)
                 ))
             ).subscribe(recordDataType => {
-                    TabsSubject.next(
-                        RecordSubject.for(recordDataType.id, openingId).key
-                    );
+                    TabsSubject.next({
+                        key: RecordSubject.for(recordDataType.id, openingId).key
+                    });
                     setState({ openingId: null });
                 }
             );
