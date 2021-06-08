@@ -1,6 +1,10 @@
 import React from 'react';
 import ApplicationFilledIcon from "../../../icons/ApplicationFilledIcon";
 import { CRUD } from "../../../actions/ActionRegistry";
+import lazy from "../../../components/lazy";
+import StringControl from "../../../components/StringControl";
+
+const LazyControl = lazy(StringControl, { skipChanges: true });
 
 export default {
     title: 'Build-in App',
@@ -10,8 +14,34 @@ export default {
             fields: ['namespace', 'name', 'slug', 'updated_at']
         },
         edit: {
-            fields: ['namespace', 'name', 'slug', 'identifier', 'secret', 'updated_at']
+            fields: ['namespace', 'name', 'slug', 'identifier', 'secret', 'application_parameters'],
+            viewportFields: ['namespace', 'name', 'slug', 'application_parameters']
         }
     },
-    crud: [CRUD.read]
+    fields: {
+        namespace: {
+            readOnly: true
+        },
+        name: {
+            readOnly: true
+        },
+        slug: {
+            readOnly: true
+        },
+        identifier: {
+            readOnly: true,
+            control: LazyControl,
+            controlProps: {
+                multiline: true
+            }
+        },
+        secret: {
+            readOnly: true,
+            control: LazyControl,
+            controlProps: {
+                multiline: true
+            }
+        }
+    },
+    crud: [CRUD.read, CRUD.update]
 };
