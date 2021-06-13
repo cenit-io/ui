@@ -52,6 +52,8 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
 
     const [containerState] = useContainerContext();
 
+    const { selectedItems } = containerState;
+
     const frame = useRef(null);
 
     useEffect(() => {
@@ -70,7 +72,14 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                     )
                 ).forEach(
                     action => {
-                        if (!action.onlyFor || action.onlyFor.find(criteria => match(dataType, criteria))) {
+                        if (
+                            (!action.onlyFor || action.onlyFor.find(criteria => match(dataType, criteria))) &&
+                            (!action.onlyForMembers || (
+                                selectedItems.length === 1 && action.onlyForMembers.find(
+                                    criteria => match(selectedItems[0], criteria)
+                                )
+                            ))
+                        ) {
                             if (
                                 action.onlyFor || !config.crud || !action.crud || (
                                     !action.crud.find(op => config.crud.indexOf(op) === -1)
@@ -88,7 +97,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
         } else {
             setState({ actions: [] });
         }
-    }, [dataType, arity, kind]);
+    }, [dataType, arity, kind, selectedItems]);
 
     useResizeObserver(frame, entry => setState({ width: Math.floor(entry.contentRect.width) }));
 
