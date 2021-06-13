@@ -27,8 +27,6 @@ Issues & next features
 
 ### Next Features
 
-- Seed for embedded forms
-
 - Action to config tasks description and auto-retry
 
 - Add breadcrumb when navigating through references properties on forms editors.

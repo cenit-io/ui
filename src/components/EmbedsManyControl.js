@@ -20,7 +20,7 @@ import { ReactSortable } from "react-sortablejs";
 function EmbedsManyControl({
                                title, value, property, errors, onDelete, onChange,
                                schema, disabled, onStack, readOnly, ready,
-                               addDisabled, deleteDisabled, sortDisabled
+                               addDisabled, deleteDisabled, sortDisabled, config
                            }) {
 
     const [state, setState] = useSpreadState({
@@ -67,10 +67,19 @@ function EmbedsManyControl({
 
     const addNew = () => {
         let items = value.get();
+        let seed;
+        if (config.seed) {
+            if (typeof config.seed === 'function') {
+                seed = config.seed(property.dataType);
+            } else {
+                seed = config.seed;
+            }
+        }
         if (items) {
             value.set(items = [...items, {
                 [NEW]: true,
-                [FETCHED]: true
+                [FETCHED]: true,
+                ...seed
             }]);
         } else {
             items = [];
