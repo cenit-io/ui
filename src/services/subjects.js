@@ -22,6 +22,8 @@ import FileTypeFilledIcon from "../icons/FileTypeFilledIcon";
 import FileFilledIcon from "../icons/FileFilledIcon";
 import DocumentTypeFilledIcon from "../icons/DocumentTypeFilledIcon";
 import QuickAccessFilledIcon from "../icons/QuickAccessFilledIcon";
+import EmbeddedApp from "../components/EmbeddedApp";
+import EmbeddedAppService from "./EnbeddedAppService";
 
 const menuIcon = <QuickAccessFilledIcon/>;
 const fileIcon = <FileFilledIcon/>;
@@ -110,12 +112,53 @@ class BasicSubject {
             (this.titleCache && of(this.titleCache)) ||
             this.titleObservable(this.cache())
         ).pipe(
-            map(title => pluralize(title, arity))
+            map(title => title && pluralize(title, arity))
         );
     }
 
     cache() {
         return null;
+    }
+}
+
+export class EmbeddedAppSubject extends BasicSubject {
+
+    static type = 'EmbeddedApp';
+
+    static for(id) {
+        if (id) {
+            let s = Object.values(Subjects).find(
+                s => s.type === EmbeddedAppSubject.type && s.id === id
+            );
+            if (!s) {
+                s = new EmbeddedAppSubject({ id });
+                Subjects.add(s);
+            }
+            return s;
+        }
+    }
+
+    constructor(attrs) {
+        super(attrs);
+        this.TabComponent = EmbeddedApp;
+        this.type = EmbeddedAppSubject.type;
+        this.key = this.key || Random.string();
+    }
+
+    titleObservable(record) {
+        return of(record?.title);
+    }
+
+    navIcon() {
+        return EmbeddedAppService.getById(this.id).pipe(
+            map(app => <img src={`${app.url}/icon.svg`}/>)
+        );
+    }
+
+    quickTitle() {
+        return EmbeddedAppService.getById(this.id).pipe(
+            map(app => app?.title)
+        );
     }
 }
 
@@ -320,14 +363,17 @@ const Subjects = {
 
     syncWith: function (subjects) {
         Object.keys(this).forEach(key => {
-           if (typeof this[key] !== 'function') {
-               delete this.key;
-           }
+            if (typeof this[key] !== 'function') {
+                delete this.key;
+            }
         });
         Object.keys(subjects || {}).forEach(
             key => {
                 const attrs = subjects[key];
                 let s;
+                if (attrs.type === EmbeddedAppSubject.type) {
+                    s = new EmbeddedAppSubject(attrs);
+                }
                 if (attrs.type === DataTypeSubject.type) {
                     s = new DataTypeSubject(attrs);
                 }

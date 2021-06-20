@@ -1,0 +1,50 @@
+import { isObservable, of, from } from "rxjs";
+import { map } from "rxjs/operators";
+import { AppGateway } from "./AuthorizationService";
+import { EmbeddedAppSubject } from "./subjects";
+
+
+const EmbeddedAppService = {
+
+    all: function () {
+        return this.cache().pipe(
+            map(apps => Object.values(apps))
+        );
+    },
+
+    cache: function () {
+        if (isObservable(this.apps)) {
+            return this.apps;
+        }
+
+        if (this.apps) {
+            return of(this.apps);
+        }
+
+        return this.apps = from(AppGateway.get('/meta_config')).pipe(
+            map(({ data: { embedded_apps } }) => this.apps = (embedded_apps || []).reduce(
+                (hash, app) => (hash[app.id] = app) && hash, {}
+            ))
+        );
+    },
+
+    getById: function (id) {
+        return this.cache().pipe(
+            map(apps => apps[id])
+        )
+    },
+
+    update: function (apps) {
+        this.apps = (apps || []).reduce(
+            (hash, app) => (hash[app.id] = app) && hash, {}
+        );
+
+        Object.values(this.apps).forEach(
+            app => EmbeddedAppSubject.for(app.id).computeTitle(app)
+        );
+
+        return this.apps;
+    }
+};
+
+export default EmbeddedAppService;

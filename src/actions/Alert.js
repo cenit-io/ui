@@ -43,7 +43,8 @@ const alertStyles = makeStyles(theme => ({
         textAlign: 'center'
     },
     padding: {
-        padding: theme.spacing(1)
+        padding: theme.spacing(1),
+        width: `calc(100% - ${theme.spacing(6)}px)`
     }
 }));
 
@@ -84,7 +85,7 @@ export default function Alert(
             <Typography variant='subtitle1' className={classes.alignCenter}>
                 {message}
             </Typography>
-            <div className={clsx(classes.alignCenter, classes.padding, 'full-width')}>
+            <div className={clsx(classes.alignCenter, classes.padding)}>
                 {children}
             </div>
         </div>

@@ -9,7 +9,7 @@ import { makeStyles, useTheme } from "@material-ui/core";
 import Loading from "../components/Loading";
 import Skeleton from "@material-ui/lab/Skeleton";
 import ConfigService from "../services/ConfigService";
-import Subjects, { DataTypeSubject, TabsSubject } from "../services/subjects";
+import Subjects, { DataTypeSubject, EmbeddedAppSubject, TabsSubject } from "../services/subjects";
 import Collapse from "@material-ui/core/Collapse";
 import zzip from "../util/zzip";
 import { useSpreadState } from "../common/hooks";
@@ -18,6 +18,9 @@ import Menu from "../config/Menu";
 import { DataType } from "../services/DataTypeService";
 import FrezzerLoader from "../components/FrezzerLoader";
 import { useTenantContext } from "./TenantContext";
+import { from } from "rxjs";
+import { AppGateway } from "../services/AuthorizationService";
+import EmbeddedAppService from "../services/EnbeddedAppService";
 
 function NavItem({ icon, onClick, disabled, text }) {
     return (
@@ -164,14 +167,23 @@ export default function Navigation({ xs }) {
 
     const [state, setState] = useSpreadState({
         navigation: ConfigService.state().navigation || [],
-        history: true
+        history: true,
+        embeddedApps: []
     });
 
     const classes = useStyles();
 
     const itemClasses = useItemStyles();
 
-    const { navigation, over, openIndex, item } = state;
+    const { navigation, over, openIndex, item, embeddedApps } = state;
+
+    useEffect(() => {
+        const subscription = EmbeddedAppService.all().subscribe(
+            embeddedApps => setState({ embeddedApps })
+        );
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     useEffect(() => {
         if (item) {
@@ -210,7 +222,7 @@ export default function Navigation({ xs }) {
         if (xs) {
             setMainContextState({ docked: false });
         }
-        TabsSubject.next({ key});
+        TabsSubject.next({ key });
     };
 
     const selectItem = item => setState({ item });
@@ -221,6 +233,16 @@ export default function Navigation({ xs }) {
                   open={index === openIndex}
                   onClick={() => setState({ openIndex: index === openIndex ? -1 : index })}
                   onSelect={selectItem}/>
+    ));
+
+    const openEmbeddedApp = id => () => TabsSubject.next({
+        key: EmbeddedAppSubject.for(id).key
+    });
+
+    embeddedApps.forEach(({ id, title }) => menuItems.push(
+        <NavSubject key={`embedded_app_${id}`}
+                    subject={EmbeddedAppSubject.for(id)}
+                    onClick={openEmbeddedApp(id)}/>
     ));
 
     let nav;
