@@ -146,18 +146,18 @@ export class EmbeddedAppSubject extends BasicSubject {
     }
 
     titleObservable(record) {
-        return of(record?.title);
+        return of(record?.title || '');
     }
 
     navIcon() {
         return EmbeddedAppService.getById(this.id).pipe(
-            map(app => <img src={`${app.url}/icon.svg`}/>)
+            map(app => app && <img src={`${app.url}/icon.svg`}/>)
         );
     }
 
     quickTitle() {
         return EmbeddedAppService.getById(this.id).pipe(
-            map(app => app?.title)
+            map(app => app?.title || '')
         );
     }
 }

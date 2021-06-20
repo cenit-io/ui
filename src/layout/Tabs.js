@@ -20,7 +20,7 @@ function ItemTab({ subject, onClick, onClose }) {
 
     useEffect(() => {
         const subscription = subject.navTitle().subscribe(
-            title => setTitle(title)
+            title => setTitle(title || '...')
         );
         return () => subscription.unsubscribe();
     }, [subject]);

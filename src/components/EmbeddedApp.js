@@ -7,6 +7,7 @@ import Random from "../util/Random";
 import { fromEvent, Subject } from "rxjs";
 import { switchMap, map, filter } from "rxjs/operators";
 import AuthorizationService from "../services/AuthorizationService";
+import Alert from "../actions/Alert";
 
 const useStyles = makeStyles(theme => ({
     iframe: {
@@ -43,8 +44,12 @@ export default function EmbeddedApp({ subject, height, width }) {
     useEffect(() => {
         const subscription = EmbeddedAppService.getById(subject.id).subscribe(
             app => {
-                subject.computeTitle(app);
-                setState({ app });
+                if (app) {
+                    subject.computeTitle(app);
+                    setState({ app });
+                } else {
+                    setState({ app: false });
+                }
             }
         );
 
@@ -69,6 +74,10 @@ export default function EmbeddedApp({ subject, height, width }) {
 
         return () => subscription.unsubscribe();
     }, []);
+
+    if (app === false) {
+        return <Alert title="Not found" message="This app is not available"/>;
+    }
 
     if (!app) {
         return <Loading/>;
