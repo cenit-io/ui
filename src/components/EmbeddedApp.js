@@ -59,11 +59,16 @@ export default function EmbeddedApp({ subject, height, width }) {
     useEffect(() => {
         const subscription = fromEvent(window, 'message').pipe(
             filter(({ data }) => data.token === token.current)
-        ).subscribe(({ data, source: { window } }) => {
-            const { type } = data || {};
-            switch (type) {
-                case 'access': {
-                    accessSubject.current.next(window);
+        ).subscribe(({ data, source: { window: appWindow } }) => {
+            const { cmd } = data || {};
+            switch (cmd) {
+                case 'getAccess': {
+                    accessSubject.current.next(appWindow);
+                }
+                    break;
+
+                case 'reload': {
+                    window.location.reload();
                 }
                     break;
 
