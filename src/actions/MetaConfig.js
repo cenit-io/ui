@@ -54,6 +54,9 @@ const MetaConfig = ({ docked, dataType, record, onSubjectPicked, height }) => {
                                         }
                                     }
                                 }
+                            },
+                            banner_url: {
+                                type: 'string'
                             }
                         }
                     },

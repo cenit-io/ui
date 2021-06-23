@@ -1,33 +1,31 @@
 import React, { useEffect, useRef } from 'react';
-import Loading from "./Loading";
-import EmbeddedAppService from "../services/EnbeddedAppService";
 import { makeStyles } from "@material-ui/core";
-import { useSpreadState } from "../common/hooks";
 import Random from "../util/Random";
 import { fromEvent, Subject } from "rxjs";
 import { switchMap, map, filter } from "rxjs/operators";
 import AuthorizationService from "../services/AuthorizationService";
-import Alert from "../actions/Alert";
 
 const useStyles = makeStyles(theme => ({
     iframe: {
-        height: ({ height }) => `calc(${height} - ${theme.spacing(0.5)}px)`,
-        width: ({ width }) => `calc(${width})`,
+        height: ({ height }) => height
+            ? `calc(${height} - ${theme.spacing(0.5)}px)`
+            : 0,
+        width: ({ width }) => width
+            ? `calc(${width})`
+            : 'inherit',
         border: 'none'
     }
 }));
 
-export default function EmbeddedApp({ subject, height, width }) {
+export default function EmbeddedApp({ url, height, width, autoHeight }) {
 
-    const [state, setState] = useSpreadState();
-
-    const classes = useStyles({ height, width });
+    const classes = useStyles({ height: autoHeight ? false : height, width });
 
     const token = useRef(Random.string());
 
     const accessSubject = useRef(new Subject());
 
-    const { app } = state;
+    const iframe = useRef(null);
 
     useEffect(() => {
         const subscription = accessSubject.current.pipe(
@@ -40,21 +38,6 @@ export default function EmbeddedApp({ subject, height, width }) {
 
         return () => subscription.unsubscribe();
     }, []);
-
-    useEffect(() => {
-        const subscription = EmbeddedAppService.getById(subject.id).subscribe(
-            app => {
-                if (app) {
-                    subject.computeTitle(app);
-                    setState({ app });
-                } else {
-                    setState({ app: false });
-                }
-            }
-        );
-
-        return () => subscription.unsubscribe();
-    }, [subject]);
 
     useEffect(() => {
         const subscription = fromEvent(window, 'message').pipe(
@@ -72,23 +55,25 @@ export default function EmbeddedApp({ subject, height, width }) {
                 }
                     break;
 
+                case 'resize': {
+                    if (autoHeight) {
+                        if (data.height >= 0) {
+                            iframe.current.style.height = `${data.height}px`;
+                        }
+                    }
+                }
+                    break;
                 default:
                 // Nothing to do here
             }
         });
 
         return () => subscription.unsubscribe();
-    }, []);
-
-    if (app === false) {
-        return <Alert title="Not found" message="This app is not available"/>;
-    }
-
-    if (!app) {
-        return <Loading/>;
-    }
+    }, [autoHeight]);
 
     return (
-        <iframe className={classes.iframe} src={`${app.url}?token=${token.current}`}/>
+        <iframe ref={iframe}
+                className={classes.iframe}
+                src={`${url}?token=${token.current}`}/>
     );
 }

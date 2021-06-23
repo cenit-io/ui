@@ -22,7 +22,7 @@ import FileTypeFilledIcon from "../icons/FileTypeFilledIcon";
 import FileFilledIcon from "../icons/FileFilledIcon";
 import DocumentTypeFilledIcon from "../icons/DocumentTypeFilledIcon";
 import QuickAccessFilledIcon from "../icons/QuickAccessFilledIcon";
-import EmbeddedApp from "../components/EmbeddedApp";
+import EmbeddedAppContainer from "../components/EmbeddedAppContainer";
 import EmbeddedAppService from "./EnbeddedAppService";
 
 const menuIcon = <QuickAccessFilledIcon/>;
@@ -140,7 +140,7 @@ export class EmbeddedAppSubject extends BasicSubject {
 
     constructor(attrs) {
         super(attrs);
-        this.TabComponent = EmbeddedApp;
+        this.TabComponent = EmbeddedAppContainer;
         this.type = EmbeddedAppSubject.type;
         this.key = this.key || Random.string();
     }

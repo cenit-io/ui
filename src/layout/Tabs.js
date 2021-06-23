@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { makeStyles, useTheme } from '@material-ui/core/styles/index';
 import AppBar from '@material-ui/core/AppBar/index';
 import Tabs from '@material-ui/core/Tabs/index';
@@ -11,6 +11,10 @@ import { appBarHeight } from "./AppBar";
 import Subjects, { NavSubject, TabsSubject } from "../services/subjects";
 import ConfigService from "../services/ConfigService";
 import { useSpreadState } from "../common/hooks";
+import useResizeObserver from "@react-hook/resize-observer";
+import { from } from "rxjs";
+import { AppGateway } from "../services/AuthorizationService";
+import EmbeddedApp from "../components/EmbeddedApp";
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
@@ -65,6 +69,11 @@ const useStyles = makeStyles(theme => ({
         backgroundColor: theme.palette.background.paper,
         position: 'relative'
     },
+    banner: {
+        display: 'flex',
+        height: 'min-content',
+        width: '100%'
+    }
 }));
 
 export default function NavTabs({ docked, width }) {
@@ -72,17 +81,32 @@ export default function NavTabs({ docked, width }) {
     const theme = useTheme();
     const [state, setState] = useSpreadState({
         tabs: [],
-        tabIndex: 0
+        tabIndex: 0,
+        alertBannerHeight: 0
     });
     const [actionsKeys, setActionKeys] = useSpreadState();
 
-    const { tabs, tabIndex } = state;
+    const { tabs, tabIndex, alertBannerHeight, bannerURL } = state;
 
     const setTabIndex = tabIndex => {
         setState({ tabIndex });
         NavSubject.next(tabs[tabIndex]);
         ConfigService.update({ tabIndex });
     };
+
+    const alertBanner = useRef(null);
+
+    useResizeObserver(alertBanner, entry => setState({
+        alertBannerHeight: Math.ceil(entry.contentRect.height)
+    }));
+
+    useEffect(() => {
+        const subscription = from(AppGateway.get('/meta_config')).subscribe(
+            ({ data: { banner_url: bannerURL } }) => setState({ bannerURL })
+        );
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     useEffect(() => {
         const subscription = ConfigService.tenantIdChanges().subscribe(
@@ -143,7 +167,7 @@ export default function NavTabs({ docked, width }) {
                                  onClose={handleClose(index)}/>
     );
 
-    const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)}`;
+    const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)} - ${alertBannerHeight}px`;
 
     const containers = tabs.map(
         (key, index) => {
@@ -167,10 +191,19 @@ export default function NavTabs({ docked, width }) {
         console.warn('CHANGED', newValue);
     }
 
+    let banner;
+    if (bannerURL) {
+        banner = <EmbeddedApp url={bannerURL} autoHeight={true}/>;
+    }
+
     return (
         <div className={classes.root}>
+            <div className={classes.banner} ref={alertBanner}>
+                {banner}
+            </div>
             <AppBar position="sticky" color="default">
                 <Tabs value={tabIndex}
+                      component="div"
                       onChange={handleChange}
                       variant="scrollable"
                       scrollButtons="on"
