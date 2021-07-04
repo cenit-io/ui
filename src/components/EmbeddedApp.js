@@ -4,6 +4,7 @@ import Random from "../util/Random";
 import { fromEvent, Subject } from "rxjs";
 import { switchMap, map, filter } from "rxjs/operators";
 import AuthorizationService from "../services/AuthorizationService";
+import { DataTypeSubject, RecordSubject, TabsSubject } from "../services/subjects";
 
 const useStyles = makeStyles(theme => ({
     iframe: {
@@ -63,6 +64,26 @@ export default function EmbeddedApp({ url, height, width, autoHeight }) {
                     }
                 }
                     break;
+
+                case 'openTab': {
+                    let subject;
+                    if (data.dataTypeId) {
+                        if (data.recordId) {
+                            subject = RecordSubject.for(data.dataTypeId, data.recordId);
+                        } else {
+                            subject = DataTypeSubject.for(data.dataTypeId);
+                        }
+                    }
+
+                    if (subject) {
+                        TabsSubject.next({
+                            key: subject.key,
+                            actionKey: data.actionKey
+                        });
+                    }
+                }
+                    break;
+
                 default:
                 // Nothing to do here
             }
