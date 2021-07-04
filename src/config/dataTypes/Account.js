@@ -10,7 +10,7 @@ export default {
     icon: <HomeIcon component="svg"/>,
     actions: {
         index: {
-            fields: ['name', 'notification_level', 'time_zone', 'updated_at']
+            fields: ['name', 'notification_level', 'time_zone', 'active_until', 'locked', 'updated_at']
         },
         new: {
             fields: ['name', 'notification_level', 'time_zone']
