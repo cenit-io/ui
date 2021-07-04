@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import Loading from '../components/Loading';
 import { Chip, Toolbar, Typography, useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
@@ -92,11 +92,47 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
     const setError = error => setState({ error });
 
-    useEffect(() => {
-        if (activeActionKey) {
-            setContainerState({ actionKey: activeActionKey });
+    const handleAction = useCallback(actionKey => {
+        if (actionSubscription.current) {
+            actionSubscription.current.unsubscribe();
+            actionSubscription.current = null;
         }
-    }, [activeActionKey]);
+        const action = ActionRegistry.byKey(actionKey);
+        if (action) {
+            if (action.executable) {
+                const r = action.call(this, {
+                    dataType, record, tenantContext, containerContext
+                });
+                if (isObservable(r)) {
+                    setState({ loading: true });
+                    actionSubscription.current = r.pipe(
+                        catchError(e => containerContext.confirm({
+                            title: 'Error',
+                            message: `An error occurred: ${e.message}`,
+                            justOk: true
+                        }))
+                    ).subscribe(
+                        () => setContainerState({
+                            loading: false,
+                            actionKey: Show.key,
+                            actionComponentKey: Random.string()
+                        })
+                    );
+                }
+            } else {
+                setContainerState({
+                    actionKey,
+                    actionComponentKey: Random.string()
+                });
+            }
+        }
+    }, [dataType, record, tenantContext, containerContext]);
+
+    useEffect(() => {
+        if (activeActionKey && record) {
+            setTimeout(() => handleAction(activeActionKey.key || activeActionKey));
+        }
+    }, [activeActionKey, record]);
 
     useEffect(() => {
         if (!error) {
@@ -154,42 +190,6 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
     if (!record) {
         return <Loading/>;
     }
-
-    const handleAction = actionKey => {
-        if (actionSubscription.current) {
-            actionSubscription.current.unsubscribe();
-            actionSubscription.current = null;
-        }
-        const action = ActionRegistry.byKey(actionKey);
-        if (action) {
-            if (action.executable) {
-                const r = action.call(this, {
-                    dataType, record, tenantContext, containerContext
-                });
-                if (isObservable(r)) {
-                    setState({ loading: true });
-                    actionSubscription.current = r.pipe(
-                        catchError(e => containerContext.confirm({
-                            title: 'Error',
-                            message: `An error occurred: ${e.message}`,
-                            justOk: true
-                        }))
-                    ).subscribe(
-                        () => setContainerState({
-                            loading: false,
-                            actionKey: Show.key,
-                            actionComponentKey: Random.string()
-                        })
-                    );
-                }
-            } else {
-                setContainerState({
-                    actionKey,
-                    actionComponentKey: Random.string()
-                });
-            }
-        }
-    };
 
     const handleUpdateItem = record => {
         setContainerState({ record, selectedItems: [record] });
