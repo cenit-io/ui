@@ -2,6 +2,7 @@ import React from 'react';
 import HomeIcon from '@material-ui/icons/Home';
 import ErrorLevelViewer from "../../viewers/ErrorLevelViewer";
 import MenuIcon from "@material-ui/icons/HomeOutlined";
+import ViewerControl from "../../components/ViewerControl";
 
 export const TenantMenuIcon = MenuIcon;
 
@@ -10,10 +11,10 @@ export default {
     icon: <HomeIcon component="svg"/>,
     actions: {
         index: {
-            fields: ['name', 'notification_level', 'time_zone', 'active_until', 'locked', 'updated_at']
+            fields: ['name', 'notification_level', 'time_zone', 'locked', 'updated_at']
         },
         new: {
-            fields: ['name', 'notification_level', 'time_zone']
+            fields: ['name', 'notification_level', 'time_zone', 'locked']
         }
     },
     fields: {
@@ -22,6 +23,9 @@ export default {
                 ({ notification_level }) => notification_level,
                 'background'
             )
+        },
+        locked: {
+            control: ViewerControl
         }
     }
 };
