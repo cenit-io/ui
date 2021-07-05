@@ -2,8 +2,7 @@ import React, { useEffect } from 'react';
 import RecordSelector from "./RecordSelector";
 import { useSpreadState } from "../common/hooks";
 import { useTenantContext } from "../layout/TenantContext";
-
-export const TenantTypeSelector = { namespace: '', name: 'Account' };
+import TenantTypeSelector from "./TenantTypeSelector";
 
 export default function TenantSelector({ inputClasses, onSelect, readOnly }) {
     const [state, setState] = useSpreadState({
