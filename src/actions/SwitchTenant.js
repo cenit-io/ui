@@ -1,6 +1,6 @@
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import TenantIcon from "@material-ui/icons/Home";
-import { TenantTypeSelector } from "../components/TenantSelector";
+import TenantTypeSelector from "../components/TenantTypeSelector";
 
 function SwitchTenant({ record, tenantContext }) {
     const [tenantState, setTenantState] = tenantContext;
