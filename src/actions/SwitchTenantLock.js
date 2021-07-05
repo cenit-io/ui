@@ -1,6 +1,6 @@
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import API from "../services/ApiService";
-import { switchMap } from "rxjs/operators";
+import { switchMap, tap } from "rxjs/operators";
 import { of } from "rxjs";
 import { useContainerContext } from "./ContainerContext";
 import React from "react";
@@ -8,7 +8,8 @@ import SvgIcon from "@material-ui/core/SvgIcon";
 import UnlockIcon from "@material-ui/icons/LockOpenOutlined";
 import LockIcon from "@material-ui/icons/LockOutlined";
 import SwitchIcon from "@material-ui/icons/SettingsBackupRestoreOutlined";
-import { TenantTypeSelector } from "../components/TenantSelector";
+import EmbeddedAppService from "../services/EnbeddedAppService";
+import TenantTypeSelector from "../components/TenantTypeSelector";
 
 const SwitchLockTitle = 'Switch Lock';
 const UnlockTitle = 'Unlock';
@@ -88,11 +89,14 @@ function SwitchTenantLock({ selectedItems, record, dataType, containerContext, s
     }).pipe(
         switchMap(ok => {
             if (ok) {
-                return API.get('setup', 'data_type', dataType.id, 'digest', 'switch', {
-                    headers: {
-                        'X-Digest-Options': JSON.stringify({ selector })
-                    }
-                });
+                return dataType.post({
+                    id: record.id,
+                    locked: !record.locked
+                }, {
+                    add_only: true
+                }).pipe(
+                    tap(() => EmbeddedAppService.refreshAll())
+                );
             }
             return of(false);
         })
