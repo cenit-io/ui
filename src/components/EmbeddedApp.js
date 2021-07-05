@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { makeStyles } from "@material-ui/core";
 import Random from "../util/Random";
-import { fromEvent, Subject } from "rxjs";
-import { switchMap, map, filter } from "rxjs/operators";
+import { fromEvent, of, Subject } from "rxjs";
+import { switchMap, map, filter, tap } from "rxjs/operators";
 import AuthorizationService from "../services/AuthorizationService";
-import { DataTypeSubject, RecordSubject, TabsSubject } from "../services/subjects";
+import { DataTypeSubject, EmbeddedAppSubject, RecordSubject, TabsSubject } from "../services/subjects";
+import EmbeddedAppService from "../services/EnbeddedAppService";
 
 const useStyles = makeStyles(theme => ({
     iframe: {
@@ -42,52 +43,82 @@ export default function EmbeddedApp({ url, height, width, autoHeight }) {
 
     useEffect(() => {
         const subscription = fromEvent(window, 'message').pipe(
-            filter(({ data }) => data.token === token.current)
-        ).subscribe(({ data, source: { window: appWindow } }) => {
-            const { cmd } = data || {};
-            switch (cmd) {
-                case 'getAccess': {
-                    accessSubject.current.next(appWindow);
-                }
-                    break;
+            filter(({ data }) => data.token === token.current),
+            switchMap(({ data, source: { window: appWindow } }) => {
+                const { cmd } = data || {};
+                switch (cmd) {
+                    case 'getAccess': {
+                        accessSubject.current.next(appWindow);
+                    }
+                        break;
 
-                case 'reload': {
-                    window.location.reload();
-                }
-                    break;
+                    case 'reload': {
+                        window.location.reload();
+                    }
+                        break;
 
-                case 'resize': {
-                    if (autoHeight) {
-                        if (data.height >= 0) {
-                            iframe.current.style.height = `${data.height}px`;
+                    case 'resize': {
+                        if (autoHeight) {
+                            if (data.height >= 0) {
+                                iframe.current.style.height = `${data.height}px`;
+                            }
                         }
                     }
-                }
-                    break;
+                        break;
 
-                case 'openTab': {
-                    let subject;
-                    if (data.dataTypeId) {
-                        if (data.recordId) {
-                            subject = RecordSubject.for(data.dataTypeId, data.recordId);
-                        } else {
-                            subject = DataTypeSubject.for(data.dataTypeId);
+                    case 'openTab': {
+                        let subject;
+                        if (data.dataTypeId) {
+                            if (data.recordId) {
+                                subject = RecordSubject.for(data.dataTypeId, data.recordId);
+                            } else {
+                                subject = DataTypeSubject.for(data.dataTypeId);
+                            }
+                        } else if (data.embeddedApp) {
+                            const { id, url } = data.embeddedApp;
+                            if (id) {
+                                subject = EmbeddedAppSubject.for(id)
+                            } else {
+                                return EmbeddedAppService.all().pipe(
+                                    tap(apps => {
+                                        const app = apps.find(({ url: appUrl }) => appUrl === url);
+                                        if (app) {
+                                            TabsSubject.next({
+                                                key: EmbeddedAppSubject.for(app.id).key,
+                                                actionKey: data.actionKey
+                                            });
+                                        }
+                                    })
+                                );
+                            }
+                        }
+
+                        if (subject) {
+                            TabsSubject.next({
+                                key: subject.key,
+                                actionKey: data.actionKey
+                            });
+                        }
+                    }
+                        break;
+
+                    case 'send': {
+                        const { message, domain } = data;
+                        if (message && domain) {
+                            const frames = window.frames;
+                            for (let i = 0; i < frames.length; i++) {
+                                frames[i].postMessage(message, domain);
+                            }
                         }
                     }
 
-                    if (subject) {
-                        TabsSubject.next({
-                            key: subject.key,
-                            actionKey: data.actionKey
-                        });
-                    }
+                    default:
+                    // Nothing to do here
                 }
-                    break;
 
-                default:
-                // Nothing to do here
-            }
-        });
+                return of(true);
+            })
+        ).subscribe();
 
         return () => subscription.unsubscribe();
     }, [autoHeight]);
