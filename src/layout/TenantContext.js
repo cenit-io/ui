@@ -6,6 +6,7 @@ import { eq } from "../services/BLoC";
 import ConfigService from "../services/ConfigService";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { Status } from "../common/Symbols";
+import EmbeddedAppService from "../services/EnbeddedAppService";
 
 const TC = React.createContext({});
 
@@ -78,6 +79,7 @@ export default function TenantContext({ children }) {
                     loading: false
                 });
                 ConfigService.update({ tenant_id: switchingTenant.id });
+                EmbeddedAppService.refreshAll();
             });
             return () => subscription && subscription.unsubscribe();
         }

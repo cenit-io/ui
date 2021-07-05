@@ -44,6 +44,25 @@ const EmbeddedAppService = {
         );
 
         return this.apps;
+    },
+
+    refreshAll: function () {
+        if (this.apps && !isObservable(this.apps)) {
+            const frames = window.frames;
+            // const urls = Object.values(this.apps).map(({ url }) => url);
+            // urls.forEach(url => {
+            //     let i = 0;
+            //     while (i < frames.length) {
+            //         if (frames[i].location.startsWith(url)) {
+            //             frames[i].postMessage({ cmd: 'refresh' }, '*');
+            //         }
+            //         i++;
+            //     }
+            // });
+            for (let i = 0; i < frames.length; i++) {
+                frames[i].postMessage({ cmd: 'refresh' }, '*');
+            }
+        }
     }
 };
 
