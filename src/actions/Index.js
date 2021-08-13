@@ -281,7 +281,7 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
                             map(
                                 properties => configFields.map(
                                     field => properties[field]
-                                )
+                                ).filter(f => f)
                             )
                         );
                     }
