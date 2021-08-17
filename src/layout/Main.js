@@ -27,7 +27,7 @@ const useStyles = makeStyles(theme => ({
         marginTop: appBarHeight(theme)
     },
     contentMargin: {
-        marginLeft: theme.spacing(7) + 1
+        marginLeft: theme.spacing(10) + 5,
     },
     drop: {
         position: 'absolute',
@@ -86,13 +86,15 @@ function MainLayout() {
     if (xs) {
         navKey = `nav_${ConfigService.state().tenant_id}`;
     }
-    let navigationUI = <Navigation key={navKey}
-                                   xs={xs}/>;
 
     const switchNavigation = () => {
         localStorage.setItem('docked', String(!docked));
         setDocked(!docked);
     };
+
+    let navigationUI = <Navigation key={navKey}
+                                   xs={xs}
+                                   onToggle={switchNavigation}/>;
 
     if (xs) {
         navigationUI = (
@@ -102,7 +104,7 @@ function MainLayout() {
         );
     }
 
-    const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(7) + 1}px`);
+    const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `${theme.spacing(10) + 5}px`);
     const tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
 
     return (

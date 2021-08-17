@@ -194,41 +194,39 @@ export default function ({ onToggle }) {
         </IconButton>
     );
 
-    return <AppBar position="fixed">
+    return (
+      <AppBar position="absolute">
         <Toolbar>
-            <IconButton edge="start"
-                        color="inherit"
-                        aria-label="Menu"
-                        onClick={onToggle}
-                        disabled={loading}>
-                <MenuIcon/>
+          {!smUp && (
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="Menu"
+              onClick={onToggle}
+              disabled={loading}
+            >
+              <MenuIcon />
             </IconButton>
-            {
-                smUp &&
-                <Typography variant="h6">
-                    Admin
-                </Typography>
-            }
-            <IconButton className={classes.quickAccess}
-                        color="inherit"
-                        disabled={loading}
-                        onClick={handleQuickAccess}>
-                <QuickAccessIcon/>
-            </IconButton>
-            {dataTypeSearch}
-            <div className={classes.grow}/>
-            <IconButton color="inherit"
-                        disabled={loading}
-                        onClick={handlePickNotifications}>
-                <NotificationsIcon/>
-            </IconButton>
-            <IconButton color="inherit"
-                        disabled={loading}
-                        onClick={handlePickTasks}>
-                <TaskMenuIcon/>
-            </IconButton>
-            {tenantSearch}
-            {avatar}
+          )}
+          {/* {dataTypeSearch} */}
+          <div className={classes.grow} />
+          <IconButton
+            color="inherit"
+            disabled={loading}
+            onClick={handlePickNotifications}
+          >
+            <NotificationsIcon />
+          </IconButton>
+          <IconButton
+            color="inherit"
+            disabled={loading}
+            onClick={handlePickTasks}
+          >
+            <TaskMenuIcon />
+          </IconButton>
+          {tenantSearch}
+          {avatar}
         </Toolbar>
-    </AppBar>
+      </AppBar>
+    );
 };
