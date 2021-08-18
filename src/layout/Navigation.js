@@ -7,6 +7,8 @@ import ListItemText from "@material-ui/core/ListItemText";
 import HistoryIcon from "@material-ui/icons/History";
 import KeyboardArrowRightIcon from "@material-ui/icons/KeyboardArrowRightRounded";
 import KeyboardArrowLeftIcon from "@material-ui/icons/KeyboardArrowLeftRounded";
+import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
+import KeyboardArrowUp from "@material-ui/icons/KeyboardArrowUp";
 import { IconButton, makeStyles, useTheme } from "@material-ui/core";
 import Loading from "../components/Loading";
 import Skeleton from "@material-ui/lab/Skeleton";
@@ -31,7 +33,7 @@ import { appBarHeight } from "./AppBar";
 import CenitIOLogo from "../img/Cenit_IO_512x512px_Imagotipo.svg";
 import CenitAdminLogo from "../img/Cenit_IO_Admin_app_Identidad.svg";
 
-function NavItem({ icon, onClick, disabled, text }) {
+function NavItem({ icon, onClick, disabled, text, isRoot, isOpen }) {
   return (
     <ListItem button component="div" disabled={disabled} onClick={onClick}>
       <ListItemIcon>{icon}</ListItemIcon>
@@ -46,6 +48,13 @@ function NavItem({ icon, onClick, disabled, text }) {
           {text}
         </div>
       </ListItemText>
+      {isRoot && (
+        <div>
+          <IconButton color="inherit" size="small">
+            { isOpen ? <KeyboardArrowUp/> : <KeyboardArrowDown />  }
+          </IconButton>
+        </div>
+      )}
     </ListItem>
   );
 }
@@ -93,7 +102,7 @@ function NavSubject({ subject, onClick }) {
   );
 }
 
-export const navigationWidth = (theme) => `${theme.spacing(30)}px`;
+export const navigationWidth = (theme) => `${theme.spacing(35)}px`;
 
 const useStyles = makeStyles((theme) => ({
   drawer: {
@@ -106,6 +115,7 @@ const useStyles = makeStyles((theme) => ({
   },
   navOpen: {
     width: navigationWidth(theme),
+    boxSizing: "border-box",
     transition: theme.transitions.create(["width"], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
@@ -148,7 +158,13 @@ function NavGroup({ title, IconComponent, items, open, onClick, onSelect }) {
 
   return (
     <>
-      <NavItem text={title} icon={<IconComponent />} onClick={onClick} />
+      <NavItem
+        text={title}
+        icon={<IconComponent />}
+        onClick={onClick}
+        isRoot={true}
+        isOpen={open}
+      />
       <Collapse in={open}>
         <List className={itemClasses.root} component="ul">
           {items.map((item, index) => (
@@ -274,7 +290,7 @@ export default function Navigation({ xs, onToggle }) {
       .filter((item) => item);
     nav = (
       <List
-        style={{ overflowX: "hidden", padding: !docked ? "0 0.9rem" : "" }}
+        style={{ overflowX: "hidden", padding: !docked ? "0 0.9rem" : "0 1rem" }}
         component="ul"
       >
         <ListItem
@@ -324,13 +340,14 @@ export default function Navigation({ xs, onToggle }) {
           overflowX: !docked ? "hidden" : "auto",
           height: "100%",
           width: "100%",
+          boxSizing: "border-box",
         }}
       >
         <div
           style={{
             width: docked ? "90%" : "100%",
-            marginLeft: docked ? "" : "1rem",
-            padding: docked && !xs ? "1rem 0 1rem 1.8rem" : "",
+            marginLeft: docked ? "" : "4px",
+            padding: docked && !xs ? "1rem 0 1rem 1.8rem" : "0 .8rem",
             boxSizing: docked ? "border-box" : "",
           }}
         >
