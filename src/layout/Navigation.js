@@ -356,13 +356,13 @@ export default function Navigation({ xs, onToggle }) {
           >
             {docked && (
               <IconButton edge="start" color="inherit" onClick={onToggle}>
-                <KeyboardArrowRightIcon />
+                <KeyboardArrowLeftIcon />
               </IconButton>
             )}
 
             {!docked && (
               <IconButton edge="start" color="inherit" onClick={onToggle}>
-                <KeyboardArrowLeftIcon />
+                <KeyboardArrowRightIcon />
               </IconButton>
             )}
           </div>
