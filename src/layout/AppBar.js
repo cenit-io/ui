@@ -210,7 +210,7 @@ export default function ({ onToggle }) {
     );
 
     const brandLogo = !smUp && 
-        <div onClick={handlePickTenants} className={classes.brandContainer}>
+        <div onClick={handleQuickAccess} className={classes.brandContainer}>
             <img src={CenitAdminLogo} width="100px" alt=""  style={{filter: 'invert(1)'}}/>
         </div>
 

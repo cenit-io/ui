@@ -16,6 +16,7 @@ import ConfigService from "../services/ConfigService";
 import Subjects, {
   DataTypeSubject,
   EmbeddedAppSubject,
+  MenuSubject,
   TabsSubject,
 } from "../services/subjects";
 import Collapse from "@material-ui/core/Collapse";
@@ -51,7 +52,7 @@ function NavItem({ icon, onClick, disabled, text, isRoot, isOpen }) {
       {isRoot && (
         <div>
           <IconButton color="inherit" size="small">
-            { isOpen ? <KeyboardArrowUp/> : <KeyboardArrowDown />  }
+            {isOpen ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
           </IconButton>
         </div>
       )}
@@ -127,6 +128,9 @@ const useStyles = makeStyles((theme) => ({
       duration: theme.transitions.duration.leavingScreen,
     }),
     width: theme.spacing(10) + 5,
+  },
+  brandImg: {
+    cursor: "pointer",
   },
 }));
 
@@ -238,6 +242,11 @@ export default function Navigation({ xs, onToggle }) {
 
   const setOver = (over) => setState({ over });
 
+  const handleHomeAccess = () =>
+    TabsSubject.next({
+      key: MenuSubject.instance().key,
+    });
+
   const select = (key) => () => {
     if (xs) {
       setMainContextState({ docked: false });
@@ -290,7 +299,10 @@ export default function Navigation({ xs, onToggle }) {
       .filter((item) => item);
     nav = (
       <List
-        style={{ overflowX: "hidden", padding: !docked ? "0 0.9rem" : "0 1rem" }}
+        style={{
+          overflowX: "hidden",
+          padding: !docked ? "0 0.9rem" : "0 1rem",
+        }}
         component="ul"
       >
         <ListItem
@@ -351,8 +363,24 @@ export default function Navigation({ xs, onToggle }) {
             boxSizing: docked ? "border-box" : "",
           }}
         >
-          {!docked && <img src={CenitIOLogo} width="50px" alt="" />}
-          {docked && !xs && <img src={CenitAdminLogo} width="150px" alt="" />}
+          {!docked && (
+            <img
+              src={CenitIOLogo}
+              width="50px"
+              alt="Brand Logo"
+              onClick={handleHomeAccess}
+              className={classes.brandImg}
+            />
+          )}
+          {docked && !xs && (
+            <img
+              src={CenitAdminLogo}
+              width="150px"
+              alt="Brand Logo"
+              onClick={handleHomeAccess}
+              className={classes.brandImg}
+            />
+          )}
         </div>
         {nav}
         {item && <FrezzerLoader />}
