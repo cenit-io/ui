@@ -84,23 +84,25 @@ export function DefaultPropertiesForm({ controlConfig, dynamicConfigState, prope
     const groupsProps = { default: [] };
     properties.forEach(
         prop => {
-            const fieldConfig = {
-                ...configFields[prop.name],
-                ...(dynamicConfigState && dynamicConfigState[prop.name])
-            };
-            if (!fieldConfig.hidden) {
-                const group = fieldConfig.group || 'default';
-                let controlsGroup = controlsGroups[group];
-                let groupProps = groupsProps[group];
-                if (!controlsGroup) {
-                    controlsGroups[group] = controlsGroup = [];
-                    groupsProps[group] = groupProps = [];
-                    groups.push(group);
+            if (prop) {
+                const fieldConfig = {
+                    ...configFields[prop.name],
+                    ...(dynamicConfigState && dynamicConfigState[prop.name])
+                };
+                if (!fieldConfig.hidden) {
+                    const group = fieldConfig.group || 'default';
+                    let controlsGroup = controlsGroups[group];
+                    let groupProps = groupsProps[group];
+                    if (!controlsGroup) {
+                        controlsGroups[group] = controlsGroup = [];
+                        groupsProps[group] = groupProps = [];
+                        groups.push(group);
+                    }
+                    groupProps.push(prop.name);
+                    controlsGroup.push(
+                        <PropertyControl {...propertyControlProps(prop.name)}/>
+                    );
                 }
-                groupProps.push(prop.name);
-                controlsGroup.push(
-                    <PropertyControl {...propertyControlProps(prop.name)}/>
-                );
             }
         }
     );
