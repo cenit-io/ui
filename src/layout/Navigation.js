@@ -131,6 +131,31 @@ const useStyles = makeStyles((theme) => ({
   },
   brandImg: {
     cursor: "pointer",
+    marginLeft: "1.35rem",
+  },
+  brandContainer: {
+    backgroundColor: theme.palette.background.paper,
+    boxSizing: "border-box",
+    position: "sticky",
+    top: 0,
+    zIndex: "1400",
+    width: "100%",
+    display: "flex",
+    justifyContent: "start",
+    padding: "0.5rem 0 0 0",
+  },
+  btnToggle: {
+    position: "absolute",
+    top: "1rem",
+    right: "-14px",
+    height: "1.5rem",
+    width: "1.5rem",
+    background: "#fff",
+    display: "flex",
+    alignItems: "center",
+    borderRadius: "50%",
+    boxShadow: "-1px 1px 4px rgba(0,0,0,0.30)",
+    zIndex: 1500,
   },
 }));
 
@@ -301,7 +326,7 @@ export default function Navigation({ xs, onToggle }) {
       <List
         style={{
           overflowX: "hidden",
-          padding: !docked ? "0 0.9rem" : "0 1rem",
+          padding: "0 0.9rem",
         }}
         component="ul"
       >
@@ -344,6 +369,8 @@ export default function Navigation({ xs, onToggle }) {
         zIndex: "1300",
         marginTop: xs ? "initial" : "-64px",
       }}
+      onMouseEnter={() => setOver(true)}
+      onMouseLeave={() => setOver(false)}
     >
       <div
         style={{
@@ -355,50 +382,32 @@ export default function Navigation({ xs, onToggle }) {
           boxSizing: "border-box",
         }}
       >
-        <div
-          style={{
-            width: docked ? "90%" : "100%",
-            marginLeft: docked ? "" : "4px",
-            padding: docked && !xs ? "1rem 0 1rem 1.8rem" : "0 .8rem",
-            boxSizing: docked ? "border-box" : "",
-          }}
-        >
-          {!docked && (
+        <div className={classes.brandContainer}>
+          {!open && (
             <img
               src={CenitIOLogo}
-              width="50px"
+              width="43px"
               alt="Brand Logo"
               onClick={handleHomeAccess}
               className={classes.brandImg}
+              style={{ marginBottom: "1.3rem" }}
             />
           )}
-          {docked && !xs && (
+          {open && !xs && (
             <img
               src={CenitAdminLogo}
-              width="150px"
+              width="135px"
               alt="Brand Logo"
               onClick={handleHomeAccess}
               className={classes.brandImg}
+              style={{ marginBottom: "1.45rem" }}
             />
           )}
         </div>
         {nav}
         {item && <FrezzerLoader />}
         {!xs && (
-          <div
-            style={{
-              position: "absolute",
-              top: "1rem",
-              right: "-14px",
-              height: "1.5rem",
-              width: "1.5rem",
-              background: "#fff",
-              display: "flex",
-              alignItems: "center",
-              borderRadius: "50%",
-              boxShadow: "-1px 1px 4px rgba(0,0,0,0.30)",
-            }}
-          >
+          <div className={classes.btnToggle}>
             {docked && (
               <IconButton edge="start" color="inherit" onClick={onToggle}>
                 <KeyboardArrowLeftIcon />
