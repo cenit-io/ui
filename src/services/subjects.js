@@ -276,9 +276,13 @@ export class RecordSubject extends BasicSubject {
 
     titleObservable(record) {
         return this.dataType().pipe(
-            switchMap(
-                dataType => dataType.titleFor(record || { id: this.id })
-            )
+            switchMap(dataType => {
+                if (dataType) {
+                    return dataType.titleFor(record || { id: this.id });
+                }
+
+                return of('404');
+            })
         );
     }
 

@@ -26,12 +26,33 @@ import { useSpreadState } from "../common/hooks";
 import NotificationsIcon from "../icons/NotificationsIcon";
 import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
 import { TenantMenuIcon } from "../config/dataTypes/Account";
+import CenitAdminLogo from "../img/Cenit_IO_Admin_app_Identidad.svg";
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
 const useStyles = makeStyles(theme => ({
     grow: {
         flexGrow: 1,
+    },
+    changeOrder:{   
+        order: -1,
+        [theme.breakpoints.up('sm')]: {
+            order: 'initial'
+        }
+    },
+    moveRight:{
+        order: 1
+    },
+    brandContainer: {
+        transition: "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+        borderRadius: "50px",
+        cursor: "pointer",
+        padding: ".75rem",
+        order: -1,
+        '&:hover': {
+            backgroundColor: fade(theme.palette.common.black, 0.05)
+        },
+    
     },
     search: {
         position: 'relative',
@@ -186,49 +207,50 @@ export default function ({ onToggle }) {
                 selectorComponent={TenantSelector}
                 onSelect={handleTenantSelected}
                 disabled={loading}/>
-    ) || (
-        <IconButton color="inherit"
-                    disabled={loading}
-                    onClick={handlePickTenants}>
-            <TenantMenuIcon/>
-        </IconButton>
     );
 
-    return <AppBar position="fixed">
+    const brandLogo = !smUp && 
+        <div onClick={handleQuickAccess} className={classes.brandContainer}>
+            <img src={CenitAdminLogo} width="100px" alt=""  style={{filter: 'invert(1)'}}/>
+        </div>
+
+    return (
+      <AppBar position="absolute">
         <Toolbar>
-            <IconButton edge="start"
-                        color="inherit"
-                        aria-label="Menu"
-                        onClick={onToggle}
-                        disabled={loading}>
-                <MenuIcon/>
+          {brandLogo}  
+          {!smUp && (
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="Menu"
+              onClick={onToggle}
+              disabled={loading}
+              className={classes.moveRight}
+            >
+              <MenuIcon />
             </IconButton>
-            {
-                smUp &&
-                <Typography variant="h6">
-                    Admin
-                </Typography>
-            }
-            <IconButton className={classes.quickAccess}
-                        color="inherit"
-                        disabled={loading}
-                        onClick={handleQuickAccess}>
-                <QuickAccessIcon/>
-            </IconButton>
-            {dataTypeSearch}
-            <div className={classes.grow}/>
-            <IconButton color="inherit"
-                        disabled={loading}
-                        onClick={handlePickNotifications}>
-                <NotificationsIcon/>
-            </IconButton>
-            <IconButton color="inherit"
-                        disabled={loading}
-                        onClick={handlePickTasks}>
-                <TaskMenuIcon/>
-            </IconButton>
-            {tenantSearch}
-            {avatar}
+          )}
+          {/* {dataTypeSearch} */}
+          <div className={classes.grow} />
+          <IconButton
+            color="inherit"
+            disabled={loading}
+            onClick={handlePickNotifications}
+            className={smUp ? classes.changeOrder : ""} 
+          >
+            <NotificationsIcon />
+          </IconButton>
+          <IconButton
+            color="inherit"
+            disabled={loading}
+            onClick={handlePickTasks}
+            className={ smUp ? classes.changeOrder: ""} 
+          >
+            <TaskMenuIcon />
+          </IconButton>
+          {tenantSearch}
+          {avatar}
         </Toolbar>
-    </AppBar>
+      </AppBar>
+    );
 };
