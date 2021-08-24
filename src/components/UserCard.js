@@ -29,7 +29,11 @@ const useStyles = makeStyles(theme => ({
     avatarContentWrapper: {
             width: '90%',
             margin: '0 auto',
-            borderBottom: `2px solid ${theme.palette.primary.light}`
+            borderBottom: `2px solid ${theme.palette.primary.light}`,
+            position: 'sticky',
+            top: 0,
+            zIndex: 1500,
+            background: '#fff',
     },
     danger: {
         color: theme.palette.error.main
