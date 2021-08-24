@@ -26,6 +26,15 @@ const useStyles = makeStyles(theme => ({
         width: `${theme.spacing(8)}px`,
         height: `${theme.spacing(8)}px`,
     },
+    avatarContentWrapper: {
+            width: '90%',
+            margin: '0 auto',
+            borderBottom: `2px solid ${theme.palette.primary.light}`,
+            position: 'sticky',
+            top: 0,
+            zIndex: 1500,
+            background: '#fff',
+    },
     danger: {
         color: theme.palette.error.main
     },
@@ -76,7 +85,7 @@ const UserCard = ({ idToken, onClose }) => {
     }
 
     return (
-        <div className="flex column">
+        <div className={`flex column ${classes.avatarContentWrapper}`}>
             <div className={classes.profile}>
                 <div className={classes.avatarContainer}>
                     {avatar}
@@ -93,7 +102,7 @@ const UserCard = ({ idToken, onClose }) => {
             <List>
                 {sudoControl}
                 <ListItem button onClick={logout}>
-                    <ListItemIcon className={classes.danger}>
+                    <ListItemIcon>
                         <LogoutIcon/>
                     </ListItemIcon>
                     <ListItemText primary="Logout"/>
