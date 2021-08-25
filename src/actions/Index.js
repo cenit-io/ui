@@ -126,6 +126,20 @@ const useStyles = makeStyles(theme => ({
     },
     pageSize: {
         margin: theme.spacing(0, 2)
+    },
+    pageTableContainer: {
+        backgroundColor: theme.palette.background.default,
+        boxSizing: "border-box",
+        padding: "1.5rem 2rem",
+        overflow: "hidden",
+    },
+    pageTableWrapper: {
+        maxHeight: "95%",
+        overflow: "auto",
+        boxSizing: "border-box",
+        boxShadow: "0 2px 5px 1px rgb(64 60 67 / 16%)",
+        borderRadius: "6px",
+        backgroundColor: "#fff",
     }
 }));
 
@@ -245,17 +259,21 @@ function ListView({ height, dataType, config }) {
     });
 
     return (
-        <div style={{ height: `calc(${height})`, overflow: 'auto' }}>
-            <Table className={classes.table}
-                   size={dense ? 'small' : 'medium'}>
-                <EnhancedTableHead props={props}
-                                   onSelectAllClick={handleSelectAllClick}
-                                   numSelected={selectedItems.length}
-                                   rowCount={data.items.length}/>
-                <TableBody>
-                    {rows}
-                </TableBody>
-            </Table>
+        <div
+            className={classes.pageTableContainer}
+            style={{ height: `calc(${height})` }}
+        >
+            <div className={classes.pageTableWrapper}>
+                <Table className={classes.table} size={dense ? "small" : "medium"}>
+                    <EnhancedTableHead
+                        props={props}
+                        onSelectAllClick={handleSelectAllClick}
+                        numSelected={selectedItems.length}
+                        rowCount={data.items.length}
+                    />
+                    <TableBody>{rows}</TableBody>
+                </Table>
+            </div>
         </div>
     );
 }
