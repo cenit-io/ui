@@ -99,7 +99,8 @@ const actionContainerStyles = makeStyles(theme => ({
         width: '100%',
         overflow: 'auto',
         position: 'relative',
-        height: props => `calc(${props.height} - ${appBarHeight(theme)})`
+        height: props => `calc(${props.height} - ${appBarHeight(theme)})`,
+        backgroundColor: theme.palette.background.default,
     }
 }));
 
