@@ -122,10 +122,32 @@ const useStyles = makeStyles(theme => ({
         height: 1
     },
     pagination: {
-        height: theme.spacing(7)
+        height: theme.spacing(7),
+        boxSizing: "border-box",
+    },
+    paginationWrapper: {
+        backgroundColor: theme.palette.background.default,
+        padding: "0 2rem",
     },
     pageSize: {
         margin: theme.spacing(0, 2)
+    },
+    pageTableContainer: {
+        backgroundColor: theme.palette.background.default,
+        boxSizing: "border-box",
+        padding: "1.5rem 2rem 0.5rem 2rem",
+        overflow: "hidden",
+    },
+    pageTableWrapper: {
+        maxHeight: "100%",
+        overflow: "auto",
+        boxSizing: "border-box",
+        backgroundColor: 'red'
+    },
+    pageShadow:{
+        boxShadow: "0 2px 5px 1px rgb(64 60 67 / 16%)",
+        borderRadius: "6px",
+        backgroundColor: "#fff",
     }
 }));
 
@@ -245,17 +267,23 @@ function ListView({ height, dataType, config }) {
     });
 
     return (
-        <div style={{ height: `calc(${height})`, overflow: 'auto' }}>
-            <Table className={classes.table}
-                   size={dense ? 'small' : 'medium'}>
-                <EnhancedTableHead props={props}
-                                   onSelectAllClick={handleSelectAllClick}
-                                   numSelected={selectedItems.length}
-                                   rowCount={data.items.length}/>
-                <TableBody>
-                    {rows}
-                </TableBody>
-            </Table>
+        <div
+            className={classes.pageTableContainer}
+            style={{ minHeight: `calc(${height} - 400px)`}}
+        >
+            <div className={clsx(classes.pageTableWrapper, classes.pageShadow)}
+             style={{ maxHeight: `calc(${height} - 2rem)`}}
+            >
+                <Table className={classes.table} size={dense ? "small" : "medium"}>
+                    <EnhancedTableHead
+                        props={props}
+                        onSelectAllClick={handleSelectAllClick}
+                        numSelected={selectedItems.length}
+                        rowCount={data.items.length}
+                    />
+                    <TableBody>{rows}</TableBody>
+                </Table>
+            </div>
         </div>
     );
 }
@@ -371,35 +399,37 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
     let pagination;
 
     if (data.count > MinItemsPerPage) {
-        viewHeight = `${viewHeight} - ${theme.spacing(7)}px`;
+        viewHeight = `${viewHeight} - ${theme.spacing(10)}px`;
         const pagOpts = {};
         if (xs) {
             pagOpts.siblingCount = 0;
         }
         pagination = (
-            <div className={clsx('flex align-items-center', classes.pagination)}>
-                <div className="grow-1"/>
-                <Typography variant="subtitle2">
-                    Page size
-                </Typography>
-                <Select className={classes.pageSize}
-                        value={limit}
-                        onChange={handleChangeRowsPerPage}>
-                    {
-                        ItemsPerPage.map((c, index) => (
-                            <MenuItem key={`ipp_${index}_${c}`}
-                                      value={c}>
-                                {c}
-                            </MenuItem>
-                        ))
-                    }
-                </Select>
-                <Pagination count={data.total_pages}
-                            page={data.current_page}
-                            {...pagOpts}
-                            onChange={handleChangePage}
-                            size="small"
-                            color="primary"/>
+            <div className={classes.paginationWrapper}>
+                <div className={clsx('flex align-items-center', classes.pagination, classes.pageShadow)}>
+                    <div className="grow-1"/>
+                    <Typography variant="subtitle2">
+                        Page size
+                    </Typography>
+                    <Select className={classes.pageSize}
+                            value={limit}
+                            onChange={handleChangeRowsPerPage}>
+                        {
+                            ItemsPerPage.map((c, index) => (
+                                <MenuItem key={`ipp_${index}_${c}`}
+                                        value={c}>
+                                    {c}
+                                </MenuItem>
+                            ))
+                        }
+                    </Select>
+                    <Pagination count={data.total_pages}
+                                page={data.current_page}
+                                {...pagOpts}
+                                onChange={handleChangePage}
+                                size="small"
+                                color="primary"/>
+                </div>
             </div>
         );
     }
