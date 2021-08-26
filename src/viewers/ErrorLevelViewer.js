@@ -19,9 +19,11 @@ const useColorStyle = makeStyles(theme => ({
 
 const useBackgroundStyle = makeStyles(theme => ({
     root: {
-        padding: theme.spacing(.5, 1),
+        padding: theme.spacing(.5, 0.1),
         borderRadius: theme.spacing(1),
-        textAlign: 'center'
+        display: 'flex',
+        alignItems: 'center',
+        textTransform: 'capitalize'
     },
     error: {
         background: theme.palette.error.light,
@@ -49,5 +51,15 @@ export default (levelProjection, mode) => ({ value, item }) => {
         ? '-'
         : String(value);
 
-    return <div className={clsx(classes.root, classes[levelProjection(item)])}>{str}</div>;
+    return (
+      <div className={clsx(classes.root)}>
+        <div style={{ width: "10%" }}>
+          <div
+            style={{ width: "10px", height: "10px", borderRadius: "50%" }}
+            className={classes[levelProjection(item)]}
+          ></div>
+        </div>
+        <div style={{ width: "90%" }}>{str}</div>
+      </div>
+    ); 
 };
