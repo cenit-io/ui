@@ -53,7 +53,7 @@ export default (levelProjection, mode) => ({ value, item }) => {
 
     return (
       <div className={clsx(classes.root)}>
-        <div style={{ width: "10%" }}>
+        <div style={{ marginRight: "0.5rem"}}>
           <div
             style={{ width: "10px", height: "10px", borderRadius: "50%" }}
             className={classes[levelProjection(item)]}
