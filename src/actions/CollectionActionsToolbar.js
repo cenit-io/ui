@@ -16,9 +16,10 @@ import IconButton from "@material-ui/core/IconButton";
 const useToolbarStyles = makeStyles(theme => ({
     root: {
         display: 'flex',
-        paddingLeft: theme.spacing(1),
-        paddingRight: theme.spacing(1),
-        height: appBarHeight(theme)
+        paddingLeft: theme.spacing(4),
+        paddingRight: theme.spacing(4),
+        height: appBarHeight(theme),
+        backgroundColor: theme.palette.background.default,
     },
     title: {
         flex: '0 0 auto',
