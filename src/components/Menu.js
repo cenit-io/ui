@@ -34,11 +34,14 @@ const useStyles = makeStyles(theme => ({
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        backgroundColor: theme.palette.background.default
     },
     group: {
         margin: theme.spacing(1),
-        boxShadow: '0 4px 8px 0 rgba(55, 71, 79, .3)'
+        boxShadow: '0 4px 8px 0 rgba(55, 71, 79, .3)',
+        borderTopLeftRadius: theme.spacing(1),
+        borderTopRightRadius: theme.spacing(1),
     },
     groupHeader: {
         padding: theme.spacing(1.5, 4, 1.5, 6),
@@ -54,7 +57,8 @@ const useStyles = makeStyles(theme => ({
     groupItems: {
         padding: theme.spacing(1, 4, 0, 4),
         borderBottomLeftRadius: theme.spacing(1),
-        borderBottomRightRadius: theme.spacing(1)
+        borderBottomRightRadius: theme.spacing(1),
+        background: theme.palette.background.paper,
     },
     items: {
         background: theme.palette.background.paper,
@@ -188,7 +192,7 @@ export default function ({ subject, height }) {
                         backOverColor="#fffffe"
                         onSelect={({ record }) => handleDataTypeSelected(record)}/>
             </div>
-            <div className={classes.groups} style={{ height: `calc(${height} - ${theme.spacing(8)}px)` }}>
+            <div className={classes.groups} style={{ height: `calc(${height} - ${theme.spacing(8)}px)`}}>
                 {groups}
             </div>
             {loader}
