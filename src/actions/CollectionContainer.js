@@ -128,6 +128,10 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
     const { dataTypeId } = subject;
 
     useEffect(() => {
+        setContainerState({containerTitle: title})
+    }, [title, setContainerState])
+    
+    useEffect(() => {
         if (activeActionKey) {
             setContainerState({ actionKey: activeActionKey });
         }
