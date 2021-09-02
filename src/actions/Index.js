@@ -165,6 +165,9 @@ const useStyles = makeStyles(theme => ({
                 marginLeft: '4px'
             }
         },
+    },
+    customPaginationText:{
+        marginRight: '4px', marginLeft: '2rem',
     }
 }));
 
@@ -309,7 +312,7 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { data, page, limit, props, itemsViewport, selector } = containerState;
+    const { data, page, limit, props, itemsViewport, selector, containerTitle } = containerState;
 
     const classes = useStyles();
     const theme = useTheme();
@@ -426,7 +429,7 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
                 <div className={clsx('flex align-items-center', classes.pagination, classes.pageShadow)}>
                     <div className="grow-1"/>
                     <Typography variant="subtitle2">
-                        Page size
+                    {containerTitle} per page
                     </Typography>
                     <Select className={classes.pageSize}
                             value={limit}
@@ -442,8 +445,8 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
                             ))
                         }
                     </Select>
-                    <Typography variant="subtitle2" style={{marginRight: '4px'}}>
-                        {(limit * data.current_page) + 1 - limit} -  {limit * data.current_page} of {data.count} 
+                    <Typography variant="subtitle2" className={classes.customPaginationText}>
+                        {(limit * data.current_page) + 1 - limit} -  {limit * data.current_page} of {data.count}  {containerTitle.toLowerCase()} 
                     </Typography>
                     <Pagination count={data.total_pages}
                         page={data.current_page}
