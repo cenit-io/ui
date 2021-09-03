@@ -20,6 +20,7 @@ import { useSpreadState } from "../common/hooks";
 import { useContainerContext } from "./ContainerContext";
 import { useOriginsStyles } from "../components/OriginsColors";
 import viewerComponentFor from "../viewers/viewerComponentFor";
+import { KeyboardArrowDown } from '@material-ui/icons';
 
 const StyledTableCell = withStyles((theme) => ({
     head: {
@@ -130,7 +131,9 @@ const useStyles = makeStyles(theme => ({
         padding: "0 2rem",
     },
     pageSize: {
-        margin: theme.spacing(0, 2)
+        margin: theme.spacing(0, 2),
+        height: '50%',
+        fontSize: '14px'
     },
     pageTableContainer: {
         backgroundColor: theme.palette.background.default,
@@ -144,10 +147,27 @@ const useStyles = makeStyles(theme => ({
         boxSizing: "border-box",
         backgroundColor: 'red'
     },
-    pageShadow:{
+    pageShadow: {
         boxShadow: "0 2px 5px 1px rgb(64 60 67 / 16%)",
         borderRadius: "6px",
         backgroundColor: "#fff",
+    },
+    customPagination: {
+        marginRight: '1rem',
+        '& ul>li': {
+            display: "none",
+            '&:nth-child(-n+2)': {
+                display: "initial",
+                marginRight: '4px'
+            },
+            '&:nth-last-child(-n+2)': {
+                display: "initial",
+                marginLeft: '4px'
+            }
+        },
+    },
+    customPaginationText:{
+        marginRight: '4px', marginLeft: '2rem',
     }
 }));
 
@@ -292,7 +312,7 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { data, page, limit, props, itemsViewport, selector } = containerState;
+    const { data, page, limit, props, itemsViewport, selector, containerTitle } = containerState;
 
     const classes = useStyles();
     const theme = useTheme();
@@ -409,11 +429,13 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
                 <div className={clsx('flex align-items-center', classes.pagination, classes.pageShadow)}>
                     <div className="grow-1"/>
                     <Typography variant="subtitle2">
-                        Page size
+                    {containerTitle} per page
                     </Typography>
                     <Select className={classes.pageSize}
                             value={limit}
-                            onChange={handleChangeRowsPerPage}>
+                            onChange={handleChangeRowsPerPage}
+                            variant="outlined"
+                            IconComponent={KeyboardArrowDown}>
                         {
                             ItemsPerPage.map((c, index) => (
                                 <MenuItem key={`ipp_${index}_${c}`}
@@ -423,12 +445,22 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
                             ))
                         }
                     </Select>
+                    <Typography variant="subtitle2" className={classes.customPaginationText}>
+                        {(limit * data.current_page) + 1 - limit} -  {limit * data.current_page} of {data.count}  {containerTitle.toLowerCase()} 
+                    </Typography>
                     <Pagination count={data.total_pages}
-                                page={data.current_page}
-                                {...pagOpts}
-                                onChange={handleChangePage}
-                                size="small"
-                                color="primary"/>
+                        page={data.current_page}
+                        {...pagOpts}
+                        onChange={handleChangePage}
+                        size="small"
+                        color="primary"
+                        showFirstButton
+                        showLastButton
+                        variant="outlined"
+                        shape="rounded"
+                        defaultPage={data.current_page}
+                        className={classes.customPagination}
+                         />
                 </div>
             </div>
         );
