@@ -292,7 +292,7 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { data, page, limit, props, itemsViewport, selector } = containerState;
+    const { data, page, limit, props, itemsViewport, selector, containerTitle } = containerState;
 
     const classes = useStyles();
     const theme = useTheme();
@@ -409,7 +409,7 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
                 <div className={clsx('flex align-items-center', classes.pagination, classes.pageShadow)}>
                     <div className="grow-1"/>
                     <Typography variant="subtitle2">
-                        Page size
+                    {containerTitle} per page
                     </Typography>
                     <Select className={classes.pageSize}
                             value={limit}
