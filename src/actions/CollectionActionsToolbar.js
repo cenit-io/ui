@@ -26,6 +26,13 @@ const useToolbarStyles = makeStyles(theme => ({
     },
     filterIcon: {
         color: theme.palette.getContrastText(theme.palette.secondary.main)
+    },
+    selectedChip:{
+        backgroundColor: theme.palette.background.default,
+        color:theme.palette.text,
+        textTransform: "uppercase",
+        border: `2px solid ${theme.palette.text.secondary}`,
+        borderRadius: "4px" 
     }
 }));
 
@@ -136,8 +143,9 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     let chip;
     if (selectedItems.length) {
         chip = <Chip label={`${selectedItems.length} selected`}
-                     color='secondary'
-                     onDelete={clearSelection}/>;
+                     onDelete={clearSelection}
+                     className={classes.selectedChip}
+                     />;
     } else {
         if (data) {
             const selection = Object.keys(selector).length;
