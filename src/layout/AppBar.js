@@ -250,6 +250,7 @@ export default function ({ onToggle }) {
             <TaskMenuIcon />
           </IconButton>
           {tenantSearch}
+          <TenantActiveInfo />
           {avatar}
           {smUp && <TenantActiveInfo />}
         </Toolbar>
