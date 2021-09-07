@@ -27,6 +27,7 @@ import NotificationsIcon from "../icons/NotificationsIcon";
 import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
 import { TenantMenuIcon } from "../config/dataTypes/Account";
 import CenitAdminLogo from "../img/Cenit_IO_Admin_app_Identidad.svg";
+import TenantActiveInfo from '../components/TenantActiveInfo';
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
@@ -249,6 +250,7 @@ export default function ({ onToggle }) {
             <TaskMenuIcon />
           </IconButton>
           {tenantSearch}
+          <TenantActiveInfo />
           {avatar}
         </Toolbar>
       </AppBar>
