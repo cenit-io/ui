@@ -52,7 +52,7 @@ export default function TenantActiveInfo() {
   return (
     <>
       <div style={{ position: "relative", marginLeft: "0" }}>
-			Tenant
+				Tenant
         <IconButton color="inherit" onClick={handleToggle} size={"small"}>
 				 <KeyboardArrowDown />
         </IconButton>
@@ -62,7 +62,6 @@ export default function TenantActiveInfo() {
             <div className={classes.paperContent}>
               <div className={classes.btnClose}>
                 <IconButton
-                  
                   edge="start"
                   variant="small"
                   onClick={handleToggle}
