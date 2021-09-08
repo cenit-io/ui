@@ -45,7 +45,7 @@ export default function LoadingButton({ loading, success, onClick, onClickCancel
     return (
       <div className={rootClassname}>
         <div className={classes.wrapper}>
-          <Tooltip title="Save">
+          <Tooltip arrow title="Save">
           <Fab
             aria-label="save"
             size="small"
@@ -63,7 +63,7 @@ export default function LoadingButton({ loading, success, onClick, onClickCancel
         {success ||
           (!loading && (
             <div className={classes.wrapper}>
-              <Tooltip title="Cancel">
+              <Tooltip arrow title="Cancel">
               <Fab
                 aria-label="cancel"
                 size="small"
