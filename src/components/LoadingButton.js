@@ -7,6 +7,7 @@ import Fab from '@material-ui/core/Fab';
 import CheckIcon from '@material-ui/icons/Check';
 import SaveIcon from '@material-ui/icons/SaveOutlined';
 import { Close } from '@material-ui/icons';
+import { Tooltip } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -44,6 +45,7 @@ export default function LoadingButton({ loading, success, onClick, onClickCancel
     return (
       <div className={rootClassname}>
         <div className={classes.wrapper}>
+          <Tooltip title="Save">
           <Fab
             aria-label="save"
             size="small"
@@ -52,6 +54,7 @@ export default function LoadingButton({ loading, success, onClick, onClickCancel
           >
             {success ? <CheckIcon /> : actionIcon || <SaveIcon />}
           </Fab>
+          </Tooltip>
           {loading && (
             <CircularProgress size={40} className={classes.fabProgress} />
           )}
@@ -60,6 +63,7 @@ export default function LoadingButton({ loading, success, onClick, onClickCancel
         {success ||
           (!loading && (
             <div className={classes.wrapper}>
+              <Tooltip title="Cancel">
               <Fab
                 aria-label="cancel"
                 size="small"
@@ -68,6 +72,7 @@ export default function LoadingButton({ loading, success, onClick, onClickCancel
               >
                 <Close />
               </Fab>
+              </Tooltip>
             </div>
           ))}
       </div>
