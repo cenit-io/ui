@@ -11,6 +11,12 @@ const useStyles = makeStyles(theme => ({
     errorStyle: {
         borderLeft: 'solid',
         borderLeftColor: theme.palette.error.light
+    },
+    wrapper:{
+        margin: '10px',
+        boxShadow: "0 2px 5px 1px rgb(64 60 67 / 16%)",
+        borderRadius: "6px",
+        backgroundColor: "#fff",
     }
 
 }));
@@ -18,7 +24,7 @@ const useStyles = makeStyles(theme => ({
 export const FormGroup = ({ children, error }) => {
 
     const classes = useStyles();
-    const className = clsx('flex column full-width relative', (error && classes.errorStyle) || classes.defaultStyle);
+    const className = clsx('flex column full-width relative', classes.wrapper, (error && classes.errorStyle) || classes.defaultStyle);
 
     return <div className={className}>
         {children}
