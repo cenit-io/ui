@@ -37,7 +37,8 @@ const stackHeaderSpacing = 5;
 const useStyles = makeStyles(theme => ({
     root: {
         position: 'relative',
-        height: props => `calc(${props.height})`
+        height: props => `calc(${props.height})`,
+        backgroundColor: theme.palette.background.default
     },
     stackHeader: {
         height: theme.spacing(stackHeaderSpacing),
