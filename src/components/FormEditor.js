@@ -77,8 +77,7 @@ const useStyles = makeStyles(theme => ({
         paddingRight: '0',
     },
     smFormContainer: {
-        paddingLeft: '15%',
-        paddingRight: '15%',
+        paddingRight: '5%',
     },
     trailing: {
         height: `${theme.spacing(8)}px`
