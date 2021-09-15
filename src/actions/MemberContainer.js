@@ -54,7 +54,8 @@ const useActionContainerStyles = makeStyles(theme => ({
         width: ({ width }) => `calc(${width} - ${theme.spacing(3)}px)`,
         paddingLeft: theme.spacing(2),
         paddingRight: theme.spacing(1),
-        height: appBarHeight(theme)
+        height: appBarHeight(theme),
+        backgroundColor: theme.palette.background.default
     },
     breadcrumb: {
         display: 'flex',
