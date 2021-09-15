@@ -225,7 +225,7 @@ function plainFormValue(value) {
 
 const FormEditor = ({
                         docked, dataType, rootId, onSubjectPicked, height, value,
-                        readOnly, onUpdate, onFormSubmit, successControl, submitIcon,
+                        readOnly,cancelEditor, onUpdate, onFormSubmit, successControl, submitIcon,
                         noSubmitButton, noJSON, jsonProjection
                     }) => {
 
@@ -382,6 +382,7 @@ const FormEditor = ({
                 <LoadingButton key='save'
                                loading={saving && !done}
                                onClick={save}
+                               onClickCancel={cancelEditor}
                                className={classes.fabSave}
                                success={done}
                                actionIcon={stack.length === 2 && submitIcon}/>
