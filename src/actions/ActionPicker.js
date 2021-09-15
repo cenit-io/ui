@@ -129,7 +129,8 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
 
         actionsControls.push(
             <Tooltip key={`action_${action.key}`}
-                     title={title}>
+                     title={title}
+                     arrow>
                 <IconButton aria-label={action.title}
                             color={selectedKey === action.key ? (action.activeColor || 'primary') : 'default'}
                             onClick={handleAction(action.key)}
@@ -144,7 +145,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
     let menu;
     if (max < actions.length) {
         actionsControls.push(
-            <Tooltip key="_more_actions" title="More">
+            <Tooltip key="_more_actions" title="More" arrow>
                 <IconButton disabled={disabled} onClick={({ target }) => setState({ moreEl: target })}>
                     <MoreIcon/>
                 </IconButton>

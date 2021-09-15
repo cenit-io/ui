@@ -55,6 +55,7 @@ const Show = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
                         onSubjectPicked={onSubjectPicked}
                         height={height}
                         readOnly={readOnly}
+                        cancelEditor={() => setState({ readOnly: true })}
                         noSubmitButton={!submitable}
                         onUpdate={onUpdate}/>
             {editButton}
