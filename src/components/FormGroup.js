@@ -15,9 +15,12 @@ const useStyles = makeStyles(theme => ({
     wrapper:{
         display: 'grid',
         width: '100%',
-        gridTemplateColumns: 'repeat(auto-fit,minmax(400px ,1fr))',
+        gridTemplateColumns: 'repeat(auto-fit,minmax(250px ,1fr))',
         gap:'2px',
-        maxHeight:'100%'
+        maxHeight:'100%',
+        [theme.breakpoints.up('sm')]: {
+            gridTemplateColumns: 'repeat(auto-fit,minmax(400px ,1fr))',
+        },
     }
 
 }));
