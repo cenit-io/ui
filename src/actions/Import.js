@@ -10,6 +10,7 @@ import DataControl from "../components/DataControl";
 import { switchMap } from "rxjs/operators";
 import { of } from "rxjs";
 import { ExecutionMonitor } from "./ExecutionMonitor";
+import { useContainerContext } from './ContainerContext';
 
 function importDataTypeFormFor(targetDataType) {
     const dt = DataType.from({
@@ -99,6 +100,13 @@ const Import = ({ docked, dataType, onSubjectPicked, height }) => {
         );
     };
 
+    const containerContext = useContainerContext();
+    const [, setContainerState] = containerContext;
+
+    const handleCancel = () => {
+        setContainerState({ actionKey: 'index' });
+    }
+
     return (
         <div className="relative">
             <FormEditor docked={docked}
@@ -108,6 +116,7 @@ const Import = ({ docked, dataType, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={ExecutionMonitor}
+                        cancelEditor={handleCancel}
                         value={value.current}/>
         </div>
     );
