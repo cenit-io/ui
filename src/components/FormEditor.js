@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import BackIcon from '@material-ui/icons/ArrowBack';
 import FormView from "./FormView";
-import { useMediaQuery, Fab, makeStyles } from "@material-ui/core/index";
+import { useMediaQuery, Fab, makeStyles, Tooltip, IconButton } from "@material-ui/core/index";
 import clsx from 'clsx';
 import LoadingButton from "./LoadingButton";
 import SwipeableViews from "react-swipeable-views";
@@ -26,6 +26,7 @@ import SuccessAlert from "../actions/SuccessAlert";
 import { Status } from "../common/Symbols";
 import InfoAlert from "../actions/InfoAlert";
 import Random from "../util/Random";
+import { Code } from '@material-ui/icons';
 
 function withForm(item) {
     item.submitter = new Subject();
@@ -46,7 +47,7 @@ const useStyles = makeStyles(theme => ({
         boxSizing: 'border-box'
     },
     formContainer: {
-        maxHeight: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px)`,
+        maxHeight: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px - 4.6rem)`,
         overflow: 'auto',
         boxSizing: 'border-box',
         flexGrow: 1,
@@ -100,7 +101,7 @@ const useStyles = makeStyles(theme => ({
     },
     fabSave: {
         position: 'absolute',
-        top: props => `calc(${props.height} - ${theme.spacing(16)}px)`,
+        top: props => `calc(${props.height} - ${theme.spacing(14)}px)`,
         right: theme.spacing(2)
     },
     fabJson: {
@@ -115,6 +116,15 @@ const useStyles = makeStyles(theme => ({
         top: theme.spacing(15),
         right: theme.spacing(5),
         color: theme.palette.text.secondary
+    },
+    iconJsonActive: {
+        backgroundColor: props=> props.jsonMode ? 'rgb(232 227 229 / 85%) ': ''
+    },
+    iconJsonWrapper: {
+        width: "1.5rem",
+        marginLeft: "auto",
+        marginRight: '2rem',    
+        marginBottom: '8px',
     },
     okBox: {
         width: '100px',
@@ -278,14 +288,15 @@ const FormEditor = ({
     const [done, setDone] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    const classes = useStyles({ height });
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
     const md = useMediaQuery(theme.breakpoints.up('md'));
     const [jsonMode, setJsonMode] = useState(false);
     const [loading, setLoading] = useState(false);
     const [stackControls, setStackControls] = useState([]);
-
+    
+    const classes = useStyles({ height, jsonMode });
+   
     const current = stack[stack.length - 1];
 
     const updateStack = stack => {
@@ -408,18 +419,6 @@ const FormEditor = ({
             );
         }
 
-        if (!noJSON && md) {
-            actions.push(
-                <Fab key='json'
-                     size='small'
-                     aria-label="JSON"
-                     className={classes.fabJson}
-                     onClick={() => setJsonMode(!jsonMode)}>
-                    {'{...}'}
-                </Fab>
-            );
-        }
-
         if (md && jsonMode) {
             jsonView = (
                 <FormContext.Provider value={{ value: current.value }}>
@@ -508,6 +507,19 @@ const FormEditor = ({
     return (
         <div className={classes.root}>
             {breadCrumb}
+            <div className={classes.iconJsonWrapper}>
+                <Tooltip title="Json Code" arrow>
+                    <IconButton aria-label="Json Code"
+                        color='default'
+                        onClick={() => setJsonMode(!jsonMode)}
+                        className={classes.iconJsonActive}
+                        style={{color: jsonMode && "rgb(68, 119, 151)"}}
+                        size="small"
+                    >
+                        <Code />
+                    </IconButton>
+                </Tooltip>
+            </div>
             <div style={{boxSizing: 'border-box',}}>
                 <div className={classes.cardWrapper}>
                     <div ref={ref}
