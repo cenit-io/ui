@@ -7,10 +7,18 @@ import Loading from "../components/Loading";
 import { FETCHED } from "../common/Symbols";
 import { switchMap } from "rxjs/operators";
 import { isObservable, of } from "rxjs";
+import { useContainerContext } from './ContainerContext';
+
 
 const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
 
     const [seed, setSeed] = useState(null);
+    const containerContext = useContainerContext();
+    const [, setContainerState] = containerContext;
+
+    const handleCancel = () => {
+        setContainerState({ actionKey: 'index' });
+    }
 
     useEffect(() => {
         const subscription = DataTypeSubject.for(dataType.id).config().pipe(
@@ -39,6 +47,7 @@ const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
                            docked={docked}
                            dataType={dataType}
                            rootId={rootId}
+                           cancelEditor={handleCancel}
                            onSubjectPicked={onSubjectPicked}/>;
     }
 
