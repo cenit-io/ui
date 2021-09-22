@@ -46,9 +46,13 @@ function updateDataTypeFormFor(sourceDataType) {
 
 const Update = ({ docked, dataType, onSubjectPicked, height }) => {
 
-    const [containerState] = useContainerContext();
+    const [containerState,setContainerState] = useContainerContext();
 
     const { selectedItems, selector } = containerState;
+
+    const handleCancel = () => {
+        setContainerState({ actionKey: 'index' });
+    }
 
     const value = useRef(new FormRootValue({
         data_type: {
@@ -90,6 +94,7 @@ const Update = ({ docked, dataType, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={ExecutionMonitor}
+                        cancelEditor={handleCancel}
                         value={value.current}/>
         </div>
     );
