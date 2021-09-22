@@ -37,7 +37,6 @@ const alertStyles = makeStyles(theme => ({
     okContainer: {
         overflow: 'auto',
         background: theme.palette.background.default,
-        padding: theme.spacing(3)
     },
     alignCenter: {
         textAlign: 'center'

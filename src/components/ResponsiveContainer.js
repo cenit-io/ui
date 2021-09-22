@@ -4,8 +4,6 @@ import clsx from 'clsx';
 
 const styles = makeStyles(theme => ({
     formContainer: {
-        paddingTop: theme.spacing(3),
-        paddingBottom: theme.spacing(3),
         overflow: 'auto',
         boxSizing: 'border-box',
         flexGrow: 1

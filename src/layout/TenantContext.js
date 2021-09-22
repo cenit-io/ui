@@ -63,7 +63,7 @@ export default function TenantContext({ children }) {
             }
         );
         return () => subscription.unsubscribe();
-    }, []);
+    }, [switchingTenant]);
 
     useEffect(() => {
         if (switchingTenant && !eq(tenant, switchingTenant)) {

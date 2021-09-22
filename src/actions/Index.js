@@ -128,18 +128,31 @@ const useStyles = makeStyles(theme => ({
     },
     paginationWrapper: {
         backgroundColor: theme.palette.background.default,
-        padding: "0 2rem",
+        padding: "0 .4rem",
+        [theme.breakpoints.up('sm')]: {
+            padding: "0 2rem",
+        },
     },
     pageSize: {
         margin: theme.spacing(0, 2),
         height: '50%',
         fontSize: '14px'
     },
+    pageSizeWrapper: {
+        height: '100%',
+        paddingLeft: ".5rem",
+        [theme.breakpoints.up('sm')]: {
+           width:'auto',
+        },
+    },
     pageTableContainer: {
         backgroundColor: theme.palette.background.default,
         boxSizing: "border-box",
-        padding: "1.5rem 2rem 0.5rem 2rem",
+        padding: "1.5rem .4rem 0.5rem .4rem",
         overflow: "hidden",
+        [theme.breakpoints.up('sm')]: {
+            padding: "1.5rem 2rem 0.5rem 2rem",
+        },
     },
     pageTableWrapper: {
         maxHeight: "100%",
@@ -153,7 +166,9 @@ const useStyles = makeStyles(theme => ({
         backgroundColor: "#fff",
     },
     customPagination: {
-        marginRight: '1rem',
+        [theme.breakpoints.up('sm')]: {
+            marginRight: '1rem',
+        },
         '& ul>li': {
             display: "none",
             '&:nth-child(-n+2)': {
@@ -167,7 +182,26 @@ const useStyles = makeStyles(theme => ({
         },
     },
     customPaginationText:{
-        marginRight: '4px', marginLeft: '2rem',
+        marginRight: '2px',
+        marginLeft: '0',
+        [theme.breakpoints.up('sm')]: {
+            marginRight: '4px',
+            marginLeft: '2rem',
+        },
+    },
+    customPaginationTextWrapper:{
+        width:"25%",
+        display: "flex",
+        flexWrap:"wrap",
+         [theme.breakpoints.up('sm')]: {
+          width:"auto",
+        },
+     },
+    customPaginationWrapper:{
+       width:"100%",
+        [theme.breakpoints.up('sm')]: {
+            width:"auto"
+        },
     }
 }));
 
@@ -426,41 +460,49 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
         }
         pagination = (
             <div className={classes.paginationWrapper}>
-                <div className={clsx('flex align-items-center', classes.pagination, classes.pageShadow)}>
-                    <div className="grow-1"/>
-                    <Typography variant="subtitle2">
-                    {containerTitle} per page
-                    </Typography>
-                    <Select className={classes.pageSize}
-                            value={limit}
-                            onChange={handleChangeRowsPerPage}
-                            variant="outlined"
-                            IconComponent={KeyboardArrowDown}>
-                        {
-                            ItemsPerPage.map((c, index) => (
-                                <MenuItem key={`ipp_${index}_${c}`}
-                                        value={c}>
-                                    {c}
-                                </MenuItem>
-                            ))
-                        }
-                    </Select>
-                    <Typography variant="subtitle2" className={classes.customPaginationText}>
-                        {(limit * data.current_page) + 1 - limit} -  {limit * data.current_page} of {data.count}  {containerTitle.toLowerCase()} 
-                    </Typography>
-                    <Pagination count={data.total_pages}
-                        page={data.current_page}
-                        {...pagOpts}
-                        onChange={handleChangePage}
-                        size="small"
-                        color="primary"
-                        showFirstButton
-                        showLastButton
-                        variant="outlined"
-                        shape="rounded"
-                        defaultPage={data.current_page}
-                        className={classes.customPagination}
-                         />
+                <div className={clsx('flex align-items-center justify-content-end', classes.pagination, classes.pageShadow)}>
+                    <div className={clsx('flex align-items-center', classes.pageSizeWrapper)}>
+                        <Typography variant="subtitle2">
+                          {!xs  &&  `${containerTitle} per page`} 
+                          {xs  &&  "Page size"} 
+                        </Typography>
+                        <Select className={classes.pageSize}
+                                value={limit}
+                                onChange={handleChangeRowsPerPage}
+                                variant="outlined"
+                                IconComponent={KeyboardArrowDown}>
+                            {
+                                ItemsPerPage.map((c, index) => (
+                                    <MenuItem key={`ipp_${index}_${c}`}
+                                            value={c}>
+                                        {c}
+                                    </MenuItem>
+                                ))
+                            }
+                        </Select>
+                    </div>
+                    <div className='flex align-items-center' >
+                        <div className={classes.customPaginationTextWrapper}>
+                            <Typography variant="subtitle2" className={classes.customPaginationText}>
+                                {(limit * data.current_page) + 1 - limit} -  {limit * data.current_page} of {data.count}  { !xs && containerTitle.toLowerCase()} 
+                            </Typography>
+                        </div>
+                        <div className={classes.customPaginationWrapper}>
+                            <Pagination count={data.total_pages}
+                                page={data.current_page}
+                                {...pagOpts}
+                                onChange={handleChangePage}
+                                size="small"
+                                color="primary"
+                                showFirstButton
+                                showLastButton
+                                variant="outlined"
+                                shape="rounded"
+                                defaultPage={data.current_page}
+                                className={classes.customPagination}
+                                />
+                        </div>
+                    </div>
                 </div>
             </div>
         );
