@@ -9,6 +9,8 @@ import ShredIcon from "@material-ui/icons/DeleteSweep";
 import WarningAlert from "./WarningAlert";
 import { useContainerContext } from "./ContainerContext";
 import { map } from "rxjs/operators";
+import Show from './Show';
+import Random from '../util/Random';
 
 function SuccessShred() {
     return (
@@ -25,6 +27,18 @@ function ShredAlert() {
 }
 
 const ShredTenant = ({ docked, record, onSubjectPicked, height }) => {
+
+    const containerContext = useContainerContext();
+    const [, setContainerState] = containerContext;
+
+    const handleCancel = () => {
+      setContainerState({
+        selectedItems: [],
+        landingActionKey: Show.key,
+        actionKey: Show.key,
+        actionComponentKey: Random.string(),
+      });
+    };
 
     const formDataType = useRef(DataType.from({
         name: 'Shred',
@@ -50,6 +64,7 @@ const ShredTenant = ({ docked, record, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={SuccessShred}
+                        cancelEditor={handleCancel}
                         noJSON={true}/>
         </div>
     );
