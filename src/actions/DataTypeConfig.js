@@ -13,6 +13,8 @@ import { FormRootValue } from "../services/FormValue";
 import { underscore } from "../common/strutls";
 import Random from "../util/Random";
 import { of } from "rxjs";
+import { useContainerContext } from './ContainerContext';
+import Index from './Index';
 
 export function SuccessConfig() {
 
@@ -27,6 +29,12 @@ const DataTypeConfig = ({ docked, record, onSubjectPicked, height }) => {
     });
 
     const { value, formDataType } = state;
+
+    const containerContext = useContainerContext();
+    const [,setContainerState] = containerContext;
+    const handleCancel = () => {
+       setContainerState({ actionKey: Index.key })
+    }
 
     useEffect(() => {
         const schema = {
@@ -93,6 +101,7 @@ const DataTypeConfig = ({ docked, record, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={SuccessConfig}
+                        cancelEditor={handleCancel}
                         value={value}/>
         );
     }
