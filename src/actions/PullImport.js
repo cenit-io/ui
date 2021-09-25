@@ -13,6 +13,7 @@ import { useSpreadState } from "../common/hooks";
 import LinearProgress from "@material-ui/core/LinearProgress";
 import * as pluralize from "pluralize";
 import { ExecutionMonitor } from "./ExecutionMonitor";
+import { useContainerContext } from './ContainerContext';
 
 const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
 
@@ -26,6 +27,8 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
     const nameTouched = useRef(false);
 
     const [state, setState] = useSpreadState();
+    const containerContext = useContainerContext();
+    const [,setContainerState] = containerContext;
 
     const { formDataType } = state;
 
@@ -84,6 +87,10 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
         return () => subscription.unsubscribe();
     }, [dataType]);
 
+    const handleCancel = () => {
+        setContainerState({ actionKey: 'index' });
+    }
+
     const handleFormSubmit = (_, value) => {
         const { data_type, data, task_description } = value.get();
         let formData;
@@ -134,6 +141,7 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={ExecutionMonitor}
+                        cancelEditor={handleCancel}
                         value={value.current}/>
         </div>
     );
