@@ -13,6 +13,9 @@ import { catchError, tap } from "rxjs/operators";
 import { of } from "rxjs";
 import { ExecutionMonitor } from "./ExecutionMonitor";
 import Alert from "./Alert";
+import { useContainerContext } from './ContainerContext';
+import Show from './Show';
+import Random from '../util/Random';
 
 function parametersSchema(parameters) {
     const properties = {};
@@ -38,6 +41,17 @@ export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
 
     const { submitting, error, success } = state;
 
+    const containerContext = useContainerContext();
+    const [,setContainerState] = containerContext;
+    const handleCancel = () => {
+     setContainerState({
+        selectedItems: [],
+        landingActionKey: Show.key,
+        actionKey: Show.key,
+        actionComponentKey: Random.string(),
+      });
+    }
+
     useEffect(() => {
         if (submitting) {
             const subscription = onFormSubmit(dataType, value).pipe(
@@ -60,6 +74,7 @@ export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
             <LoadingButton loading={submitting}
                            onClick={submit}
                            success={success}
+                           onClickCancel={handleCancel}
                            actionIcon={<RunActionIcon/>}/>
         </div>
     );
