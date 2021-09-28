@@ -95,8 +95,8 @@ const useStyles = makeStyles(theme => ({
     },
     fabBack: {
         position: 'absolute',
-        top: props => `calc(${props.height} - ${theme.spacing(14)}px)`,
-        right: theme.spacing(13),
+        top: props => `calc(${props.height} - ${theme.spacing(13)}px)`,
+        right: theme.spacing(18),
         color: theme.palette.text.secondary
     },
     fabSave: {
