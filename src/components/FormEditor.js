@@ -504,22 +504,26 @@ const FormEditor = ({
         </div>
     );
 
+    const jsonBtn  = (!noJSON && md) && (
+        <div className={classes.iconJsonWrapper}>
+        <Tooltip title="Json Code" arrow>
+            <IconButton aria-label="Json Code"
+                color='default'
+                onClick={() => setJsonMode(!jsonMode)}
+                className={classes.iconJsonActive}
+                style={{color: jsonMode && "rgb(68, 119, 151)"}}
+                size="small"
+            >
+                <Code />
+            </IconButton>
+        </Tooltip>
+    </div>
+    );
+
     return (
         <div className={classes.root}>
             {breadCrumb}
-            <div className={classes.iconJsonWrapper}>
-                <Tooltip title="Json Code" arrow>
-                    <IconButton aria-label="Json Code"
-                        color='default'
-                        onClick={() => setJsonMode(!jsonMode)}
-                        className={classes.iconJsonActive}
-                        style={{color: jsonMode && "rgb(68, 119, 151)"}}
-                        size="small"
-                    >
-                        <Code />
-                    </IconButton>
-                </Tooltip>
-            </div>
+            {jsonBtn}
             <div style={{boxSizing: 'border-box',}}>
                 <div className={classes.cardWrapper}>
                     <div ref={ref}
