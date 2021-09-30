@@ -92,6 +92,7 @@ const useStyles = makeStyles(theme => ({
         backgroundColor: theme.palette.background.paper,
         boxShadow: "0 2px 5px 1px rgb(64 60 67 / 16%)",
         borderRadius: "6px",
+        maxHeight: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px - 4.6rem)`,
     },
     fabBack: {
         position: 'absolute',
