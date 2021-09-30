@@ -95,8 +95,8 @@ const useStyles = makeStyles(theme => ({
     },
     fabBack: {
         position: 'absolute',
-        top: props => `calc(${props.height} - ${theme.spacing(14)}px)`,
-        right: theme.spacing(13),
+        top: props => `calc(${props.height} - ${theme.spacing(13)}px)`,
+        right: theme.spacing(18),
         color: theme.palette.text.secondary
     },
     fabSave: {
@@ -504,22 +504,26 @@ const FormEditor = ({
         </div>
     );
 
+    const jsonBtn  = (!noJSON && md) && (
+        <div className={classes.iconJsonWrapper}>
+        <Tooltip title="Json Code" arrow>
+            <IconButton aria-label="Json Code"
+                color='default'
+                onClick={() => setJsonMode(!jsonMode)}
+                className={classes.iconJsonActive}
+                style={{color: jsonMode && "rgb(68, 119, 151)"}}
+                size="small"
+            >
+                <Code />
+            </IconButton>
+        </Tooltip>
+    </div>
+    );
+
     return (
         <div className={classes.root}>
             {breadCrumb}
-            <div className={classes.iconJsonWrapper}>
-                <Tooltip title="Json Code" arrow>
-                    <IconButton aria-label="Json Code"
-                        color='default'
-                        onClick={() => setJsonMode(!jsonMode)}
-                        className={classes.iconJsonActive}
-                        style={{color: jsonMode && "rgb(68, 119, 151)"}}
-                        size="small"
-                    >
-                        <Code />
-                    </IconButton>
-                </Tooltip>
-            </div>
+            {jsonBtn}
             <div style={{boxSizing: 'border-box',}}>
                 <div className={classes.cardWrapper}>
                     <div ref={ref}

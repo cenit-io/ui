@@ -327,6 +327,7 @@ export default function Navigation({ xs, onToggle }) {
         style={{
           overflowX: "hidden",
           padding: "0 0.9rem",
+          margin: "-0.15rem 0"
         }}
         component="ul"
       >
