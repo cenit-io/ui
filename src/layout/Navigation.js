@@ -201,7 +201,7 @@ function NavGroup({ title, IconComponent, items, open, onClick, onSelect }) {
               key={`item_${index}`}
               text={item.title}
               icon={item.icon}
-              onClick={() => onSelect(item)}
+              onClick={() => onSelect(item, title)}
             />
           ))}
         </List>
@@ -279,7 +279,10 @@ export default function Navigation({ xs, onToggle }) {
     TabsSubject.next({ key });
   };
 
-  const selectItem = (item) => setState({ item });
+  const selectItem = (item, text) => {
+    localStorage.setItem(`${item.title}`, text);
+    setState({ item });
+  };
 
   let menuItems = Menu.groups.map((group, index) => (
     <NavGroup
@@ -327,7 +330,7 @@ export default function Navigation({ xs, onToggle }) {
         style={{
           overflowX: "hidden",
           padding: "0 0.9rem",
-          margin: "-0.15rem 0"
+          margin: "-0.15rem 0",
         }}
         component="ul"
       >
