@@ -172,7 +172,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
         }
     }
 
-     const mainSectionTitle = localStorage.getItem(`${title}`)
+    const mainSectionTitle = localStorage.getItem(`${dataType.name}`);
 
     return (
         <Toolbar className={classes.root}>

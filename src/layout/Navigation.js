@@ -280,7 +280,7 @@ export default function Navigation({ xs, onToggle }) {
   };
 
   const selectItem = (item, text) => {
-    localStorage.setItem(`${item.title}`, text);
+    localStorage.setItem(`${item.$ref.name}`, text);
     setState({ item });
   };
 
