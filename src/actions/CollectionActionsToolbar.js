@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { makeStyles, Toolbar, Typography, Chip } from "@material-ui/core";
+import { makeStyles, Toolbar, Typography, Chip, useMediaQuery, useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
 import ActionPicker from "./ActionPicker";
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
@@ -16,10 +16,13 @@ import IconButton from "@material-ui/core/IconButton";
 const useToolbarStyles = makeStyles(theme => ({
     root: {
         display: 'flex',
-        paddingLeft: theme.spacing(4),
-        paddingRight: theme.spacing(4),
+        paddingLeft: theme.spacing(1),
         height: appBarHeight(theme),
         backgroundColor: theme.palette.background.default,
+        [theme.breakpoints.up('sm')]: {
+            paddingLeft: theme.spacing(4),
+            paddingRight: theme.spacing(4),
+        },
     },
     title: {
         flex: '0 0 auto',
@@ -173,12 +176,14 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     }
 
     const mainSectionTitle = localStorage.getItem(`${dataType.name}`);
+    const theme = useTheme();
+    const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
     return (
         <Toolbar className={classes.root}>
             <div className={classes.title}>
                 <Typography variant="h6">
-                   { mainSectionTitle && `${mainSectionTitle} |`} {title}
+                   { mainSectionTitle && !xs && `${mainSectionTitle} |`} {title}
                 </Typography>
             </div>
             <div className="grow-1"/>
