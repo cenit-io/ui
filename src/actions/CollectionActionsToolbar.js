@@ -23,6 +23,7 @@ const useToolbarStyles = makeStyles(theme => ({
     },
     title: {
         flex: '0 0 auto',
+        color: theme.palette.primary.dark
     },
     filterIcon: {
         color: theme.palette.getContrastText(theme.palette.secondary.main)
@@ -171,11 +172,13 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
         }
     }
 
+    const mainSectionTitle = localStorage.getItem(`${dataType.name}`);
+
     return (
         <Toolbar className={classes.root}>
             <div className={classes.title}>
                 <Typography variant="h6">
-                    {title}
+                   { mainSectionTitle && `${mainSectionTitle} |`} {title}
                 </Typography>
             </div>
             <div className="grow-1"/>
