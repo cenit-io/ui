@@ -21,6 +21,14 @@ const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
     }
 
     useEffect(() => {
+      setContainerState({ breadcrumbActionName: "New" });
+
+      return () => {
+        setContainerState({ breadcrumbActionName: null });
+      };
+    }, []);
+
+    useEffect(() => {
         const subscription = DataTypeSubject.for(dataType.id).config().pipe(
             switchMap(config => {
                 let seed = config.actions?.new?.seed;
