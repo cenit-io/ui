@@ -47,52 +47,33 @@ const useStyles = makeStyles(theme => ({
         boxSizing: 'border-box'
     },
     formContainer: {
-        maxHeight: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px - 4.6rem)`,
+        height: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px)`,
         overflow: 'auto',
         boxSizing: 'border-box',
-        flexGrow: 1,
-        paddingTop: 0,
-        paddingBottom: 0,
+        flexGrow: 1
     },
     jsonContainer: {
-        maxHeight: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px)`,
+        height: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px)`,
         overflow: 'auto',
         boxSizing: 'border-box',
         background: theme.palette.background.default,
         color: theme.palette.text.secondary,
-        margin: '1.5rem 1.5rem 1.5rem 0',
-        borderRadius: "6px",
     },
     jsonBox: {
         width: '50%',
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1)
     },
-    jsonBoxForm: {
-        width: '50%',
-        paddingLeft: 0,
-        paddingRight: theme.spacing(1)
-    },
     mdFormContainer: {
-        paddingLeft: '0',
-        paddingRight: '0',
+        paddingLeft: '25%',
+        paddingRight: '25%',
     },
     smFormContainer: {
-        paddingRight: '5%',
+        paddingLeft: '15%',
+        paddingRight: '15%',
     },
     trailing: {
         height: `${theme.spacing(8)}px`
-    },
-    cardWrapper:{
-        display: 'flex',
-        position: 'relative',
-        margin: '0 2rem', 
-        padding: '0 0 0 1.5rem',
-        boxSizing: 'border-box',
-        backgroundColor: theme.palette.background.paper,
-        boxShadow: "0 2px 5px 1px rgb(64 60 67 / 16%)",
-        borderRadius: "6px",
-        maxHeight: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)}px - 4.6rem)`,
     },
     fabBack: {
         position: 'absolute',
@@ -525,21 +506,20 @@ const FormEditor = ({
         <div className={classes.root}>
             {breadCrumb}
             {jsonBtn}
-            <div style={{boxSizing: 'border-box',}}>
-                <div className={classes.cardWrapper}>
-                    <div ref={ref}
-                        className={clsx(
-                            classes.formContainer,
-                            !xs && !jsonView && (docked || !md) && classes.smFormContainer,
-                            md && ((jsonMode && classes.jsonBoxForm) || classes.mdFormContainer)
-                        )}>
-                        {forms}
-                        {actions}
-                    </div>
-                    {jsonView}
+            <div style={{ display: 'flex', position: 'relative' }}>
+                <div ref={ref}
+                     className={clsx(
+                         classes.formContainer,
+                         !xs && !jsonView && (docked || !md) && classes.smFormContainer,
+                         md && ((jsonMode && classes.jsonBox) || classes.mdFormContainer)
+                     )}>
+                    {forms}
+                    <div className={classes.trailing}/>
+                    {actions}
                 </div>
-                {loading && <FrezzerLoader/>}
+                {jsonView}
             </div>
+            {loading && <FrezzerLoader />}
         </div>
     );
 };

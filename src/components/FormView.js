@@ -252,7 +252,8 @@ const FormView = ({
 
     return (
         <FormContext.Provider value={formContext}>
-            <div className={classes.root}>
+            <div className={classes.root}
+                 style={{ minHeight: `calc(${formHeight})` }}>
                 {control}
             </div>
         </FormContext.Provider>
