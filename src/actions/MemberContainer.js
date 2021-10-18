@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import Loading from '../components/Loading';
-import { Chip, Toolbar, Typography, useTheme } from "@material-ui/core";
+import { Breadcrumbs, Chip, Toolbar, Typography, useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
@@ -57,10 +57,20 @@ const useActionContainerStyles = makeStyles(theme => ({
         height: appBarHeight(theme),
         backgroundColor: theme.palette.background.default
     },
-    breadcrumb: {
-        display: 'flex',
-        alignItems: 'center',
-        maxWidth: ({ width }) => `calc(${width} - ${theme.spacing(9)}px)`
+    breadcrumbColor: {
+        color: theme.palette.primary.dark
+    },
+    breadcrumbs: {
+        color: theme.palette.primary.dark,
+        maxWidth: ({ width }) => `calc(${width} - ${theme.spacing(9)}px)`,
+        '& ol':{
+            flexWrap: 'nowrap',
+        },
+        '& li:last-child':{
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden'
+        }
     },
     recordTitle: {
         textOverflow: 'ellipsis',
@@ -202,20 +212,25 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
     let dataLink;
     if (dataTypeTitle) {
         dataLink = <Chip label={pluralize(dataTypeTitle)}
+                         className={classes.breadcrumbColor}
                          onClick={() => onSubjectPicked(DataTypeSubject.for(subject.dataTypeId).key)}/>;
     } else {
         dataLink = <Skeleton variant="circle"
                              width={theme.spacing(3)}
                              height={theme.spacing(3)}/>;
     }
+    const mainSectionTitle = localStorage.getItem(`${dataType.name}`);
+
     const breadcrumb = (
-        <div className={classes.breadcrumb}>
-            {dataLink}
-            <ChevronRight/>
-            <Typography variant="h6" className={classes.recordTitle}>
-                {title || <Skeleton variant="text" width={theme.spacing(5)}/>}
-            </Typography>
-        </div>
+      <Breadcrumbs separator="|" aria-label="breadcrumb" className={classes.breadcrumbs}>
+        <Typography variant="h6" className={classes.recordTitle}>
+          {mainSectionTitle && `${mainSectionTitle} `}
+        </Typography>
+        {dataLink}
+        <Typography variant="h6" className={classes.recordTitle}>
+          {title || <Skeleton variant="text" width={theme.spacing(5)} />}
+        </Typography>
+      </Breadcrumbs>
     );
 
     const componentHeight = `${height} - ${appBarHeight(theme)}`;
