@@ -112,6 +112,14 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
     const { formDataType } = state;
 
     useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Export" });
+  
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
+
+    useEffect(() => {
         const subscription = value.current.changed().subscribe(
             ({ format, template }) => {
                 if (template && format && template.file_extension !== format) {
