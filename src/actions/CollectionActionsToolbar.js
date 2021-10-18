@@ -59,7 +59,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
 
     const [containerState, setContainerState] = containerContext;
 
-    const { selectedItems, data, selector } = containerState;
+    const { selectedItems, data, selector, breadcrumbActionName } = containerState;
 
     const execute = action => {
         const r = action.call(this, {
@@ -187,8 +187,8 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     return (
         <Toolbar className={classes.root}>
             <div className={classes.title}>
-                <Typography variant="h6" className={classes.titleText}>
-                   { mainSectionTitle && `${mainSectionTitle} |`} {title}
+                <Typography variant="h6"> 
+                   { mainSectionTitle && `${mainSectionTitle} |`} {title}  { breadcrumbActionName && ` | ${breadcrumbActionName}`}
                 </Typography>
             </div>
             <div className="grow-1"/>
