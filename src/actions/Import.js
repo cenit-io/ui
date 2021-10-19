@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
@@ -106,6 +106,14 @@ const Import = ({ docked, dataType, onSubjectPicked, height }) => {
     const handleCancel = () => {
         setContainerState({ actionKey: 'index' });
     }
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Import" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     return (
         <div className="relative">

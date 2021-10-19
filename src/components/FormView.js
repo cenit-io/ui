@@ -23,8 +23,8 @@ const useStyles = makeStyles(theme => ({
         width: ({ width }) => width ? `calc(${width})` : 'unset',
         overflow: 'auto'
     },
-    bgPaper: {
-        background: theme.palette.background.paper
+    bgDefault: {
+        background: theme.palette.background.default
     }
 }));
 
@@ -230,7 +230,7 @@ const FormView = ({
         control = (
             <div className="flex column full-width justify-content-center">
                 <List style={{ height: `calc(${formHeight})` }} component="ul">
-                    <ListSubheader className={classes.bgPaper} component="li">
+                    <ListSubheader className={classes.bgDefault} component="li">
                         <Typography variant="h6" component="h6">
                             {titles ? 'Pick a type' : textSkeleton}
                         </Typography>

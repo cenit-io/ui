@@ -16,14 +16,24 @@ import IconButton from "@material-ui/core/IconButton";
 const useToolbarStyles = makeStyles(theme => ({
     root: {
         display: 'flex',
-        paddingLeft: theme.spacing(4),
-        paddingRight: theme.spacing(4),
+        paddingLeft: theme.spacing(1),
+        paddingRight: theme.spacing(0),
         height: appBarHeight(theme),
         backgroundColor: theme.palette.background.default,
+          [theme.breakpoints.up('sm')]: {
+            paddingLeft: theme.spacing(4),
+            paddingRight: theme.spacing(4),
+        },
     },
     title: {
         flex: '0 0 auto',
-        color: theme.palette.primary.dark
+        color: theme.palette.primary.dark,
+        maxWidth: () => `calc(100vw - 190px)`,
+    },
+    titleText: {
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden'
     },
     filterIcon: {
         color: theme.palette.getContrastText(theme.palette.secondary.main)
@@ -49,7 +59,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
 
     const [containerState, setContainerState] = containerContext;
 
-    const { selectedItems, data, selector } = containerState;
+    const { selectedItems, data, selector, breadcrumbActionName } = containerState;
 
     const execute = action => {
         const r = action.call(this, {
@@ -177,8 +187,8 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     return (
         <Toolbar className={classes.root}>
             <div className={classes.title}>
-                <Typography variant="h6">
-                   { mainSectionTitle && `${mainSectionTitle} |`} {title}
+                <Typography variant="h6" className={classes.titleText}> 
+                   { mainSectionTitle && `${mainSectionTitle} |`} {title}  { breadcrumbActionName && ` | ${breadcrumbActionName}`}
                 </Typography>
             </div>
             <div className="grow-1"/>

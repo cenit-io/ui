@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import ActionRegistry, { CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
@@ -49,6 +49,14 @@ const Convert = ({ docked, dataType, onSubjectPicked, height }) => {
     const [containerState, setContainerState] = useContainerContext();
 
     const { selectedItems, selector } = containerState;
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Convert" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     const handleCancel = () => {
         setContainerState({ actionKey: 'index' });
