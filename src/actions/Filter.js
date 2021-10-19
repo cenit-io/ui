@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import SvgIcon from "@material-ui/core/SvgIcon";
 import SelectorControl from "../components/SelectorControl";
@@ -36,6 +36,14 @@ const Filter = ({ docked, dataType, onSubjectPicked, height }) => {
     const classes = useStyles();
 
     const { selector, landingActionKey } = containerState;
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Filter" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     const value = useRef(new FormRootValue({
         selector: selector
