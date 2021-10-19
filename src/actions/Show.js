@@ -6,6 +6,7 @@ import Fab from "@material-ui/core/Fab";
 import EditIcon from "@material-ui/icons/Edit";
 import FormEditor from "../components/FormEditor";
 import { useSpreadState } from "../common/hooks";
+import { useContainerContext } from './ContainerContext';
 
 const useStyles = makeStyles(theme => ({
     editButton: {
@@ -20,9 +21,20 @@ const Show = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
         readOnly: true
     });
 
+    const containerContext = useContainerContext();
+    const [, setContainerState] = containerContext;
+
     const { readOnly, config } = state;
 
     const classes = useStyles();
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: readOnly ? "Show" : "Edit" });
+  
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, [readOnly]);
 
     useEffect(() => {
         const subscription = dataType.config().subscribe(

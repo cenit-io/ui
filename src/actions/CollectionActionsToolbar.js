@@ -187,7 +187,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     return (
         <Toolbar className={classes.root}>
             <div className={classes.title}>
-                <Typography variant="h6"> 
+                <Typography variant="h6" className={classes.titleText}> 
                    { mainSectionTitle && `${mainSectionTitle} |`} {title}  { breadcrumbActionName && ` | ${breadcrumbActionName}`}
                 </Typography>
             </div>
