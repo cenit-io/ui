@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
@@ -30,6 +30,14 @@ const ShredTenant = ({ docked, record, onSubjectPicked, height }) => {
 
     const containerContext = useContainerContext();
     const [, setContainerState] = containerContext;
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Shred" });
+  
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     const handleCancel = () => {
       setContainerState({
