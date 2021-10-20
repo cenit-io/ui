@@ -50,6 +50,14 @@ const Cross = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const { selectedItems, selector } = containerState;
 
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Cross" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
+
     const handleCancel = () => {
         setContainerState({ actionKey: 'index' });
     }
