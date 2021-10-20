@@ -33,6 +33,14 @@ const PullImport = ({ docked, dataType, onSubjectPicked, height }) => {
     const { formDataType } = state;
 
     useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Pull Import" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
+
+    useEffect(() => {
         const subscription = dataType.getTitle().subscribe(
             formTitle => {
                 const name = `Pull-import ${pluralize(formTitle)}`;
