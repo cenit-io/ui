@@ -83,6 +83,14 @@ const Delete = ({ dataType, onCancel, onClose }) => {
     const { selectedItems, landingActionKey, selector } = containerState;
 
     useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Delete" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
+
+    useEffect(() => {
         let theTitle;
         if (selectedItems.length === 1) {
             theTitle = dataType.titleFor(selectedItems[0]).pipe(

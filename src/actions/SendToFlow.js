@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import ActionRegistry from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
@@ -55,6 +55,14 @@ const SendToFlow = ({ docked, dataType, onSubjectPicked, height }) => {
     const [containerState, setContainerState] = useContainerContext();
 
     const { selectedItems, selector } = containerState;
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Send to Flow" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     const handleCancel = () => {
         setContainerState({ actionKey: 'index' });
