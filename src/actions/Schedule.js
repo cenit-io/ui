@@ -70,6 +70,10 @@ const Schedule = ({ dataType, docked, record, onSubjectPicked, height }) => {
         );
     };
 
+    const handleCancel = () => {
+        setContainerState({ actionKey: 'index' });
+    }
+
     if (formDataType) {
         return (
             <div className="relative">
@@ -80,6 +84,7 @@ const Schedule = ({ dataType, docked, record, onSubjectPicked, height }) => {
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
                             successControl={SuccessSchedule}
+                            cancelEditor={handleCancel}
                             value={value}/>
             </div>
         );
