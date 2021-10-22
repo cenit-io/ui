@@ -43,6 +43,15 @@ export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
 
     const containerContext = useContainerContext();
     const [,setContainerState] = containerContext;
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Run" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
+
     const handleCancel = () => {
      setContainerState({
         selectedItems: [],
