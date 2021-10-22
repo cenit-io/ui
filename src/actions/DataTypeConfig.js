@@ -32,9 +32,18 @@ const DataTypeConfig = ({ docked, record, onSubjectPicked, height }) => {
 
     const containerContext = useContainerContext();
     const [,setContainerState] = containerContext;
+    
     const handleCancel = () => {
        setContainerState({ actionKey: Index.key })
     }
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Configure" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     useEffect(() => {
         const schema = {
