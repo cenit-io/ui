@@ -9,6 +9,7 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { TasksHierarchy } from "../config/dataTypes/Setup/Task";
 import { useSpreadState } from "../common/hooks";
 import Loading from "../components/Loading";
+import { useContainerContext } from './ContainerContext';
 
 function SuccessSchedule() {
     return (
@@ -18,8 +19,18 @@ function SuccessSchedule() {
 
 const Schedule = ({ dataType, docked, record, onSubjectPicked, height }) => {
     const [state, setState] = useSpreadState();
+    const containerContext = useContainerContext();
+    const [,setContainerState] = containerContext;
 
     const { value, formDataType } = state;
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Schedule" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     useEffect(() => {
         const subscription = dataType.get(record.id, {
