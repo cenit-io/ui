@@ -7,6 +7,8 @@ import Dialog from "@material-ui/core/Dialog/Dialog";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogActions from "@material-ui/core/DialogActions";
 import Button from "@material-ui/core/Button";
+import { makeStyles } from '@material-ui/core';
+import ErrorOutlineOutlinedIcon from '@material-ui/icons/ErrorOutlineOutlined'
 
 const CC = React.createContext({});
 
@@ -25,6 +27,37 @@ export default function ContainerContext({ initialState, children }) {
     const confirmationSubject = useRef(new Subject());
     const confirmOptions = useRef({});
 
+    const modalStyles = makeStyles((theme) => ({
+        root: {
+            backdropFilter: 'blur(6px) saturate(120%)',
+            '& .MuiBackdrop-root': {
+                backgroundColor: "rgba(0, 0, 0, 0.05)"
+            },
+            '& .MuiTypography-h6': {
+                textAlign: 'center'   
+            },
+            '& p': {
+                textAlign: 'center'   
+            },
+            '& .MuiDialogActions-root': {
+                justifyContent: 'center',
+                marginBottom: '1rem'
+            }
+        },
+        alertContent: {
+            display: 'flex',
+            justifyContent: 'center',
+            alertContent:'center',
+            width: '100%',
+            padding:' 16px 0 0 0',
+            '& svg': {
+                fontSize: '5rem'
+            }
+        },
+    }));
+
+    const classes = modalStyles();
+
     value.confirm = options => {
         confirmOptions.current = options || {};
         setState({ confirm: true });
@@ -39,9 +72,19 @@ export default function ContainerContext({ initialState, children }) {
     };
 
     let dialogContent;
+
+    let alertContent = <div className={classes.alertContent} >
+                            <ErrorOutlineOutlinedIcon color="action" />
+                        </div>
+
     if (confirm) {
         let { title, message, abortText, okText, justOk } = confirmOptions.current;
-        title = title && <DialogTitle>{title}</DialogTitle>;
+        title = title && (
+          <>
+            {alertContent}
+            <DialogTitle>{title} </DialogTitle>
+          </>
+        );
         message = message && (
             <DialogContent>
                 <DialogContentText>{message}</DialogContentText>
@@ -50,7 +93,7 @@ export default function ContainerContext({ initialState, children }) {
         let abort;
         if (!justOk) {
             abort = (
-                <Button onClick={closeDialog(false)}>
+                <Button variant="outlined" onClick={closeDialog(false)}>
                     {abortText || 'Abort'}
                 </Button>
             );
@@ -61,7 +104,7 @@ export default function ContainerContext({ initialState, children }) {
                 {message}
                 <DialogActions>
                     {abort}
-                    <Button onClick={closeDialog(true)} color="primary" autoFocus>
+                    <Button variant="outlined"  onClick={closeDialog(true)} color="primary" autoFocus>
                         {okText || 'Ok'}
                     </Button>
                 </DialogActions>
@@ -73,8 +116,10 @@ export default function ContainerContext({ initialState, children }) {
         <CC.Provider value={value}>
             {children}
             <Dialog open={Boolean(confirm)}
-                    onClose={closeDialog(false)}
-                    maxWidth="sm">
+                onClose={closeDialog(false)}
+                maxWidth="xs"
+                fullWidth
+                classes={classes}>
                 {dialogContent}
             </Dialog>
         </CC.Provider>
