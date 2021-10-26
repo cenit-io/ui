@@ -7,6 +7,7 @@ import Dialog from "@material-ui/core/Dialog/Dialog";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogActions from "@material-ui/core/DialogActions";
 import Button from "@material-ui/core/Button";
+import { makeStyles } from '@material-ui/core';
 
 const CC = React.createContext({});
 
@@ -24,6 +25,17 @@ export default function ContainerContext({ initialState, children }) {
 
     const confirmationSubject = useRef(new Subject());
     const confirmOptions = useRef({});
+
+    const modalStyles = makeStyles((theme) => ({
+        root: {
+            backdropFilter: 'blur(6px) saturate(120%)',
+            '& .MuiBackdrop-root': {
+                backgroundColor: "rgba(0, 0, 0, 0.05)"
+            },
+        },
+    }));
+
+    const classes = modalStyles();
 
     value.confirm = options => {
         confirmOptions.current = options || {};
@@ -74,7 +86,8 @@ export default function ContainerContext({ initialState, children }) {
             {children}
             <Dialog open={Boolean(confirm)}
                     onClose={closeDialog(false)}
-                    maxWidth="sm">
+                    maxWidth="sm"
+                    classes={classes}>
                 {dialogContent}
             </Dialog>
         </CC.Provider>
