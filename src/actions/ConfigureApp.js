@@ -11,6 +11,7 @@ import { Config, FETCHED } from "../common/Symbols";
 import { map } from "rxjs/operators";
 import { FormRootValue } from "../services/FormValue";
 import { capitalize, underscore } from "../common/strutls";
+import { useContainerContext } from './ContainerContext';
 
 export function SuccessAppConfig() {
 
@@ -76,8 +77,17 @@ function parameterSchema({ type, many, group, description }) {
 
 const ConfigureApp = ({ docked, dataType, record, onSubjectPicked, height }) => {
     const [state, setState] = useSpreadState();
+    const [_, setContainerState] = useContainerContext();
 
     const { formDataType, value } = state;
+    
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Configure" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     useEffect(() => {
         const subscription = dataType.get(record.id, {
