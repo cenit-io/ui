@@ -13,6 +13,7 @@ import Random from "../util/Random";
 import { of } from "rxjs";
 import { DataType } from "../services/DataTypeService";
 import { underscore } from "../common/strutls";
+import { useContainerContext } from './ContainerContext';
 
 const RegistrationIcon = () => (
     <SvgIcon>
@@ -47,6 +48,8 @@ const RegisterApp = ({ docked, record, onSubjectPicked, height }) => {
         retry: Random.string()
     });
 
+    const [_, setContainerState] = useContainerContext();
+
     const formDataType = useRef(DataType.from({
         name: 'Registration',
         schema: {
@@ -63,6 +66,14 @@ const RegisterApp = ({ docked, record, onSubjectPicked, height }) => {
     }));
 
     const { value } = state;
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Register" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     useEffect(() => {
         const subscription = API.get(
