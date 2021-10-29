@@ -122,6 +122,10 @@ const RegisterApp = ({ docked, record, onSubjectPicked, height }) => {
         );
     };
 
+    const handleCancel = () => {
+        setContainerState({ actionKey: 'index' });
+    }
+
     if (value) {
         return (
             <FormEditor key={record.id}
@@ -132,6 +136,7 @@ const RegisterApp = ({ docked, record, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={RegistrationSuccess}
+                        cancelEditor={handleCancel}
                         value={value}/>
         );
     }
