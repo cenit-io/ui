@@ -225,9 +225,11 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
     const breadcrumb = (
       <Breadcrumbs separator="|" aria-label="breadcrumb" className={classes.breadcrumbs}>
-        <Typography variant="h6" className={classes.recordTitle}>
-          {mainSectionTitle && `${mainSectionTitle} `}
-        </Typography>
+        {mainSectionTitle && (
+          <Typography variant="h6" className={classes.recordTitle}>
+            {`${mainSectionTitle} `}
+          </Typography>
+        )}
         {dataLink}
         <Typography variant="h6" className={classes.recordTitle}>
           {title || <Skeleton variant="text" width={theme.spacing(5)} />}
