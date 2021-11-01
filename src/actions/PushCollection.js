@@ -87,6 +87,10 @@ const PushCollection = ({ docked, record, onSubjectPicked, height }) => {
         );
     };
 
+    const handleCancel = () => {
+        setContainerState({ actionKey: 'index' });
+    }
+
     return (
         <div className="relative">
             <FormEditor docked={docked}
@@ -96,6 +100,7 @@ const PushCollection = ({ docked, record, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={ExecutionMonitor}
+                        cancelEditor={handleCancel}
                         value={value.current}/>
         </div>
     );
