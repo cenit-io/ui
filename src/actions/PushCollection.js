@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
@@ -10,6 +10,7 @@ import SvgIcon from "@material-ui/core/SvgIcon";
 import { ExecutionMonitor } from "./ExecutionMonitor";
 import { useTenantContext } from "../layout/TenantContext";
 import { Config } from "../common/Symbols";
+import { useContainerContext } from './ContainerContext';
 
 const PushIcon = () => (
     <SvgIcon style={{ display: 'block', transform: 'rotate(180deg)' }}>
@@ -28,6 +29,8 @@ const PushCollection = ({ docked, record, onSubjectPicked, height }) => {
     }));
 
     const [tenantState] = useTenantContext();
+    const containerContext = useContainerContext();
+    const [,setContainerState] = containerContext;
 
     const { user } = tenantState;
 
@@ -57,6 +60,14 @@ const PushCollection = ({ docked, record, onSubjectPicked, height }) => {
             }
         }
     }));
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Push" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     const handleFormSubmit = (_, value) => {
         const { shared_collection } = value.get();
