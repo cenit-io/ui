@@ -8,6 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Index from "./Index";
 import './New';
 import "./Show";
+import "./Edit";
 import './Delete';
 import './Export';
 import './Import';

@@ -103,6 +103,14 @@ const AccessTokens = ({ dataType, record, height, width }) => {
     const { current_token, tokens } = state;
 
     useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Tokens" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
+
+    useEffect(() => {
         const subscription = zzip(
             AuthorizationService.getAccessToken(),
             API.get(

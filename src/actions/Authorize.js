@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import AuthorizeIcon from '@material-ui/icons/VerifiedUser';
 import ActionRegistry, { ActionKind } from './ActionRegistry';
 import { makeStyles } from '@material-ui/core';
@@ -13,6 +13,7 @@ import { of } from "rxjs";
 import { switchMap, map } from "rxjs/operators";
 import SuccessAlert from "./SuccessAlert";
 import { Config } from "../services/AuthorizationService";
+import { useContainerContext } from './ContainerContext';
 
 const useStyles = makeStyles(() => ({
     link: {
@@ -23,6 +24,16 @@ const useStyles = makeStyles(() => ({
 const SuccessAuthorization = () => <SuccessAlert mainIcon={AuthorizeIcon}/>;
 
 function BasicAuthorizationForm({ docked, dataType, record, onSubjectPicked, onUpdate, height }) {
+
+    const [_,setContainerState] = useContainerContext();
+
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Authorize" });
+
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
 
     const value = useRef(new FormRootValue(record));
 
@@ -49,6 +60,10 @@ function BasicAuthorizationForm({ docked, dataType, record, onSubjectPicked, onU
             }
         }
     }));
+
+    const handleCancel = () => {
+        setContainerState({ actionKey: 'index' });
+    }
 
     const handleFormSubmit = (_, value) => {
         const { username, password } = value.get();
@@ -78,6 +93,7 @@ function BasicAuthorizationForm({ docked, dataType, record, onSubjectPicked, onU
                        onUpdate={onUpdate}
                        value={value.current}
                        onFormSubmit={handleFormSubmit}
+                       cancelEditor={handleCancel}
                        successControl={SuccessAuthorization}/>;
 }
 
