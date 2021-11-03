@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
@@ -8,6 +8,8 @@ import ShredIcon from "@material-ui/icons/DeleteSweep";
 import WarningAlert from "./WarningAlert";
 import { useContainerContext } from "./ContainerContext";
 import { tap } from "rxjs/operators";
+import Random from '../util/Random';
+import Index from './Index';
 
 function ShredAlert() {
     const { record } = useContainerContext()[0];
@@ -18,7 +20,17 @@ function ShredAlert() {
 }
 
 const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) => {
+    const containerContext = useContainerContext();
+    const [, setContainerState] = containerContext;
 
+    useEffect(() => {
+        setContainerState({ breadcrumbActionName: "Shred" });
+  
+        return () => {
+          setContainerState({ breadcrumbActionName: null });
+        };
+      }, []);
+    
     const formDataType = useRef(DataType.from({
         name: 'Shred',
         schema: {
@@ -34,6 +46,15 @@ const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) =
         tap(() => setTimeout(onClose, 1000))
     );
 
+    const handleCancel = () => {
+        setContainerState({
+          selectedItems: [],
+          landingActionKey: Index.key,
+          actionKey: Index.key,
+          actionComponentKey: Random.string(),
+        });
+      };
+
     return (
         <div className="relative">
             <FormEditor docked={docked}
@@ -42,6 +63,7 @@ const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) =
                         submitIcon={<ShredIcon component="svg"/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
+                        cancelEditor={handleCancel}
                         noJSON={true}/>
         </div>
     );
