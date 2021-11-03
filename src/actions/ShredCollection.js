@@ -8,6 +8,8 @@ import ShredIcon from "@material-ui/icons/DeleteSweep";
 import WarningAlert from "./WarningAlert";
 import { useContainerContext } from "./ContainerContext";
 import { tap } from "rxjs/operators";
+import Random from '../util/Random';
+import Index from './Index';
 
 function ShredAlert() {
     const { record } = useContainerContext()[0];
@@ -44,6 +46,15 @@ const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) =
         tap(() => setTimeout(onClose, 1000))
     );
 
+    const handleCancel = () => {
+        setContainerState({
+          selectedItems: [],
+          landingActionKey: Index.key,
+          actionKey: Index.key,
+          actionComponentKey: Random.string(),
+        });
+      };
+
     return (
         <div className="relative">
             <FormEditor docked={docked}
@@ -52,6 +63,7 @@ const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) =
                         submitIcon={<ShredIcon component="svg"/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
+                        cancelEditor={handleCancel}
                         noJSON={true}/>
         </div>
     );
