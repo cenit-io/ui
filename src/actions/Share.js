@@ -9,6 +9,8 @@ import { FormRootValue } from "../services/FormValue";
 import { of } from "rxjs";
 import { ExecutionMonitor } from "./ExecutionMonitor";
 import { useContainerContext } from './ContainerContext';
+import Index from './Index';
+import Random from '../util/Random';
 
 const Share = ({ docked, record, onSubjectPicked, height }) => {
 
@@ -58,6 +60,14 @@ const Share = ({ docked, record, onSubjectPicked, height }) => {
         }
     }));
     
+    const handleCancel = () => {
+        setContainerState({
+          selectedItems: [],
+          landingActionKey: Index.key,
+          actionKey: Index.key,
+          actionComponentKey: Random.string(),
+        });
+      };
 
     const handleFormSubmit = (_, value) => {
         const { name, summary, collection } = value.get();
@@ -89,6 +99,7 @@ const Share = ({ docked, record, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={ExecutionMonitor}
+                        cancelEditor={handleCancel}
                         value={value.current}/>
         </div>
     );
