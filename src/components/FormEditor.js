@@ -27,6 +27,9 @@ import { Status } from "../common/Symbols";
 import InfoAlert from "../actions/InfoAlert";
 import Random from "../util/Random";
 import { Code } from '@material-ui/icons';
+import { useContainerContext } from '../actions/ContainerContext';
+import Index from '../actions/Index';
+import Show from '../actions/Show';
 
 function withForm(item) {
     item.submitter = new Subject();
@@ -388,13 +391,26 @@ const FormEditor = ({
     }
 
     let jsonView;
+
+    const [containerState, setContainerState] = useContainerContext();
+    const { landingActionKey } = containerState;
+
+    const handleCancel = () => {
+        landingActionKey === Index.key
+          ? setContainerState({ actionKey: Index.key,  selectedItems: []  })
+          : setContainerState({
+              landingActionKey: Show.key,
+              actionKey: Show.key,
+            });
+    }
+
     if (stack.length > 1) {
         if (!noSubmitButton && !readOnly) {
             actions.push(
                 <LoadingButton key='save'
                                loading={saving && !done}
                                onClick={save}
-                               onClickCancel={cancelEditor}
+                               onClickCancel={cancelEditor ? cancelEditor : handleCancel}
                                className={classes.fabSave}
                                success={done}
                                actionIcon={stack.length === 2 && submitIcon}/>
