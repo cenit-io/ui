@@ -61,10 +61,6 @@ function BasicAuthorizationForm({ docked, dataType, record, onSubjectPicked, onU
         }
     }));
 
-    const handleCancel = () => {
-        setContainerState({ actionKey: 'index' });
-    }
-
     const handleFormSubmit = (_, value) => {
         const { username, password } = value.get();
         return of(true).pipe(
@@ -93,7 +89,6 @@ function BasicAuthorizationForm({ docked, dataType, record, onSubjectPicked, onU
                        onUpdate={onUpdate}
                        value={value.current}
                        onFormSubmit={handleFormSubmit}
-                       cancelEditor={handleCancel}
                        successControl={SuccessAuthorization}/>;
 }
 
