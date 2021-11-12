@@ -40,26 +40,43 @@ export default function AutocompleteControl({
                                                 onChange,
                                                 options,
                                                 freeSolo,
-                                                deleteDisabled
+                                                deleteDisabled,
+                                                multiple,
+                                                formatter,
+                                                parser,
+                                                renderTags
                                             }) {
-    const [state, setState] = useState(null);
+    const [state, setState] = useState(multiple ? [] : null);
     const classes = useStyles();
 
     const { initialFormValue } = useFormContext();
 
     useEffect(() => {
+        if (multiple) {
+            setState(state => state === null ? [] : [state]);
+        } else {
+            setState(state => (state && state[0]) || null);
+        }
+    }, [multiple]);
+
+    useEffect(() => {
         const subscription = value.changed().subscribe(
-            v => setState(v || null)
+            v => {
+                if (parser) {
+                    v = parser(v);
+                }
+                setState(v || (multiple ? [] : null));
+            }
         );
         value.changed().next(value.get());
         return () => subscription.unsubscribe();
-    }, [value]);
+    }, [value, parser]);
 
     const optionLabel = key => options && options.constructor === Object
         ? options[key]
         : key;
 
-    if (readOnly) {
+    if (readOnly && !multiple) {
         return <TextField key={`readOnly_${state}`}
                           label={title}
                           value={optionLabel(state) || ''}
@@ -69,7 +86,10 @@ export default function AutocompleteControl({
     }
 
     const handleChange = (_, v) => {
-        if (v === null) {
+        const formattedValue = formatter
+            ? formatter(v)
+            : v;
+        if (v === null || (multiple && !v.length)) {
             const initialValue = value.valueFrom(initialFormValue);
             if (initialValue !== undefined && initialValue !== null) {
                 value.set(null);
@@ -77,10 +97,10 @@ export default function AutocompleteControl({
                 value.delete();
             }
         } else {
-            value.set(v);
+            value.set(formattedValue);
         }
-        onChange && onChange(v);
-        setState(v);
+        onChange && onChange(formattedValue);
+        setState(v || (multiple ? [] : v));
     };
 
     const selectableOptions = options
@@ -89,13 +109,15 @@ export default function AutocompleteControl({
             : Object.keys(options))
         : [];
 
-    return <Autocomplete options={selectableOptions}
+    return <Autocomplete multiple={multiple}
+                         renderTags={renderTags}
+                         options={selectableOptions}
                          freeSolo={freeSolo}
                          getOptionLabel={optionLabel}
                          disabled={disabled}
                          value={state}
                          onChange={handleChange}
-                         disableClearable={deleteDisabled}
+                         disableClearable={deleteDisabled || readOnly}
                          renderInput={
                              params => <TextField {...params}
                                                   readOnly={readOnly}
