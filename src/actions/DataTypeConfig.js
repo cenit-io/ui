@@ -14,7 +14,6 @@ import { underscore } from "../common/strutls";
 import Random from "../util/Random";
 import { of } from "rxjs";
 import { useContainerContext } from './ContainerContext';
-import Index from './Index';
 
 export function SuccessConfig() {
 
@@ -33,10 +32,6 @@ const DataTypeConfig = ({ docked, record, onSubjectPicked, height }) => {
     const containerContext = useContainerContext();
     const [,setContainerState] = containerContext;
     
-    const handleCancel = () => {
-       setContainerState({ actionKey: Index.key })
-    }
-
     useEffect(() => {
         setContainerState({ breadcrumbActionName: "Configure" });
 
@@ -110,7 +105,6 @@ const DataTypeConfig = ({ docked, record, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={SuccessConfig}
-                        cancelEditor={handleCancel}
                         value={value}/>
         );
     }
