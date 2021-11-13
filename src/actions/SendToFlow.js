@@ -64,10 +64,6 @@ const SendToFlow = ({ docked, dataType, onSubjectPicked, height }) => {
         };
       }, []);
 
-    const handleCancel = () => {
-        setContainerState({ actionKey: 'index' });
-    }
-
     const value = useRef(new FormRootValue({
         data_type: {
             id: dataType.id,
@@ -108,7 +104,6 @@ const SendToFlow = ({ docked, dataType, onSubjectPicked, height }) => {
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
                         successControl={ExecutionMonitor}
-                        cancelEditor={handleCancel}
                         value={value.current}/>
         </div>
     );
