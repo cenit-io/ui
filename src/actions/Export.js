@@ -95,10 +95,6 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
 
     const { selectedItems, selector } = containerState;
 
-    const handleCancel = () => {
-        setContainerState({ actionKey: 'index' });
-    }
-
     const value = useRef(new FormRootValue({
         data_type: {
             id: dataType.id,
@@ -186,7 +182,6 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
                             successControl={ExecutionMonitor}
-                            cancelEditor={handleCancel}
                             value={value.current}/>
             </div>
         );
