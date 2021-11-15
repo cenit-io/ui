@@ -1,24 +1,24 @@
 
 ## Cenit Admin
 
-This is a React application for the administration of a Cenit Platform istance. The current state is developing.
-Fallow these instructions to configure a local instance of Cenit and connect it as a backend for the app.
+This is a React application for the administration of a Cenit Platform instance, that is currently under development.
+Follow these instructions to configure a local instance of Cenit and connect it as a backend for the app.
 
 ### Configuring the Backend
 
-1. Make sure the Cenit **local repository is upto date with the remote**. The develop branch of Cenit
+1. Make sure the Cenit **local repository is up to date with the remote**. The developed branch of Cenit
 to support the Admin Backed is `admin_backend`.
 
-2. The `admin_backend` development branch includes features which are not yet sync with the `develop` and `master`
-branches (for example the support of buil-in apps). For this reason is strongly recommended to **use a dedicated
-data base.** To define a custom data base just include in the `config/application.yml` file an entry
+2. The `admin_backend` development branch includes features that are not yet synced with the `develop` and `master`
+branches (for example the support of built-in apps). For this reason is strongly recommended to **use a dedicated
+database.** To define a custom database just include in the `config/application.yml` file an entry
 `DB_DEV: custom_db_name`.    
 
 2. **Configure the Cenit listening port.** By default the Admin App runs listening to the port `3000` therefore the local
-instance of Cenit should runs listening to a different one. By default the App expect Cenit being listening to the port
-`3001`, so launch Cenit listening the port `3001`.
+instance of Cenit should run listening to a different one. By default the App expect Cenit to be listening to the port
+`3001`, so launch Cenit listening to the port `3001`.
 
-3. **Configure the Cenit HOMEPAGE URL.** Make sure that Cenit HOMEPAGE URL is sync with the listening port by including
+3. **Configure the Cenit HOMEPAGE URL.** Make sure that Cenit HOMEPAGE URL is synced with the listening port by including
 in the `config/application.yml` file the entry `HOMEPAGE: http://127.0.0.1:3001`.
 
 4. **Configure the default URI for the admin app.** By default the Admin App runs listening to the port `3000`.
