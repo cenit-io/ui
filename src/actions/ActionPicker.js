@@ -56,6 +56,19 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
 
     const frame = useRef(null);
 
+    const reorder = (a, b) => {
+      let groupA = a.group ? a.group : 0,
+        groupB = b.group ? b.group : 0;
+
+      if (groupA > groupB) {
+        return 1;
+      }
+      if (groupA < groupB) {
+        return -1;
+      }
+      return 0;
+    };
+
     useEffect(() => {
         if (dataType) {
             const subscription = dataType.config().subscribe(config => {
@@ -90,7 +103,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                     }
                 );
 
-                setState({ actions, config });
+                setState({ actions: actions.sort(reorder) , config });
             });
 
             return () => subscription.unsubscribe();

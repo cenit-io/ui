@@ -102,5 +102,6 @@ export default ActionRegistry.register(Share, {
     onlyFor: [{
         "namespace": "Setup",
         "name": "Collection"
-    }]
+    }],
+    group: 3
 });

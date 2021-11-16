@@ -97,5 +97,6 @@ const Filter = ({ docked, dataType, onSubjectPicked, height }) => {
 export default ActionRegistry.register(Filter, {
     kind: ActionKind.collection,
     icon: FilterIcon,
-    title: 'Filter'
+    title: 'Filter',
+    group: 5
 });

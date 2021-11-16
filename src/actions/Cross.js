@@ -472,5 +472,6 @@ export default ActionRegistry.register(Cross, {
             "namespace": "Setup",
             "name": "CrossSharedCollection"
         }
-    ]
+    ],
+    group: 3
 });

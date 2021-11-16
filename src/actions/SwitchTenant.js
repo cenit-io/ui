@@ -17,5 +17,6 @@ export default ActionRegistry.register(SwitchTenant, {
     title: 'Switch',
     executable: true,
     arity: 1,
-    onlyFor: [TenantTypeSelector]
+    onlyFor: [TenantTypeSelector],
+    group: 5
 });

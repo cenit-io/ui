@@ -409,5 +409,6 @@ export default ActionRegistry.register(PullImport, {
             "namespace": "Setup",
             "name": "Collection"
         }
-    ]
+    ],
+    group: 2
 });
