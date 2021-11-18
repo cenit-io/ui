@@ -7,10 +7,12 @@ import { useSpreadState } from "../common/hooks";
 import useResizeObserver from "@react-hook/resize-observer";
 import useTheme from "@material-ui/core/styles/useTheme";
 import MoreIcon from "@material-ui/icons/MoreVert";
+import Refresh from "@material-ui/icons/Refresh";
 import MenuItem from "@material-ui/core/MenuItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import Menu from "@material-ui/core/Menu";
 import clsx from "clsx";
+import Index from './Index';
 
 const useToolbarStyles = makeStyles(theme => ({
     actions: {
@@ -52,7 +54,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
 
     const [containerState] = useContainerContext();
 
-    const { selectedItems } = containerState;
+    const { selectedItems, actionKey } = containerState;
 
     const frame = useRef(null);
 
@@ -121,12 +123,19 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
         cursor++;
         const action = actions[i];
 
-        const Icon = iconFor(action);
+        let Icon = iconFor(action);
 
-        const title = typeof action.title === "function"
+        let title = typeof action.title === "function"
             ? action.title.call(this, containerState)
             : action.title;
 
+        if (actionKey === Index.key) {
+            if (action.key === Index.key) {
+                Icon = Refresh;
+                title = 'Refresh List'
+            }
+        }
+        
         actionsControls.push(
             <Tooltip key={`action_${action.key}`}
                      title={title}
