@@ -1,12 +1,25 @@
 import axios from 'axios';
 import AuthorizationService, { Config } from './AuthorizationService';
-import { catchError, map, switchMap } from "rxjs/operators";
+import { catchError, map } from "rxjs/operators";
 import { from, of } from "rxjs";
 import { Status } from "../common/Symbols";
 
 const apiGateway = axios.create({
     baseURL: `${Config.getCenitHost()}/api/v3`,
     timeout: Config.timeoutSpan
+});
+
+apiGateway.interceptors.request.use(async config => {
+    const accessToken = await AuthorizationService.getAccessToken().toPromise();
+    if (!config.headers) {
+        config.headers = {};
+    }
+    config.headers.Authorization = `Bearer ${accessToken}`;
+    if (AuthorizationService.xTenantId) {
+        config.headers['X-Tenant-Id'] = AuthorizationService.xTenantId;
+    }
+
+    return config;
 });
 
 //const ApiCache = {};
@@ -44,6 +57,7 @@ export const ApiResource = function () {
     }
 
     const config = {
+        headers,
         params,
         onUploadProgress,
         cancelToken,
@@ -52,50 +66,35 @@ export const ApiResource = function () {
 
     this.path = '/' + args.join('/');
 
-    this.get = () => {
-        return AuthorizationService.getAccessToken().pipe(
-            switchMap(access_token => from(
-                apiGateway.get(this.path, {
-                    headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                    ...config
-                })).pipe(map(response => {
-                    const { data } = response;
-                    if (data?.constructor === Object) {
-                        data[Status] = response.status;
-                    }
-                    return data;
-                }))
-            )
-        );
-    };
+    this.get = () => from(
+        apiGateway.get(this.path, config)
+    ).pipe(
+        map(response => {
+            const { data } = response;
+            if (data?.constructor === Object) {
+                data[Status] = response.status;
+            }
+            return data;
+        })
+    );
 
-    this.delete = () => {
-        return AuthorizationService.getAccessToken().pipe(
-            switchMap(access_token => from(
-                apiGateway.delete(this.path, {
-                    headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                    ...config
-                })).pipe(map(response => response && response.data))
-            )
-        );
-    };
+    this.delete = () => from(
+        apiGateway.delete(this.path, config)
+    ).pipe(
+        map(response => response && response.data)
+    );
 
-    this.post = data => {
-        return AuthorizationService.getAccessToken().pipe(
-            switchMap(access_token => from(
-                apiGateway.post(this.path, data, {
-                    headers: { 'Authorization': 'Bearer ' + access_token, ...headers },
-                    ...config
-                })).pipe(map(response => {
-                    const { data } = response;
-                    if (data?.constructor === Object) {
-                        data[Status] = response.status;
-                    }
-                    return data;
-                }))
-            )
-        );
-    };
+    this.post = data => from(
+        apiGateway.post(this.path, data, config)
+    ).pipe(
+        map(response => {
+            const { data } = response;
+            if (data?.constructor === Object) {
+                data[Status] = response.status;
+            }
+            return data;
+        })
+    );
 };
 
 const ErrorCallbacks = [];

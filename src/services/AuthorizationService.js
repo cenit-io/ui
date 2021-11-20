@@ -37,7 +37,9 @@ const stateKey = state => `${StateKeyPrefix}${state}`;
 
 const isStateKey = key => key.startsWith(StateKeyPrefix);
 
-const AuthorizationService = {
+export const AuthorizationService = {
+
+    xTenantId: null,
 
     authorize: () => {
         Object.keys(localStorage).forEach(key => {

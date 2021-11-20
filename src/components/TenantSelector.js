@@ -1,19 +1,14 @@
-import React, { useEffect } from 'react';
+import React  from 'react';
 import RecordSelector from "./RecordSelector";
-import { useSpreadState } from "../common/hooks";
 import { useTenantContext } from "../layout/TenantContext";
 import TenantTypeSelector from "./TenantTypeSelector";
 
-export default function TenantSelector({ inputClasses, onSelect, readOnly }) {
-    const [state, setState] = useSpreadState({
-        tenant: { name: 'Loading...' }
-    });
-
+export default function TenantSelector({ inputClasses, readOnly }) {
     const [tenantState, setTenantState] = useTenantContext();
 
     const { tenant, loading } = tenantState;
 
-    const handleSelect = selection => setTenantState({ switchingTenant: selection.record });
+    const handleSelect = selection => setTenantState({ tenant: selection.record });
 
     return <RecordSelector key={tenant.id}
                            dataTypeSelector={TenantTypeSelector}
