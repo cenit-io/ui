@@ -144,10 +144,6 @@ const ConfigureApp = ({ docked, dataType, record, onSubjectPicked, height }) => 
         map(() => ({}))
     );
 
-    const handleCancel = () => {
-        setContainerState({ actionKey: 'index' });
-    }
-
     if (formDataType) {
         return (
             <div className="relative">
@@ -158,7 +154,6 @@ const ConfigureApp = ({ docked, dataType, record, onSubjectPicked, height }) => 
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
                             successControl={SuccessAppConfig}
-                            cancelEditor={handleCancel}
                             value={value}/>
             </div>
         );

@@ -46,15 +46,6 @@ const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) =
         tap(() => setTimeout(onClose, 1000))
     );
 
-    const handleCancel = () => {
-        setContainerState({
-          selectedItems: [],
-          landingActionKey: Index.key,
-          actionKey: Index.key,
-          actionComponentKey: Random.string(),
-        });
-      };
-
     return (
         <div className="relative">
             <FormEditor docked={docked}
@@ -63,7 +54,6 @@ const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) =
                         submitIcon={<ShredIcon component="svg"/>}
                         onFormSubmit={handleFormSubmit}
                         onSubjectPicked={onSubjectPicked}
-                        cancelEditor={handleCancel}
                         noJSON={true}/>
         </div>
     );
