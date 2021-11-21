@@ -15,8 +15,9 @@ apiGateway.interceptors.request.use(async config => {
         config.headers = {};
     }
     config.headers.Authorization = `Bearer ${accessToken}`;
-    if (AuthorizationService.xTenantId) {
-        config.headers['X-Tenant-Id'] = AuthorizationService.xTenantId;
+    const xTenantId = AuthorizationService.getXTenantId();
+    if (xTenantId) {
+        config.headers['X-Tenant-Id'] = xTenantId;
     }
 
     return config;

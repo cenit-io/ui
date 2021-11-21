@@ -6,12 +6,11 @@ import ConfigService from "../services/ConfigService";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { Status } from "../common/Symbols";
 import EmbeddedAppService from "../services/EnbeddedAppService";
-import { of} from "rxjs";
+import { defer, of, zip } from "rxjs";
 import { catchError } from "rxjs/operators";
 import AuthorizationService from "../services/AuthorizationService";
 
 const TC = React.createContext({});
-
 
 export function useTenantContext() {
     return useContext(TC);
@@ -60,21 +59,30 @@ export default function TenantContext({ children }) {
                 if (remote?.id !== tenant.id) {
                     remote = tenant;
                 }
-                AuthorizationService.xTenantId = tenant.id;
+                AuthorizationService.setXTenantId(tenant.id);
                 setState({ tenant: remote, loading: false });
                 ConfigService.update({ tenant_id: remote.id });
                 EmbeddedAppService.refreshAll();
             });
         } else {
-            subscription = API.get('setup', 'user', 'me').subscribe(
-                user => {
+            subscription = zip(
+                API.get('setup', 'user', 'me'),
+                defer(() => {
+                    const tenantId = AuthorizationService.getXTenantId();
+                    if (tenantId) {
+                        return API.get('setup', 'account', tenantId);
+                    }
+
+                    return of(null);
+                })
+            ).subscribe(([user, tenant]) => {
                     if (user) {
+                        tenant = tenant || user.account
                         setState({
-                            user,
-                            tenant: user.account,
-                            loading: false
+                            user, tenant, loading: false
                         });
-                        ConfigService.update({ tenant_id: user.account.id });
+                        AuthorizationService.setXTenantId(tenant.id);
+                        ConfigService.update({ tenant_id: tenant.id });
                         EmbeddedAppService.refreshAll();
                     }
                 }

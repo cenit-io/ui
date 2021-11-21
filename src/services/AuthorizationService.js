@@ -37,9 +37,20 @@ const stateKey = state => `${StateKeyPrefix}${state}`;
 
 const isStateKey = key => key.startsWith(StateKeyPrefix);
 
+const TENANT_ID_KEY = 'tenantId';
+
 export const AuthorizationService = {
 
-    xTenantId: null,
+    xTenantId: localStorage.getItem(TENANT_ID_KEY),
+
+    getXTenantId: function () {
+        return this.xTenantId;
+    },
+
+    setXTenantId: function (id) {
+        localStorage.setItem(TENANT_ID_KEY, id);
+        this.xTenantId = id;
+    },
 
     authorize: () => {
         Object.keys(localStorage).forEach(key => {
