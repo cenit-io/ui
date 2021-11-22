@@ -57,5 +57,6 @@ export default ActionRegistry.register(DataType, {
     kind: ActionKind.collection,
     icon: CenitTypesIcon,
     title: 'Data Type',
-    executable: true
+    executable: true,
+    group: 5
 });

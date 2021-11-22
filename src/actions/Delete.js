@@ -202,5 +202,6 @@ export default ActionRegistry.register(Delete, {
     title: 'Delete',
     bulkable: true,
     activeColor: 'secondary',
-    crud: [CRUD.delete]
+    crud: [CRUD.delete],
+    group: 4
 });

@@ -83,5 +83,6 @@ export default ActionRegistry.register(ShredTenant, {
     arity: 1,
     icon: ShredIcon,
     title: 'Shred',
-    onlyFor: [{ namespace: '', name: 'Account' }]
+    onlyFor: [{ namespace: '', name: 'Account' }],
+    group: 4
 });

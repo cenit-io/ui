@@ -126,5 +126,6 @@ export default ActionRegistry.register(SwitchTenantLock, {
     icon: SwitchLockIcon,
     title: contextTitle,
     executable: true,
-    onlyFor: [TenantTypeSelector]
+    onlyFor: [TenantTypeSelector],
+    group: 5
 });
