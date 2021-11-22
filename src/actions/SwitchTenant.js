@@ -7,7 +7,7 @@ function SwitchTenant({ record, tenantContext }) {
 
     const { tenant } = tenantState;
     if (tenant.id !== record.id) {
-        setTenantState({ switchingTenant: record });
+        setTenantState({ tenant: record });
     }
 }
 
