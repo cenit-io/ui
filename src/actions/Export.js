@@ -193,5 +193,6 @@ const Export = ({ docked, dataType, onSubjectPicked, height }) => {
 export default ActionRegistry.register(Export, {
     bulkable: true,
     icon: SharedCollectionIcon,
-    title: 'Export'
+    title: 'Export',
+    group: 2
 });

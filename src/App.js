@@ -30,7 +30,7 @@ function App() {
             const params = QueryString.parse(window.location.search.slice(1, window.location.search.length));
 
             if (params.cenitHost) {
-                localStorage.setItem(CenitHostKey, params.cenitHost);
+                sessionStorage.setItem(CenitHostKey, params.cenitHost);
             }
 
             let authorize;

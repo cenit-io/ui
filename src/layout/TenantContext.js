@@ -2,14 +2,15 @@ import React, { useContext, useEffect } from 'react';
 import { useSpreadState } from "../common/hooks";
 import API from "../services/ApiService";
 import FrezzerLoader from "../components/FrezzerLoader";
-import { eq } from "../services/BLoC";
 import ConfigService from "../services/ConfigService";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { Status } from "../common/Symbols";
 import EmbeddedAppService from "../services/EnbeddedAppService";
+import { defer, of, zip } from "rxjs";
+import { catchError } from "rxjs/operators";
+import AuthorizationService from "../services/AuthorizationService";
 
 const TC = React.createContext({});
-
 
 export function useTenantContext() {
     return useContext(TC);
@@ -29,7 +30,7 @@ export default function TenantContext({ children }) {
 
     const classes = useLoaderStyles();
 
-    const { tenant, switchingTenant, loading, switchSudo } = state;
+    const { tenant, loading, switchSudo } = state;
 
     useEffect(() => {
         if (switchSudo) {
@@ -49,41 +50,46 @@ export default function TenantContext({ children }) {
     }, [switchSudo]);
 
     useEffect(() => {
-        const subscription = API.get('setup', 'user', 'me').subscribe(
-            user => {
-                if (user) {
-                    setState({
-                        user,
-                        tenant: user.account,
-                        switchingTenant: null,
-                        loading: false
-                    });
-                    ConfigService.update({ tenant_id: user.account.id });
+        let subscription;
+        setState({ loading: true });
+        if (tenant) {
+            subscription = API.get('setup', 'account', tenant.id).pipe(
+                catchError(() => of(null))
+            ).subscribe(remote => {
+                if (remote?.id !== tenant.id) {
+                    remote = tenant;
                 }
-            }
-        );
-        return () => subscription.unsubscribe();
-    }, [switchingTenant]);
-
-    useEffect(() => {
-        if (switchingTenant && !eq(tenant, switchingTenant)) {
-            setState({ loading: true });
-            const subscription = API.post('setup', 'user', 'me', {
-                account: {
-                    id: switchingTenant.id
-                }
-            }).subscribe(() => {
-                setState({
-                    tenant: switchingTenant,
-                    switchingTenant: null,
-                    loading: false
-                });
-                ConfigService.update({ tenant_id: switchingTenant.id });
+                AuthorizationService.setXTenantId(tenant.id);
+                setState({ tenant: remote, loading: false });
+                ConfigService.update({ tenant_id: remote.id });
                 EmbeddedAppService.refreshAll();
             });
-            return () => subscription && subscription.unsubscribe();
+        } else {
+            subscription = zip(
+                API.get('setup', 'user', 'me'),
+                defer(() => {
+                    const tenantId = AuthorizationService.getXTenantId();
+                    if (tenantId) {
+                        return API.get('setup', 'account', tenantId);
+                    }
+
+                    return of(null);
+                })
+            ).subscribe(([user, tenant]) => {
+                    if (user) {
+                        tenant = tenant || user.account
+                        setState({
+                            user, tenant, loading: false
+                        });
+                        AuthorizationService.setXTenantId(tenant.id);
+                        ConfigService.update({ tenant_id: tenant.id });
+                        EmbeddedAppService.refreshAll();
+                    }
+                }
+            );
         }
-    }, [tenant, switchingTenant]);
+        return () => subscription.unsubscribe();
+    }, [tenant?.id]);
 
     return (
         <TC.Provider value={[state, setState]}>

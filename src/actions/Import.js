@@ -134,5 +134,6 @@ export default ActionRegistry.register(Import, {
     kind: ActionKind.collection,
     icon: ImportIcon,
     title: 'Import',
-    crud: [CRUD.create, CRUD.update]
+    crud: [CRUD.create, CRUD.update],
+    group: 2
 });
