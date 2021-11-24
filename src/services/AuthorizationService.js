@@ -17,7 +17,7 @@ export const Config = AppConfig.useEnvironmentConfig ? EnvironmentConfig : AppCo
 export const CenitHostKey = 'cenitHost';
 
 Config.getCenitHost = function () {
-    return localStorage.getItem(CenitHostKey) || this.cenitHost;
+    return sessionStorage.getItem(CenitHostKey) || this.cenitHost;
 };
 
 export const AppGateway = axios.create({
