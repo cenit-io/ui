@@ -284,7 +284,9 @@ export default function OauthScopeControl(props) {
     const { scopes, readOnly, disabled, value } = props;
 
     const renderTags = (tagValue, getTagProps) =>
-        tagValue.map((option, index) => {
+      tagValue
+        .filter((val) => SCOPES.includes(val))
+        .map((option, index) => {
             const tagProps = getTagProps({ index });
             if (readOnly) {
                 tagProps.onDelete = undefined;
