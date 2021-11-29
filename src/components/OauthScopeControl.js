@@ -1,11 +1,10 @@
-import { Chip, makeStyles, Tooltip } from "@material-ui/core";
-import React, { useState } from "react";
+import { Chip, makeStyles, Tooltip, Typography } from "@material-ui/core";
+import React from "react";
 import purple from "@material-ui/core/colors/purple";
 import green from "@material-ui/core/colors/green";
 import orange from "@material-ui/core/colors/orange";
 import blue from "@material-ui/core/colors/blue";
 import red from "@material-ui/core/colors/red";
-import grey from "@material-ui/core/colors/grey";
 import AutocompleteControl from "./AutocompleteControl";
 import { InfoRounded } from "@material-ui/icons";
 import { Zoom } from "@material-ui/core";
@@ -50,18 +49,15 @@ const useStylesReadOnlyView = makeStyles((theme) => ({
     root: {
         width: "100%",
         minHeight: "4rem",
-        border: `1px solid ${grey[400]}`,
-        backgroundColor: grey[200],
         position: "relative",
         marginTop: "1.7rem",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
     },
     header: {
         width: "4rem",
         height: "2rem",
-        fontWeight: "bold",
-        fontSize: "14px",
-        color: theme.palette.background.paper,
-        backgroundColor: COLORS.create,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -70,8 +66,7 @@ const useStylesReadOnlyView = makeStyles((theme) => ({
         left: "-1px",
     },
     list: {
-        marginLeft: "4rem",
-        paddingLeft: "0.6rem",
+     
         "& li": {
             marginBottom: "0.7rem",
         },
@@ -258,13 +253,15 @@ const ReadOnlyView = ({ scope }) => {
     */
     const scopes = (scope || '')
         .split(' ')
-        .filter(s => s)
+        .filter(s => SCOPE_DESCRIPTIONS.hasOwnProperty(s))
         .map(scope => ({ scope }));
 
     return (
         <div className={classes.root}>
             <div className={classes.header}>
-                <span> Scope </span>
+                <Typography variant="subtitle2">
+                    Scope
+                </Typography>
             </div>
             <ul className={classes.list}>
                 {
