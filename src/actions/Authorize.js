@@ -14,6 +14,7 @@ import { switchMap, map } from "rxjs/operators";
 import SuccessAlert from "./SuccessAlert";
 import { Config } from "../services/AuthorizationService";
 import { useContainerContext } from './ContainerContext';
+import { useTenantContext } from "../layout/TenantContext";
 
 const useStyles = makeStyles(() => ({
     link: {
@@ -96,6 +97,10 @@ const Authorize = (props) => {
 
     const { dataType, record } = props;
 
+    const [tenantState] = useTenantContext();
+
+    const { tenant } = tenantState;
+
     const classes = useStyles();
 
     if (dataType.name === 'BasicAuthorization') {
@@ -107,7 +112,7 @@ const Authorize = (props) => {
                    title="Redirection Alert"
                    message="To start the authorization process you will be redirected to an other location in a new browser view">
             <a className={classes.link}
-               href={`${Config.getCenitHost()}/authorization/${record.id}/authorize`}
+               href={`${Config.getCenitHost()}/authorization/${tenant.id}/${record.id}/authorize`}
                target="_blank">
                 <Button variant="outlined"
                         color="primary"

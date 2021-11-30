@@ -1,7 +1,7 @@
 window.appConfig = {
     useEnvironmentConfig: true,
-    localhost: 'http://cenit-admin.s3-website-us-west-2.amazonaws.com',
-    cenitHost: 'http://ec2-18-208-253-0.compute-1.amazonaws.com',
+    localhost: 'https://cenit-ui.io',
+    cenitHost: 'https://server.cenit.io',
     timeoutSpan: 300000,
     appIdentifier: 'admin'
 };
