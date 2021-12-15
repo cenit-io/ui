@@ -48,7 +48,7 @@ const useStyles = makeStyles(theme => ({
         transition: "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
         borderRadius: "50px",
         cursor: "pointer",
-        padding: ".75rem",
+        padding: ".75rem .75rem .75rem 0",
         order: -1,
         '&:hover': {
             backgroundColor: fade(theme.palette.common.black, 0.05)
@@ -203,17 +203,39 @@ export default function ({ onToggle }) {
                 disabled={loading}/>
     );
 
-    const tenantSearch = smUp && (
+    const tenantSearch = (
         <Search searchIcon={<HomeIcon/>}
                 selectorComponent={TenantSelector}
                 onSelect={handleTenantSelected}
                 disabled={loading}/>
-    );
+        );
 
     const brandLogo = !smUp && 
         <div onClick={handleQuickAccess} className={classes.brandContainer}>
             <img src={CenitAdminLogo} width="100px" alt=""  style={{filter: 'invert(1)'}}/>
         </div>
+
+    const taskMenu = smUp && (
+      <IconButton
+        color="inherit"
+        disabled={loading}
+        onClick={handlePickTasks}
+        className={smUp ? classes.changeOrder : ""}
+      >
+        <TaskMenuIcon />
+      </IconButton>
+    );   
+
+    const notification = smUp && (
+      <IconButton
+        color="inherit"
+        disabled={loading}
+        onClick={handlePickNotifications}
+        className={smUp ? classes.changeOrder : ""}
+      >
+        <NotificationsIcon />
+      </IconButton>
+    );
 
     return (
       <AppBar position="absolute">
@@ -233,22 +255,8 @@ export default function ({ onToggle }) {
           )}
           {/* {dataTypeSearch} */}
           <div className={classes.grow} />
-          <IconButton
-            color="inherit"
-            disabled={loading}
-            onClick={handlePickNotifications}
-            className={smUp ? classes.changeOrder : ""} 
-          >
-            <NotificationsIcon />
-          </IconButton>
-          <IconButton
-            color="inherit"
-            disabled={loading}
-            onClick={handlePickTasks}
-            className={ smUp ? classes.changeOrder: ""} 
-          >
-            <TaskMenuIcon />
-          </IconButton>
+          {notification}  
+          {taskMenu}  
           {tenantSearch}
           {avatar}
           {smUp && <TenantActiveInfo />}
