@@ -26,7 +26,7 @@ import { useSpreadState } from "../common/hooks";
 import NotificationsIcon from "../icons/NotificationsIcon";
 import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
 import { TenantMenuIcon } from "../config/dataTypes/Account";
-import CenitAdminLogo from "../img/Cenit_IO_Admin_app_Identidad.svg";
+import CenitAdminLogo from "../img/Cenit_IO_512x512px_Imagotipo.svg";
 import TenantActiveInfo from '../components/TenantActiveInfo';
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
@@ -42,13 +42,13 @@ const useStyles = makeStyles(theme => ({
         }
     },
     moveRight:{
-        order: 1
+        order: 2
     },
     brandContainer: {
         transition: "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
         borderRadius: "50px",
         cursor: "pointer",
-        padding: ".75rem .75rem .75rem 0",
+        padding: "0 .45rem 0 0",
         order: -1,
         '&:hover': {
             backgroundColor: fade(theme.palette.common.black, 0.05)
@@ -92,6 +92,20 @@ const useStyles = makeStyles(theme => ({
     },
     quickAccess: {
         marginLeft: theme.spacing(2)
+    },
+    notificationIcon: {
+        padding: '4px !important',
+        order: 1,
+        [theme.breakpoints.up('sm')]: {
+            order: 0,
+        },
+    },
+    taskIcon: {
+        padding: '4px',
+        order: 1,
+        [theme.breakpoints.up('sm')]: {
+            order: 0,
+        },
     }
 }));
 
@@ -212,26 +226,26 @@ export default function ({ onToggle }) {
 
     const brandLogo = !smUp && 
         <div onClick={handleQuickAccess} className={classes.brandContainer}>
-            <img src={CenitAdminLogo} width="100px" alt=""  style={{filter: 'invert(1)'}}/>
+            <img src={CenitAdminLogo} width="40px" alt=""  style={{filter: 'invert(1)'}}/>
         </div>
 
-    const taskMenu = smUp && (
+    const taskMenu = (
       <IconButton
         color="inherit"
         disabled={loading}
         onClick={handlePickTasks}
-        className={smUp ? classes.changeOrder : ""}
+        className={smUp ? classes.changeOrder : classes.taskIcon}
       >
         <TaskMenuIcon />
       </IconButton>
     );   
 
-    const notification = smUp && (
+    const notification = (
       <IconButton
         color="inherit"
         disabled={loading}
         onClick={handlePickNotifications}
-        className={smUp ? classes.changeOrder : ""}
+        className={smUp ? classes.changeOrder : classes.notificationIcon}
       >
         <NotificationsIcon />
       </IconButton>
