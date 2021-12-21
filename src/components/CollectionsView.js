@@ -9,7 +9,7 @@ import Image from 'material-ui-image';
 
 const useStyles = makeStyles(theme => ({
     root: {
-        padding: theme.spacing(2)
+        padding: theme.spacing(0)
     },
     card: {
         margin: theme.spacing(3),
