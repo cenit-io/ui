@@ -125,6 +125,11 @@ const useStyles = makeStyles(theme => ({
     pagination: {
         height: theme.spacing(7),
         boxSizing: "border-box",
+        [theme.breakpoints.down('sm')]: {
+            padding: 0,
+            margin: 0,
+            justifyContent: 'space-evenly'
+        },
     },
     paginationWrapper: {
         backgroundColor: theme.palette.background.default,
@@ -134,13 +139,14 @@ const useStyles = makeStyles(theme => ({
         },
     },
     pageSize: {
-        margin: theme.spacing(0, 2),
+        margin: '0, 8px',
         height: '50%',
         fontSize: '14px'
     },
     pageSizeWrapper: {
         height: '100%',
         paddingLeft: ".5rem",
+        justifyContent: "space-between",
         [theme.breakpoints.up('sm')]: {
            width:'auto',
         },
@@ -192,7 +198,16 @@ const useStyles = makeStyles(theme => ({
     customPaginationTextWrapper:{
         width:"25%",
         display: "flex",
+        margin: "0 14px",
         flexWrap:"wrap",
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+        textOverflow: "ellipsis",
+        [theme.breakpoints.up('xs')]: {
+            margin: "0 10px",
+            overflow: "visible",
+            whiteSpace: "normal",
+          },
          [theme.breakpoints.up('sm')]: {
           width:"auto",
         },
