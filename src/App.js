@@ -22,7 +22,10 @@ function App() {
     const [error, setError] = useState(false);
 
     useEffect(() => {
-        API.onError(() => setError(true));
+        API.onError(() => {
+            localStorage.clear();
+            setError(true);
+        });
     }, []);
 
     useEffect(() => {

@@ -88,6 +88,10 @@ export const AuthorizationService = {
         );
     },
 
+    cleanAccess: function () {
+        localStorage.removeItem(AccessKey);
+    },
+
     getAccessWith: params => {
         return from(AppGateway.post('token', params.code)).pipe(
             map(response => {
