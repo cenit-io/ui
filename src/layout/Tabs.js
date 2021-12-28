@@ -15,6 +15,7 @@ import useResizeObserver from "@react-hook/resize-observer";
 import { from } from "rxjs";
 import { AppGateway } from "../services/AuthorizationService";
 import EmbeddedApp from "../components/EmbeddedApp";
+import { useMediaQuery } from '@material-ui/core';
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
@@ -79,6 +80,7 @@ const useStyles = makeStyles(theme => ({
 export default function NavTabs({ docked, width }) {
     const classes = useStyles();
     const theme = useTheme();
+    const smUp = useMediaQuery(theme.breakpoints.up('sm'));
     const [state, setState] = useSpreadState({
         tabs: [],
         tabIndex: 0,
@@ -214,6 +216,7 @@ export default function NavTabs({ docked, width }) {
             </AppBar>
             <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
                             index={tabIndex}
+                            disabled={!smUp}
                             onChangeIndex={tabIndex => setTabIndex(tabIndex)}>
                 {containers}
             </SwipeableViews>
