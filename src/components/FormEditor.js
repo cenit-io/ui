@@ -76,7 +76,7 @@ const useStyles = makeStyles(theme => ({
         paddingRight: '15%',
     },
     trailing: {
-        height: `${theme.spacing(8)}px`
+        height: `${theme.spacing(1)}px`
     },
     fabBack: {
         position: 'absolute',
