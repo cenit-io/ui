@@ -175,7 +175,7 @@ const AccessTokens = ({ dataType, record, height, width }) => {
         API.post(
             'cenit', 'oauth_access_grant', record.id, 'digest', 'token', {
                 token_span: null, // Token span in seconds, null is default 3600, if 0 then never expires
-                name: 'My Token'
+                note: 'My Token'
             }
         ).subscribe(
             () => setContainerState({
