@@ -84,7 +84,7 @@ export default function NavTabs({ docked, width }) {
     const [state, setState] = useSpreadState({
         tabs: [],
         tabIndex: 0,
-        alertBannerHeight: 0
+        alertBannerHeight: 1
     });
     const [actionsKeys, setActionKeys] = useSpreadState();
 
@@ -99,7 +99,7 @@ export default function NavTabs({ docked, width }) {
     const alertBanner = useRef(null);
 
     useResizeObserver(alertBanner, entry => setState({
-        alertBannerHeight: Math.ceil(entry.contentRect.height)
+        alertBannerHeight: Math.ceil(entry.contentRect.height) || 1
     }));
 
     useEffect(() => {
