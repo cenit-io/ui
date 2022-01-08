@@ -17,6 +17,38 @@ export function useContainerContext() {
     return useContext(CC);
 }
 
+const useModalStyles = makeStyles((theme) => ({
+    root: {
+        backdropFilter: 'blur(6px) saturate(120%)',
+        '& .MuiBackdrop-root': {
+            backgroundColor: "rgba(0, 0, 0, 0.05)"
+        },
+        '& .MuiTypography-h6': {
+            textAlign: 'center'
+        },
+        '& p': {
+            textAlign: 'center'
+        },
+        '& .MuiDialogActions-root': {
+            justifyContent: 'center',
+            marginBottom: '1rem'
+        }
+    }
+}));
+
+
+const useAlertContentStyles = makeStyles((theme) => ({
+    root: {
+        display: 'flex',
+        justifyContent: 'center',
+        width: '100%',
+        padding: ' 16px 0 0 0',
+        '& svg': {
+            fontSize: '5rem'
+        }
+    },
+}));
+
 export default function ContainerContext({ initialState, children }) {
     const value = useSpreadState(initialState);
 
@@ -27,36 +59,8 @@ export default function ContainerContext({ initialState, children }) {
     const confirmationSubject = useRef(new Subject());
     const confirmOptions = useRef({});
 
-    const modalStyles = makeStyles((theme) => ({
-        root: {
-            backdropFilter: 'blur(6px) saturate(120%)',
-            '& .MuiBackdrop-root': {
-                backgroundColor: "rgba(0, 0, 0, 0.05)"
-            },
-            '& .MuiTypography-h6': {
-                textAlign: 'center'   
-            },
-            '& p': {
-                textAlign: 'center'   
-            },
-            '& .MuiDialogActions-root': {
-                justifyContent: 'center',
-                marginBottom: '1rem'
-            }
-        },
-        alertContent: {
-            display: 'flex',
-            justifyContent: 'center',
-            alertContent:'center',
-            width: '100%',
-            padding:' 16px 0 0 0',
-            '& svg': {
-                fontSize: '5rem'
-            }
-        },
-    }));
-
-    const classes = modalStyles();
+    const modalClasses = useModalStyles();
+    const alertContentClasses = useAlertContentStyles();
 
     value.confirm = options => {
         confirmOptions.current = options || {};
@@ -73,21 +77,25 @@ export default function ContainerContext({ initialState, children }) {
 
     let dialogContent;
 
-    let alertContent = <div className={classes.alertContent} >
-                            <ErrorOutlineOutlinedIcon color="action" />
-                        </div>
+    const alertContent = (
+        <div className={alertContentClasses.root}>
+            <ErrorOutlineOutlinedIcon color="action" component="svg"/>
+        </div>
+    );
 
     if (confirm) {
         let { title, message, abortText, okText, justOk } = confirmOptions.current;
         title = title && (
-          <>
-            {alertContent}
-            <DialogTitle>{title} </DialogTitle>
-          </>
+            <>
+                {alertContent}
+                <DialogTitle>{title} </DialogTitle>
+            </>
         );
         message = message && (
             <DialogContent>
-                <DialogContentText>{message}</DialogContentText>
+                <DialogContentText component="p">
+                    {message}
+                </DialogContentText>
             </DialogContent>
         );
         let abort;
@@ -104,7 +112,7 @@ export default function ContainerContext({ initialState, children }) {
                 {message}
                 <DialogActions>
                     {abort}
-                    <Button variant="outlined"  onClick={closeDialog(true)} color="primary" autoFocus>
+                    <Button variant="outlined" onClick={closeDialog(true)} color="primary" autoFocus>
                         {okText || 'Ok'}
                     </Button>
                 </DialogActions>
@@ -116,10 +124,10 @@ export default function ContainerContext({ initialState, children }) {
         <CC.Provider value={value}>
             {children}
             <Dialog open={Boolean(confirm)}
-                onClose={closeDialog(false)}
-                maxWidth="xs"
-                fullWidth
-                classes={classes}>
+                    onClose={closeDialog(false)}
+                    maxWidth="xs"
+                    fullWidth
+                    classes={modalClasses}>
                 {dialogContent}
             </Dialog>
         </CC.Provider>
