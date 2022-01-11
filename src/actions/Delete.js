@@ -86,9 +86,9 @@ const Delete = ({ dataType, onCancel, onClose }) => {
         setContainerState({ breadcrumbActionName: "Delete" });
 
         return () => {
-          setContainerState({ breadcrumbActionName: null });
+            setContainerState({ breadcrumbActionName: null });
         };
-      }, []);
+    }, []);
 
     useEffect(() => {
         let theTitle;
@@ -201,6 +201,10 @@ export default ActionRegistry.register(Delete, {
     icon: DeleteIcon,
     title: 'Delete',
     bulkable: true,
+    bulkableExceptions: [
+        { namespace: '', name: 'Account' },
+        { namespace: '', name: 'User' }
+    ],
     activeColor: 'secondary',
     crud: [CRUD.delete],
     group: 4

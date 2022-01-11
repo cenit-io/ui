@@ -88,6 +88,9 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                 ).forEach(
                     action => {
                         if (
+                            (arity === 1 || !action.bulkable || !action.bulkableExceptions || !action.bulkableExceptions.find(
+                                criteria => match(dataType, criteria)
+                            )) &&
                             (!action.onlyFor || action.onlyFor.find(criteria => match(dataType, criteria))) &&
                             (!action.onlyForMembers || (
                                 selectedItems.length === 1 && action.onlyForMembers.find(
@@ -148,7 +151,7 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                 title = 'Refresh List'
             }
         }
-        
+
         actionsControls.push(
             <Tooltip key={`action_${action.key}`}
                      title={title}
