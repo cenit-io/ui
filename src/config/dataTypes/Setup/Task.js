@@ -205,5 +205,9 @@ export const TasksHierarchy = [
     {
         "namespace": "Setup",
         "name": "Translation"
+    },
+    {
+        "namespace": "Setup",
+        "name": "HookDataProcessing"
     }
 ];
