@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import AccessTokensIcon from '@material-ui/icons/VpnKey';
 import { useSpreadState } from "../common/hooks";
 import LinearProgress from "@material-ui/core/LinearProgress";
@@ -6,7 +6,7 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import API from "../services/ApiService";
 import Typography from "@material-ui/core/Typography";
 import Chip from "@material-ui/core/Chip";
-import { makeStyles } from "@material-ui/core";
+import { Box, FormControl, makeStyles, MenuItem } from "@material-ui/core";
 import TableContainer from "@material-ui/core/TableContainer";
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
@@ -27,6 +27,12 @@ import Button from "@material-ui/core/Button";
 import zzip from "../util/zzip";
 import AuthorizationService from "../services/AuthorizationService";
 import clsx from "clsx";
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import InputLabel from '@material-ui/core/InputLabel';
+import Select from '@material-ui/core/Select';
 
 const HeaderHeight = 8;
 
@@ -91,6 +97,164 @@ const StyledTableRow = withStyles((theme) => ({
     }
 }))(TableRow);
 
+const dialogStyles = makeStyles((theme) => ({
+  root: {
+    backdropFilter: "blur(6px) saturate(120%)",
+    "& .MuiBackdrop-root": {
+      backgroundColor: "rgba(0, 0, 0, 0.05)",
+    },
+    "& .MuiTypography-h6": {
+      textAlign: "center",
+    },
+    "& p": {
+      textAlign: "center",
+    },
+    "& .MuiDialogActions-root": {
+      justifyContent: "center",
+      marginBottom: "1rem",
+    },
+    "& .MuiDialogContent-root": {
+        [theme.breakpoints.down('sm')]: {
+            width: 'initial'
+        },
+    }
+  },
+  box: {
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    minWidth: 2,
+    [theme.breakpoints.up('sm')]: {
+        minWidth: '80%',
+    },
+  },
+  select: {
+    m: 1,
+    minWidth: "70% ",
+    [theme.breakpoints.up('sm')]: {
+        minWidth: '80%',
+    },
+  },
+  expirationText: {
+    color: theme.palette.text.secondary,
+  },
+  expirationTextWrapper:{
+      width:'100%'
+  }
+}));
+
+const NewTokenDialog = ({ handleClose, createToken, open }) => {
+  const [span, setSpan] = useState(1);
+  const [tokenSpan, setTokenSpan] = useState(0);
+  const [expireTime, setExpireTime] = useState("");
+
+  const classes = dialogStyles();
+
+  const handleChange = (event) => {
+    //One day = 86400 seg
+    let value = Number(event.target.value),
+      span;
+    setSpan(value);
+    span = value === 1 ? null : value * 86400;
+    setTokenSpan(span);
+    setExpireTime(translateTime(span));
+  };
+
+  const translateTime = (time) => {
+    let milliseconds = (time ? time : 3600) * 1000,
+      dateTimestamp = Date.now() + milliseconds,
+      date = new Date(dateTimestamp),
+      transformedTimeText = date.toDateString();
+
+    return transformedTimeText;
+  };
+
+  const expirationTextMsg = () => {
+    let msg = "";
+
+    switch (span) {
+      case 0:
+        msg = `The token will not expire`;
+        break;
+      case 2:
+        msg = `The token will expire on custom`; //To DO
+        break;
+
+      default:
+        msg = `The token will expire on ${expireTime}`;
+    }
+
+    return msg;
+  };
+
+  const handleOk = () => {
+    handleClose();
+    createToken({ token_span: tokenSpan, note: "My Note" });
+  };
+
+  useEffect(() => {
+    if (open) {
+      setTokenSpan(1);
+      setSpan(1);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    setExpireTime(translateTime(tokenSpan));
+  }, [tokenSpan]);
+
+  return (
+    <div>
+      <Dialog
+        disableEscapeKeyDown
+        open={open}
+        onClose={handleClose}
+        maxWidth="xs"
+        fullWidth
+        className={classes.root}
+      >
+        <DialogTitle>Create new token</DialogTitle>
+        <DialogContent>
+          <Box component="form" className={classes.box}>
+            <FormControl variant="filled" className={classes.select}>
+              <InputLabel id="select-span-input-label"> Expiration </InputLabel>
+              <Select
+                labelId="select-span-input-label"
+                value={span}
+                onChange={handleChange}
+              >
+                <MenuItem value={1}> 1 hour </MenuItem>
+                <MenuItem value={7}> 7 days </MenuItem>
+                <MenuItem value={30}> 30 days </MenuItem>
+                <MenuItem value={60}> 60 days </MenuItem>
+                <MenuItem value={90}> 90 days </MenuItem>
+                {/* <MenuItem value={2}> Custom </MenuItem> */}
+                <MenuItem value={0}> Never expires </MenuItem>
+              </Select>
+            </FormControl>
+            <div className={classes.expirationTextWrapper}>
+             <p className={classes.expirationText}> {expirationTextMsg()} </p>
+            </div>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={handleOk}
+            color="primary"
+            autoFocus
+          >
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+};
+
 const AccessTokens = ({ dataType, record, height, width }) => {
     const [state, setState] = useSpreadState();
 
@@ -100,7 +264,7 @@ const AccessTokens = ({ dataType, record, height, width }) => {
 
     const classes = useStyles({ height, width });
 
-    const { current_token, tokens } = state;
+    const { current_token, tokens, addToken } = state;
 
     useEffect(() => {
         setContainerState({ breadcrumbActionName: "Tokens" });
@@ -170,19 +334,27 @@ const AccessTokens = ({ dataType, record, height, width }) => {
         }
     };
 
-    const newToken = () => {
+    const newToken = ({ token_span, note }) => {
         setContainerState({ loading: true });
         API.post(
             'cenit', 'oauth_access_grant', record.id, 'digest', 'token', {
-                token_span: null, // Token span in seconds, null is default 3600, if 0 then never expires
-                note: 'My Token'
-            }
+            token_span,// Token span in seconds, null is default 3600, if 0 then never expires
+            note
+        }
         ).subscribe(
             () => setContainerState({
                 loading: false,
                 actionComponentKey: Random.string()
             })
         );
+    };
+
+    const handleOpenDialog = () => setState({ ...state, addToken: true });
+
+    const handleCloseDialog = (event, reason) => {
+        if (reason !== "backdropClick") {
+            setState({ ...state, addToken: false });
+        }
     };
 
     const now = new Date();
@@ -226,8 +398,9 @@ const AccessTokens = ({ dataType, record, height, width }) => {
                 <div className="grow-1"/>
                 <Button variant="outlined"
                         color="primary"
-                        endIcon={<AccessTokensIcon/>}
-                        onClick={newToken}>
+                    endIcon={<AccessTokensIcon />}
+                    onClick={handleOpenDialog}
+                >
                     Create
                 </Button>
             </div>
@@ -238,6 +411,7 @@ const AccessTokens = ({ dataType, record, height, width }) => {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <NewTokenDialog open={addToken} handleClose={handleCloseDialog} createToken={newToken} />
         </div>
     );
 };
