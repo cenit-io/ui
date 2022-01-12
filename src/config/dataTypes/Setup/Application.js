@@ -1,9 +1,6 @@
 import React from 'react';
 import ApplicationFilledIcon from "../../../icons/ApplicationFilledIcon";
-import StringControl from "../../../components/StringControl";
-import lazy from "../../../components/lazy";
-
-const LazyControl = lazy(StringControl, { skipChanges: true });
+import { LazyStringControl } from "../../../components/LazyStringControl";
 
 export default {
     title: 'Application',
@@ -27,11 +24,11 @@ export default {
     },
     fields: {
         identifier: {
-            control: LazyControl,
+            control: LazyStringControl,
             readOnly: true
         },
         secret: {
-            control: LazyControl,
+            control: LazyStringControl,
             readOnly: true
         }
     }

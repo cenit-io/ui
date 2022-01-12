@@ -106,9 +106,9 @@ const AccessTokens = ({ dataType, record, height, width }) => {
         setContainerState({ breadcrumbActionName: "Tokens" });
 
         return () => {
-          setContainerState({ breadcrumbActionName: null });
+            setContainerState({ breadcrumbActionName: null });
         };
-      }, []);
+    }, []);
 
     useEffect(() => {
         const subscription = zzip(
@@ -118,8 +118,18 @@ const AccessTokens = ({ dataType, record, height, width }) => {
             )
         ).subscribe(
             ([current_token, tokens]) => {
-                tokens.forEach(token => token.expires_at = Date.parse(token.expires_at));
-                tokens.sort((a, b) => b.expires_at - a.expires_at);
+                tokens.forEach(token => token.expires_at = token.expires_at && Date.parse(token.expires_at));
+                tokens.sort((a, b) => {
+                    if (b.expires_at) {
+                        if (a.expires_at) {
+                            return b.expires_at - a.expires_at;
+                        }
+
+                        return -1;
+                    }
+
+                    return 0;
+                });
                 setState({ current_token, tokens });
             }
         );
@@ -135,7 +145,7 @@ const AccessTokens = ({ dataType, record, height, width }) => {
         const token = tokens.find(({ id }) => id === tokenId);
         if (token) {
             (
-                token.expires_at < new Date()
+                (token.expires_at && token.expires_at < new Date())
                     ? of(true)
                     : containerContext.confirm({
                         title: `DELETE confirmation`,
@@ -162,8 +172,11 @@ const AccessTokens = ({ dataType, record, height, width }) => {
 
     const newToken = () => {
         setContainerState({ loading: true });
-        API.get(
-            'cenit', 'oauth_access_grant', record.id, 'digest', 'token'
+        API.post(
+            'cenit', 'oauth_access_grant', record.id, 'digest', 'token', {
+                token_span: null, // Token span in seconds, null is default 3600, if 0 then never expires
+                note: 'My Token'
+            }
         ).subscribe(
             () => setContainerState({
                 loading: false,
@@ -179,13 +192,13 @@ const AccessTokens = ({ dataType, record, height, width }) => {
                         tabIndex={-1}
                         className={clsx(
                             current_token === token && classes.current,
-                            expires_at < now && classes.expired
+                            expires_at && expires_at < now && classes.expired
                         )}>
             <TableCell>
                 {token}
             </TableCell>
             <TableCell>
-                <ExpirationDateTimeViewer value={expires_at}/>
+                <ExpirationDateTimeViewer value={expires_at} emptyMessage="Never expires"/>
             </TableCell>
             <TableCell className={classes.tokenActions}>
                 <div>

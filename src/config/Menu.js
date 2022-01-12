@@ -47,6 +47,7 @@ import { RabbitConsumerMenuIcon } from "./dataTypes/RabbitConsumer";
 import { SystemReportMenuIcon } from "./dataTypes/Setup/SystemReport";
 import { DelayedMessageMenuIcon } from "./dataTypes/Setup/DelayedMessage";
 import { TenantMenuIcon } from "./dataTypes/Account";
+import WebhookIcon from "../icons/WebhookIcon";
 
 export default {
     groups: [
@@ -235,7 +236,7 @@ export default {
                     icon: <SnippetIcon component="svg"/>
                 }
             ]
-        },  
+        },
         {
             title: 'Workflow',
             IconComponent: WorkflowIcon,
@@ -282,6 +283,15 @@ export default {
                         name: 'Scheduler'
                     },
                     icon: <SchedulersIcon/>
+                },
+                {
+                    type: DataTypeSubject.type,
+                    title: 'Hooks',
+                    $ref: {
+                        namespace: 'Cenit',
+                        name: 'Hook'
+                    },
+                    icon: <WebhookIcon/>
                 }
             ]
         },

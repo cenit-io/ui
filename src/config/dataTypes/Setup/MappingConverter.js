@@ -35,7 +35,10 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                         ...dts.map(dt => formConfigProperties(dt))
                     )
                 ),
-                switchMap(([sourceDataType, targetDataType, [, sourceProps], [, targetProps]]) => zzip(
+                map(([sourceDataType, targetDataType, [, sourceProps], [, targetProps]]) => ([
+                    sourceDataType, targetDataType, sourceProps.filter(p => p), targetProps.filter(p => p)
+                ])),
+                switchMap(([sourceDataType, targetDataType, sourceProps, targetProps]) => zzip(
                     zzip(
                         ...sourceProps.map(p => p.isModel(true))
                     ),
@@ -183,7 +186,7 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                                                 };
                                                 let description;
                                                 if (sourceProp?.isTypeMany()) {
-                                                    description = `Define the file data from a bulk source template for ${dataType.name}`
+                                                    description = `Define the file data from a bulk source template for ${dataType.name}`;
                                                     selector = { $and: [selector, { bulk_source: true }] }
                                                 } else {
                                                     description = `Define the file data from a template for ${dataType.name}`
@@ -344,7 +347,7 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                                     properties[name] = {
                                         label: `${titleize(name)} mapping`,
                                         ...subMappingSchema
-                                    }
+                                    };
                                     config.fields[name] = subMappingConfigFor(prop);
                                 } else if (name !== 'id' && name !== '_id') {
                                     properties[name] = { type: 'string' };

@@ -42,6 +42,10 @@ const useStyles = makeStyles(theme => ({
         boxShadow: '0 4px 8px 0 rgba(55, 71, 79, .3)',
         borderTopLeftRadius: theme.spacing(1),
         borderTopRightRadius: theme.spacing(1),
+        width: '80vw',
+        [theme.breakpoints.up('sm')]: {
+            width: 'auto'
+        },
     },
     groupHeader: {
         padding: theme.spacing(1.5, 4, 1.5, 6),
