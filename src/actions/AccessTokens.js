@@ -6,7 +6,7 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import API from "../services/ApiService";
 import Typography from "@material-ui/core/Typography";
 import Chip from "@material-ui/core/Chip";
-import { Box, FormControl, makeStyles, MenuItem } from "@material-ui/core";
+import { Box, FormControl, makeStyles, MenuItem, TextField } from "@material-ui/core";
 import TableContainer from "@material-ui/core/TableContainer";
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
@@ -33,6 +33,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
+import { DateTimePicker } from '@material-ui/pickers';
 
 const HeaderHeight = 8;
 
@@ -140,24 +141,67 @@ const dialogStyles = makeStyles((theme) => ({
   },
   expirationTextWrapper:{
       width:'100%'
+  },
+  picker:{
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 }));
+
+const CustomValueDatePicker = ({ value, onChange }) => {
+  return (
+    <DateTimePicker
+      inputVariant="filled"
+      renderInput={(params) => <TextField {...params} />}
+      label="Pick a date"
+      value={value}
+      onChange={onChange}
+      minDate={Date.now()}
+    />
+  );
+};
 
 const NewTokenDialog = ({ handleClose, createToken, open }) => {
   const [span, setSpan] = useState(1);
   const [tokenSpan, setTokenSpan] = useState(0);
   const [expireTime, setExpireTime] = useState("");
+  const [openPiker, setOpenPiker] = useState(false);
+  const [customValue, setCustomValue] = useState(Date.now());
+  const [customExpireTimeMsg, setCustomExpireTimeMsg] = useState("");
 
   const classes = dialogStyles();
+
+  const setInitialTime = () => {
+    setTokenSpan(1);
+    setSpan(1);
+    setOpenPiker(false);
+  };
 
   const handleChange = (event) => {
     //One day = 86400 seg
     let value = Number(event.target.value),
       span;
     setSpan(value);
-    span = value === 1 ? null : value * 86400;
-    setTokenSpan(span);
-    setExpireTime(translateTime(span));
+
+    if (value === 2) {
+      setOpenPiker(true);
+      setCustomValue(Date.now());
+      setCustomExpireTimeMsg(customTranslateTime());
+      setExpireTime(translateCustomTime());
+    } else {
+      span = value === 1 ? null : value * 86400;
+      setTokenSpan(span);
+      setExpireTime(translateTime(span));
+    }
+  };
+
+  const handleChangeDatePicker = (value) => {
+    setCustomValue(value);
+    setTokenSpan(calculateCustomExpireTime(value));
+    setExpireTime(translateCustomTime(value));
+    setCustomExpireTimeMsg(translateCustomTime(value));
   };
 
   const translateTime = (time) => {
@@ -169,6 +213,25 @@ const NewTokenDialog = ({ handleClose, createToken, open }) => {
     return transformedTimeText;
   };
 
+  const calculateCustomExpireTime = (value) =>
+    (Date.now() - value.getTime()) / 1000;
+
+  const translateCustomTime = (custom) => {
+    let dateTimestamp = custom ? custom.getTime() : Date.now(),
+      date = new Date(dateTimestamp),
+      transformedTimeText = date.toDateString();
+
+    return transformedTimeText;
+  };
+
+  const customTranslateTime = () => {
+    if (customValue) {
+      let date = new Date(Date.now()),
+        transformedTimeText = date.toDateString();
+      return transformedTimeText;
+    }
+  };
+
   const expirationTextMsg = () => {
     let msg = "";
 
@@ -177,7 +240,7 @@ const NewTokenDialog = ({ handleClose, createToken, open }) => {
         msg = `The token will not expire`;
         break;
       case 2:
-        msg = `The token will expire on custom`; //To DO
+        msg = `The token will expire on ${customExpireTimeMsg}`;
         break;
 
       default:
@@ -193,10 +256,7 @@ const NewTokenDialog = ({ handleClose, createToken, open }) => {
   };
 
   useEffect(() => {
-    if (open) {
-      setTokenSpan(1);
-      setSpan(1);
-    }
+    open && setInitialTime();
   }, [open]);
 
   useEffect(() => {
@@ -216,24 +276,36 @@ const NewTokenDialog = ({ handleClose, createToken, open }) => {
         <DialogTitle>Create new token</DialogTitle>
         <DialogContent>
           <Box component="form" className={classes.box}>
-            <FormControl variant="filled" className={classes.select}>
-              <InputLabel id="select-span-input-label"> Expiration </InputLabel>
-              <Select
-                labelId="select-span-input-label"
-                value={span}
-                onChange={handleChange}
-              >
-                <MenuItem value={1}> 1 hour </MenuItem>
-                <MenuItem value={7}> 7 days </MenuItem>
-                <MenuItem value={30}> 30 days </MenuItem>
-                <MenuItem value={60}> 60 days </MenuItem>
-                <MenuItem value={90}> 90 days </MenuItem>
-                {/* <MenuItem value={2}> Custom </MenuItem> */}
-                <MenuItem value={0}> Never expires </MenuItem>
-              </Select>
-            </FormControl>
+            {openPiker ? (
+              <div className={classes.picker}>
+                <CustomValueDatePicker
+                  value={customValue}
+                  onChange={handleChangeDatePicker}
+                />
+                <IconButton onClick={setInitialTime}>
+                  <DeleteIcon />
+                </IconButton>
+              </div>
+            ) : (
+              <FormControl variant="filled" className={classes.select}>
+                <InputLabel id="select-span-input-label">Expiration</InputLabel>
+                <Select
+                  labelId="select-span-input-label"
+                  value={span}
+                  onChange={handleChange}
+                >
+                  <MenuItem value={1}> 1 hour </MenuItem>
+                  <MenuItem value={7}> 7 days </MenuItem>
+                  <MenuItem value={30}> 30 days </MenuItem>
+                  <MenuItem value={60}> 60 days </MenuItem>
+                  <MenuItem value={90}> 90 days </MenuItem>
+                  <MenuItem value={2}> Custom </MenuItem>
+                  <MenuItem value={0}> Never expires </MenuItem>
+                </Select>
+              </FormControl>
+            )}
             <div className={classes.expirationTextWrapper}>
-             <p className={classes.expirationText}> {expirationTextMsg()} </p>
+              <p className={classes.expirationText}> {expirationTextMsg()} </p>
             </div>
           </Box>
         </DialogContent>
