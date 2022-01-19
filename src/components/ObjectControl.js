@@ -14,15 +14,22 @@ import FrezzerLoader from "./FrezzerLoader";
 import zzip from "../util/zzip";
 import { useSpreadState } from "../common/hooks";
 import { deepMergeObjectsOnly } from "../common/merge";
+import { useTenantContext } from "../layout/TenantContext";
 
-function editFields(config) {
+function editFields(config, user = null) {
     const editConfig = config.actions?.edit;
     const newConfig = config.actions?.new;
     if (editConfig?.fields) {
+        if (typeof editConfig.fields === 'function') {
+            return editConfig.fields(user);
+        }
         return editConfig.fields;
     }
     let fields = newConfig?.fields;
     if (fields) {
+        if (typeof fields === 'function') {
+            fields = fields(user);
+        }
         if (fields.indexOf('id') === -1) {
             fields = ['id', ...fields];
         }
@@ -30,11 +37,11 @@ function editFields(config) {
     }
 }
 
-function editViewportFields(config) {
-    return config.actions?.edit?.viewportFields || editFields(config);
+function editViewportFields(config, user = null) {
+    return config.actions?.edit?.viewportFields || editFields(config, user);
 }
 
-function editViewport(config, dataType, embedded, ...plus) {
+function editViewport(config, dataType, embedded, user, ...plus) {
     const editConfig = config.actions?.edit;
     const configViewport = (embedded && editConfig?.embeddedViewport) || editConfig?.viewport;
     if (configViewport) {
@@ -47,18 +54,18 @@ function editViewport(config, dataType, embedded, ...plus) {
         }
         return configViewport;
     }
-    const fields = editViewportFields(config);
+    const fields = editViewportFields(config, user);
     if (fields) {
         return dataType.shallowViewPort(...fields, ...plus);
     }
 }
 
-export function formConfigProperties(dataType, editMode = false) {
+export function formConfigProperties(dataType, editMode = false, user = null) {
     return (dataType?.config() || of({})).pipe(
         switchMap(config => {
             let propsObservable;
             const configFields = editMode
-                ? editFields(config)
+                ? editFields(config, user)
                 : config.actions?.new?.fields;
             if (configFields) {
                 propsObservable = dataType.properties().pipe(
@@ -122,6 +129,11 @@ export function DefaultPropertiesForm({ controlConfig, dynamicConfigState, prope
 }
 
 function ObjectControl(props) {
+
+    const [tenantState] = useTenantContext();
+
+    const { user } = tenantState;
+
     const [state, setState] = useSpreadState();
 
     const { initialFormValue } = useFormContext();
@@ -144,7 +156,8 @@ function ObjectControl(props) {
         const editMode = rootId;
         const subscription = formConfigProperties(
             getDataType(),
-            rootId
+            rootId,
+            user
         ).subscribe(([sConfig, properties]) => {
             setState({
                 properties,
@@ -164,7 +177,7 @@ function ObjectControl(props) {
             });
         });
         return () => subscription.unsubscribe();
-    }, [dataType, property, config]);
+    }, [dataType, property, config, user]);
 
     useEffect(() => {
         if (rootId) {
@@ -175,7 +188,12 @@ function ObjectControl(props) {
                     switchMap(config => {
                         const configViewport = v[NEW]
                             ? config.actions?.new?.viewport
-                            : editViewport(config, getDataType(), value.jsonPath() !== '$', 'id');
+                            : editViewport(
+                                config, getDataType(),
+                                value.jsonPath() !== '$',
+                                user,
+                                'id'
+                            );
 
                         if (configViewport) {
                             if (typeof configViewport === 'string') {
@@ -212,13 +230,13 @@ function ObjectControl(props) {
             value.set({ ...value.cache, [FETCHED]: true });
             setState({ ready: true });
         }
-    }, [getDataType, rootId, value, initialFormValue, fetched]);
+    }, [getDataType, rootId, value, initialFormValue, fetched, user]);
 
     useEffect(() => {
         if (orchestrator) {
             const subscription = value.changed().subscribe(
                 v => {
-                    let newState = orchestrator(v, orchestratorState || {}, value, { readOnly });
+                    let newState = orchestrator(v, orchestratorState || {}, value, { readOnly, user });
                     if (newState) {
                         if (isObservable(newState)) {
                             newState.subscribe(s => { // TODO unsubscribe
@@ -235,13 +253,16 @@ function ObjectControl(props) {
             value.changed().next(value.get());
             return () => subscription.unsubscribe();
         }
-    }, [orchestrator, orchestratorState, value, readOnly]);
+    }, [orchestrator, orchestratorState, value, readOnly, user]);
 
     useEffect(() => {
         if (dynamicConfig) {
             const subscription = value.changed().subscribe(
                 v => {
-                    let newState = dynamicConfig(v, dynamicConfigState || {}, value, { readOnly, errors });
+                    let newState = dynamicConfig(v, dynamicConfigState || {}, value, {
+                        readOnly,
+                        errors
+                    }, user);
                     if (newState) {
                         if (!isObservable(newState)) {
                             newState = of(newState);
@@ -257,7 +278,7 @@ function ObjectControl(props) {
             value.changed().next(value.get());
             return () => subscription.unsubscribe();
         }
-    }, [dynamicConfig, dynamicConfigState, value, readOnly, errors]);
+    }, [dynamicConfig, dynamicConfigState, value, readOnly, errors, user]);
 
     const handleChange = (prop, handler) => () => {
         if (!handler || handler() !== 'abort') {

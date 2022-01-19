@@ -26,7 +26,7 @@ import { useMainContext } from "./MainContext";
 import Menu from "../config/Menu";
 import { DataType } from "../services/DataTypeService";
 import FrezzerLoader from "../components/FrezzerLoader";
-import { useTenantContext } from "./TenantContext";
+import { isSuperAdmin, useTenantContext } from "./TenantContext";
 import { from } from "rxjs";
 import { AppGateway } from "../services/AuthorizationService";
 import EmbeddedAppService from "../services/EnbeddedAppService";
@@ -173,9 +173,7 @@ function NavGroup({ title, IconComponent, items, open, onClick, onSelect }) {
 
   const userRoles = user.roles || [];
 
-  const isSuperUser =
-    user.super_admin_enabled &&
-    !!userRoles.find(({ name }) => name === "super_admin");
+  const isSuperUser = isSuperAdmin(user);
 
   const itemClasses = useItemStyles();
 

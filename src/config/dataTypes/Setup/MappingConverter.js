@@ -19,7 +19,7 @@ const idDescription = 'Match an existing ID to update a record';
 
 const filePlainProperties = ['id', 'filename', 'contentType'];
 
-function dynamicConfig({ source_data_type, target_data_type }, state) {
+function dynamicConfig({ source_data_type, target_data_type }, state, user) {
     if (source_data_type?.id && target_data_type?.id) {
         if (
             state.source_data_type_id !== source_data_type.id ||
@@ -32,7 +32,7 @@ function dynamicConfig({ source_data_type, target_data_type }, state) {
                 switchMap(
                     dts => zzip(
                         ...dts.map(dt => of(dt)),
-                        ...dts.map(dt => formConfigProperties(dt))
+                        ...dts.map(dt => formConfigProperties(dt, false, user))
                     )
                 ),
                 map(([sourceDataType, targetDataType, [, sourceProps], [, targetProps]]) => ([
