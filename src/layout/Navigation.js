@@ -9,7 +9,7 @@ import KeyboardArrowRightIcon from "@material-ui/icons/KeyboardArrowRightRounded
 import KeyboardArrowLeftIcon from "@material-ui/icons/KeyboardArrowLeftRounded";
 import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
 import KeyboardArrowUp from "@material-ui/icons/KeyboardArrowUp";
-import { IconButton, makeStyles, useTheme } from "@material-ui/core";
+import { IconButton, makeStyles, Typography, useTheme } from "@material-ui/core";
 import Loading from "../components/Loading";
 import Skeleton from "@material-ui/lab/Skeleton";
 import ConfigService from "../services/ConfigService";
@@ -31,8 +31,7 @@ import { from } from "rxjs";
 import { AppGateway } from "../services/AuthorizationService";
 import EmbeddedAppService from "../services/EnbeddedAppService";
 import { appBarHeight } from "./AppBar";
-import CenitIOLogo from "../img/Cenit_IO_512x512px_Imagotipo.svg";
-import CenitAdminLogo from "../img/Cenit_IO_Admin_app_Identidad.svg";
+import CenitIOLogo from "../img/brandLogo.svg";
 
 function NavItem({ icon, onClick, disabled, text, isRoot, isOpen }) {
   return (
@@ -132,6 +131,16 @@ const useStyles = makeStyles((theme) => ({
   brandImg: {
     cursor: "pointer",
     marginLeft: "1.35rem",
+    marginBottom: "1.3rem",
+    width:"100%"
+  },  
+  brandImgWrapper: {
+    width: "43px"
+  },
+  brandText: {
+    fontWeight: "800",
+    marginLeft: "1.8rem",
+    cursor: "pointer",
   },
   brandContainer: {
     backgroundColor: theme.palette.background.paper,
@@ -142,7 +151,7 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     display: "flex",
     justifyContent: "start",
-    padding: "0.5rem 0 0 0",
+    padding: "0.7rem 0 0 0",
   },
   btnToggle: {
     position: "absolute",
@@ -358,6 +367,26 @@ export default function Navigation({ xs, onToggle }) {
 
   const open = docked || over;
 
+  const BrandLogo = () => (
+    <div className={classes.brandContainer}>
+      <div className={classes.brandImgWrapper}>
+        {!xs && (
+          <img
+            src={CenitIOLogo}
+            alt="Brand Logo"
+            onClick={handleHomeAccess}
+            className={classes.brandImg}
+          />
+        )}
+      </div>
+      {open && !xs && (
+        <Typography variant="h6" className={classes.brandText} onClick={handleHomeAccess}>
+          Cenit IO
+        </Typography>
+      )}
+    </div>
+  );
+
   return (
     <div
       className={clsx(classes.drawer, {
@@ -384,28 +413,7 @@ export default function Navigation({ xs, onToggle }) {
           boxSizing: "border-box",
         }}
       >
-        <div className={classes.brandContainer}>
-          {!open && (
-            <img
-              src={CenitIOLogo}
-              width="43px"
-              alt="Brand Logo"
-              onClick={handleHomeAccess}
-              className={classes.brandImg}
-              style={{ marginBottom: "1.3rem" }}
-            />
-          )}
-          {open && !xs && (
-            <img
-              src={CenitAdminLogo}
-              width="135px"
-              alt="Brand Logo"
-              onClick={handleHomeAccess}
-              className={classes.brandImg}
-              style={{ marginBottom: "1.45rem" }}
-            />
-          )}
-        </div>
+        <BrandLogo />
         {nav}
         {item && <FrezzerLoader />}
         {!xs && (

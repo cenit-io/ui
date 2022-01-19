@@ -26,7 +26,7 @@ import { useSpreadState } from "../common/hooks";
 import NotificationsIcon from "../icons/NotificationsIcon";
 import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
 import { TenantMenuIcon } from "../config/dataTypes/Account";
-import CenitAdminLogo from "../img/Cenit_IO_512x512px_Imagotipo.svg";
+import CenitAdminLogo from "../img/brandLogo.svg";
 import TenantActiveInfo from '../components/TenantActiveInfo';
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
