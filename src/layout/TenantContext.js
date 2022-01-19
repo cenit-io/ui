@@ -98,3 +98,8 @@ export default function TenantContext({ children }) {
         </TC.Provider>
     );
 }
+
+export function isSuperAdmin(user) {
+    return user?.super_admin_enabled &&
+        !!(user.roles || []).find(({ name }) => name === "super_admin");
+}

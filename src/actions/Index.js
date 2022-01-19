@@ -21,6 +21,7 @@ import { useContainerContext } from "./ContainerContext";
 import { useOriginsStyles } from "../components/OriginsColors";
 import viewerComponentFor from "../viewers/viewerComponentFor";
 import { KeyboardArrowDown } from '@material-ui/icons';
+import { useTenantContext } from "../layout/TenantContext";
 
 const StyledTableCell = withStyles((theme) => ({
     head: {
@@ -148,7 +149,7 @@ const useStyles = makeStyles(theme => ({
         paddingLeft: ".5rem",
         justifyContent: "space-between",
         [theme.breakpoints.up('sm')]: {
-           width:'auto',
+            width: 'auto',
         },
     },
     pageTableContainer: {
@@ -187,7 +188,7 @@ const useStyles = makeStyles(theme => ({
             }
         },
     },
-    customPaginationText:{
+    customPaginationText: {
         marginRight: '2px',
         marginLeft: '0',
         [theme.breakpoints.up('sm')]: {
@@ -195,11 +196,11 @@ const useStyles = makeStyles(theme => ({
             marginLeft: '2rem',
         },
     },
-    customPaginationTextWrapper:{
-        width:"25%",
+    customPaginationTextWrapper: {
+        width: "25%",
         display: "flex",
         margin: "0 14px",
-        flexWrap:"wrap",
+        flexWrap: "wrap",
         overflow: "hidden",
         whiteSpace: "nowrap",
         textOverflow: "ellipsis",
@@ -207,15 +208,15 @@ const useStyles = makeStyles(theme => ({
             margin: "0 10px",
             overflow: "visible",
             whiteSpace: "normal",
-          },
-         [theme.breakpoints.up('sm')]: {
-          width:"auto",
         },
-     },
-    customPaginationWrapper:{
-       width:"100%",
         [theme.breakpoints.up('sm')]: {
-            width:"auto"
+            width: "auto",
+        },
+    },
+    customPaginationWrapper: {
+        width: "100%",
+        [theme.breakpoints.up('sm')]: {
+            width: "auto"
         },
     }
 }));
@@ -338,10 +339,10 @@ function ListView({ height, dataType, config }) {
     return (
         <div
             className={classes.pageTableContainer}
-            style={{ minHeight: `calc(${height} - 400px)`}}
+            style={{ minHeight: `calc(${height} - 400px)` }}
         >
             <div className={clsx(classes.pageTableWrapper, classes.pageShadow)}
-             style={{ maxHeight: `calc(${height} - 2rem)`}}
+                 style={{ maxHeight: `calc(${height} - 2rem)` }}
             >
                 <Table className={classes.table} size={dense ? "small" : "medium"}>
                     <EnhancedTableHead
@@ -359,6 +360,8 @@ function ListView({ height, dataType, config }) {
 
 function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
 
+    const [tenantState] = useTenantContext();
+    const { user } = tenantState;
     const [containerState, setContainerState] = useContainerContext();
 
     const { data, page, limit, props, itemsViewport, selector, containerTitle } = containerState;
@@ -372,8 +375,11 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
         const subscription = dataType.config().pipe(
             switchMap(
                 config => {
-                    const configFields = config.actions?.index?.fields;
+                    let configFields = config.actions?.index?.fields;
                     if (configFields) {
+                        if (typeof configFields === 'function') {
+                            configFields = configFields(user)
+                        }
                         return dataType.properties().pipe(
                             map(
                                 properties => configFields.map(
@@ -398,7 +404,7 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
         ).subscribe(props => setContainerState({ props }));
 
         return () => subscription.unsubscribe();
-    }, [dataType]);
+    }, [dataType, user]);
 
     useEffect(() => {
         if (props) {
@@ -475,11 +481,12 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
         }
         pagination = (
             <div className={classes.paginationWrapper}>
-                <div className={clsx('flex align-items-center justify-content-end', classes.pagination, classes.pageShadow)}>
+                <div
+                    className={clsx('flex align-items-center justify-content-end', classes.pagination, classes.pageShadow)}>
                     <div className={clsx('flex align-items-center', classes.pageSizeWrapper)}>
                         <Typography variant="subtitle2">
-                          {!xs  &&  `${containerTitle} per page`} 
-                          {xs  &&  "Page size"} 
+                            {!xs && `${containerTitle} per page`}
+                            {xs && "Page size"}
                         </Typography>
                         <Select className={classes.pageSize}
                                 value={limit}
@@ -489,33 +496,33 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
                             {
                                 ItemsPerPage.map((c, index) => (
                                     <MenuItem key={`ipp_${index}_${c}`}
-                                            value={c}>
+                                              value={c}>
                                         {c}
                                     </MenuItem>
                                 ))
                             }
                         </Select>
                     </div>
-                    <div className='flex align-items-center' >
+                    <div className='flex align-items-center'>
                         <div className={classes.customPaginationTextWrapper}>
                             <Typography variant="subtitle2" className={classes.customPaginationText}>
-                                {(limit * data.current_page) + 1 - limit} -  {limit * data.current_page} of {data.count}  { !xs && containerTitle.toLowerCase()} 
+                                {(limit * data.current_page) + 1 - limit} - {limit * data.current_page} of {data.count} {!xs && containerTitle.toLowerCase()}
                             </Typography>
                         </div>
                         <div className={classes.customPaginationWrapper}>
                             <Pagination count={data.total_pages}
-                                page={data.current_page}
-                                {...pagOpts}
-                                onChange={handleChangePage}
-                                size="small"
-                                color="primary"
-                                showFirstButton
-                                showLastButton
-                                variant="outlined"
-                                shape="rounded"
-                                defaultPage={data.current_page}
-                                className={classes.customPagination}
-                                />
+                                        page={data.current_page}
+                                        {...pagOpts}
+                                        onChange={handleChangePage}
+                                        size="small"
+                                        color="primary"
+                                        showFirstButton
+                                        showLastButton
+                                        variant="outlined"
+                                        shape="rounded"
+                                        defaultPage={data.current_page}
+                                        className={classes.customPagination}
+                            />
                         </div>
                     </div>
                 </div>
@@ -550,7 +557,7 @@ function Index(props) {
     if (config) {
         const IndexComponent = config.actions?.index?.component || DefaultIndex;
 
-        return <IndexComponent  dataTypeConfig={config} {...props}/>;
+        return <IndexComponent dataTypeConfig={config} {...props}/>;
     }
 
     return <Loading/>;

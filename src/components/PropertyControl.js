@@ -17,6 +17,7 @@ import DateTimeControl from "./DateTimeControl";
 import { useSpreadState } from "../common/hooks";
 import { of } from "rxjs";
 import FormHelperText from "@material-ui/core/FormHelperText";
+import { useTenantContext } from "../layout/TenantContext";
 
 function controlComponentFor(property) {
     if (property.propertySchema.enum) {
@@ -83,14 +84,14 @@ function controlComponentFor(property) {
     }
 }
 
-const configurableProps = ['readOnly'];
+const configurableProps = ['readOnly', 'disabled'];
 
-function configProps(config, value) {
+function configProps(config, value, user) {
     return config && configurableProps.reduce((prev, prop) => {
         let fieldConfig = config[prop];
         if (fieldConfig !== undefined) {
             if (typeof fieldConfig === 'function') {
-                fieldConfig = fieldConfig(value);
+                fieldConfig = fieldConfig(value, user);
             }
             prev[prop] = fieldConfig;
         }
@@ -108,9 +109,13 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function PropertyControl(props) {
+    const [tenantState] = useTenantContext();
+
+    const { user } = tenantState;
+
     const [state, setState] = useSpreadState();
 
-    const { errors, property, onChange, config } = props;
+    const { errors, property, onChange, config, value } = props;
     const { schema, controlErrors } = state;
     const classes = useStyles();
 
@@ -146,7 +151,7 @@ function PropertyControl(props) {
 
         const control = <ControlComponent {...state}
                                           {...props}
-                                          {...configProps(config)}
+                                          {...configProps(config, value.get(), user)}
                                           errors={currentErrors}
                                           onError={setErrors}
                                           onChange={handleChange}/>;
