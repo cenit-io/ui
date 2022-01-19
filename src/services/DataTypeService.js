@@ -913,7 +913,7 @@ export class DataType {
         return this.config().pipe(
             switchMap(config => {
                 if (config.itemLabel) {
-                    return of(config.itemLabel(item));
+                    return of(config.itemLabel(item)?.trim());
                 }
 
                 return zzip(this.getSchema(), this.getTitle()).pipe(
@@ -942,7 +942,7 @@ export class DataType {
         return this.config().pipe(switchMap(
             config => {
                 if (config.itemLabel) {
-                    return of(items.map(item => config.itemLabel(item)))
+                    return of(items.map(item => config.itemLabel(item)?.trim()))
                 }
 
                 return this.computeTitlesFor(...items);
