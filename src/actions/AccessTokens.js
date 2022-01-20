@@ -6,7 +6,7 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import API from "../services/ApiService";
 import Typography from "@material-ui/core/Typography";
 import Chip from "@material-ui/core/Chip";
-import { Box, FormControl, makeStyles, MenuItem, TextField } from "@material-ui/core";
+import { Box, DialogContentText, FormControl, makeStyles, MenuItem, TextField } from "@material-ui/core";
 import TableContainer from "@material-ui/core/TableContainer";
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
@@ -17,6 +17,9 @@ import withStyles from "@material-ui/core/styles/withStyles";
 import IconButton from "@material-ui/core/IconButton";
 import DeleteIcon from "@material-ui/icons/Delete";
 import CopyIcon from "@material-ui/icons/ContentCopy";
+import NoteIcon from '@material-ui/icons/Note';
+import { Tooltip } from "@material-ui/core/index";
+import ErrorOutlineOutlinedIcon from '@material-ui/icons/ErrorOutlineOutlined'
 import ExpirationDateTimeViewer from "../viewers/ExpirationDateTimeViewer";
 import copy from 'copy-to-clipboard/index';
 import { of } from "rxjs";
@@ -75,7 +78,14 @@ const useStyles = makeStyles(theme => ({
         '& td': {
             color: theme.palette.error.main
         }
-    }
+    },
+    infoIcon: {
+      position: 'absolute',
+      top: '8px',
+      right: 0,
+      background: theme.palette.background.paper,
+      borderRadius: '50%'
+  },
 }));
 
 const StyledTableRow = withStyles((theme) => ({
@@ -147,7 +157,16 @@ const dialogStyles = makeStyles((theme) => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center'
-  }
+  },
+  infoContent: {
+    display: 'flex',
+    justifyContent: 'center',
+    width: '100%',
+    padding: ' 16px 0 0 0',
+    '& svg': {
+        fontSize: '5rem'
+    }
+},
 }));
 
 const CustomValueDatePicker = ({ value, onChange }) => {
@@ -341,6 +360,39 @@ const NewTokenDialog = ({ handleClose, createToken, open }) => {
   );
 };
 
+const NoteDialog = ({ open, note, handleClose }) => {
+  const classes = dialogStyles();
+
+  const alertContent = (
+    <div className={classes.infoContent}>
+      <ErrorOutlineOutlinedIcon color="action" component="svg" />
+    </div>
+  );
+
+  return (
+    <div>
+      <Dialog
+        disableEscapeKeyDown
+        open={open}
+        maxWidth="xs"
+        fullWidth
+        className={classes.root}
+      >
+        {alertContent}
+        <DialogTitle>Token Note</DialogTitle>
+        <DialogContent>
+          <DialogContentText>{note}</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="outlined" onClick={handleClose}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+};
+
 const AccessTokens = ({ dataType, record, height, width }) => {
     const [state, setState] = useSpreadState();
 
@@ -350,7 +402,7 @@ const AccessTokens = ({ dataType, record, height, width }) => {
 
     const classes = useStyles({ height, width });
 
-    const { current_token, tokens, addToken } = state;
+    const { current_token, tokens, addToken, showNote, note } = state;
 
     useEffect(() => {
         setContainerState({ breadcrumbActionName: "Tokens" });
@@ -436,6 +488,7 @@ const AccessTokens = ({ dataType, record, height, width }) => {
     };
 
     const handleOpenDialog = () => setState({ ...state, addToken: true });
+    const handleOpenNoteDialog = (note) => setState({ ...state, showNote: true, note: note });
 
     const handleCloseDialog = (event, reason) => {
         if (reason !== "backdropClick") {
@@ -443,36 +496,49 @@ const AccessTokens = ({ dataType, record, height, width }) => {
         }
     };
 
-    const now = new Date();
+    const handleCloseNoteDialog = (event, reason) => {
+      if (reason !== "backdropClick") {
+          setState({ ...state, showNote: false, note: null });
+      }
+  };
 
-    const tokensRows = tokens.map(({ id, token, expires_at }) => (
-        <StyledTableRow key={id}
-                        tabIndex={-1}
-                        className={clsx(
-                            current_token === token && classes.current,
-                            expires_at && expires_at < now && classes.expired
-                        )}>
-            <TableCell>
-                {token}
-            </TableCell>
-            <TableCell>
-                <ExpirationDateTimeViewer value={expires_at} emptyMessage="Never expires"/>
-            </TableCell>
-            <TableCell className={classes.tokenActions}>
-                <div>
-                    <IconButton onClick={() => copy(token)}>
-                        <CopyIcon/>
-                    </IconButton>
-                    {
-                        current_token !== token && (
-                            <IconButton onClick={deleteToken(id)}>
-                                <DeleteIcon/>
-                            </IconButton>
-                        )
-                    }
-                </div>
-            </TableCell>
-        </StyledTableRow>
+    const now = new Date();
+    const tokensRows = tokens.map(({ id, token, expires_at, note }) => (
+      <StyledTableRow key={id}
+        tabIndex={-1}
+        className={clsx(
+          current_token === token && classes.current,
+          expires_at && expires_at < now && classes.expired
+        )}>
+        <TableCell>
+          {token}
+        </TableCell>
+        <TableCell>
+          <ExpirationDateTimeViewer value={expires_at} emptyMessage="Never expires" />
+        </TableCell>
+        <TableCell className={classes.tokenActions}>
+          <div>
+            <Tooltip title="Token Note" arrow>
+              <IconButton onClick={() => {
+                note = (current_token === token) ? "Current Token" : note
+                handleOpenNoteDialog(note)
+              }}>
+                <NoteIcon />
+              </IconButton>
+            </Tooltip>
+            <IconButton onClick={() => copy(token)}>
+              <CopyIcon />
+            </IconButton>
+            {
+              current_token !== token && (
+                <IconButton onClick={deleteToken(id)}>
+                  <DeleteIcon />
+                </IconButton>
+              )
+            }
+          </div>
+        </TableCell>
+      </StyledTableRow>
     ));
 
     return (
@@ -498,6 +564,7 @@ const AccessTokens = ({ dataType, record, height, width }) => {
                 </Table>
             </TableContainer>
             <NewTokenDialog open={addToken} handleClose={handleCloseDialog} createToken={newToken} />
+            <NoteDialog open={showNote} handleClose={handleCloseNoteDialog} note={note} />
         </div>
     );
 };
