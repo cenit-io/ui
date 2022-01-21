@@ -166,6 +166,7 @@ const CustomValueDatePicker = ({ value, onChange }) => {
 const NewTokenDialog = ({ handleClose, createToken, open }) => {
   const [span, setSpan] = useState(1);
   const [tokenSpan, setTokenSpan] = useState(0);
+  const [tokenNote, setTokenNote] = useState("My note");
   const [expireTime, setExpireTime] = useState("");
   const [openPiker, setOpenPiker] = useState(false);
   const [customValue, setCustomValue] = useState(Date.now());
@@ -177,6 +178,8 @@ const NewTokenDialog = ({ handleClose, createToken, open }) => {
     setTokenSpan(1);
     setSpan(1);
     setOpenPiker(false);
+    setTokenNote("My note");
+    setTokenSpan(null);
   };
 
   const handleChange = (event) => {
@@ -252,8 +255,10 @@ const NewTokenDialog = ({ handleClose, createToken, open }) => {
 
   const handleOk = () => {
     handleClose();
-    createToken({ token_span: tokenSpan, note: "My Note" });
+    createToken({ token_span: tokenSpan, note: tokenNote });
   };
+
+  const handleInput = (e) => setTokenNote(e.target.value);
 
   useEffect(() => {
     open && setInitialTime();
@@ -307,6 +312,15 @@ const NewTokenDialog = ({ handleClose, createToken, open }) => {
             <div className={classes.expirationTextWrapper}>
               <p className={classes.expirationText}> {expirationTextMsg()} </p>
             </div>
+            <FormControl variant="filled" className={classes.select}>
+              <TextField
+                id="token-note"
+                label="Add Note"
+                defaultValue={tokenNote}
+                variant="filled"
+                onInput={handleInput}
+              />
+            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>

@@ -141,6 +141,8 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: "800",
     marginLeft: "1.8rem",
     cursor: "pointer",
+    lineHeight: "0.85",
+    fontSize: "1.8rem"
   },
   brandContainer: {
     backgroundColor: theme.palette.background.paper,
@@ -380,7 +382,7 @@ export default function Navigation({ xs, onToggle }) {
         )}
       </div>
       {open && !xs && (
-        <Typography variant="h6" className={classes.brandText} onClick={handleHomeAccess}>
+        <Typography variant="h5" className={classes.brandText} onClick={handleHomeAccess}>
           Cenit IO
         </Typography>
       )}
