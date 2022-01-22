@@ -93,8 +93,8 @@ function MainLayout() {
     };
 
     let navigationUI = <Navigation key={navKey}
-                                   xs={xs}
-                                   onToggle={switchNavigation}/>;
+        xs={xs}
+        onToggle={switchNavigation} />;
 
     if (xs) {
         navigationUI = (
@@ -111,30 +111,30 @@ function MainLayout() {
         <div className={classes.root}>
             <div className={classes.mainContainer}>
                 <div className={clsx(!(xs || docked) && classes.contentMargin)}
-                     style={{
-                         flexGrow: 1,
-                         order: 1,
-                         width: `calc(${tabsWidth})`
-                     }}>
+                    style={{
+                        flexGrow: 1,
+                        order: 1,
+                        width: `calc(${tabsWidth})`
+                    }}>
                     <Tabs docked={docked}
-                          width={tabsWidth}/>
+                        width={tabsWidth} />
                 </div>
                 {
                     navigationUI
                 }
             </div>
-            <AppBar onToggle={switchNavigation}/>
+            <AppBar onToggle={switchNavigation} />
         </div>
     );
 }
-
+// grey 
 const theme = createMuiTheme({
     palette: {
         primary: {
-            main: '#447797'
+            main: '#212121'
         },
         secondary: {
-            main: '#447797'
+            main: '#212121'
         }
     },
 });
@@ -144,7 +144,7 @@ export default function Main() {
         <ThemeProvider theme={theme}>
             <MainContext>
                 <TenantContext>
-                    <MainLayout/>
+                    <MainLayout />
                 </TenantContext>
             </MainContext>
         </ThemeProvider>
