@@ -1,4 +1,4 @@
-import React, { useEffect, useRef} from 'react';
+import React, { useEffect, useRef } from 'react';
 import AccessTokensIcon from '@material-ui/icons/VpnKey';
 import { useSpreadState } from "../common/hooks";
 import LinearProgress from "@material-ui/core/LinearProgress";
@@ -6,7 +6,7 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import API from "../services/ApiService";
 import Typography from "@material-ui/core/Typography";
 import Chip from "@material-ui/core/Chip";
-import { makeStyles} from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
 import TableContainer from "@material-ui/core/TableContainer";
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
@@ -21,7 +21,7 @@ import ExpirationDateTimeViewer from "../viewers/ExpirationDateTimeViewer";
 import copy from 'copy-to-clipboard/index';
 import { of } from "rxjs";
 import { useContainerContext } from "./ContainerContext";
-import { catchError, switchMap, map, tap} from "rxjs/operators";
+import { catchError, switchMap, map, tap } from "rxjs/operators";
 import Random from "../util/Random";
 import Button from "@material-ui/core/Button";
 import zzip from "../util/zzip";
@@ -53,6 +53,10 @@ const useStyles = makeStyles(theme => ({
         '& + &': {
             borderTop: `solid 1px ${theme.palette.background.default}`
         }
+    },
+    note: {
+        minWidth: theme.spacing(20),
+        width: '80%'
     },
     tokenActions: {
         position: 'sticky',
@@ -282,7 +286,7 @@ const AccessTokens = ({ dataType, record, height, width, docked }) => {
                             current_token === token && classes.current,
                             expires_at && expires_at < now && classes.expired
                         )}>
-            <TableCell className="grow-1">
+            <TableCell className={classes.note}>
                 {note || '<no note>'}
             </TableCell>
             <TableCell>
