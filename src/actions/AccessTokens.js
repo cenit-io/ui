@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef} from 'react';
 import AccessTokensIcon from '@material-ui/icons/VpnKey';
 import { useSpreadState } from "../common/hooks";
 import LinearProgress from "@material-ui/core/LinearProgress";
@@ -6,7 +6,7 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import API from "../services/ApiService";
 import Typography from "@material-ui/core/Typography";
 import Chip from "@material-ui/core/Chip";
-import { Box, FormControl, makeStyles, MenuItem, TextField } from "@material-ui/core";
+import { makeStyles} from "@material-ui/core";
 import TableContainer from "@material-ui/core/TableContainer";
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
@@ -21,19 +21,16 @@ import ExpirationDateTimeViewer from "../viewers/ExpirationDateTimeViewer";
 import copy from 'copy-to-clipboard/index';
 import { of } from "rxjs";
 import { useContainerContext } from "./ContainerContext";
-import { catchError, switchMap, map } from "rxjs/operators";
+import { catchError, switchMap, map, tap} from "rxjs/operators";
 import Random from "../util/Random";
 import Button from "@material-ui/core/Button";
 import zzip from "../util/zzip";
 import AuthorizationService from "../services/AuthorizationService";
 import clsx from "clsx";
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import InputLabel from '@material-ui/core/InputLabel';
-import Select from '@material-ui/core/Select';
-import { DateTimePicker } from '@material-ui/pickers';
+import FormEditor from "../components/FormEditor";
+import { DataType } from "../services/DataTypeService";
+import { Config } from "../common/Symbols";
+import { SuccessAlertWith } from "./SuccessAlert";
 
 const HeaderHeight = 8;
 
@@ -98,259 +95,95 @@ const StyledTableRow = withStyles((theme) => ({
     }
 }))(TableRow);
 
-const dialogStyles = makeStyles((theme) => ({
-  root: {
-    backdropFilter: "blur(6px) saturate(120%)",
-    "& .MuiBackdrop-root": {
-      backgroundColor: "rgba(0, 0, 0, 0.05)",
-    },
-    "& .MuiTypography-h6": {
-      textAlign: "center",
-    },
-    "& p": {
-      textAlign: "center",
-    },
-    "& .MuiDialogActions-root": {
-      justifyContent: "center",
-      marginBottom: "1rem",
-    },
-    "& .MuiDialogContent-root": {
-        [theme.breakpoints.down('sm')]: {
-            width: 'initial'
-        },
-    }
-  },
-  box: {
-    display: "flex",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    minWidth: 2,
-    [theme.breakpoints.up('sm')]: {
-        minWidth: '80%',
-    },
-  },
-  select: {
-    m: 1,
-    minWidth: "70% ",
-    [theme.breakpoints.up('sm')]: {
-        minWidth: '80%',
-    },
-  },
-  expirationText: {
-    color: theme.palette.text.secondary,
-  },
-  expirationTextWrapper:{
-      width:'100%'
-  },
-  picker:{
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center'
-  }
-}));
-
-const CustomValueDatePicker = ({ value, onChange }) => {
-  return (
-    <DateTimePicker
-      inputVariant="filled"
-      renderInput={(params) => <TextField {...params} />}
-      label="Pick a date"
-      value={value}
-      onChange={onChange}
-      minDate={Date.now()}
-    />
-  );
-};
-
-const NewTokenDialog = ({ handleClose, createToken, open }) => {
-  const [span, setSpan] = useState(1);
-  const [tokenSpan, setTokenSpan] = useState(0);
-  const [tokenNote, setTokenNote] = useState("My note");
-  const [expireTime, setExpireTime] = useState("");
-  const [openPiker, setOpenPiker] = useState(false);
-  const [customValue, setCustomValue] = useState(Date.now());
-  const [customExpireTimeMsg, setCustomExpireTimeMsg] = useState("");
-
-  const classes = dialogStyles();
-
-  const setInitialTime = () => {
-    setTokenSpan(1);
-    setSpan(1);
-    setOpenPiker(false);
-    setTokenNote("My note");
-    setTokenSpan(null);
-  };
-
-  const handleChange = (event) => {
-    //One day = 86400 seg
-    let value = Number(event.target.value),
-      span;
-    setSpan(value);
-
-    if (value === 2) {
-      setOpenPiker(true);
-      setCustomValue(Date.now());
-      setCustomExpireTimeMsg(customTranslateTime());
-      setExpireTime(translateCustomTime());
-    } else {
-      span = value === 1 ? null : value * 86400;
-      setTokenSpan(span);
-      setExpireTime(translateTime(span));
-    }
-  };
-
-  const handleChangeDatePicker = (value) => {
-    setCustomValue(value);
-    setTokenSpan(calculateCustomExpireTime(value));
-    setExpireTime(translateCustomTime(value));
-    setCustomExpireTimeMsg(translateCustomTime(value));
-  };
-
-  const translateTime = (time) => {
-    let milliseconds = (time ? time : 3600) * 1000,
-      dateTimestamp = Date.now() + milliseconds,
-      date = new Date(dateTimestamp),
-      transformedTimeText = date.toDateString();
-
-    return transformedTimeText;
-  };
-
-  const calculateCustomExpireTime = (value) =>
-    (Date.now() - value.getTime()) / 1000;
-
-  const translateCustomTime = (custom) => {
-    let dateTimestamp = custom ? custom.getTime() : Date.now(),
-      date = new Date(dateTimestamp),
-      transformedTimeText = date.toDateString();
-
-    return transformedTimeText;
-  };
-
-  const customTranslateTime = () => {
-    if (customValue) {
-      let date = new Date(Date.now()),
-        transformedTimeText = date.toDateString();
-      return transformedTimeText;
-    }
-  };
-
-  const expirationTextMsg = () => {
-    let msg = "";
-
-    switch (span) {
-      case 0:
-        msg = `The token will not expire`;
-        break;
-      case 2:
-        msg = `The token will expire on ${customExpireTimeMsg}`;
-        break;
-
-      default:
-        msg = `The token will expire on ${expireTime}`;
-    }
-
-    return msg;
-  };
-
-  const handleOk = () => {
-    handleClose();
-    createToken({ token_span: tokenSpan, note: tokenNote });
-  };
-
-  const handleInput = (e) => setTokenNote(e.target.value);
-
-  useEffect(() => {
-    open && setInitialTime();
-  }, [open]);
-
-  useEffect(() => {
-    setExpireTime(translateTime(tokenSpan));
-  }, [tokenSpan]);
-
-  return (
-    <div>
-      <Dialog
-        disableEscapeKeyDown
-        open={open}
-        onClose={handleClose}
-        maxWidth="xs"
-        fullWidth
-        className={classes.root}
-      >
-        <DialogTitle>Create new token</DialogTitle>
-        <DialogContent>
-          <Box component="form" className={classes.box}>
-            {openPiker ? (
-              <div className={classes.picker}>
-                <CustomValueDatePicker
-                  value={customValue}
-                  onChange={handleChangeDatePicker}
-                />
-                <IconButton onClick={setInitialTime}>
-                  <DeleteIcon />
-                </IconButton>
-              </div>
-            ) : (
-              <FormControl variant="filled" className={classes.select}>
-                <InputLabel id="select-span-input-label">Expiration</InputLabel>
-                <Select
-                  labelId="select-span-input-label"
-                  value={span}
-                  onChange={handleChange}
-                >
-                  <MenuItem value={1}> 1 hour </MenuItem>
-                  <MenuItem value={7}> 7 days </MenuItem>
-                  <MenuItem value={30}> 30 days </MenuItem>
-                  <MenuItem value={60}> 60 days </MenuItem>
-                  <MenuItem value={90}> 90 days </MenuItem>
-                  <MenuItem value={2}> Custom </MenuItem>
-                  <MenuItem value={0}> Never expires </MenuItem>
-                </Select>
-              </FormControl>
-            )}
-            <div className={classes.expirationTextWrapper}>
-              <p className={classes.expirationText}> {expirationTextMsg()} </p>
-            </div>
-            <FormControl variant="filled" className={classes.select}>
-              <TextField
-                id="token-note"
-                label="Add Note"
-                defaultValue={tokenNote}
-                variant="filled"
-                onInput={handleInput}
-              />
-            </FormControl>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button variant="outlined" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={handleOk}
-            color="primary"
-            autoFocus
-          >
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </div>
-  );
-};
-
-const AccessTokens = ({ dataType, record, height, width }) => {
+const AccessTokens = ({ dataType, record, height, width, docked }) => {
     const [state, setState] = useSpreadState();
 
     const containerContext = useContainerContext();
 
     const setContainerState = containerContext[1];
 
+    const tokenFormDataType = useRef(DataType.from({
+        name: 'Access Token',
+        schema: {
+            type: 'object',
+            properties: {
+                note: {
+                    type: 'string',
+                },
+                expires_in: {
+                    type: 'string',
+                    enum: [
+                        1, 24, 24 * 7, 24 * 30, 24 * 90, -1, 0
+                    ].map(s => s.toString()),
+                    enumNames: [
+                        '1 hour', '1 day', '7 days', '30 days', '90 days', 'Custom', 'No expiration'
+                    ]
+                },
+                expires_at: {
+                    type: 'string',
+                    format: 'date-time'
+                }
+            }
+        },
+        [Config]: {
+            actions: {
+                new: {
+                    seed: {
+                        expires_in: '1'
+                    }
+                }
+            },
+            fields: {
+                note: {
+                    controlProps: {
+                        multiline: true
+                    }
+                },
+                expires_in: {
+                    controlProps: {
+                        deleteDisabled: true
+                    }
+                },
+                expires_at: {
+                    controlProps: {
+                        deleteDisabled: true,
+                        minDate: new Date()
+                    }
+                }
+            },
+            dynamicConfig: ({ expires_in }, state) => {
+                if (state.expiration !== expires_in) {
+                    return {
+                        expiration: expires_in,
+                        expires_at: {
+                            hidden: !+expires_in
+                        }
+                    }
+                }
+            },
+            orchestrator: ({ expires_in, expires_at }, state, value) => {
+                if (state.expiration !== expires_in) {
+                    state.expiration = expires_in;
+                    let expiration_date = state.expiration_date = expires_at;
+                    if (expires_in !== '-1') {
+                        if (+expires_in > 0) {
+                            expiration_date = new Date(new Date().getTime() + 3600000 * +expires_in).toISOString();
+                        }
+                        state.expiration_date = expiration_date;
+                        value.propertyValue('expires_at').set(expiration_date, true);
+                    }
+                } else if (state.expiration_date !== expires_at) {
+                    state.expiration_date = expires_at;
+                    state.expiration = '-1';
+                    value.propertyValue('expires_in').set(state.expiration, true);
+                }
+            }
+        }
+    }));
+
     const classes = useStyles({ height, width });
 
-    const { current_token, tokens, addToken } = state;
+    const { current_token, tokens, tokenForm } = state;
 
     useEffect(() => {
         setContainerState({ breadcrumbActionName: "Tokens" });
@@ -420,40 +253,37 @@ const AccessTokens = ({ dataType, record, height, width }) => {
         }
     };
 
-    const newToken = ({ token_span, note }) => {
-        setContainerState({ loading: true });
-        API.post(
+    const newToken = (_, value) => {
+        let { note, expires_in, expires_at } = value.get();
+        expires_in = +expires_in;
+        const token_span = expires_in
+            ? (expires_in === -1
+                ? (Date.parse(expires_at) - new Date().getTime()) / 1000
+                : 3600 * expires_in)
+            : 0;
+        return API.post(
             'cenit', 'oauth_access_grant', record.id, 'digest', 'token', {
-            token_span,// Token span in seconds, null is default 3600, if 0 then never expires
-            note
-        }
-        ).subscribe(
-            () => setContainerState({
-                loading: false,
-                actionComponentKey: Random.string()
-            })
+                token_span,// Token span in seconds, null is default 3600, if 0 then never expires
+                note
+            }
+        ).pipe(
+            tap(() => setTimeout(
+                () => setContainerState({ actionComponentKey: Random.string() }), 2500
+            ))
         );
-    };
-
-    const handleOpenDialog = () => setState({ ...state, addToken: true });
-
-    const handleCloseDialog = (event, reason) => {
-        if (reason !== "backdropClick") {
-            setState({ ...state, addToken: false });
-        }
     };
 
     const now = new Date();
 
-    const tokensRows = tokens.map(({ id, token, expires_at }) => (
+    const tokensRows = tokens.map(({ id, note, token, expires_at }) => (
         <StyledTableRow key={id}
                         tabIndex={-1}
                         className={clsx(
                             current_token === token && classes.current,
                             expires_at && expires_at < now && classes.expired
                         )}>
-            <TableCell>
-                {token}
+            <TableCell className="grow-1">
+                {note || '<no note>'}
             </TableCell>
             <TableCell>
                 <ExpirationDateTimeViewer value={expires_at} emptyMessage="Never expires"/>
@@ -475,6 +305,26 @@ const AccessTokens = ({ dataType, record, height, width }) => {
         </StyledTableRow>
     ));
 
+    const showTokenForm = tokenForm => () => setState({ tokenForm });
+
+    if (tokenForm) {
+        return (
+            <div className="relative">
+                <FormEditor docked={docked}
+                            dataType={tokenFormDataType.current}
+                            height={height}
+                            submitIcon={<AccessTokensIcon component="svg"/>}
+                            onFormSubmit={newToken}
+                            successControl={SuccessAlertWith({
+                                mainIcon: AccessTokensIcon,
+                                message: 'Successfully created'
+                            })}
+                            noJSON={true}
+                />
+            </div>
+        );
+    }
+
     return (
         <div className={classes.root}>
             <div className={classes.header}>
@@ -484,9 +334,8 @@ const AccessTokens = ({ dataType, record, height, width }) => {
                 <div className="grow-1"/>
                 <Button variant="outlined"
                         color="primary"
-                    endIcon={<AccessTokensIcon />}
-                    onClick={handleOpenDialog}
-                >
+                        endIcon={<AccessTokensIcon/>}
+                        onClick={showTokenForm(true)}>
                     Create
                 </Button>
             </div>
@@ -497,7 +346,6 @@ const AccessTokens = ({ dataType, record, height, width }) => {
                     </TableBody>
                 </Table>
             </TableContainer>
-            <NewTokenDialog open={addToken} handleClose={handleCloseDialog} createToken={newToken} />
         </div>
     );
 };

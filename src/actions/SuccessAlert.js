@@ -28,3 +28,5 @@ export default function SuccessAlert(
         </Alert>
     );
 }
+
+export const SuccessAlertWith = props => () => <SuccessAlert {...props}/>;

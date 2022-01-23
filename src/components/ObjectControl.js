@@ -5,7 +5,7 @@ import PropertyControl from "./PropertyControl";
 import { FormGroup } from "./FormGroup";
 import ErrorMessages from "./ErrorMessages";
 import { LinearProgress } from "@material-ui/core";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { FETCHED, NEW } from "../common/Symbols";
 import { DataTypeSubject } from "../services/subjects";
 import Collapsible from "./Collapsible";
@@ -138,9 +138,11 @@ function ObjectControl(props) {
 
     const { initialFormValue } = useFormContext();
 
+    const orchestratorState = useRef({});
+
     const {
         properties, controlConfig, ready,
-        orchestrator, orchestratorState, dynamicConfig, dynamicConfigState
+        orchestrator, dynamicConfig, dynamicConfigState
     } = state;
 
     const {
@@ -236,16 +238,18 @@ function ObjectControl(props) {
         if (orchestrator) {
             const subscription = value.changed().subscribe(
                 v => {
-                    let newState = orchestrator(v, orchestratorState || {}, value, { readOnly, user });
+                    let newState = orchestrator(v, orchestratorState.current, value, { readOnly, user });
                     if (newState) {
                         if (isObservable(newState)) {
                             newState.subscribe(s => { // TODO unsubscribe
                                 if (s) {
-                                    setState({ orchestratorState: s });
+                                   orchestratorState.current = s || {};
+                                   setState({});
                                 }
                             });
                         } else {
-                            setState({ orchestratorState: newState });
+                            orchestratorState.current = newState || {};
+                            setState({});
                         }
                     }
                 }
@@ -253,7 +257,7 @@ function ObjectControl(props) {
             value.changed().next(value.get());
             return () => subscription.unsubscribe();
         }
-    }, [orchestrator, orchestratorState, value, readOnly, user]);
+    }, [orchestrator, value, readOnly, user]);
 
     useEffect(() => {
         if (dynamicConfig) {
@@ -339,7 +343,7 @@ function ObjectControl(props) {
                     config: fieldConfig,
                     ready: ready,
                     ...fieldConfig.controlProps,
-                    ...(orchestratorState && orchestratorState[name])
+                    ...(orchestratorState.current && orchestratorState.current[name])
                 };
             }
         };
