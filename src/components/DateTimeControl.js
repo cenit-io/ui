@@ -34,7 +34,11 @@ function FormattedDateTime(props) {
     );
 }
 
-export default function DateTimeControl({ title, onChange, value, onDelete, disabled, readOnly, schema }) {
+export default function DateTimeControl(
+    {
+        title, onChange, value, onDelete, disabled, readOnly, schema, deleteDisabled, minDate
+    }
+) {
 
     const [date, setDate] = useState(null);
 
@@ -86,7 +90,7 @@ export default function DateTimeControl({ title, onChange, value, onDelete, disa
                 <CalendarIcon/>
             </IconButton>
         );
-        if (date && !disabled) {
+        if (date && !disabled && ! deleteDisabled) {
             deleteButton = (
                 <IconButton onClick={handleDelete}>
                     <ClearIcon/>
@@ -111,6 +115,7 @@ export default function DateTimeControl({ title, onChange, value, onDelete, disa
                  placeholder={title}
                  label={title}
                  inputVariant="filled"
+                 minDate={minDate}
                  InputProps={{
                      endAdornment: (
                          <InputAdornment position="end">
