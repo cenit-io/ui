@@ -4,8 +4,7 @@ import AuthorizationService, { CenitHostKey } from "./services/AuthorizationServ
 import { CircularProgress } from "@material-ui/core";
 import Main from "./layout/Main";
 import API from "./services/ApiService";
-import { catchError } from "rxjs/operators";
-import { of } from "rxjs";
+import { tap } from "rxjs/operators";
 import './common/FlexBox.css';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
@@ -44,12 +43,14 @@ function App() {
             }
 
             const subscription = authorize.pipe(
-                catchError(() => {
-                    setError(true);
-                    return of(null);
+                tap(access => {
+                    if (!access) {
+                        throw new Error('Auth with no access shoud not happens');
+                    }
                 })
             ).subscribe(
-                access => access && setAuthorizing(false)
+                () => setAuthorizing(false),
+                e => console.error(e)
             );
 
             return () => subscription.unsubscribe();
