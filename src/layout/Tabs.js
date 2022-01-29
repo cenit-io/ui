@@ -103,7 +103,7 @@ export default function NavTabs({ docked, width }) {
     }));
 
     useEffect(() => {
-        const subscription = from(AppGateway.get('/meta_config')).subscribe(
+        const subscription = from(AppGateway().get('/meta_config')).subscribe(
             ({ data: { banner_url: bannerURL } }) => setState({ bannerURL })
         );
 

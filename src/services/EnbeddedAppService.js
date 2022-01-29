@@ -21,7 +21,7 @@ const EmbeddedAppService = {
             return of(this.apps);
         }
 
-        return this.apps = from(AppGateway.get('/meta_config')).pipe(
+        return this.apps = from(AppGateway().get('/meta_config')).pipe(
             map(({ data: { embedded_apps } }) => this.apps = (embedded_apps || []).reduce(
                 (hash, app) => (hash[app.id] = app) && hash, {}
             ))

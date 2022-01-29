@@ -17,17 +17,26 @@ export const Config = AppConfig.useEnvironmentConfig ? EnvironmentConfig : AppCo
 export const CenitHostKey = 'cenitHost';
 
 Config.getCenitHost = function () {
-    return sessionStorage.getItem(CenitHostKey) || this.cenitHost;
+    return sessionStorage.getItem(CenitHostKey) || Config.cenitHost;
 };
 
-export const AppGateway = axios.create({
-    baseURL: `${Config.getCenitHost()}/app/${Config.appIdentifier}`,
-    timeout: Config.timeoutSpan,
-});
+let _appGateway = null;
+
+export const AppGateway = function () {
+    if (!_appGateway || _appGateway.baseUrl !== Config.getCenitHost()) {
+        console.log(`Creating app gateway for ${Config.getCenitHost()}`);
+        return _appGateway = axios.create({
+            baseURL: `${Config.getCenitHost()}/app/${Config.appIdentifier}`,
+            timeout: Config.timeoutSpan,
+        });
+    }
+
+    return _appGateway;
+};
 
 export const AccessKey = 'access';
 
-const AuthorizeURL = `${Config.getCenitHost()}/app/${Config.appIdentifier}/authorize?redirect_uri=${Config.localhost}`;
+const getAuthorizeURL = () => `${Config.getCenitHost()}/app/${Config.appIdentifier}/authorize?redirect_uri=${Config.localhost}`;
 
 const LogoutURL = `${Config.getCenitHost()}/users/sign_out`;
 
@@ -38,6 +47,8 @@ const stateKey = state => `${StateKeyPrefix}${state}`;
 const isStateKey = key => key.startsWith(StateKeyPrefix);
 
 const TENANT_ID_KEY = 'tenantId';
+
+const BANED_QUERY_PARAMS = ['cenitHost', 'code', 'state'];
 
 export const AuthorizationService = {
 
@@ -60,7 +71,7 @@ export const AuthorizationService = {
         });
         const state = Random.string();
         localStorage.setItem(stateKey(state), window.location);
-        window.location = `${AuthorizeURL}&state=${state}`;
+        window.location = `${getAuthorizeURL()}&state=${state}`;
     },
 
     getAccess: function () {
@@ -68,7 +79,7 @@ export const AuthorizationService = {
         try {
             access = JSON.parse(localStorage.getItem(AccessKey));
             let expirationDate = new Date(access.created_at + access.expires_in + Config.timeoutSpan);
-            if (expirationDate < new Date()) {
+            if (expirationDate < new Date() || access.host !== Config.getCenitHost()) {
                 access = null;
             }
         } catch (e) {
@@ -93,7 +104,7 @@ export const AuthorizationService = {
     },
 
     getAccessWith: params => {
-        return from(AppGateway.post('token', params.code)).pipe(
+        return from(AppGateway().post('token', params.code)).pipe(
             map(response => {
                 const access = response.data;
 
@@ -109,12 +120,14 @@ export const AuthorizationService = {
                     query = query
                         .join('?')
                         .split('&')
-                        .filter(param => !param.startsWith('cenitHost'))
+                        .filter(param => !BANED_QUERY_PARAMS.find(
+                            baned => param.startsWith(baned)
+                        ))
                         .join('&');
                     if (query) {
                         url = `${url}?${query}`;
                     }
-                    window.location = url;
+                    window.location.replace(url);
                 }
 
                 return access;
@@ -148,7 +161,7 @@ export const AuthorizationService = {
     config: function (data = {}) {
         return this.getAccess().pipe(
             switchMap(access => from(
-                AppGateway.post('config', data, {
+                AppGateway().post('config', data, {
                     headers: { Authorization: `Bearer ${access.access_token}` }
                 })
             ).pipe(map(response => response.data)))

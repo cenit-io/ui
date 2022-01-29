@@ -57,7 +57,7 @@ export class DataType {
         }
 
         if (!DataType.loading) {
-            DataType.loading = from(AppGateway.get('build_in_types')).pipe(
+            DataType.loading = from(AppGateway().get('build_in_types')).pipe(
                 tap(({ data }) => {
                     DataType.initBuildIns(data);
                     DataType.loaded = true;
