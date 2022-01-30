@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import QueryString from 'querystring';
-import AuthorizationService, { CenitHostKey } from "./services/AuthorizationService";
+import AuthorizationService, { CenitHostKey, Config } from "./services/AuthorizationService";
 import { CircularProgress } from "@material-ui/core";
 import Main from "./layout/Main";
 import API from "./services/ApiService";
@@ -10,20 +10,32 @@ import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import Dialog from "@material-ui/core/Dialog";
 import ExpiredIcon from "@material-ui/icons/HourglassEmpty";
+import NetworkErrorIcon from "@material-ui/icons/WifiOff";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 import { Alert } from "@material-ui/lab";
+import Button from "@material-ui/core/Button";
 
 API.onError(() => AuthorizationService.authorize());
+
+function reset() {
+    AuthorizationService.cleanAccess();
+    AuthorizationService.cleanHost();
+    AuthorizationService.authorize();
+}
 
 function App() {
 
     const [authorizing, setAuthorizing] = useState(true);
     const [error, setError] = useState(false);
+    const [networkError, setNetworkError] = useState(false);
 
     useEffect(() => {
         API.onError(() => {
             localStorage.clear();
             setError(true);
+        });
+        API.onConnectionRefused(() => {
+            setNetworkError(true);
         });
     }, []);
 
@@ -73,6 +85,23 @@ function App() {
                         <b>Session Expired</b>
                     </AlertTitle>
                     The app will reboot in a few seconds, reload manually if not.
+                </Alert>
+            </Dialog>
+            <Dialog maxWidth="xs"
+                    open={networkError}>
+                <Alert severity="error" icon={<NetworkErrorIcon component="svg"/>}>
+                    <AlertTitle>
+                        <b>Unable to connect</b>
+                    </AlertTitle>
+                    <p>
+                        Connection refused from <a href={Config.getCenitHost()} target="_blank">
+                        {Config.getCenitHost()} </a>
+                    </p>
+                    <p>
+                        To reset and try again <Button href="#" onClick={reset} variant="outlined">
+                            Click here
+                        </Button>
+                    </p>
                 </Alert>
             </Dialog>
         </MuiPickersUtilsProvider>
