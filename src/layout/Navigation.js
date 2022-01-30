@@ -31,7 +31,7 @@ import { from } from "rxjs";
 import { AppGateway } from "../services/AuthorizationService";
 import EmbeddedAppService from "../services/EnbeddedAppService";
 import { appBarHeight } from "./AppBar";
-import CenitIOLogo from "../img/brandLogo.svg";
+
 
 function NavItem({ icon, onClick, disabled, text, isRoot, isOpen }) {
   return (
@@ -374,7 +374,7 @@ export default function Navigation({ xs, onToggle }) {
       <div className={classes.brandImgWrapper}>
         {!xs && (
           <img
-            src={CenitIOLogo}
+            src="https://server.cenit.io/images/brandLogo.svg"
             alt="Brand Logo"
             onClick={handleHomeAccess}
             className={classes.brandImg}

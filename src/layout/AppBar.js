@@ -26,7 +26,6 @@ import { useSpreadState } from "../common/hooks";
 import NotificationsIcon from "../icons/NotificationsIcon";
 import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
 import { TenantMenuIcon } from "../config/dataTypes/Account";
-import CenitAdminLogo from "../img/brandLogo.svg";
 import TenantActiveInfo from '../components/TenantActiveInfo';
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
@@ -226,7 +225,7 @@ export default function ({ onToggle }) {
 
     const brandLogo = !smUp && 
         <div onClick={handleQuickAccess} className={classes.brandContainer}>
-            <img src={CenitAdminLogo} width="40px" alt=""  style={{filter: 'invert(1)'}}/>
+            <img src="https://server.cenit.io/images/brandLogo.svg" width="40px" alt=""  style={{filter: 'invert(1)'}}/>
         </div>
 
     const taskMenu = (

@@ -103,6 +103,10 @@ export const AuthorizationService = {
         localStorage.removeItem(AccessKey);
     },
 
+    cleanHost: function () {
+        sessionStorage.removeItem(CenitHostKey);
+    },
+
     getAccessWith: params => {
         return from(AppGateway().post('token', params.code)).pipe(
             map(response => {

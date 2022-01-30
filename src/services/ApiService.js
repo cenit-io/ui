@@ -100,6 +100,8 @@ export const ApiResource = function () {
 
 const ErrorCallbacks = [];
 
+const ConnectionRefusedCallbacks = [];
+
 const API = {
     get: (...args) => {
         return (new ApiResource(...args)).get().pipe(
@@ -107,8 +109,12 @@ const API = {
                 if (axios.isCancel(e)) {
                     throw e;
                 }
-                if (e.response && e.response.status !== 404 && e.response.status !== 403) {
-                    ErrorCallbacks.forEach(callback => callback(e));
+                if (e.response) {
+                    if (e.response && e.response.status !== 404 && e.response.status !== 403) {
+                        ErrorCallbacks.forEach(callback => callback(e));
+                    }
+                } else {
+                    ConnectionRefusedCallbacks.forEach(callback => callback(e));
                 }
                 return of(null);
             })
@@ -130,6 +136,8 @@ const API = {
                             ErrorCallbacks.forEach(callback => callback(e));
                     }
                     return of(null);
+                } else {
+                    ConnectionRefusedCallbacks.forEach(callback => callback(e));
                 }
                 throw e;
             })
@@ -150,13 +158,17 @@ const API = {
                         default:
                             ErrorCallbacks.forEach(callback => callback(e));
                     }
+                } else {
+                    ConnectionRefusedCallbacks.forEach(callback => callback(e));
                 }
                 throw e;
             })
         );
     },
 
-    onError: callback => ErrorCallbacks.push(callback)
+    onError: callback => ErrorCallbacks.push(callback),
+
+    onConnectionRefused: callback => ConnectionRefusedCallbacks.push(callback)
 };
 
 export default API;
