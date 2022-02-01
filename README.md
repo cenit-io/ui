@@ -55,4 +55,17 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 
 ### `npm run eject`
 
+### Run with Docker
+
+Replace the `xxx` with your values.
+
+```
+docker run -dti -e REACT_APP_LOCALHOST=xxx \
+    -e REACT_APP_CENIT_HOST=xxx \
+    -e REACT_APP_APP_ID=xxx \
+    -p 1337:80 \
+    --name container_name ghcr.io/cenit-io/ui:latest
+```
+Navigate to http://localhost:1337/ in your browser to view the app.
+
 **DO NOT DO THAT**
