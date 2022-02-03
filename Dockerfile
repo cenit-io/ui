@@ -1,30 +1,25 @@
-FROM node:16-alpine as build
-
-ARG REACT_APP_LOCALHOST
-ENV REACT_APP_LOCALHOST=${REACT_APP_LOCALHOST}
-
-ARG REACT_APP_CENIT_HOST
-ENV REACT_APP_CENIT_HOST=${REACT_APP_CENIT_HOST}
-
-ARG REACT_APP_TIMEOUT_SPAN=300000
-ENV REACT_APP_TIMEOUT_SPAN=${REACT_APP_TIMEOUT_SPAN}
-
-ARG REACT_APP_APP_ID=admin
-ENV REACT_APP_APP_ID=${REACT_APP_APP_ID}
-ENV GENERATE_SOURCEMAP=false
+# => Build container
+FROM node:16-alpine as builder
 
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
-COPY package.json ./
-COPY package-lock.json ./
+COPY package.json .
+COPY package-lock.json .
 RUN npm install -g npm@latest
 RUN npm ci --silent
 RUN npm install react-scripts --production -g --silent
 COPY . .
 RUN npm run build
 
-# production environment
-FROM nginx:stable-alpine
-COPY --from=build /app/build /usr/share/nginx/html
+# => Run container
+FROM nginx:1.15.2-alpine
+
+RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+COPY --from=builder /app/build /usr/share/nginx/html/
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+WORKDIR /usr/share/nginx/html
+COPY ./env.sh .
+COPY .env .
+RUN chmod +x env.sh
+CMD ["/bin/sh", "-c", "/usr/share/nginx/html/env.sh && nginx -g \"daemon off;\""]
