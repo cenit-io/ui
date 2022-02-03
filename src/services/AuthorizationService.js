@@ -5,14 +5,21 @@ import { map, switchMap } from "rxjs/operators";
 
 export const AppConfig = window.appConfig;
 
-const EnvironmentConfig = {
+const EnvironmentAppConfig = {
+    localhost: AppConfig.REACT_APP_LOCALHOST,
+    cenitHost: AppConfig.REACT_APP_CENIT_HOST,
+    timeoutSpan: +AppConfig.REACT_APP_TIMEOUT_SPAN,
+    appIdentifier: AppConfig.REACT_APP_APP_ID
+};
+
+const EnvironmentProcessConfig = {
     localhost: process.env.REACT_APP_LOCALHOST,
     cenitHost: process.env.REACT_APP_CENIT_HOST,
     timeoutSpan: +process.env.REACT_APP_TIMEOUT_SPAN,
     appIdentifier: process.env.REACT_APP_APP_ID
 };
 
-export const Config = AppConfig.useEnvironmentConfig ? EnvironmentConfig : AppConfig;
+export const Config = AppConfig.USE_ENVIRONMENT_CONFIG == "true" ? EnvironmentAppConfig : EnvironmentProcessConfig;
 
 export const CenitHostKey = 'cenitHost';
 
