@@ -1,65 +1,39 @@
 
-## Cenit Admin
+# Cenit IO Admin App
 
 This is a React application for the administration of a Cenit IO integration Platform (iPaaS).
 
-### Configuring the Backend
+## Configuring the Admin App 
 
-1. Make sure the Cenit **local repository is up to date with the remote**. The developed branch of Cenit
-to support the Admin Backed is `admin_backend`.
+1. **Configure the Cenit listening port.** In the example bellow the Admin App runs is listening to the port `3000` therefore the local
+instance of Cenit IO server should run listening to a different one, in the example the port `3001`. 
 
-2. The `admin_backend` development branch includes features that are not yet synced with the `develop` and `master`
-branches (for example the support of built-in apps). For this reason is strongly recommended to **use a dedicated
-database.** To define a custom database just include in the `config/application.yml` file an entry
-`DB_DEV: custom_db_name`.    
+Set the docker runtime environment variables to the right values:
+- `REACT_APP_LOCALHOST=http://127.0.0.1:3000`
+- `REACT_APP_CENIT_HOST=http://127.0.0.1:3001`
 
-2. **Configure the Cenit listening port.** By default the Admin App runs listening to the port `3000` therefore the local
-instance of Cenit should run listening to a different one. By default the App expect Cenit to be listening to the port
-`3001`, so launch Cenit listening to the port `3001`.
 
-3. **Configure the Cenit HOMEPAGE URL.** Make sure that Cenit HOMEPAGE URL is synced with the listening port by including
+## Configuring the Cenit Backend Server
+
+
+1. **Configure the Cenit HOMEPAGE URL.** Make sure that Cenit HOMEPAGE URL is synced with the listening port by including
 in the `config/application.yml` file the entry `HOMEPAGE: http://127.0.0.1:3001`.
 
-4. **Configure the default URI for the admin app.** By default the Admin App runs listening to the port `3000`.
+2. **Configure the default URI for the admin app.** By default the Admin App runs listening to the port `3000`.
 Include in the `config/application.yml` file the entry `'Cenit::Admin:default_uri': http://localhost:3000`.
 
+```
+# config/application.yml
+HOMEPAGE: http://127.0.0.1:3001
+'Cenit::Admin:default_uri': http://localhost:3000
+# ...
+```
+
 And that's all!
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-### Run with Docker
+## Run with Docker
 
 
 `docker pull ghcr.io/cenit-io/ui:latest`
-
-Replace the `xxx` with your values.
 
 ```
 docker run -dti -e REACT_APP_LOCALHOST=http://127.0.0.1:3001 \
@@ -68,5 +42,3 @@ docker run -dti -e REACT_APP_LOCALHOST=http://127.0.0.1:3001 \
     --name container_name ghcr.io/cenit-io/ui:latest
 ```
 Navigate to http://localhost:3000/ in your browser to view the app.
-
-**DO NOT DO THAT**
