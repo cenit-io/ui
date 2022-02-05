@@ -19,7 +19,7 @@ const EnvironmentProcessConfig = {
     appIdentifier: process.env.REACT_APP_APP_ID
 };
 
-export const Config = AppConfig.USE_ENVIRONMENT_CONFIG == "true" ? EnvironmentAppConfig : EnvironmentProcessConfig;
+export const Config = AppConfig.REACT_APP_USE_ENVIRONMENT_CONFIG === 'true' ? EnvironmentProcessConfig : EnvironmentAppConfig;
 
 export const CenitHostKey = 'cenitHost';
 

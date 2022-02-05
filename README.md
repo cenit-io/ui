@@ -39,6 +39,6 @@ And that's all!
 docker run -dti -e REACT_APP_LOCALHOST=http://127.0.0.1:3001 \
     -e REACT_APP_CENIT_HOST=http://127.0.0.1:3000 \
     -p 3000:80 \
-    --name container_name ghcr.io/cenit-io/ui:latest
+    --name cenit-ui ghcr.io/cenit-io/ui:latest
 ```
 Navigate to http://localhost:3000/ in your browser to view the app.
