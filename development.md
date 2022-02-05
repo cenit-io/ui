@@ -4,20 +4,6 @@
 This is a React application for the administration of a Cenit Platform instance, that is currently under development.
 Follow these instructions to configure a local instance of Cenit and connect it as a backend for the app.
 
-## Configuring the Admin App
-
-Update public/config.js
-
-```
-window.appConfig = {
-    USE_ENVIRONMENT_CONFIG: "true",
-    REACT_APP_LOCALHOST: "http://127.0.0.1:3000",
-    REACT_APP_CENIT_HOST: "http://127.0.0.1:3001",
-    TIMEOUT_SPAN: "300000",
-    REACT_APP_APP_ID: "admin",
-}
-```
-
 ## Configuring the Backend
 
 1. Make sure the Cenit **local repository is up to date with the remote**. The developed branch of Cenit
@@ -78,9 +64,9 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 ### Run with Docker
 
 ```
-docker run -dti -e REACT_APP_LOCALHOST=http://127.0.0.1:3001 \
-    -e REACT_APP_CENIT_HOST=http://127.0.0.1:3000 \
+docker run -dti -e REACT_APP_LOCALHOST=http://127.0.0.1:3000 \
+    -e REACT_APP_CENIT_HOST=http://127.0.0.1:3001 \
     -p 3000:80 \
-    --t cenit-ui:latest
+    -t cenit-ui:latest
 ```
 Navigate to http://localhost:3000/ in your browser to view the app.
