@@ -8,7 +8,10 @@ COPY package-lock.json .
 RUN npm install -g npm@latest
 RUN npm ci --silent
 RUN npm install react-scripts --production -g --silent
-COPY . .
+COPY env.sh .
+COPY src src/
+COPY public public/
+COPY conf conf/
 RUN npm run build
 
 # => Run container
@@ -20,6 +23,6 @@ COPY --from=builder /app/build /usr/share/nginx/html/
 EXPOSE 80
 WORKDIR /usr/share/nginx/html
 COPY ./env.sh .
-COPY .env .
+COPY .env.docker .env
 RUN chmod +x env.sh
 CMD ["/bin/sh", "-c", "/usr/share/nginx/html/env.sh && nginx -g \"daemon off;\""]
