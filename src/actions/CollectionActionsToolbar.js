@@ -1,15 +1,10 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { makeStyles, Toolbar, Typography, Chip } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
 import ActionPicker from "./ActionPicker";
-import ActionRegistry, { ActionKind } from "./ActionRegistry";
-import { isObservable, of } from "rxjs";
-import Random from "../util/Random";
-import { catchError, switchMap } from "rxjs/operators";
-import { RecordSubject } from "../services/subjects";
+import { ActionKind } from "./ActionRegistry";
 import { useContainerContext } from "./ContainerContext";
 import Index from "./Index";
-import { useTenantContext } from "../layout/TenantContext";
 import Filter, { FilterIcon } from "./Filter";
 import IconButton from "@material-ui/core/IconButton";
 
@@ -20,7 +15,7 @@ const useToolbarStyles = makeStyles(theme => ({
         paddingRight: theme.spacing(0),
         height: appBarHeight(theme),
         backgroundColor: theme.palette.background.default,
-          [theme.breakpoints.up('sm')]: {
+        [theme.breakpoints.up('sm')]: {
             paddingLeft: theme.spacing(4),
             paddingRight: theme.spacing(4),
         },
@@ -38,114 +33,29 @@ const useToolbarStyles = makeStyles(theme => ({
     filterIcon: {
         color: theme.palette.getContrastText(theme.palette.secondary.main)
     },
-    selectedChip:{
+    selectedChip: {
         backgroundColor: theme.palette.background.default,
-        color:theme.palette.text,
+        color: theme.palette.text,
         textTransform: "uppercase",
         border: `2px solid ${theme.palette.text.secondary}`,
-        borderRadius: "4px" 
+        borderRadius: "4px"
     }
 }));
 
 function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicked }) {
 
-    const actionSubscription = useRef(null);
-
     const classes = useToolbarStyles();
-
-    const tenantContext = useTenantContext();
 
     const containerContext = useContainerContext();
 
     const [containerState, setContainerState] = containerContext;
 
-    const { selectedItems, data, selector, breadcrumbActionName } = containerState;
-
-    const execute = action => {
-        const r = action.call(this, {
-            dataType, tenantContext, selectedItems, containerContext, selector
-        });
-        if (isObservable(r)) {
-            setContainerState({ loading: true });
-            actionSubscription.current = r.pipe(
-                catchError(e => containerContext.confirm({
-                    title: 'Error',
-                    message: `An error occurred: ${e.message}`,
-                    justOk: true
-                }))
-            ).subscribe(() => {
-                setContainerState({
-                    loading: false,
-                    actionKey: Index.key,
-                    actionComponentKey: Random.string()
-                });
-            });
-        }
-    };
-
-    const handleAction = actionKey => {
-        if (actionSubscription.current) {
-            actionSubscription.current.unsubscribe();
-            actionSubscription.current = null;
-        }
-        const action = ActionRegistry.byKey(actionKey);
-        if (action) {
-            if (!action.kind || action.kind === ActionKind.collection || action.bulkable) {
-                if (action.executable) {
-                    execute(action);
-                } else {
-                    if (action.drawer) {
-                        setContainerState({ drawerActionKey: actionKey });
-                    } else {
-                        setContainerState({ actionKey, actionComponentKey: Random.string() });
-                    }
-                }
-            } else {
-                setContainerState({ loading: true });
-                const { _type, id } = selectedItems[0];
-                actionSubscription.current = (
-                    ((!_type || _type === dataType.type_name()) && of(dataType)) ||
-                    dataType.findByName(_type)
-                ).pipe(
-                    switchMap(dataType => {
-                            if (dataType) {
-                                if (action.executable) {
-                                    const r = action.call(this, {
-                                        dataType,
-                                        record: selectedItems[0],
-                                        tenantContext,
-                                        containerContext,
-                                        selector
-                                    });
-                                    if (isObservable(r)) {
-                                        return r.pipe(
-                                            catchError(e => containerContext.confirm({
-                                                title: 'Error',
-                                                message: `An error occurred: ${e.message}`,
-                                                justOk: true
-                                            }))
-                                        );
-                                    }
-                                } else {
-                                    onSubjectPicked(RecordSubject.for(dataType.id, id).key, actionKey);
-                                }
-                                return of(true);
-                            }
-                        }
-                    )
-                ).subscribe(() => setContainerState({
-                    selectedItems: [],
-                    loading: false,
-                    actionComponentKey: Random.string()
-                }));
-            }
-        }
-    };
+    const { selectedItems, data, selector, breadcrumbActionName, handleAction } = containerState;
 
     const clearSelection = () => {
         if (selectedItems.length) {
             setContainerState({ selectedItems: [] });
-            handleAction(Index.key);
+            handleAction(dataType, Index.key, onSubjectPicked);
         } else if (Object.keys(selector).length) {
             setContainerState({ actionKey: Filter.key });
         }
@@ -154,9 +64,10 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     let chip;
     if (selectedItems.length) {
         chip = <Chip label={`${selectedItems.length} selected`}
+                     component="div"
                      onDelete={clearSelection}
                      className={classes.selectedChip}
-                     />;
+        />;
     } else {
         if (data) {
             const selection = Object.keys(selector).length;
@@ -165,6 +76,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                     ? `found ${data.count}`
                     : 'no records found';
                 chip = <Chip label={msg}
+                             component="div"
                              color='secondary'
                              onDelete={clearSelection}
                              onClick={clearSelection}
@@ -177,7 +89,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                 const msg = data.count
                     ? `about ${data.count}`
                     : 'no records found';
-                chip = <Chip label={msg}/>;
+                chip = <Chip label={msg} component="div"/>;
             }
         }
     }
@@ -185,17 +97,20 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     const mainSectionTitle = localStorage.getItem(`${dataType.name}`);
 
     return (
-        <Toolbar className={classes.root}>
+        <Toolbar className={classes.root}
+                 component="div">
             <div className={classes.title}>
-                <Typography variant="h6" className={classes.titleText}> 
-                   { mainSectionTitle && `${mainSectionTitle} |`} {title}  { breadcrumbActionName && ` | ${breadcrumbActionName}`}
+                <Typography variant="h6"
+                            className={classes.titleText}
+                            component="h6">
+                    {mainSectionTitle && `${mainSectionTitle} |`} {title} {breadcrumbActionName && ` | ${breadcrumbActionName}`}
                 </Typography>
             </div>
             <div className="grow-1"/>
             {chip}
             <ActionPicker kind={ActionKind.collection}
                           arity={selectedItems.length}
-                          onAction={handleAction}
+                          onAction={actionKey => handleAction(dataType, actionKey, onSubjectPicked)}
                           selectedKey={selectedKey}
                           dataType={dataType}/>
         </Toolbar>

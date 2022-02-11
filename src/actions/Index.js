@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Loading from '../components/Loading';
 import { Checkbox, fade, makeStyles, useMediaQuery, useTheme, withStyles } from "@material-ui/core";
 import Table from '@material-ui/core/Table';
@@ -22,6 +22,7 @@ import { useOriginsStyles } from "../components/OriginsColors";
 import viewerComponentFor from "../viewers/viewerComponentFor";
 import { KeyboardArrowDown } from '@material-ui/icons';
 import { useTenantContext } from "../layout/TenantContext";
+import ActionPicker from "./ActionPicker";
 
 const StyledTableCell = withStyles((theme) => ({
     head: {
@@ -75,7 +76,7 @@ const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelecte
     };
 
     return (
-        <TableHead>
+        <TableHead component="thead">
             <StyledTableRow>
                 <StyledTableCell padding="checkbox"
                                  style={{
@@ -113,7 +114,7 @@ const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelecte
             </StyledTableRow>
         </TableHead>
     );
-}
+};
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -153,12 +154,13 @@ const useStyles = makeStyles(theme => ({
         },
     },
     pageTableContainer: {
+        position: 'relative',
         backgroundColor: theme.palette.background.default,
         boxSizing: "border-box",
-        padding: "1.5rem .4rem 0.5rem .4rem",
+        padding: theme.spacing(1, .5),
         overflow: "hidden",
         [theme.breakpoints.up('sm')]: {
-            padding: "1.5rem 2rem 0.5rem 2rem",
+            padding: theme.spacing(3),
         },
     },
     pageTableWrapper: {
@@ -218,30 +220,45 @@ const useStyles = makeStyles(theme => ({
         [theme.breakpoints.up('sm')]: {
             width: "auto"
         },
-    }
+    },
+    memberActions: {
+        top: ({ highlightTop }) => highlightTop,
+        position: 'absolute',
+        right: theme.spacing(.5),
+        width: theme.spacing(32),
+        background: theme.palette.background.default,
+        [theme.breakpoints.up('sm')]: {
+            right: theme.spacing(3),
+        },
+    },
 }));
 
 const MinItemsPerPage = 5;
 
 const ItemsPerPage = [MinItemsPerPage, 10, 25];
 
-function ListView({ height, dataType, config }) {
+function ListView({ height, dataType, config, onSubjectPicked }) {
 
     const [state, setState] = useSpreadState({
         order: 'asc',
-        orderBy: '_id'
+        orderBy: '_id',
     });
+
+    const highlightTimer = useRef(0);
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { data, page, limit, selectedItems, props, itemsViewport, withOrigin } = containerState;
+    const { data, page, limit, selectedItems, props, itemsViewport, withOrigin, handleAction } = containerState;
 
-    const classes = useStyles();
     const originsClasses = useOriginsStyles();
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
-    const { dense, order, orderBy } = state;
+    const tableContainerRef = useRef(null);
+
+    const { dense, order, orderBy, highlightTop, highlightIndex } = state;
+
+    const classes = useStyles({ highlightTop });
 
     const select = selectedItems => setContainerState({ selectedItems });
 
@@ -269,7 +286,7 @@ function ListView({ height, dataType, config }) {
         } else {
             select([item]);
         }
-    }
+    };
 
     const handleSelect = item => () => {
         const index = selectedItems.findIndex(i => i.id === item.id);
@@ -297,7 +314,7 @@ function ListView({ height, dataType, config }) {
                                                        top: 0
                                                    }}>{prop.title}</StyledTableCell>);*/
 
-    const rows = data.items.map(item => {
+    const rows = data.items.map((item, index) => {
         let isSelected = selectedItems.findIndex(i => i.id === item.id) !== -1;
         return (
             <StyledTableRow hover
@@ -305,7 +322,15 @@ function ListView({ height, dataType, config }) {
                             onClick={handleSelectOne(item)}
                             role="checkbox"
                             aria-checked={isSelected}
-                            tabIndex={-1}>
+                            tabIndex={-1}
+                            onMouseEnter={e => {
+                                clearHighlightTimer();
+                                setState({
+                                    highlightIndex: index,
+                                    highlightTop: e.target.getBoundingClientRect().top -
+                                        tableContainerRef.current.getBoundingClientRect().top
+                                });
+                            }}>
                 <StyledTableCell padding="checkbox"
                                  style={{
                                      color: '#fff',
@@ -336,14 +361,20 @@ function ListView({ height, dataType, config }) {
         );
     });
 
+    const hideHighlight = timeout => highlightTimer.current = setTimeout(
+        () => setState({ highlightTop: false }),
+        typeof timeout === 'number' ? timeout : 3000
+    );
+
+    const clearHighlightTimer = () => clearTimeout(highlightTimer.current);
+
     return (
-        <div
-            className={classes.pageTableContainer}
-            style={{ minHeight: `calc(${height} - 400px)` }}
-        >
+        <div ref={tableContainerRef}
+             className={classes.pageTableContainer}
+             style={{ minHeight: `calc(${height} - 400px)` }}>
             <div className={clsx(classes.pageTableWrapper, classes.pageShadow)}
                  style={{ maxHeight: `calc(${height} - 2rem)` }}
-            >
+                 onMouseLeave={hideHighlight}>
                 <Table className={classes.table} size={dense ? "small" : "medium"}>
                     <EnhancedTableHead
                         props={props}
@@ -354,11 +385,24 @@ function ListView({ height, dataType, config }) {
                     <TableBody>{rows}</TableBody>
                 </Table>
             </div>
+            {!selectedItems.length && highlightTop && (
+                <div className={classes.memberActions}
+                     onMouseEnter={clearHighlightTimer}
+                     onMouseLeave={hideHighlight}>
+                    <ActionPicker kind={ActionKind.collection}
+                                  arity={1}
+                                  onAction={actionKey => handleAction(
+                                      dataType, actionKey, onSubjectPicked, [data.items[highlightIndex]])
+                                  }
+                                  dataType={dataType}/>
+
+                </div>
+            )}
         </div>
     );
 }
 
-function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
+function DefaultIndex({ dataType, subject, height, width, dataTypeConfig, onSubjectPicked }) {
 
     const [tenantState] = useTenantContext();
     const { user } = tenantState;
@@ -537,7 +581,8 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig }) {
             <View height={viewHeight}
                   width={width}
                   dataType={dataType}
-                  config={dataTypeConfig}/>
+                  config={dataTypeConfig}
+                  onSubjectPicked={onSubjectPicked}/>
             {pagination}
         </>
     );
