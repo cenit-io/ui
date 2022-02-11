@@ -1,5 +1,5 @@
 import React, { useContext, useRef } from 'react';
-import { Subject } from "rxjs";
+import { isObservable, of, Subject } from "rxjs";
 import { useSpreadState } from "../common/hooks";
 import DialogTitle from "@material-ui/core/DialogTitle/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent/DialogContent";
@@ -9,6 +9,12 @@ import DialogActions from "@material-ui/core/DialogActions";
 import Button from "@material-ui/core/Button";
 import { makeStyles } from '@material-ui/core';
 import ErrorOutlineOutlinedIcon from '@material-ui/icons/ErrorOutlineOutlined'
+import { catchError, switchMap } from "rxjs/operators";
+import Index from "./Index";
+import Random from "../util/Random";
+import ActionRegistry, { ActionKind } from "./ActionRegistry";
+import { RecordSubject } from "../services/subjects";
+import { useTenantContext } from "../layout/TenantContext";
 
 const CC = React.createContext({});
 
@@ -17,7 +23,7 @@ export function useContainerContext() {
     return useContext(CC);
 }
 
-const useModalStyles = makeStyles((theme) => ({
+const useModalStyles = makeStyles(() => ({
     root: {
         backdropFilter: 'blur(6px) saturate(120%)',
         '& .MuiBackdrop-root': {
@@ -42,7 +48,7 @@ const useAlertContentStyles = makeStyles((theme) => ({
         display: 'flex',
         justifyContent: 'center',
         width: '100%',
-        padding: ' 16px 0 0 0',
+        padding: theme.spacing(2, 0, 0, 0),
         '& svg': {
             fontSize: '5rem'
         }
@@ -50,6 +56,11 @@ const useAlertContentStyles = makeStyles((theme) => ({
 }));
 
 export default function ContainerContext({ initialState, children }) {
+
+    const actionSubscription = useRef(null);
+
+    const tenantContext = useTenantContext();
+
     const value = useSpreadState(initialState);
 
     const [state, setState] = value;
@@ -61,6 +72,90 @@ export default function ContainerContext({ initialState, children }) {
 
     const modalClasses = useModalStyles();
     const alertContentClasses = useAlertContentStyles();
+
+    const { selector, selectedItems } = state;
+
+    const execute = (dataType, action, items) => {
+        const r = action.call(this, {
+            dataType, tenantContext, selectedItems: items, containerContext: value, selector
+        });
+        if (isObservable(r)) {
+            setState({ loading: true });
+            actionSubscription.current = r.pipe(
+                catchError(e => value.confirm({
+                    title: 'Error',
+                    message: `An error occurred: ${e.message}`,
+                    justOk: true
+                }))
+            ).subscribe(() => {
+                setState({
+                    loading: false,
+                    actionKey: Index.key,
+                    actionComponentKey: Random.string()
+                });
+            });
+        }
+    };
+
+    const handleAction = (dataType, actionKey, onSubjectPicked, items) => {
+        items = items || selectedItems;
+        if (actionSubscription.current) {
+            actionSubscription.current.unsubscribe();
+            actionSubscription.current = null;
+        }
+        const action = ActionRegistry.byKey(actionKey);
+        if (action) {
+            if (!action.kind || action.kind === ActionKind.collection || action.bulkable) {
+                if (action.executable) {
+                    execute(dataType, action, items);
+                } else {
+                    if (action.drawer) {
+                        setState({ drawerActionKey: actionKey });
+                    } else {
+                        setState({ actionKey, actionComponentKey: Random.string() });
+                    }
+                }
+            } else {
+                setState({ loading: true });
+                const { _type, id } = items[0];
+                actionSubscription.current = (
+                    ((!_type || _type === dataType.type_name()) && of(dataType)) ||
+                    dataType.findByName(_type)
+                ).pipe(
+                    switchMap(dataType => {
+                            if (dataType) {
+                                if (action.executable) {
+                                    const r = action.call(this, {
+                                        dataType,
+                                        record: items[0],
+                                        tenantContext,
+                                        value,
+                                        selector
+                                    });
+                                    if (isObservable(r)) {
+                                        return r.pipe(
+                                            catchError(e => value.confirm({
+                                                title: 'Error',
+                                                message: `An error occurred: ${e.message}`,
+                                                justOk: true
+                                            }))
+                                        );
+                                    }
+                                } else {
+                                    onSubjectPicked(RecordSubject.for(dataType.id, id).key, actionKey);
+                                }
+                                return of(true);
+                            }
+                        }
+                    )
+                ).subscribe(() => setState({
+                    selectedItems: [],
+                    loading: false,
+                    actionComponentKey: Random.string()
+                }));
+            }
+        }
+    };
 
     value.confirm = options => {
         confirmOptions.current = options || {};
@@ -121,7 +216,7 @@ export default function ContainerContext({ initialState, children }) {
     }
 
     return (
-        <CC.Provider value={value}>
+        <CC.Provider value={[{ ...state, handleAction }, setState]}>
             {children}
             <Dialog open={Boolean(confirm)}
                     onClose={closeDialog(false)}
