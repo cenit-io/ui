@@ -225,8 +225,9 @@ const useStyles = makeStyles(theme => ({
         top: ({ highlightTop }) => highlightTop,
         position: 'absolute',
         right: theme.spacing(.5),
-        width: theme.spacing(32),
+        width: theme.spacing(31),
         background: theme.palette.background.default,
+        borderRadius: theme.spacing(1.5),
         [theme.breakpoints.up('sm')]: {
             right: theme.spacing(3),
         },
