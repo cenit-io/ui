@@ -109,6 +109,9 @@ export default function ContainerContext({ initialState, children }) {
                 if (action.executable) {
                     execute(dataType, action, items);
                 } else {
+                    if (items !== selectedItems) {
+                        setState({ selectedItems: items });
+                    }
                     if (action.drawer) {
                         setState({ drawerActionKey: actionKey });
                     } else {
