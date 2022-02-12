@@ -98,10 +98,10 @@ export default function ChangesSetControl({
 
     const fields = Object.keys(diffs).map(field => {
         const lines = [];
-        diffs[field].forEach((part) => {
+        diffs[field].forEach((part, i) => {
             const klass = (part.added && 'added') || (part.removed && 'removed') || 'unchanged';
-            part.value.match(/[^\r\n]+/g).forEach(l => lines.push(
-                <li className={classes[klass]}>
+            part.value.match(/[^\r\n]+/g)?.forEach((l, j) => lines.push(
+                <li className={classes[klass]} key={`field_diff_${i}_${j}`}>
                     <span>
                     {l}
                     </span>
