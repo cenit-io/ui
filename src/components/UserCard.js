@@ -5,14 +5,7 @@ import AuthorizationService from "../services/AuthorizationService";
 import List from "@material-ui/core/List";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import { useTenantContext } from "../layout/TenantContext";
-import SvgIcon from "@material-ui/core/SvgIcon";
-
-const LogoutIcon = props => (
-    <SvgIcon {...props}>
-        <path
-            d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-    </SvgIcon>
-);
+import LogoutIcon from "@material-ui/icons/Logout";
 
 const useStyles = makeStyles(theme => ({
     avatarContainer: {
@@ -20,20 +13,18 @@ const useStyles = makeStyles(theme => ({
         justifyContent: 'center',
         alignItems: 'center',
         margin: theme.spacing(1),
-        minWidth: theme.spacing(26)
     },
     avatar: {
-        width: `${theme.spacing(8)}px`,
-        height: `${theme.spacing(8)}px`,
+        width: theme.spacing(8),
+        height: theme.spacing(8),
     },
     avatarContentWrapper: {
-            width: '90%',
-            margin: '0 auto',
-            borderBottom: `2px solid ${theme.palette.primary.light}`,
-            position: 'sticky',
-            top: 0,
-            zIndex: 1500,
-            background: '#fff',
+        borderBottom: `solid 2px ${theme.palette.primary.light}`,
+        position: 'sticky',
+        top: 0,
+        zIndex: 1500,
+        background: theme.palette.common.white,
+        minWidth: theme.spacing(26)
     },
     danger: {
         color: theme.palette.error.main
@@ -103,7 +94,7 @@ const UserCard = ({ idToken, onClose }) => {
                 {sudoControl}
                 <ListItem button onClick={logout}>
                     <ListItemIcon>
-                        <LogoutIcon/>
+                        <LogoutIcon component="svg"/>
                     </ListItemIcon>
                     <ListItemText primary="Logout"/>
                 </ListItem>
