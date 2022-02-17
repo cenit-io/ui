@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import CodeMirror from 'codemirror';
 import { Subject } from "rxjs";
 import { IconButton, makeStyles, Typography, useMediaQuery } from "@material-ui/core";
@@ -17,7 +17,8 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from '@material-ui/core/DialogTitle';
 import useTheme from "@material-ui/core/styles/useTheme";
 import ErrorMessages from "./ErrorMessages";
-import SvgIcon from "@material-ui/core/SvgIcon";
+import OpenInIcon from "@material-ui/icons/OpenInFullOutlined";
+import OpenInOffIcon from "@material-ui/icons/CloseFullscreenOutlined";
 
 const useStyles = makeStyles(theme => ({
     editor: {
@@ -66,24 +67,13 @@ Object.keys(ExtraModeTypes).forEach(
     }
 );
 
-
-const OpenInIcon = () => (
-    <SvgIcon>
-        <polygon points="21,11 21,3 13,3 16.29,6.29 6.29,16.29 3,13 3,21 11,21 7.71,17.71 17.71,7.71"/>
-    </SvgIcon>
-);
-
-const OpenInOffIcon = () => (
-    <SvgIcon>
-        <path d="M22,3.41l-5.29,5.29L20,12h-8V4l3.29,3.29L20.59,2L22,3.41z M3.41,22l5.29-5.29L12,20v-8H4l3.29,3.29L2,20.59L3.41,22z"/>
-    </SvgIcon>
-);
-
-export default function CodeMirrorControl({
-                                              property, title, value, disabled, readOnly, errors, onChange, onDelete,
-                                              mime, mode, theme, lineNumbers, viewportMargin, gutters, lint, foldGutter,
-                                              autoHeight, addons, customCSS
-                                          }) {
+export default function CodeMirrorControl(
+    {
+        property, title, value, disabled, readOnly, errors, onChange, onDelete,
+        mime, mode, theme, lineNumbers, viewportMargin, gutters, lint, foldGutter,
+        autoHeight, addons, customCSS, onBlur
+    }
+) {
     const { initialFormValue } = useFormContext();
     const [state, setState] = useSpreadState({
         controlValue: value.get(),
@@ -122,7 +112,7 @@ export default function CodeMirrorControl({
     if (controlValue !== undefined && controlValue !== null) {
         openInDialog = (
             <IconButton onClick={() => setState({ open: true })}>
-                <OpenInIcon/>
+                <OpenInIcon component="svg"/>
             </IconButton>
         );
     }
@@ -130,7 +120,7 @@ export default function CodeMirrorControl({
     if (!readOnly && !disabled && controlValue !== undefined && controlValue !== null) {
         clear = (
             <IconButton onClick={handleDelete}>
-                <ClearIcon/>
+                <ClearIcon component="svg"/>
             </IconButton>
         );
     }
@@ -155,10 +145,11 @@ export default function CodeMirrorControl({
                               lint={lint}
                               viewportMargin={viewportMargin}
                               lineNumbers={lineNumbers}
-                              eraser={eraser.current}>
+                              eraser={eraser.current}
+                              onBlur={onBlur}>
 
                 <div className={clsx('flex', classes.header)}>
-                    <Typography variant="subtitle2">
+                    <Typography variant="subtitle2" component="div">
                         {title}
                     </Typography>
                     <div className="grow-1"/>
@@ -178,7 +169,7 @@ export default function CodeMirrorControl({
                     <div className="grow-1"/>
                     <div className={classes.closeDialogButton}>
                         <IconButton aria-label="close" onClick={handleClose}>
-                            <OpenInOffIcon/>
+                            <OpenInOffIcon component="svg"/>
                         </IconButton>
                     </div>
                 </div>

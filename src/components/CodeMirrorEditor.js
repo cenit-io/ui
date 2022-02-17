@@ -37,11 +37,13 @@ Object.keys(ExtraModeTypes).forEach(
 
 const autoHeightFor = json => !json || json.split(/\r\n|\r|\n/).length < 20;
 
-export default function CodeMirrorEditor({
-                                             property, value, disabled, readOnly, errors, onChange, mime, mode,
-                                             theme, lineNumbers, viewportMargin, gutters, lint, foldGutter,
-                                             autoHeight, addons, customCSS, classes, children, eraser, customHeight
-                                         }) {
+export default function CodeMirrorEditor(
+    {
+        property, value, disabled, readOnly, errors, onChange, mime, mode,
+        theme, lineNumbers, viewportMargin, gutters, lint, foldGutter, onBlur,
+        autoHeight, addons, customCSS, classes, children, eraser, customHeight
+    }
+) {
     const textElRef = useRef(null);
     const [state, setState] = useSpreadState({
         autoHeight: value.get()
@@ -77,6 +79,22 @@ export default function CodeMirrorEditor({
             setEditor(editor);
         }
     }, []);
+
+    const onBlurRef = useRef(null);
+
+    useEffect(() => {
+        if (editor) {
+            if (onBlurRef.current) {
+                editor.off('blur', onBlurRef.current);
+            }
+
+            if (onBlur) {
+                editor.on('blur', onBlur);
+            }
+
+            onBlurRef.current = onBlur;
+        }
+    }, [editor, onBlur]);
 
     useEffect(() => {
         if (editor) {
