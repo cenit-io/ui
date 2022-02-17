@@ -21,10 +21,17 @@ function parametersSchema(parameters) {
     const properties = {};
     const requiredProperties = [];
     const schema = { type: 'object', properties, required: requiredProperties };
-    parameters.forEach(({ name, type, required }) => {
+    parameters.forEach(({ name, type, required, many }) => {
         const propertySchema = properties[name] = {};
+        if (many) {
+            propertySchema.type = 'array';
+        }
         if (type) {
-            propertySchema.type = type;
+            if (many) {
+                propertySchema.items = type;
+            } else {
+                propertySchema.type = type;
+            }
         }
         if (required) {
             requiredProperties.push(name);
@@ -39,7 +46,7 @@ function parametersSchema(parameters) {
 export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
     const [state, setState] = useSpreadState();
 
-    const { submitting, error, success } = state;
+    const { submitting, success } = state;
 
     const containerContext = useContainerContext();
     const [,setContainerState] = containerContext;
@@ -59,13 +66,13 @@ export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
         actionKey: Show.key,
         actionComponentKey: Random.string(),
       });
-    }
+    };
 
     useEffect(() => {
         if (submitting) {
             const subscription = onFormSubmit(dataType, value).pipe(
                 tap(() => setState({ success: true })),
-                catchError(error => {
+                catchError(() => {
                     setState({ submitting: false });
                     return of(null);
                 })
@@ -84,7 +91,7 @@ export function ClickAndRun({ onFormSubmit, dataType, value, height }) {
                            onClick={submit}
                            success={success}
                            onClickCancel={handleCancel}
-                           actionIcon={<RunActionIcon/>}/>
+                           actionIcon={<RunActionIcon component="svg"/>}/>
         </div>
     );
 }
@@ -136,7 +143,7 @@ const RunAlgorithm = ({ docked, dataType, record, onSubjectPicked, height }) => 
                 <FormEditor docked={docked}
                             dataType={paramsDataType}
                             height={height}
-                            submitIcon={<RunActionIcon/>}
+                            submitIcon={<RunActionIcon component="svg"/>}
                             onFormSubmit={handleFormSubmit}
                             onSubjectPicked={onSubjectPicked}
                             successControl={ExecutionMonitor}

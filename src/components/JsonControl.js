@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import CodeMirrorControl from "./CodeMirrorControl";
 import scriptLoader from 'react-async-script-loader';
 import { interval, Subject } from "rxjs";
-import { debounce } from "rxjs/operators";
+import { tap, debounce } from "rxjs/operators";
 import { FormRootValue } from "../services/FormValue";
 import { useFormContext } from "./FormContext";
 import { useSpreadState } from "../common/hooks";
@@ -32,6 +32,7 @@ function JsonControl({ onChange, onError, value, ...otherProps }) {
     const { initialFormValue } = useFormContext();
 
     const valueProxy = useRef(new FormRootValue(''));
+    const lazyJson = useRef(value.get());
 
     const error = useRef(null);
 
@@ -53,54 +54,55 @@ function JsonControl({ onChange, onError, value, ...otherProps }) {
         return () => subscription.unsubscribe();
     }, [errorDebounce, onError]);
 
+    const check = useCallback(json => {
+        const blank = json === '' || json === undefined || json === null;
+        const errorBeforeChange = error.current;
+        let v;
+        try {
+            v = JSON.parse(json);
+            error.current = null;
+        } catch (e) {
+            error.current = blank ? null : e.message;
+        }
+        if (error.current) {
+            clearCss();
+            if (errorBeforeChange) {
+                errorDebounce.next(error.current);
+            } else {
+                onError([error.current]);
+            }
+        } else {
+            if (blank) {
+                setState({ css: customCSS });
+                v = null;
+            } else {
+                clearCss();
+            }
+            if (v === null || v === undefined) {
+                const initialValue = value.valueFrom(initialFormValue);
+                if (initialValue !== undefined && initialValue !== null) {
+                    value.set(null);
+                } else {
+                    value.delete();
+                }
+                valueProxy.current.set(null);
+            } else {
+                value.set(v);
+            }
+            onChange(v);
+            errorDebounce.next(null);
+            onError([]);
+        }
+    }, [value, errorDebounce, onError, onChange, initialFormValue]);
+
     useEffect(() => {
         const subscription = valueProxy.current.changed().pipe(
+            tap(json => lazyJson.current = json),
             debounce(() => interval(1500))
-        ).subscribe(
-            json => {
-                const blank = json === '' || json === undefined || json === null;
-                const errorBeforeChange = error.current;
-                let v;
-                try {
-                    v = JSON.parse(json);
-                    error.current = null;
-                } catch (e) {
-                    error.current = blank ? null : e.message;
-                }
-                if (error.current) {
-                    clearCss();
-                    if (errorBeforeChange) {
-                        errorDebounce.next(error.current);
-                    } else {
-                        onError([error.current]);
-                    }
-                } else {
-                    if (blank) {
-                        setState({ css: customCSS });
-                        v = null;
-                    } else {
-                        clearCss();
-                    }
-                    if (v === null || v === undefined) {
-                        const initialValue = value.valueFrom(initialFormValue);
-                        if (initialValue !== undefined && initialValue !== null) {
-                            value.set(null);
-                        } else {
-                            value.delete();
-                        }
-                        valueProxy.current.set(null);
-                    } else {
-                        value.set(v);
-                    }
-                    onChange(v);
-                    errorDebounce.next(null);
-                    onError([]);
-                }
-            }
-        );
+        ).subscribe(check);
 
         return () => subscription.unsubscribe();
-    }, [value, errorDebounce, onError, onChange, initialFormValue]);
+    }, [check]);
 
     const clearCss = () => css?.length && setState({ css: null });
 
@@ -115,7 +117,8 @@ function JsonControl({ onChange, onError, value, ...otherProps }) {
                            autoHeight={autoHeight}
                            viewportMargin={Infinity}
                            mime="application/json"
-                           customCSS={css}/>
+                           customCSS={css}
+                           onBlur={() => check(lazyJson.current)}/>
     );
 }
 
