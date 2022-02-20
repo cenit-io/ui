@@ -10,7 +10,6 @@ import Button from "@material-ui/core/Button";
 import { makeStyles } from '@material-ui/core';
 import ErrorOutlineOutlinedIcon from '@material-ui/icons/ErrorOutlineOutlined'
 import { catchError, switchMap } from "rxjs/operators";
-import Index from "./Index";
 import Random from "../util/Random";
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { RecordSubject } from "../services/subjects";
@@ -55,7 +54,7 @@ const useAlertContentStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function ContainerContext({ initialState, children }) {
+export default function ContainerContext({ initialState, children, homeActionKey }) {
 
     const actionSubscription = useRef(null);
 
@@ -75,7 +74,7 @@ export default function ContainerContext({ initialState, children }) {
 
     const { selector, selectedItems } = state;
 
-    const execute = (dataType, action, items) => {
+    const execute = useRef((dataType, action, items) => {
         const r = action.call(this, {
             dataType, tenantContext, selectedItems: items, containerContext: value, selector
         });
@@ -90,14 +89,14 @@ export default function ContainerContext({ initialState, children }) {
             ).subscribe(() => {
                 setState({
                     loading: false,
-                    actionKey: Index.key,
+                    actionKey: homeActionKey,
                     actionComponentKey: Random.string()
                 });
             });
         }
-    };
+    });
 
-    const handleAction = (dataType, actionKey, onSubjectPicked, items) => {
+    const handleAction = useRef((dataType, actionKey, onSubjectPicked, items) => {
         items = items || selectedItems;
         if (actionSubscription.current) {
             actionSubscription.current.unsubscribe();
@@ -107,7 +106,7 @@ export default function ContainerContext({ initialState, children }) {
         if (action) {
             if (!action.kind || action.kind === ActionKind.collection || action.bulkable) {
                 if (action.executable) {
-                    execute(dataType, action, items);
+                    execute.current(dataType, action, items);
                 } else {
                     if (items !== selectedItems) {
                         setState({ selectedItems: items });
@@ -132,7 +131,7 @@ export default function ContainerContext({ initialState, children }) {
                                         dataType,
                                         record: items[0],
                                         tenantContext,
-                                        value,
+                                        containerContext: value,
                                         selector
                                     });
                                     if (isObservable(r)) {
@@ -158,7 +157,7 @@ export default function ContainerContext({ initialState, children }) {
                 }));
             }
         }
-    };
+    });
 
     value.confirm = options => {
         confirmOptions.current = options || {};
@@ -219,7 +218,7 @@ export default function ContainerContext({ initialState, children }) {
     }
 
     return (
-        <CC.Provider value={[{ ...state, handleAction }, setState]}>
+        <CC.Provider value={[{ ...state, handleAction: handleAction.current }, setState]}>
             {children}
             <Dialog open={Boolean(confirm)}
                     onClose={closeDialog(false)}
