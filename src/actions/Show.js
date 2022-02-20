@@ -30,7 +30,7 @@ const Show = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
 
     useEffect(() => {
         setContainerState({ breadcrumbActionName: readOnly ? "Show" : "Edit" });
-  
+
         return () => {
           setContainerState({ breadcrumbActionName: null });
         };
@@ -53,7 +53,7 @@ const Show = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
                  color="primary"
                  className={classes.editButton}
                  onClick={() => setState({ readOnly: false })}>
-                <EditIcon/>
+                <EditIcon component="svg"/>
             </Fab>
         );
     }
@@ -79,5 +79,6 @@ export default ActionRegistry.register(Show, {
     kind: ActionKind.member,
     icon: ShowIcon,
     title: 'Show',
-    arity: 1
+    arity: 1,
+    key: 'show'
 });

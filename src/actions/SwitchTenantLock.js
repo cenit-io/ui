@@ -1,10 +1,8 @@
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
-import API from "../services/ApiService";
 import { switchMap, tap } from "rxjs/operators";
 import { of } from "rxjs";
 import { useContainerContext } from "./ContainerContext";
 import React from "react";
-import SvgIcon from "@material-ui/core/SvgIcon";
 import UnlockIcon from "@material-ui/icons/LockOpenOutlined";
 import LockIcon from "@material-ui/icons/LockOutlined";
 import SwitchIcon from "@material-ui/icons/SettingsBackupRestoreOutlined";
@@ -109,14 +107,14 @@ function SwitchLockIcon() {
     const title = contextTitle(containerState);
 
     if (title === UnlockTitle) {
-        return <UnlockIcon/>;
+        return <UnlockIcon component="svg"/>;
     }
 
     if (title === LockTitle) {
-        return <LockIcon/>;
+        return <LockIcon  component="svg"/>;
     }
 
-    return <SwitchIcon/>;
+    return <SwitchIcon  component="svg"/>;
 }
 
 export default ActionRegistry.register(SwitchTenantLock, {

@@ -6,9 +6,8 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
 import Show from "./Show";
 import Random from "../util/Random";
-import { catchError, switchMap, tap } from "rxjs/operators";
-import { isObservable, of } from "rxjs";
-import ChevronRight from "@material-ui/icons/ChevronRight";
+import { switchMap, tap } from "rxjs/operators";
+import { of } from "rxjs";
 import ActionPicker from "./ActionPicker";
 import Alert from "./Alert";
 import { DataTypeSubject } from "../services/subjects";
@@ -16,7 +15,6 @@ import Skeleton from "@material-ui/lab/Skeleton";
 import { useSpreadState } from "../common/hooks";
 import FrezzerLoader from "../components/FrezzerLoader";
 import ContainerContext, { useContainerContext } from "./ContainerContext";
-import { useTenantContext } from "../layout/TenantContext";
 import * as pluralize from "pluralize";
 import Button from "@material-ui/core/Button";
 import ReloadIcon from "@material-ui/icons/Refresh";
@@ -63,10 +61,10 @@ const useActionContainerStyles = makeStyles(theme => ({
     breadcrumbs: {
         color: theme.palette.primary.dark,
         maxWidth: ({ width }) => `calc(${width} - ${theme.spacing(9)}px)`,
-        '& ol':{
+        '& ol': {
             flexWrap: 'nowrap',
         },
-        '& li:last-child':{
+        '& li:last-child': {
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             overflow: 'hidden'
@@ -93,9 +91,9 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
     const [containerState, setContainerState] = containerContext;
 
-    const tenantContext = useTenantContext();
-
-    const { dataType, record, loading, actionKey, actionComponentKey,breadcrumbActionName } = containerState;
+    const {
+        dataType, record, loading, actionKey, actionComponentKey, breadcrumbActionName, handleAction
+    } = containerState;
 
     const actionSubscription = useRef(null);
     const theme = useTheme();
@@ -107,47 +105,17 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
     const setError = error => setState({ error });
 
-    const handleAction = useCallback(actionKey => {
-        if (actionSubscription.current) {
-            actionSubscription.current.unsubscribe();
-            actionSubscription.current = null;
+    const doHandleAction = useCallback(actionKey => {
+        if (record) {
+            handleAction(dataType, actionKey, onSubjectPicked, [record]);
         }
-        const action = ActionRegistry.byKey(actionKey);
-        if (action) {
-            if (action.executable) {
-                const r = action.call(this, {
-                    dataType, record, tenantContext, containerContext
-                });
-                if (isObservable(r)) {
-                    setState({ loading: true });
-                    actionSubscription.current = r.pipe(
-                        catchError(e => containerContext.confirm({
-                            title: 'Error',
-                            message: `An error occurred: ${e.message}`,
-                            justOk: true
-                        }))
-                    ).subscribe(
-                        () => setContainerState({
-                            loading: false,
-                            actionKey: Show.key,
-                            actionComponentKey: Random.string()
-                        })
-                    );
-                }
-            } else {
-                setContainerState({
-                    actionKey,
-                    actionComponentKey: Random.string()
-                });
-            }
-        }
-    }, [dataType, record, tenantContext, containerContext]);
+    }, [handleAction, dataType, onSubjectPicked, record]);
 
     useEffect(() => {
-        if (activeActionKey && record) {
-            setTimeout(() => handleAction(activeActionKey.key || activeActionKey));
+        if (activeActionKey) {
+            setTimeout(() => doHandleAction(activeActionKey));
         }
-    }, [activeActionKey, record]);
+    }, [doHandleAction, activeActionKey]);
 
     useEffect(() => {
         if (!error) {
@@ -225,22 +193,22 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
     const mainSectionTitle = localStorage.getItem(`${dataType.name}`);
 
     const breadcrumb = (
-      <Breadcrumbs separator="|" aria-label="breadcrumb" className={classes.breadcrumbs}>
-        {mainSectionTitle && (
-          <Typography variant="h6" className={classes.recordTitle}>
-            {`${mainSectionTitle} `}
-          </Typography>
-        )}
-        {dataLink}
-        <Typography variant="h6" className={classes.recordTitle}>
-          {title || <Skeleton variant="text" width={theme.spacing(5)} />}
-        </Typography>
-        {breadcrumbActionName && !xs && (
-          <Typography variant="h6" className={classes.recordTitle}>
-            {breadcrumbActionName}
-          </Typography>
-        )}
-      </Breadcrumbs>
+        <Breadcrumbs separator="|" aria-label="breadcrumb" className={classes.breadcrumbs}>
+            {mainSectionTitle && (
+                <Typography variant="h6" className={classes.recordTitle}>
+                    {`${mainSectionTitle} `}
+                </Typography>
+            )}
+            {dataLink}
+            <Typography variant="h6" className={classes.recordTitle}>
+                {title || <Skeleton variant="text" width={theme.spacing(5)}/>}
+            </Typography>
+            {breadcrumbActionName && !xs && (
+                <Typography variant="h6" className={classes.recordTitle}>
+                    {breadcrumbActionName}
+                </Typography>
+            )}
+        </Breadcrumbs>
     );
 
     const componentHeight = `${height} - ${appBarHeight(theme)}`;
@@ -256,7 +224,7 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
                                                        height={componentHeight}
                                                        width={width}
                                                        onSubjectPicked={onSubjectPicked}
-                                                       onCancel={() => handleAction(Show.key)}
+                                                       onCancel={() => doHandleAction(Show.key)}
                                                        onDisable={disabled => setState({ disabled })}
                                                        onClose={onClose}/>;
 
@@ -266,7 +234,7 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
                 {breadcrumb}
                 <ActionPicker kind={ActionKind.member}
                               arity={1}
-                              onAction={handleAction}
+                              onAction={actionKey => doHandleAction(actionKey)}
                               disabled={disabled}
                               dataType={dataType}
                               selectedKey={actionKey}/>
@@ -289,7 +257,7 @@ const InitialContextState = {
 
 export default function MemberContainer(props) {
     return (
-        <ContainerContext initialState={InitialContextState}>
+        <ContainerContext initialState={InitialContextState} homeActionKey={Show.key}>
             <MemberContainerLayout {...props}/>
         </ContainerContext>
     );

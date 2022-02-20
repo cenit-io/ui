@@ -77,6 +77,8 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
+const onSubjectPicked = (key, actionKey) => TabsSubject.next({ key, actionKey });
+
 export default function NavTabs({ docked, width }) {
     const classes = useStyles();
     const theme = useTheme();
@@ -158,8 +160,6 @@ export default function NavTabs({ docked, width }) {
         setActionKeys({ [key]: undefined });
         ConfigService.update(config)
     };
-
-    const onSubjectPicked = (key, actionKey) => TabsSubject.next({ key, actionKey });
 
     const itemTabs = tabs.map(
         (key, index) => <ItemTab key={`tab_${key}`}

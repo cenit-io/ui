@@ -130,8 +130,8 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
 
     useEffect(() => {
         setContainerState({containerTitle: title})
-    }, [title, setContainerState])
-    
+    }, [title, setContainerState]);
+
     useEffect(() => {
         if (activeActionKey) {
             setContainerState({ actionKey: activeActionKey });
@@ -242,7 +242,7 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
 
 export default function CollectionContainer(props) {
     return (
-        <ContainerContext initialState={InitialState}>
+        <ContainerContext initialState={InitialState} homeActionKey={Index.key}>
             <CollectionContainerLayout {...props}/>
         </ContainerContext>
     );
