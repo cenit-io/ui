@@ -390,7 +390,7 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
                 <div className={classes.memberActions}
                      onMouseEnter={clearHighlightTimer}
                      onMouseLeave={hideHighlight}>
-                    <ActionPicker kind={ActionKind.collection}
+                    <ActionPicker kind={ActionKind.member}
                                   arity={1}
                                   onAction={actionKey => handleAction(
                                       dataType, actionKey, onSubjectPicked, [data.items[highlightIndex]])
