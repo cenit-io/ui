@@ -257,7 +257,9 @@ const InitialContextState = {
 
 export default function MemberContainer(props) {
     return (
-        <ContainerContext initialState={InitialContextState} homeActionKey={Show.key}>
+        <ContainerContext initialState={InitialContextState}
+                          homeActionKey={Show.key}
+                          kind={ActionKind.member}>
             <MemberContainerLayout {...props}/>
         </ContainerContext>
     );

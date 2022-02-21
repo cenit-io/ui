@@ -29,7 +29,7 @@ const Edit = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
 
     useEffect(() => {
          setContainerState({ breadcrumbActionName: readOnly ? "Show" : "Edit" });
-  
+
         return () => {
           setContainerState({ breadcrumbActionName: null });
         };
@@ -78,5 +78,6 @@ const Edit = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
      kind: ActionKind.member,
      icon: EditIcon,
      title: 'Edit',
-     arity: 1
+     arity: 1,
+     key: 'edit'
  });
