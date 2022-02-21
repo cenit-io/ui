@@ -13,8 +13,8 @@ const SwitchLockTitle = 'Switch Lock';
 const UnlockTitle = 'Unlock';
 const LockTitle = 'Lock';
 
-function contextTitle({ selectedItems, data }) { // TODO selector
-    let items = selectedItems;
+function contextTitle({ record, selectedItems, data }) { // TODO selector
+    let items = record ? [record] : selectedItems;
     if (!items.length && data?.total_pages === 1) {
         items = data.items;
     }
@@ -56,7 +56,7 @@ function SwitchTenantLock({ selectedItems, record, dataType, containerContext, s
         selector = { _id: { $in: selectedItems.map(({ id }) => id) } };
     }
 
-    const title = contextTitle(containerContext[0]);
+    const title = contextTitle({ selectedItems });
     const action = title === UnlockTitle
         ? 'unlocked'
         : (
