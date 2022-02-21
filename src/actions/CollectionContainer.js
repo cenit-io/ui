@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import Loading from '../components/Loading';
 import { useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
-import ActionRegistry from "./ActionRegistry";
+import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
 
 import Index from "./Index";
@@ -242,7 +242,9 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
 
 export default function CollectionContainer(props) {
     return (
-        <ContainerContext initialState={InitialState} homeActionKey={Index.key}>
+        <ContainerContext initialState={InitialState}
+                          homeActionKey={Index.key}
+                          kind={ActionKind.collection}>
             <CollectionContainerLayout {...props}/>
         </ContainerContext>
     );

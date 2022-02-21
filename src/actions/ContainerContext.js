@@ -54,7 +54,7 @@ const useAlertContentStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function ContainerContext({ initialState, children, homeActionKey }) {
+export default function ContainerContext({ kind, initialState, children, homeActionKey }) {
 
     const actionSubscription = useRef(null);
 
@@ -74,29 +74,10 @@ export default function ContainerContext({ initialState, children, homeActionKey
 
     const { selector, selectedItems } = state;
 
-    const execute = useRef((dataType, action, items) => {
-        const r = action.call(this, {
-            dataType, tenantContext, selectedItems: items, containerContext: value, selector
-        });
-        if (isObservable(r)) {
-            setState({ loading: true });
-            actionSubscription.current = r.pipe(
-                catchError(e => value.confirm({
-                    title: 'Error',
-                    message: `An error occurred: ${e.message}`,
-                    justOk: true
-                }))
-            ).subscribe(() => {
-                setState({
-                    loading: false,
-                    actionKey: homeActionKey,
-                    actionComponentKey: Random.string()
-                });
-            });
-        }
-    });
+    const actionContext = useRef({});
 
     const handleAction = useRef((dataType, actionKey, onSubjectPicked, items) => {
+        const { selectedItems, value, selector, tenantContext } = actionContext.current;
         items = items || selectedItems;
         if (actionSubscription.current) {
             actionSubscription.current.unsubscribe();
@@ -106,7 +87,25 @@ export default function ContainerContext({ initialState, children, homeActionKey
         if (action) {
             if (!action.kind || action.kind === ActionKind.collection || action.bulkable) {
                 if (action.executable) {
-                    execute.current(dataType, action, items);
+                    const r = action.call(this, {
+                        dataType, tenantContext, selectedItems: items, containerContext: value, selector
+                    });
+                    if (isObservable(r)) {
+                        setState({ loading: true });
+                        actionSubscription.current = r.pipe(
+                            catchError(e => value.confirm({
+                                title: 'Error',
+                                message: `An error occurred: ${e.message}`,
+                                justOk: true
+                            }))
+                        ).subscribe(() => {
+                            setState({
+                                loading: false,
+                                actionKey: homeActionKey,
+                                actionComponentKey: Random.string()
+                            });
+                        });
+                    }
                 } else {
                     if (items !== selectedItems) {
                         setState({ selectedItems: items });
@@ -124,11 +123,11 @@ export default function ContainerContext({ initialState, children, homeActionKey
                     ((!_type || _type === dataType.type_name()) && of(dataType)) ||
                     dataType.findByName(_type)
                 ).pipe(
-                    switchMap(dataType => {
-                            if (dataType) {
+                    switchMap(recordDataType => {
+                            if (recordDataType) {
                                 if (action.executable) {
                                     const r = action.call(this, {
-                                        dataType,
+                                        dataType: recordDataType,
                                         record: items[0],
                                         tenantContext,
                                         containerContext: value,
@@ -143,8 +142,10 @@ export default function ContainerContext({ initialState, children, homeActionKey
                                             }))
                                         );
                                     }
+                                } else if (recordDataType.id === dataType.id && kind === ActionKind.member) {
+                                    setState({ actionKey });
                                 } else {
-                                    onSubjectPicked(RecordSubject.for(dataType.id, id).key, actionKey);
+                                    onSubjectPicked(RecordSubject.for(recordDataType.id, id).key, actionKey);
                                 }
                                 return of(true);
                             }
@@ -216,6 +217,8 @@ export default function ContainerContext({ initialState, children, homeActionKey
             </>
         )
     }
+
+    actionContext.current = { selectedItems, value, selector, tenantContext };
 
     return (
         <CC.Provider value={[{ ...state, handleAction: handleAction.current }, setState]}>
