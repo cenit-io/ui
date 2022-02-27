@@ -13,7 +13,7 @@ export default {
     actions: {
         index: {
             fields: user => {
-                const fields = ['name', 'notification_level', 'time_zone', 'locked', 'updated_at']
+                const fields = ['name', 'notification_level', 'time_zone', 'locked', 'updated_at'];
                 if (isSuperAdmin(user)) {
                     fields.splice(fields.length - 2, 0, 'owner', 'users');
                 }
@@ -21,7 +21,28 @@ export default {
             }
         },
         new: {
+            fields: user => {
+                const fields = ['name', 'notification_level', 'time_zone']
+                if (isSuperAdmin(user)) {
+                    fields.splice(fields.length - 2, 0, 'owner', 'users');
+                }
+                return fields;
+            }
+        },
+        edit: {
+            fields: user => {
+                const fields = ['name', 'notification_level', 'time_zone']
+                if (isSuperAdmin(user)) {
+                    fields.splice(fields.length - 2, 0, 'owner', 'users');
+                }
+                return fields;
+            }
+        },
+        show: {
             fields: ['name', 'notification_level', 'time_zone', 'locked', 'owner', 'users']
+        },
+        delete: {
+            confirmation: true
         }
     },
     fields: {

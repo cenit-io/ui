@@ -73,6 +73,9 @@ export default {
         },
         index: {
             fields: ['namespace', 'name', 'slug', 'discard_additional_properties', 'updated_at']
+        },
+        delete: {
+            confirmation: true
         }
     },
     icon: <DocumentTypesFilledIcon/>,

@@ -1,39 +1,22 @@
 import React, { useEffect } from 'react';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
-import { makeStyles } from "@material-ui/core";
-import Fab from "@material-ui/core/Fab";
 import EditIcon from "@material-ui/icons/Edit";
 import FormEditor from "../components/FormEditor";
 import { useSpreadState } from "../common/hooks";
 import { useContainerContext } from './ContainerContext';
-
-const useStyles = makeStyles(theme => ({
-    editButton: {
-        position: 'absolute',
-        right: theme.spacing(3),
-        bottom: theme.spacing(3)
-    }
-}));
+import Show from "./Show";
 
 const Edit = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) => {
-    const [state, setState] = useSpreadState({
-        readOnly: false
-    });
+    const [state, setState] = useSpreadState();
 
     const containerContext = useContainerContext();
     const [, setContainerState] = containerContext;
 
-    const { readOnly, config } = state;
-
-    const classes = useStyles();
+    const { config } = state;
 
     useEffect(() => {
-         setContainerState({ breadcrumbActionName: readOnly ? "Show" : "Edit" });
-
-        return () => {
-          setContainerState({ breadcrumbActionName: null });
-        };
-      }, [readOnly]);
+        setContainerState({ breadcrumbActionName: "Edit" });
+    }, []);
 
     useEffect(() => {
         const subscription = dataType.config().subscribe(
@@ -45,18 +28,6 @@ const Edit = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
 
     const submitable = config && (!config.crud || config.crud.indexOf('update') !== -1);
 
-    let editButton;
-    if (readOnly && submitable) {
-        editButton = (
-            <Fab aria-label="edit"
-                 color="primary"
-                 className={classes.editButton}
-                 onClick={() => setState({ readOnly: false })}>
-                <EditIcon/>
-            </Fab>
-        );
-    }
-
     return (
         <div className="relative">
             <FormEditor rootId={record.id}
@@ -65,19 +36,18 @@ const Edit = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
                         value={{ id: record.id }}
                         onSubjectPicked={onSubjectPicked}
                         height={height}
-                        readOnly={readOnly}
-                        cancelEditor={() => setState({ readOnly: true })}
+                        cancelEditor={() => setContainerState({ actionKey: Show.key })}
                         noSubmitButton={!submitable}
-                        onUpdate={onUpdate}/>
-            {editButton}
+                        onUpdate={onUpdate}
+                        formActionKey={Edit.key}/>
         </div>
     );
 };
 
- export default ActionRegistry.register(Edit, {
-     kind: ActionKind.member,
-     icon: EditIcon,
-     title: 'Edit',
-     arity: 1,
-     key: 'edit'
- });
+export default ActionRegistry.register(Edit, {
+    kind: ActionKind.member,
+    icon: EditIcon,
+    title: 'Edit',
+    arity: 1,
+    key: 'edit'
+});

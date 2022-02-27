@@ -12,6 +12,7 @@ import { Config } from "../../../common/Symbols";
 import { of } from "rxjs";
 import { titleize } from "../../../common/strutls";
 import ViewerControl from "../../../components/ViewerControl";
+import New from "../../../actions/New";
 
 const JsonMapping = Symbol.for('json_mapping');
 
@@ -32,7 +33,7 @@ function dynamicConfig({ source_data_type, target_data_type }, state, user) {
                 switchMap(
                     dts => zzip(
                         ...dts.map(dt => of(dt)),
-                        ...dts.map(dt => formConfigProperties(dt, false, user))
+                        ...dts.map(dt => formConfigProperties(dt, New.key, user))
                     )
                 ),
                 map(([sourceDataType, targetDataType, [, sourceProps], [, targetProps]]) => ([
@@ -147,7 +148,7 @@ function dynamicConfig({ source_data_type, target_data_type }, state, user) {
                                                 typesFilter: dataTypes => dataTypes.filter(
                                                     ({ name }) => name.includes('Template')
                                                 ),
-                                                newSeed: (value, dataType) => {
+                                                newSeed: value => {
                                                     const formValue = value.parent;
                                                     const source = formValue.propertyValue('source').get();
                                                     let source_data_type = source === '$'

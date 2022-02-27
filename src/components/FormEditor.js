@@ -103,12 +103,12 @@ const useStyles = makeStyles(theme => ({
         color: theme.palette.text.secondary
     },
     iconJsonActive: {
-        backgroundColor: props=> props.jsonMode ? 'rgb(232 227 229 / 85%) ': ''
+        backgroundColor: ({ jsonMode }) => jsonMode && theme.palette.action.selected
     },
     iconJsonWrapper: {
         width: "1.5rem",
         marginLeft: "auto",
-        marginRight: '2rem',    
+        marginRight: '2rem',
         marginBottom: '8px',
     },
     okBox: {
@@ -237,11 +237,13 @@ function plainFormValue(value) {
     return value;
 }
 
-const FormEditor = ({
-                        docked, dataType, rootId, onSubjectPicked, height, value,
-                        readOnly,cancelEditor, onUpdate, onFormSubmit, successControl, submitIcon,
-                        noSubmitButton, noJSON, jsonProjection
-                    }) => {
+const FormEditor = (
+    {
+        docked, dataType, rootId, onSubjectPicked, height, value,
+        readOnly, cancelEditor, onUpdate, onFormSubmit, successControl, submitIcon,
+        noSubmitButton, noJSON, jsonProjection, formActionKey
+    }
+) => {
 
     const [id, setId] = useState(plainFormValue(value)?.id || null);
     const [submitResponse, setSubmitResponse] = useState(null);
@@ -279,9 +281,9 @@ const FormEditor = ({
     const [jsonMode, setJsonMode] = useState(false);
     const [loading, setLoading] = useState(false);
     const [stackControls, setStackControls] = useState([]);
-    
+
     const classes = useStyles({ height, jsonMode });
-   
+
     const current = stack[stack.length - 1];
 
     const updateStack = stack => {
@@ -397,10 +399,10 @@ const FormEditor = ({
 
     const handleCancel = () => {
         landingActionKey === Index.key
-          ? setContainerState({ actionKey: Index.key,  selectedItems: []  })
-          : setContainerState({
-              landingActionKey: Show.key,
-              actionKey: Show.key,
+            ? setContainerState({ actionKey: Index.key, selectedItems: [] })
+            : setContainerState({
+                landingActionKey: Show.key,
+                actionKey: Show.key,
             });
     }
 
@@ -431,7 +433,7 @@ const FormEditor = ({
                      aria-label="JSON"
                      className={classes.fabCopy}
                      onClick={() => copy(JSON.stringify(current.value.get(), null, 2))}>
-                    <CopyIcon/>
+                    <CopyIcon component="svg"/>
                 </Fab>
             );
         }
@@ -465,7 +467,8 @@ const FormEditor = ({
                                         item.rootId,
                                         index === 1 && onFormSubmit, // TODO Improve this
                                         onSubmitDone
-                                    )}/>
+                                    )}
+                                    formActionKey={formActionKey}/>
                 }
             }
 
@@ -502,20 +505,20 @@ const FormEditor = ({
         </div>
     );
 
-    const jsonBtn  = (!noJSON && md) && (
+    const jsonBtn = (!noJSON && md) && (
         <div className={classes.iconJsonWrapper}>
-        <Tooltip title="Json Code" arrow>
-            <IconButton aria-label="Json Code"
-                color='default'
-                onClick={() => setJsonMode(!jsonMode)}
-                className={classes.iconJsonActive}
-                style={{color: jsonMode && "rgb(68, 119, 151)"}}
-                size="small"
-            >
-                <Code />
-            </IconButton>
-        </Tooltip>
-    </div>
+            <Tooltip title="Json Code" arrow>
+                <IconButton aria-label="Json Code"
+                            color='default'
+                            onClick={() => setJsonMode(!jsonMode)}
+                            className={classes.iconJsonActive}
+                            style={{ color: jsonMode && "rgb(68, 119, 151)" }}
+                            size="small"
+                >
+                    <Code/>
+                </IconButton>
+            </Tooltip>
+        </div>
     );
 
     return (
@@ -535,7 +538,7 @@ const FormEditor = ({
                 </div>
                 {jsonView}
             </div>
-            {loading && <FrezzerLoader />}
+            {loading && <FrezzerLoader/>}
         </div>
     );
 };
