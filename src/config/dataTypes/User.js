@@ -13,6 +13,9 @@ export default {
         },
         new: {
             fields: ['name', 'email', 'roles', 'password', 'account']
+        },
+        delete: {
+            confirmation: true
         }
     }
 };

@@ -22,6 +22,9 @@ export default {
         },
         new: {
             fields: ['name', 'notification_level', 'time_zone', 'locked', 'owner', 'users']
+        },
+        delete: {
+            confirmation: true
         }
     },
     fields: {

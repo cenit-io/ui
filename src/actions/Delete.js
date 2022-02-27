@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect} from 'react';
 import ActionRegistry, { CRUD } from "./ActionRegistry";
 import DeleteIcon from '@material-ui/icons/Delete';
 import WarningIcon from '@material-ui/icons/Info';
@@ -13,6 +13,9 @@ import { useContainerContext } from "./ContainerContext";
 import { map } from "rxjs/operators";
 import * as pluralize from "pluralize";
 import Show from "./Show";
+import zzip from "../util/zzip";
+import { useSpreadState } from "../common/hooks";
+import TextField from "@material-ui/core/TextField";
 
 const useStyles = makeStyles(theme => ({
     okBox: {
@@ -62,6 +65,10 @@ const useStyles = makeStyles(theme => ({
         top: -4,
         left: -4,
         zIndex: 1101,
+    },
+    confirmationInput: {
+        margin: theme.spacing(1, 0),
+        padding: theme.spacing(0, 1)
     }
 }));
 
@@ -73,14 +80,21 @@ const Status = Object.freeze({
     failed: 5
 });
 
+const CONFIRMATION_PHRASE = 'permanently delete';
+
 const Delete = ({ dataType, onCancel, onClose }) => {
-    const [status, setStatus] = useState(Status.loading);
-    const [title, setTitle] = useState(null);
+    const [state, setState] = useSpreadState({
+        status: Status.loading,
+        title: null,
+    });
+
     const classes = useStyles();
 
     const [containerState, setContainerState] = useContainerContext();
 
     const { selectedItems, landingActionKey, selector } = containerState;
+
+    const { status, title, config, confirmed } = state;
 
     useEffect(() => {
         setContainerState({ breadcrumbActionName: "Delete" });
@@ -107,14 +121,18 @@ const Delete = ({ dataType, onCancel, onClose }) => {
                 })
             );
         }
-        const subscription = theTitle.subscribe(
-            title => {
-                setStatus(Status.ready);
-                setTitle(title);
+        const subscription = zzip(dataType.config(), theTitle).subscribe(
+            ([config, title]) => {
+                setState({
+                    status: Status.ready,
+                    title,
+                    config,
+                    confirmed: !config.actions?.delete?.confirmation
+                });
             }
         );
         return () => subscription.unsubscribe();
-    }, [selectedItems]);
+    }, [dataType, selectedItems]);
 
     useEffect(() => {
         switch (status) {
@@ -123,8 +141,8 @@ const Delete = ({ dataType, onCancel, onClose }) => {
                     ? { _id: { $in: selectedItems.map(({ id }) => id) } }
                     : selector || {};
                 const subscription = dataType.bulkDelete(selection).subscribe(
-                    () => setStatus(Status.destroyed),
-                    () => setStatus(Status.failed)
+                    () => setState({ status: Status.destroyed }),
+                    () => setState({ status: Status.failed })
                 );
                 return () => subscription.unsubscribe();
             }
@@ -139,41 +157,66 @@ const Delete = ({ dataType, onCancel, onClose }) => {
         }
     }, [status, selector]);
 
-    const handleDestroy = () => setStatus(Status.destroying);
+    const handleDestroy = () => setState({ status: Status.destroying });
 
     let statusUI, actions, text;
     switch (status) {
         case Status.ready:
-            statusUI = <WarningIcon className={classes.infoIcon} color="secondary"/>;
+            statusUI = <WarningIcon className={classes.infoIcon} color="secondary" component="svg"/>;
             text = title;
-            actions = <React.Fragment>
-                <Typography variant='subtitle1' className={clsx(classes.successLabel, classes.alignCenter)}>
-                    Are you sure you want to proceed?
-                </Typography>
-                <div className={classes.alignCenter}>
-                    <Button variant="outlined"
-                            color="secondary"
-                            startIcon={<CancelIcon/>}
-                            className={classes.actionButton}
-                            onClick={onCancel}>
-                        Cancel
-                    </Button>
-                    <Button variant="contained"
-                            color="secondary"
-                            startIcon={<CheckIcon/>}
-                            className={classes.actionButton}
-                            onClick={handleDestroy}>
-                        Yes, I'm sure!
-                    </Button>
-                </div>
-            </React.Fragment>;
+            const confirmation = config.actions?.delete?.confirmation && (
+                <>
+                    <Typography component="div"
+                                variant="subtitle1"
+                                className={clsx(classes.successLabel, classes.alignCenter)}>
+                        This is a high risk operation and the associated data may be lost forever.
+                    </Typography>
+                    <Typography component="div"
+                                variant="subtitle2"
+                                className={clsx(classes.successLabel, classes.alignCenter)}>
+                        To confirm deletion, type <em>{CONFIRMATION_PHRASE}</em> in the text input below.
+                    </Typography>
+                    <TextField variant="outlined"
+                               className={classes.confirmationInput}
+                               placeholder={CONFIRMATION_PHRASE}
+                               onChange={e => setState({ confirmed: e.target.value === CONFIRMATION_PHRASE })}/>
+                </>
+            );
+            actions = (
+                <>
+                    {confirmation || (
+                        <Typography variant='subtitle1'
+                                    className={clsx(classes.successLabel, classes.alignCenter)}
+                                    component="div">
+                            Are you sure you want to proceed?
+                        </Typography>
+                    )}
+                    <div className={classes.alignCenter}>
+                        <Button variant="outlined"
+                                color="secondary"
+                                startIcon={<CancelIcon component="svg"/>}
+                                className={classes.actionButton}
+                                onClick={onCancel}>
+                            Cancel
+                        </Button>
+                        <Button variant="contained"
+                                color="secondary"
+                                startIcon={<CheckIcon component="svg"/>}
+                                className={classes.actionButton}
+                                onClick={handleDestroy}
+                                disabled={!confirmed}>
+                            {confirmation ? 'Delete' : "Yes, I'm sure!"}
+                        </Button>
+                    </div>
+                </>
+            );
             break;
         case Status.destroyed:
-            statusUI = <CheckIcon className={classes.infoIcon} color="secondary"/>;
+            statusUI = <CheckIcon className={classes.infoIcon} color="secondary" component="svg"/>;
             text = `Done!`;
             break;
         case Status.failed:
-            statusUI = <WarningIcon className={classes.infoIcon} color="secondary"/>;
+            statusUI = <WarningIcon className={classes.infoIcon} color="secondary" component="svg"/>;
             text = 'Operation failed';
             break;
         default:
@@ -187,9 +230,9 @@ const Delete = ({ dataType, onCancel, onClose }) => {
         <div className={classes.okContainer}>
             <div className={clsx(classes.okBox, classes.center)}>
                 {statusUI}
-                <DeleteIcon fontSize='large'/>
+                <DeleteIcon fontSize='large' component="svg"/>
             </div>
-            <Typography variant='h5' className={classes.alignCenter}>
+            <Typography variant='h5' className={classes.alignCenter} component="div">
                 {text}
             </Typography>
             {actions}
@@ -207,5 +250,6 @@ export default ActionRegistry.register(Delete, {
     ],
     activeColor: 'secondary',
     crud: [CRUD.delete],
-    group: 4
+    group: 4,
+    key: 'delete'
 });

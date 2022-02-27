@@ -52,6 +52,9 @@ export default {
         },
         index: {
             fields: ['namespace', 'name', 'slug', 'id_type', 'updated_at']
+        },
+        delete: {
+            confirmation: true
         }
     },
     icon: <FileTypesFilledIcon/>,
