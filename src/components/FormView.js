@@ -28,11 +28,13 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const FormView = ({
-                      rootId, submitter, viewport, dataType, width, height, value, _type,
-                      disabled, onStack, readOnly, onFormSubmit, onUpdate, seed, typesFilter,
-                      formViewControlConfig
-                  }) => {
+const FormView = (
+    {
+        rootId, submitter, viewport, dataType, width, height, value, _type,
+        disabled, onStack, readOnly, onFormSubmit, onUpdate, seed, typesFilter,
+        formViewControlConfig, formActionKey
+    }
+) => {
 
     const [state, setState] = useSpreadState({
         initialFormValue: value.get()[FETCHED] ? value.cache : {}
@@ -191,7 +193,8 @@ const FormView = ({
                                    value={value}
                                    errors={errors}
                                    onStack={onStack}
-                                   onFetched={handleFetched}/>;
+                                   onFetched={handleFetched}
+                                   formActionKey={formActionKey}/>;
     } else {
         const textSkeleton = <Skeleton variant="text" component="div"/>;
         if (configs) {

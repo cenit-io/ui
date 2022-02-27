@@ -7,6 +7,7 @@ import EditIcon from "@material-ui/icons/Edit";
 import FormEditor from "../components/FormEditor";
 import { useSpreadState } from "../common/hooks";
 import { useContainerContext } from './ContainerContext';
+import Edit from "./Edit";
 
 const useStyles = makeStyles(theme => ({
     editButton: {
@@ -16,7 +17,7 @@ const useStyles = makeStyles(theme => ({
     }
 }));
 
-const Show = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) => {
+const Show = ({ docked, dataType, record, onSubjectPicked, height }) => {
     const [state, setState] = useSpreadState({
         readOnly: true
     });
@@ -24,17 +25,13 @@ const Show = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
     const containerContext = useContainerContext();
     const [, setContainerState] = containerContext;
 
-    const { readOnly, config } = state;
+    const { config } = state;
 
     const classes = useStyles();
 
     useEffect(() => {
-        setContainerState({ breadcrumbActionName: readOnly ? "Show" : "Edit" });
-
-        return () => {
-          setContainerState({ breadcrumbActionName: null });
-        };
-      }, [readOnly]);
+        setContainerState({ breadcrumbActionName: "Show" });
+    }, []);
 
     useEffect(() => {
         const subscription = dataType.config().subscribe(
@@ -47,12 +44,12 @@ const Show = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
     const submitable = config && (!config.crud || config.crud.indexOf('update') !== -1);
 
     let editButton;
-    if (readOnly && submitable) {
+    if (submitable) {
         editButton = (
             <Fab aria-label="edit"
                  color="primary"
                  className={classes.editButton}
-                 onClick={() => setState({ readOnly: false })}>
+                 onClick={() => setContainerState({ actionKey: Edit.key })}>
                 <EditIcon component="svg"/>
             </Fab>
         );
@@ -66,10 +63,9 @@ const Show = ({ docked, dataType, record, onSubjectPicked, onUpdate, height }) =
                         value={{ id: record.id }}
                         onSubjectPicked={onSubjectPicked}
                         height={height}
-                        readOnly={readOnly}
-                        cancelEditor={() => setState({ readOnly: true })}
-                        noSubmitButton={!submitable}
-                        onUpdate={onUpdate}/>
+                        readOnly={true}
+                        noSubmitButton={true}
+                        formActionKey={Show.key}/>
             {editButton}
         </div>
     );

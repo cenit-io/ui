@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import Loading from '../components/Loading';
 import { Breadcrumbs, Chip, Toolbar, Typography, useMediaQuery, useTheme } from "@material-ui/core";
 import { appBarHeight } from "../layout/AppBar";
@@ -95,7 +95,6 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
         dataType, record, loading, actionKey, actionComponentKey, breadcrumbActionName, handleAction
     } = containerState;
 
-    const actionSubscription = useRef(null);
     const theme = useTheme();
     const xs = useMediaQuery(theme.breakpoints.down('xs'));
 
@@ -113,7 +112,9 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
     useEffect(() => {
         if (activeActionKey) {
-            setTimeout(() => doHandleAction(activeActionKey));
+            const timeout = setTimeout(() => doHandleAction(activeActionKey));
+
+            return () => clearTimeout(timeout);
         }
     }, [doHandleAction, activeActionKey]);
 

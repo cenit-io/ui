@@ -18,14 +18,14 @@ const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
 
     const handleCancel = () => {
         setContainerState({ actionKey: 'index' });
-    }
+    };
 
     useEffect(() => {
-      setContainerState({ breadcrumbActionName: "New" });
+        setContainerState({ breadcrumbActionName: "New" });
 
-      return () => {
-        setContainerState({ breadcrumbActionName: null });
-      };
+        return () => {
+            setContainerState({ breadcrumbActionName: null });
+        };
     }, []);
 
     useEffect(() => {
@@ -56,7 +56,8 @@ const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
                            dataType={dataType}
                            rootId={rootId}
                            cancelEditor={handleCancel}
-                           onSubjectPicked={onSubjectPicked}/>;
+                           onSubjectPicked={onSubjectPicked}
+                           formActionKey={New.key}/>;
     }
 
     return <Loading/>;
@@ -66,5 +67,6 @@ export default ActionRegistry.register(New, {
     kind: ActionKind.collection,
     icon: NewIcon,
     title: 'New',
-    crud: [CRUD.create]
+    crud: [CRUD.create],
+    key: 'new'
 });

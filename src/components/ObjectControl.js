@@ -15,15 +15,17 @@ import zzip from "../util/zzip";
 import { useSpreadState } from "../common/hooks";
 import { deepMergeObjectsOnly } from "../common/merge";
 import { useTenantContext } from "../layout/TenantContext";
+import Edit from "../actions/Edit";
+import New from "../actions/New";
 
-function editFields(config, user = null) {
-    const editConfig = config.actions?.edit;
-    const newConfig = config.actions?.new;
-    if (editConfig?.fields) {
-        if (typeof editConfig.fields === 'function') {
-            return editConfig.fields(user);
+function actionFields(config, actionKey, user = null) {
+    const actionConfig = config.actions && config.actions[actionKey || Edit.key];
+    const newConfig = config.actions && config.actions[New.key];
+    if (actionConfig?.fields) {
+        if (typeof actionConfig.fields === 'function') {
+            return actionConfig.fields(user);
         }
-        return editConfig.fields;
+        return actionConfig.fields;
     }
     let fields = newConfig?.fields;
     if (fields) {
@@ -37,13 +39,15 @@ function editFields(config, user = null) {
     }
 }
 
-function editViewportFields(config, user = null) {
-    return config.actions?.edit?.viewportFields || editFields(config, user);
+function actionViewportFields(config, actionKey, user = null) {
+    return (
+        config.actions && config.actions[actionKey || Edit.key]?.viewportFields
+    ) || actionFields(config, actionKey, user);
 }
 
-function editViewport(config, dataType, embedded, user, ...plus) {
-    const editConfig = config.actions?.edit;
-    const configViewport = (embedded && editConfig?.embeddedViewport) || editConfig?.viewport;
+function actionViewport(config, actionKey, dataType, embedded, user, ...plus) {
+    const actionConfig = config.actions && config.actions[actionKey || Edit.key];
+    const configViewport = (embedded && actionConfig?.embeddedViewport) || actionConfig?.viewport;
     if (configViewport) {
         if (plus.length) {
             let viewport = configViewport.trim();
@@ -54,19 +58,17 @@ function editViewport(config, dataType, embedded, user, ...plus) {
         }
         return configViewport;
     }
-    const fields = editViewportFields(config, user);
+    const fields = actionViewportFields(config, actionKey, user);
     if (fields) {
         return dataType.shallowViewPort(...fields, ...plus);
     }
 }
 
-export function formConfigProperties(dataType, editMode = false, user = null) {
+export function formConfigProperties(dataType, actionKey = New.key, user = null) {
     return (dataType?.config() || of({})).pipe(
         switchMap(config => {
             let propsObservable;
-            const configFields = editMode
-                ? editFields(config, user)
-                : config.actions?.new?.fields;
+            const configFields = actionFields(config, actionKey, user);
             if (configFields) {
                 propsObservable = dataType.properties().pipe(
                     map(
@@ -146,7 +148,7 @@ function ObjectControl(props) {
     } = state;
 
     const {
-        onChange, value, dataType, fetchPath, onFetched, config,
+        onChange, value, dataType, fetchPath, onFetched, config, formActionKey,
         property, width, disabled, onStack, readOnly, errors, fetched
     } = props;
 
@@ -158,7 +160,7 @@ function ObjectControl(props) {
         const editMode = rootId;
         const subscription = formConfigProperties(
             getDataType(),
-            rootId,
+            formActionKey || (rootId ? Edit.key : New.key),
             user
         ).subscribe(([sConfig, properties]) => {
             setState({
@@ -179,7 +181,7 @@ function ObjectControl(props) {
             });
         });
         return () => subscription.unsubscribe();
-    }, [dataType, property, config, user]);
+    }, [dataType, property, config, user, formActionKey]);
 
     useEffect(() => {
         if (rootId) {
@@ -190,8 +192,10 @@ function ObjectControl(props) {
                     switchMap(config => {
                         const configViewport = v[NEW]
                             ? config.actions?.new?.viewport
-                            : editViewport(
-                                config, getDataType(),
+                            : actionViewport(
+                                config,
+                                formActionKey,
+                                getDataType(),
                                 value.jsonPath() !== '$',
                                 user,
                                 'id'
@@ -232,7 +236,7 @@ function ObjectControl(props) {
             value.set({ ...value.cache, [FETCHED]: true });
             setState({ ready: true });
         }
-    }, [getDataType, rootId, value, initialFormValue, fetched, user]);
+    }, [getDataType, rootId, value, initialFormValue, fetched, user, formActionKey]);
 
     useEffect(() => {
         if (orchestrator) {
@@ -243,8 +247,8 @@ function ObjectControl(props) {
                         if (isObservable(newState)) {
                             newState.subscribe(s => { // TODO unsubscribe
                                 if (s) {
-                                   orchestratorState.current = s || {};
-                                   setState({});
+                                    orchestratorState.current = s || {};
+                                    setState({});
                                 }
                             });
                         } else {
