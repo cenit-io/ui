@@ -2,12 +2,9 @@ import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { green } from '@material-ui/core/colors';
 import Fab from '@material-ui/core/Fab';
 import CheckIcon from '@material-ui/icons/Check';
-import SaveIcon from '@material-ui/icons/SaveOutlined';
-import { Close } from '@material-ui/icons';
-import { Tooltip } from '@material-ui/core';
+import SaveIcon from '@material-ui/icons/Save';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -24,16 +21,13 @@ const useStyles = makeStyles(theme => ({
     fabProgress: {
         color: theme.palette.primary.main,
         position: 'absolute',
-        top: 0,
-        left: 0,
+        top: -6,
+        left: -6,
         zIndex: 1101,
-    },
-    fabCustom:{
-        borderRadius: "2px"
     }
 }));
 
-export default function LoadingButton({ loading, success, onClick, onClickCancel, className, actionIcon }) {
+export default function LoadingButton({ loading, success, onClick, className, actionIcon }) {
     const classes = useStyles();
 
     const fabClassName = clsx({
@@ -43,38 +37,16 @@ export default function LoadingButton({ loading, success, onClick, onClickCancel
     const rootClassname = clsx(classes.root, className);
 
     return (
-      <div className={rootClassname}>
-        <div className={classes.wrapper}>
-          <Tooltip arrow title="Save">
-          <Fab
-            aria-label="save"
-            size="small"
-            className={classes.fabCustom}
-            onClick={() => !(loading || success) && onClick()}
-          >
-            {success ? <CheckIcon /> : actionIcon || <SaveIcon />}
-          </Fab>
-          </Tooltip>
-          {loading && (
-            <CircularProgress size={40} className={classes.fabProgress} />
-          )}
-        </div>
-
-        {success ||
-          (!loading && (
+        <div className={rootClassname}>
             <div className={classes.wrapper}>
-              <Tooltip arrow title="Cancel">
-              <Fab
-                aria-label="cancel"
-                size="small"
-                className={classes.fabCustom}
-                onClick={() => !(loading || success) && onClickCancel()}
-              >
-                <Close />
-              </Fab>
-              </Tooltip>
+                <Fab aria-label="save"
+                     color="primary"
+                     className={fabClassName}
+                     onClick={() => !(loading || success) && onClick()}>
+                    {success ? <CheckIcon component="svg"/> : actionIcon || <SaveIcon component="svg"/>}
+                </Fab>
+                {loading && <CircularProgress size={68} className={classes.fabProgress}/>}
             </div>
-          ))}
-      </div>
+        </div>
     );
 }
