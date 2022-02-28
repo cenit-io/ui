@@ -30,6 +30,7 @@ import { Code } from '@material-ui/icons';
 import { useContainerContext } from '../actions/ContainerContext';
 import Index from '../actions/Index';
 import Show from '../actions/Show';
+import { Close } from '@material-ui/icons';
 
 function withForm(item) {
     item.submitter = new Subject();
@@ -76,11 +77,11 @@ const useStyles = makeStyles(theme => ({
         paddingRight: '15%',
     },
     trailing: {
-        height: `${theme.spacing(1)}px`
+        height: `${theme.spacing(8)}px`
     },
     fabBack: {
         position: 'absolute',
-        top: props => `calc(${props.height} - ${theme.spacing(13)}px)`,
+        top: props => `calc(${props.height} - ${theme.spacing(12)}px)`,
         right: theme.spacing(18),
         color: theme.palette.text.secondary
     },
@@ -88,6 +89,14 @@ const useStyles = makeStyles(theme => ({
         position: 'absolute',
         top: props => `calc(${props.height} - ${theme.spacing(14)}px)`,
         right: theme.spacing(2)
+    },
+    fabSaveLeft: {
+        right: theme.spacing(8)
+    },
+    fabCancel: {
+        position: 'absolute',
+        top: props => `calc(${props.height} - ${theme.spacing(12)}px)`,
+        right: theme.spacing(2),
     },
     fabJson: {
         position: 'absolute',
@@ -99,7 +108,7 @@ const useStyles = makeStyles(theme => ({
     fabCopy: {
         position: 'absolute',
         top: theme.spacing(15),
-        right: theme.spacing(5),
+        right: theme.spacing(3),
         color: theme.palette.text.secondary
     },
     iconJsonActive: {
@@ -412,11 +421,20 @@ const FormEditor = (
                 <LoadingButton key='save'
                                loading={saving && !done}
                                onClick={save}
-                               onClickCancel={cancelEditor ? cancelEditor : handleCancel}
-                               className={classes.fabSave}
+                               className={clsx(classes.fabSave, cancelEditor && classes.fabSaveLeft)}
                                success={done}
                                actionIcon={stack.length === 2 && submitIcon}/>
             );
+            if (cancelEditor) {
+                actions.push(
+                    <Fab key='cancel'
+                         size="small"
+                         className={classes.fabCancel}
+                         onClick={cancelEditor}>
+                        <Close component="svg"/>
+                    </Fab>
+                );
+            }
         }
 
         if (md && jsonMode) {
@@ -513,9 +531,8 @@ const FormEditor = (
                             onClick={() => setJsonMode(!jsonMode)}
                             className={classes.iconJsonActive}
                             style={{ color: jsonMode && "rgb(68, 119, 151)" }}
-                            size="small"
-                >
-                    <Code/>
+                            size="small">
+                    <Code component="svg"/>
                 </IconButton>
             </Tooltip>
         </div>

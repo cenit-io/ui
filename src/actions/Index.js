@@ -20,9 +20,9 @@ import { useSpreadState } from "../common/hooks";
 import { useContainerContext } from "./ContainerContext";
 import { useOriginsStyles } from "../components/OriginsColors";
 import viewerComponentFor from "../viewers/viewerComponentFor";
-import { KeyboardArrowDown } from '@material-ui/icons';
 import { useTenantContext } from "../layout/TenantContext";
 import ActionPicker from "./ActionPicker";
+import * as pluralize from "pluralize";
 
 const StyledTableCell = withStyles((theme) => ({
     head: {
@@ -127,31 +127,17 @@ const useStyles = makeStyles(theme => ({
     pagination: {
         height: theme.spacing(7),
         boxSizing: "border-box",
-        [theme.breakpoints.down('sm')]: {
+        margin: theme.spacing(0, 3),
+        [theme.breakpoints.down('xs')]: {
             padding: 0,
             margin: 0,
             justifyContent: 'space-evenly'
         },
     },
-    paginationWrapper: {
-        backgroundColor: theme.palette.background.default,
-        padding: "0 .4rem",
-        [theme.breakpoints.up('sm')]: {
-            padding: "0 2rem",
-        },
-    },
     pageSize: {
-        margin: '0, 8px',
+        margin: theme.spacing(0, 1),
         height: '50%',
-        fontSize: '14px'
-    },
-    pageSizeWrapper: {
-        height: '100%',
-        paddingLeft: ".5rem",
-        justifyContent: "space-between",
-        [theme.breakpoints.up('sm')]: {
-            width: 'auto',
-        },
+        fontSize: 14
     },
     pageTableContainer: {
         position: 'relative',
@@ -167,59 +153,11 @@ const useStyles = makeStyles(theme => ({
         maxHeight: "100%",
         overflow: "auto",
         boxSizing: "border-box",
-        backgroundColor: 'red'
     },
     pageShadow: {
         boxShadow: "0 2px 5px 1px rgb(64 60 67 / 16%)",
         borderRadius: "6px",
-        backgroundColor: "#fff",
-    },
-    customPagination: {
-        [theme.breakpoints.up('sm')]: {
-            marginRight: '1rem',
-        },
-        '& ul>li': {
-            display: "none",
-            '&:nth-child(-n+2)': {
-                display: "initial",
-                marginRight: '4px'
-            },
-            '&:nth-last-child(-n+2)': {
-                display: "initial",
-                marginLeft: '4px'
-            }
-        },
-    },
-    customPaginationText: {
-        marginRight: '2px',
-        marginLeft: '0',
-        [theme.breakpoints.up('sm')]: {
-            marginRight: '4px',
-            marginLeft: '2rem',
-        },
-    },
-    customPaginationTextWrapper: {
-        width: "25%",
-        display: "flex",
-        margin: "0 14px",
-        flexWrap: "wrap",
-        overflow: "hidden",
-        whiteSpace: "nowrap",
-        textOverflow: "ellipsis",
-        [theme.breakpoints.up('xs')]: {
-            margin: "0 10px",
-            overflow: "visible",
-            whiteSpace: "normal",
-        },
-        [theme.breakpoints.up('sm')]: {
-            width: "auto",
-        },
-    },
-    customPaginationWrapper: {
-        width: "100%",
-        [theme.breakpoints.up('sm')]: {
-            width: "auto"
-        },
+        backgroundColor: theme.palette.background.paper,
     },
     memberActions: {
         top: ({ highlightTop }) => highlightTop,
@@ -249,7 +187,7 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
 
     const [containerState, setContainerState] = useContainerContext();
 
-    const { data, page, limit, selectedItems, props, itemsViewport, withOrigin, handleAction } = containerState;
+    const { data, selectedItems, props, withOrigin, handleAction } = containerState;
 
     const originsClasses = useOriginsStyles();
     const theme = useTheme();
@@ -257,19 +195,11 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
 
     const tableContainerRef = useRef(null);
 
-    const { dense, order, orderBy, highlightTop, highlightIndex } = state;
+    const { dense, highlightTop, highlightIndex } = state;
 
     const classes = useStyles({ highlightTop });
 
     const select = selectedItems => setContainerState({ selectedItems });
-
-    const handleRequestSort = (event, property) => {
-        const isDesc = orderBy === property && order === 'desc';
-        setState({
-            order: isDesc ? 'asc' : 'desc',
-            orderBy: property
-        });
-    };
 
     const handleSelectAllClick = event => {
         let selection;
@@ -301,19 +231,6 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
 
         select(newSelection);
     };
-
-    const handleChangeDense = event => setState({ dense: event.target.checked });
-
-    //const { order, orderBy, page} = this.state;
-
-    //const isSelected = name => selectedItems.indexOf(name) !== -1;
-
-    /*const headCells = props.map(prop => <StyledTableCell key={prop.prop.name}
-                                                   style={{
-                                                       backgroundColor: "#fff",
-                                                       position: "sticky",
-                                                       top: 0
-                                                   }}>{prop.title}</StyledTableCell>);*/
 
     const rows = data.items.map((item, index) => {
         let isSelected = selectedItems.findIndex(i => i.id === item.id) !== -1;
@@ -374,7 +291,7 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
              className={classes.pageTableContainer}
              style={{ minHeight: `calc(${height} - 400px)` }}>
             <div className={clsx(classes.pageTableWrapper, classes.pageShadow)}
-                 style={{ maxHeight: `calc(${height} - 2rem)` }}
+                 style={{ maxHeight: `calc(${height} - ${xs ? '0px' : '2rem'})` }}
                  onMouseLeave={hideHighlight}>
                 <Table className={classes.table} size={dense ? "small" : "medium"}>
                     <EnhancedTableHead
@@ -403,7 +320,7 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
     );
 }
 
-function DefaultIndex({ dataType, subject, height, width, dataTypeConfig, onSubjectPicked }) {
+function DefaultIndex({ dataType, height, width, dataTypeConfig, onSubjectPicked }) {
 
     const [tenantState] = useTenantContext();
     const { user } = tenantState;
@@ -524,53 +441,34 @@ function DefaultIndex({ dataType, subject, height, width, dataTypeConfig, onSubj
         if (xs) {
             pagOpts.siblingCount = 0;
         }
+        const pageSizeLabel = xs
+            ? 'Page size'
+            : `${pluralize(containerTitle)} per page`;
         pagination = (
-            <div className={classes.paginationWrapper}>
-                <div
-                    className={clsx('flex align-items-center justify-content-end', classes.pagination, classes.pageShadow)}>
-                    <div className={clsx('flex align-items-center', classes.pageSizeWrapper)}>
-                        <Typography variant="subtitle2">
-                            {!xs && `${containerTitle} per page`}
-                            {xs && "Page size"}
-                        </Typography>
-                        <Select className={classes.pageSize}
-                                value={limit}
-                                onChange={handleChangeRowsPerPage}
-                                variant="outlined"
-                                IconComponent={KeyboardArrowDown}>
-                            {
-                                ItemsPerPage.map((c, index) => (
-                                    <MenuItem key={`ipp_${index}_${c}`}
-                                              value={c}>
-                                        {c}
-                                    </MenuItem>
-                                ))
-                            }
-                        </Select>
-                    </div>
-                    <div className='flex align-items-center'>
-                        <div className={classes.customPaginationTextWrapper}>
-                            <Typography variant="subtitle2" className={classes.customPaginationText}>
-                                {(limit * data.current_page) + 1 - limit} - {limit * data.current_page} of {data.count} {!xs && containerTitle.toLowerCase()}
-                            </Typography>
-                        </div>
-                        <div className={classes.customPaginationWrapper}>
-                            <Pagination count={data.total_pages}
-                                        page={data.current_page}
-                                        {...pagOpts}
-                                        onChange={handleChangePage}
-                                        size="small"
-                                        color="primary"
-                                        showFirstButton
-                                        showLastButton
-                                        variant="outlined"
-                                        shape="rounded"
-                                        defaultPage={data.current_page}
-                                        className={classes.customPagination}
-                            />
-                        </div>
-                    </div>
-                </div>
+            <div className={clsx('flex align-items-center', classes.pagination, !xs && classes.pageShadow)}>
+                <div className="grow-1"/>
+                <Typography variant="subtitle2" component="div">
+                    {pageSizeLabel}
+                </Typography>
+                <Select className={classes.pageSize}
+                        value={limit}
+                        onChange={handleChangeRowsPerPage}
+                        variant="outlined">
+                    {
+                        ItemsPerPage.map((c, index) => (
+                            <MenuItem key={`ipp_${index}_${c}`}
+                                      value={c}>
+                                {c}
+                            </MenuItem>
+                        ))
+                    }
+                </Select>
+                <Pagination count={data.total_pages}
+                            page={data.current_page}
+                            {...pagOpts}
+                            onChange={handleChangePage}
+                            size="small"
+                            color="primary"/>
             </div>
         );
     }
