@@ -45,7 +45,6 @@ import './RunScript';
 import './RunAlgorithm';
 import './SwitchTenant';
 import './MetaConfig';
-import './SwitchTenantLock';
 
 const useActionContainerStyles = makeStyles(theme => ({
     toolbar: {

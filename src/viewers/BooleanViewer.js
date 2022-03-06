@@ -4,7 +4,7 @@ import NotDefinedIcon from "../icons/NotDefinedIcon";
 import CheckIcon from "../icons/CheckIcon";
 import FalseIcon from "../icons/FalseIcon";
 
-const useStyles = makeStyles(theme => ({
+export const useBooleanViewerStyles = makeStyles(theme => ({
     true: {
         color: theme.palette.success.main
     },
@@ -20,7 +20,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 export default function BooleanViewer({ value }) {
-    const classes = useStyles();
+    const classes = useBooleanViewerStyles();
 
     const Icon = value === undefined || value === null
         ? NotDefinedIcon

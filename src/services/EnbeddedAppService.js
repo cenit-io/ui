@@ -1,6 +1,6 @@
 import { isObservable, of, from } from "rxjs";
 import { map } from "rxjs/operators";
-import { AppGateway } from "./AuthorizationService";
+import AuthorizationService, { AppGateway } from "./AuthorizationService";
 import { EmbeddedAppSubject } from "./subjects";
 
 
@@ -60,7 +60,10 @@ const EmbeddedAppService = {
             //     }
             // });
             for (let i = 0; i < frames.length; i++) {
-                frames[i].postMessage({ cmd: 'refresh' }, '*');
+                frames[i].postMessage({
+                    cmd: 'refresh',
+                    tenantId: AuthorizationService.getXTenantId()
+                }, '*');
             }
         }
     }
