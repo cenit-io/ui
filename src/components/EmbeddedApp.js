@@ -35,7 +35,9 @@ export default function EmbeddedApp({ url, height, width, autoHeight }) {
                 map(access => ([window, access]))
             ))
         ).subscribe(
-            ([window, access]) => window.postMessage({ access }, '*')
+            ([window, access]) => window.postMessage({
+                access, tenantId: AuthorizationService.getXTenantId()
+            }, '*')
         );
 
         return () => subscription.unsubscribe();
@@ -105,6 +107,9 @@ export default function EmbeddedApp({ url, height, width, autoHeight }) {
                     case 'send': {
                         const { message, domain } = data;
                         if (message && domain) {
+                            if (message.cmd === 'refresh') {
+                                message.tenantId = AuthorizationService.getXTenantId();
+                            }
                             const frames = window.frames;
                             for (let i = 0; i < frames.length; i++) {
                                 frames[i].postMessage(message, domain);

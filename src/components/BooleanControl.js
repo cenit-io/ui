@@ -1,17 +1,20 @@
 import React, { useEffect } from 'react';
 import ClearIcon from '@material-ui/icons/Clear';
 import BlankIcon from '@material-ui/icons/IndeterminateCheckBox';
-import CheckedIcon from '@material-ui/icons/CheckBox';
-import UncheckedIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import TrueIcon from '@material-ui/icons/CheckBox';
 import { FormControl, IconButton, FilledInput, InputAdornment, InputLabel } from "@material-ui/core";
 import { useSpreadState } from "../common/hooks";
 import { useFormContext } from "./FormContext";
+import { useBooleanViewerStyles } from "../viewers/BooleanViewer";
+import FalseIcon from "../icons/FalseIcon";
 
-const BooleanControl = ({ title, onChange, value, onDelete, disabled, readOnly }) => {
+const BooleanControl = ({ title, onChange, value, onDelete, disabled, readOnly, deleteDisabled }) => {
 
     const [state, setState] = useSpreadState({ focused: false });
 
     const { initialFormValue } = useFormContext();
+
+    const classes = useBooleanViewerStyles();
 
     useEffect(() => {
         setState({ booleanValue: value.get() });
@@ -26,8 +29,8 @@ const BooleanControl = ({ title, onChange, value, onDelete, disabled, readOnly }
     const CheckIcon = booleanValue === undefined || booleanValue === null
         ? BlankIcon
         : (booleanValue
-                ? CheckedIcon
-                : UncheckedIcon
+                ? TrueIcon
+                : FalseIcon
         );
     const displayValue = String(booleanValue);
 
@@ -38,7 +41,9 @@ const BooleanControl = ({ title, onChange, value, onDelete, disabled, readOnly }
         onChange(newBoolean);
     };
 
-    const handleDelete = () => {
+    const handleDelete = (
+        !deleteDisabled && !disabled && !readOnly && booleanValue !== undefined && booleanValue !== null
+    ) && (() => {
         const initialValue = value.valueFrom(initialFormValue);
         setState({ focused: true, booleanValue: initialValue ? null : undefined });
         if (initialValue !== null && initialValue !== undefined) {
@@ -47,7 +52,7 @@ const BooleanControl = ({ title, onChange, value, onDelete, disabled, readOnly }
             value.delete();
         }
         onDelete();
-    };
+    });
 
     return (
         <FormControl variant="filled" fullWidth={true} disabled={disabled}>
@@ -60,14 +65,14 @@ const BooleanControl = ({ title, onChange, value, onDelete, disabled, readOnly }
                              <InputAdornment position="end">
 
                                  <IconButton onClick={handleChange} disabled={disabled || readOnly}>
-                                     <CheckIcon color={focused ? 'primary' : 'inherit'}/>
+                                     <CheckIcon color={focused ? 'primary' : 'inherit'}
+                                                className={classes[String(booleanValue)]}/>
                                  </IconButton>
-                                 {
-                                     !disabled && !readOnly && booleanValue !== undefined && booleanValue !== null &&
+                                 {handleDelete && (
                                      <IconButton onClick={handleDelete}>
                                          <ClearIcon/>
                                      </IconButton>
-                                 }
+                                 )}
                              </InputAdornment>
                          }
                          onFocus={() => setState({ focused: true })}

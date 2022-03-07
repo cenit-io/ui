@@ -2,7 +2,6 @@ import React from 'react';
 import HomeIcon from '@material-ui/icons/Home';
 import ErrorLevelViewer from "../../viewers/ErrorLevelViewer";
 import MenuIcon from "@material-ui/icons/HomeOutlined";
-import ViewerControl from "../../components/ViewerControl";
 import { isSuperAdmin } from "../../layout/TenantContext";
 
 export const TenantMenuIcon = MenuIcon;
@@ -13,33 +12,33 @@ export default {
     actions: {
         index: {
             fields: user => {
-                const fields = ['name', 'notification_level', 'time_zone', 'locked', 'updated_at'];
+                const fields = ['name', 'notification_level', 'time_zone', 'unlocked', 'updated_at'];
                 if (isSuperAdmin(user)) {
-                    fields.splice(fields.length - 2, 0, 'owner', 'users');
+                    fields.splice(fields.length - 1, 0, 'owner', 'users');
                 }
                 return fields;
             }
         },
         new: {
             fields: user => {
-                const fields = ['name', 'notification_level', 'time_zone']
+                const fields = ['name', 'notification_level', 'time_zone'];
                 if (isSuperAdmin(user)) {
-                    fields.splice(fields.length - 2, 0, 'owner', 'users');
+                    fields.splice(fields.length, 0, 'owner', 'users');
                 }
                 return fields;
             }
         },
         edit: {
             fields: user => {
-                const fields = ['name', 'notification_level', 'time_zone']
+                const fields = ['name', 'notification_level', 'time_zone', 'unlocked']
                 if (isSuperAdmin(user)) {
-                    fields.splice(fields.length - 2, 0, 'owner', 'users');
+                    fields.splice(fields.length, 0, 'owner', 'users');
                 }
                 return fields;
             }
         },
         show: {
-            fields: ['name', 'notification_level', 'time_zone', 'locked', 'owner', 'users']
+            fields: ['name', 'notification_level', 'time_zone', 'unlocked', 'owner', 'users']
         },
         delete: {
             confirmation: true
@@ -52,8 +51,10 @@ export default {
                 'background'
             )
         },
-        locked: {
-            control: ViewerControl
+        unlocked: {
+            controlProps: {
+                deleteDisabled: true,
+            }
         },
         owner: {
             disabled: (_, user) => !isSuperAdmin(user)
