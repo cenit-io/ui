@@ -136,7 +136,7 @@ const MetaConfig = ({ docked, dataType, record, onSubjectPicked, height }) => {
 };
 
 export default ActionRegistry.register(MetaConfig, {
-    key: 'embedded_apps',
+    key: 'meta_config',
     kind: ActionKind.member,
     arity: 1,
     icon: MetaConfigIcon,
