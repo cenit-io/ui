@@ -1,5 +1,5 @@
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
-import { switchMap, tap } from "rxjs/operators";
+import { tap } from "rxjs/operators";
 import DownloadIcon from "@material-ui/icons/CloudDownload";
 import { saveAs } from 'file-saver';
 import API from "../services/ApiService";
