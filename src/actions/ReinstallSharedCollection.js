@@ -12,7 +12,7 @@ const ReinstallIcon = () => (
     </SvgIcon>
 );
 
-function Reinstall({ record, containerContext }) {
+function ReinstallSharedCollection({ record, containerContext }) {
     return containerContext.confirm({
         title: 'Re-install Confirmation',
         message: `Shared collection ${record.name} will be re-installed`
@@ -26,7 +26,7 @@ function Reinstall({ record, containerContext }) {
     );
 }
 
-export default ActionRegistry.register(Reinstall, {
+export default ActionRegistry.register(ReinstallSharedCollection, {
     kind: ActionKind.member,
     icon: ReinstallIcon,
     title: 'Re-install',
