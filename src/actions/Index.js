@@ -312,7 +312,8 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
                                   onAction={actionKey => handleAction(
                                       dataType, actionKey, onSubjectPicked, [data.items[highlightIndex]])
                                   }
-                                  dataType={dataType}/>
+                                  dataType={dataType}
+                                  record={data.items[highlightIndex]}/>
 
                 </div>
             )}
