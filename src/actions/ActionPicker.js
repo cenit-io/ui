@@ -41,7 +41,9 @@ function match(target, criteria) {
     return true;
 }
 
-function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }) {
+function ActionPicker(
+    { disabled, kind, arity, selectedKey, onAction, dataType, selectedItems: customSelectedItems, record: customRecord }
+) {
     const [state, setState] = useSpreadState({
         actions: [],
         width: 0
@@ -54,25 +56,30 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
 
     const [containerState] = useContainerContext();
 
-    const { selectedItems, actionKey } = containerState;
+    const { selectedItems, actionKey, record } = containerState;
 
     const frame = useRef(null);
 
     const reorder = (a, b) => {
-      let groupA = a.group ? a.group : 0,
-        groupB = b.group ? b.group : 0;
+        let groupA = a.group ? a.group : 0,
+            groupB = b.group ? b.group : 0;
 
-      if (groupA > groupB) {
-        return 1;
-      }
-      if (groupA < groupB) {
-        return -1;
-      }
-      return 0;
+        if (groupA > groupB) {
+            return 1;
+        }
+        if (groupA < groupB) {
+            return -1;
+        }
+        return 0;
     };
 
     useEffect(() => {
         if (dataType) {
+            const items = (customSelectedItems?.length && customSelectedItems) ||
+                (customRecord && [customRecord]) ||
+                (selectedItems?.length && selectedItems) ||
+                (record && [record]) || [];
+
             const subscription = dataType.config().subscribe(config => {
                 const k = arity === 1 ? ActionKind.member : kind;
                 const actions = [];
@@ -93,8 +100,8 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                             )) &&
                             (!action.onlyFor || action.onlyFor.find(criteria => match(dataType, criteria))) &&
                             (!action.onlyForMembers || (
-                                selectedItems.length === 1 && action.onlyForMembers.find(
-                                    criteria => match(selectedItems[0], criteria)
+                                items.length === 1 && action.onlyForMembers.find(
+                                    criteria => match(items[0], criteria)
                                 )
                             ))
                         ) {
@@ -108,14 +115,14 @@ function ActionPicker({ disabled, kind, arity, selectedKey, onAction, dataType }
                     }
                 );
 
-                setState({ actions: actions.sort(reorder) , config });
+                setState({ actions: actions.sort(reorder), config });
             });
 
             return () => subscription.unsubscribe();
         } else {
             setState({ actions: [] });
         }
-    }, [dataType, arity, kind, selectedItems]);
+    }, [dataType, arity, kind, selectedItems, record, customSelectedItems, customRecord]);
 
     useResizeObserver(frame, entry => setState({ width: Math.floor(entry.contentRect.width) }));
 
