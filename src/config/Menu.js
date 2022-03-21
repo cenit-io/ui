@@ -408,10 +408,10 @@ export default {
                 },
                 {
                     type: DataTypeSubject.type,
-                    title: 'Resources',
+                    title: 'Resource Paths',
                     $ref: {
                         namespace: 'Setup',
-                        name: 'Resource'
+                        name: 'PlainWebhook'
                     },
                     icon: <ResourceIcon component="svg"/>
                 },

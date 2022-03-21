@@ -1,10 +1,9 @@
 import React from 'react';
-import WebhookFilledIcon from "../../../icons/WebhookFilledIcon";
-import ParserFilledIcon from "../../../icons/ParserFilledIcon";
+import ResourceIcon from "@material-ui/icons/Work";
 
 export default {
-    title: 'Plain Webhook',
-    icon: <WebhookFilledIcon/>,
+    title: 'Resource Path',
+    icon: <ResourceIcon/>,
     titleViewport: '{namespace name}',
     itemLabel: ({ namespace, name, id }) => {
         if (namespace || name) {
