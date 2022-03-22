@@ -102,7 +102,7 @@ export class DataType {
         if (!dataType) {
             dataType = DataType.load(
                 API.get('setup', 'data_type', id, {
-                    headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema}' }) }
+                    headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema id_type}' }) }
                 }).pipe(
                     tap(dataType => {
                         if (dataType) {
@@ -1188,7 +1188,7 @@ export class DataType {
 export class FileDataType extends DataType {
 
     upload(data, opts = {}) {
-        const { id, filename, onUploadProgress, cancelToken } = opts;
+        const { id, filename, onUploadProgress, cancelToken, add_new } = opts;
         opts = { headers: {}, onUploadProgress, cancelToken };
 
         let digestOpts;
@@ -1197,6 +1197,9 @@ export class FileDataType extends DataType {
         }
         if (filename) {
             digestOpts = { ...digestOpts, filename };
+        }
+        if(add_new) {
+            digestOpts = { ...digestOpts, add_new };
         }
         if (digestOpts) {
             opts.headers['X-Digest-Options'] = JSON.stringify(digestOpts);

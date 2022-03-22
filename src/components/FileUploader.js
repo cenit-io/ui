@@ -99,6 +99,9 @@ const dropStyles = theme => ({
             wordBreak: 'break-word'
         }
     },
+    mb2: {
+       marginBottom: theme.spacing(2)
+    },
     [FileStatus.waiting]: {
         background: theme.palette.background.default
     },
@@ -252,7 +255,7 @@ function uploaderReducer(state, action) {
     }
 }
 
-function FileItem({ file, rootId, status, launch, dispatch, disabled, classes }) {
+function FileItem({ file, rootId, status, launch, dispatch, disabled, classes, id_type }) {
     let progress, action;
 
     const handleLaunch = e => {
@@ -275,8 +278,13 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
         dispatch({ type: 'delete', file, rootId });
     };
 
-    const handleChange = event => {
+    const handleNameChange = event => {
         file.customName = event.target.value;
+        dispatch({ type: 'refresh' });
+    };
+
+    const handleIdChange = event => {
+        file.id = event.target.value;
         dispatch({ type: 'refresh' });
     };
 
@@ -330,6 +338,7 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
             }
         }
     }
+    let id;
     let primary;
     if (file.status === FileStatus.success) {
         primary = <Button className={classes.launchButton}
@@ -340,6 +349,20 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
             {file.customName || file.name}
         </Button>;
     } else {
+        if (id_type === 'string' || id_type === 'integer') {
+            id = <TextField label="Id"
+                            variant="filled"
+                            disabled={rootId !== undefined || disabled}
+                            error={FileStatus.isError(file.status)}
+                            value={file.id || ''}
+                            helperText=""
+                            className={clsx(
+                                ((file.fake || file.status === FileStatus.finishing) && 'full-width') || classes.launchButton,
+                                classes.mb2
+                            )}
+                            onChange={handleIdChange}
+                            onClick={e => e.stopPropagation()}/>
+        }
         primary = <TextField label="Name"
                              variant="filled"
                              multiline
@@ -350,13 +373,18 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes })
                              className={clsx(
                                  ((file.fake || file.status === FileStatus.finishing) && 'full-width') || classes.launchButton
                              )}
-                             onChange={handleChange}
+                             onChange={handleNameChange}
                              onClick={e => e.stopPropagation()}/>
     }
 
     return <ListItem className={clsx(classes.fileItem, classes[status])}>
         <ListItemText primaryTypographyProps={{ component: 'div' }}
-                      primary={primary}
+                      primary={(
+                          <>
+                              {id}
+                              {primary}
+                          </>
+                      )}
                       secondaryTypographyProps={{ component: 'div' }}
                       secondary={
                           <React.Fragment>
@@ -484,8 +512,9 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
                 })
             } else {
                 submit = dataType.upload(current, {
-                    id: rootId,
+                    id: rootId || current.id,
                     filename,
+                    add_new: !rootId,
                     onUploadProgress: event => {
                         current.progress = Math.round((event.loaded * 100) / event.total);
                         if (current.progress === 100) {
@@ -538,7 +567,8 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
                                    launch={launch}
                                    dispatch={dispatch}
                                    disabled={disabled}
-                                   rootId={rootId}/>
+                                   rootId={rootId}
+                                   id_type={dataType.id_type}/>
     );
     const remaining = max - files.length;
     let dropIt;
