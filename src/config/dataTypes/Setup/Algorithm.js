@@ -51,6 +51,14 @@ export default {
                 deleteDisabled: true,
                 sortDisabled: true
             }
+        },
+        parameters: {
+            seed: (_dt, value) => {
+                const items = value.get() || [];
+                return {
+                    required: !items.length || !!items[items.length - 1]?.required
+                };
+            }
         }
     },
     orchestrator
