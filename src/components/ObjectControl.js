@@ -142,9 +142,11 @@ function ObjectControl(props) {
 
     const orchestratorState = useRef({});
 
+    const dynamicConfigState = useRef({});
+
     const {
         properties, controlConfig, ready,
-        orchestrator, dynamicConfig, dynamicConfigState
+        orchestrator, dynamicConfig,
     } = state;
 
     const {
@@ -267,7 +269,7 @@ function ObjectControl(props) {
         if (dynamicConfig) {
             const subscription = value.changed().subscribe(
                 v => {
-                    let newState = dynamicConfig(v, dynamicConfigState || {}, value, {
+                    let newState = dynamicConfig(v, dynamicConfigState.current || {}, value, {
                         readOnly,
                         errors
                     }, user);
@@ -277,7 +279,8 @@ function ObjectControl(props) {
                         }
                         newState.subscribe(s => { // TODO unsubscribe
                             if (s) {
-                                setState({ dynamicConfigState: s });
+                                dynamicConfigState.current = s || {};
+                                setState({});
                             }
                         });
                     }
@@ -286,7 +289,7 @@ function ObjectControl(props) {
             value.changed().next(value.get());
             return () => subscription.unsubscribe();
         }
-    }, [dynamicConfig, dynamicConfigState, value, readOnly, errors, user]);
+    }, [dynamicConfig, value, readOnly, errors, user]);
 
     const handleChange = (prop, handler) => () => {
         if (!handler || handler() !== 'abort') {
@@ -330,7 +333,7 @@ function ObjectControl(props) {
             if (prop) {
                 const fieldConfig = {
                     ...configFields[name],
-                    ...(dynamicConfigState && dynamicConfigState[name])
+                    ...(dynamicConfigState.current[name])
                 };
 
                 return {
@@ -357,7 +360,7 @@ function ObjectControl(props) {
         return <FormGroup error={Object.keys(formErrors).length > 0}>
             <ErrorMessages errors={formErrors.$}>
                 <FormControl properties={properties}
-                             dynamicConfigState={dynamicConfigState}
+                             dynamicConfigState={dynamicConfigState.current}
                              controlConfig={controlConfig}
                              propertyControlProps={propertyControlProps}
                              errors={formErrors}

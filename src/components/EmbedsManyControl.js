@@ -70,7 +70,7 @@ function EmbedsManyControl({
         let seed;
         if (config.seed) {
             if (typeof config.seed === 'function') {
-                seed = config.seed(property.dataType);
+                seed = config.seed(property.dataType, value);
             } else {
                 seed = config.seed;
             }
