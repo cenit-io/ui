@@ -33,7 +33,7 @@ function parametersSchema(parameters) {
                 propertySchema.type = type;
             }
         }
-        if (required) {
+        if (required && name !== 'task') {
             requiredProperties.push(name);
         }
     });
