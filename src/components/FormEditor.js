@@ -266,7 +266,7 @@ const FormEditor = (
             value: isFormValue(value) ? value : new FormRootValue({ ...value }),
             dataType,
             title: value => dataType.titleFor(value),
-            viewport: dataType.titleViewport('_id'),
+            viewport: dataType.shallowViewPort('_id'),
             callback: (value, dataType) => {
                 setId(value.id);
                 setSubmitResponse({ value, dataType });
