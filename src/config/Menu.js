@@ -268,7 +268,7 @@ export default {
                 },
                 {
                     type: DataTypeSubject.type,
-                    title: 'Observers',
+                    title: 'Data Events',
                     $ref: {
                         namespace: 'Setup',
                         name: 'Observer'
