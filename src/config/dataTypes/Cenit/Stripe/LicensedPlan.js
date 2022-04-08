@@ -2,7 +2,7 @@ import React from 'react';
 import PlanIcon from "@material-ui/icons/RequestQuote";
 import MenuIcon from "@material-ui/icons/RequestQuoteOutlined";
 
-const fields = ['id', 'nickname', 'product', 'interval', 'currency', 'amount'];
+const fields = ['id', 'nickname', 'product', 'interval', 'currency', 'amount', 'summary', 'description'];
 
 export const PlanMenuIcon = MenuIcon;
 
@@ -16,5 +16,12 @@ export default {
         new: {
             fields
         }
-    }
+    },
+    fields: {
+        description: {
+            controlProps: {
+                multiline: true
+            }
+        }
+    },
 };
