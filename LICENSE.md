@@ -1,4 +1,4 @@
-Copyright (C) 2019-2021 Cenit IO LLC <support@cenit.io>
+Copyright (C) 2019-2022 Cenit IO LLC <support@cenit.io>
 
 This file is part of the Cenit UI project.
 
