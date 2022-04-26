@@ -32,11 +32,6 @@ export default {
             control: ViewerControl,
             viewer: TraceActionViewer(ActionProjection, 'background')
         },
-        message: {
-            controlProps: {
-                multiline: true
-            }
-        },
         changes_set: {
             control: ChangesSetControl
         }

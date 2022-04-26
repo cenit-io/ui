@@ -31,16 +31,10 @@ export default {
         identifier: {
             readOnly: true,
             control: LazyControl,
-            controlProps: {
-                multiline: true
-            }
         },
         secret: {
             readOnly: true,
             control: LazyControl,
-            controlProps: {
-                multiline: true
-            }
         }
     },
     crud: [CRUD.read, CRUD.update]

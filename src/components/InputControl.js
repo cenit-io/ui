@@ -121,26 +121,28 @@ const InputControl = reactiveControlFor(
         };
 
         const handleKeyDown = e => {
-            let handled = true;
-            switch (e.keyCode) {
-                case 13:
-                    selectOption(optionIndex)();
-                    break;
-                case 27:
-                    selectOption(-1)();
-                    break;
-                case 38:
-                    setState({ optionIndex: Math.max(0, optionIndex - 1) });
-                    break;
-                case 40:
-                    setState({ optionIndex: Math.min(options.length - 1, optionIndex + 1) });
-                    break;
-                default:
-                    handled = false;
-            }
-            if (handled) {
-                e.preventDefault();
-                e.stopPropagation();
+            if (options.length) {
+                let handled = true;
+                switch (e.keyCode) {
+                    case 13:
+                        selectOption(optionIndex)();
+                        break;
+                    case 27:
+                        selectOption(-1)();
+                        break;
+                    case 38:
+                        setState({ optionIndex: Math.max(0, optionIndex - 1) });
+                        break;
+                    case 40:
+                        setState({ optionIndex: Math.min(options.length - 1, optionIndex + 1) });
+                        break;
+                    default:
+                        handled = false;
+                }
+                if (handled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
             }
         };
 

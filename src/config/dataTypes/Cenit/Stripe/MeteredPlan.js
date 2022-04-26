@@ -17,11 +17,4 @@ export default {
             fields
         }
     },
-    fields: {
-        description: {
-            controlProps: {
-                multiline: true
-            }
-        }
-    },
 };

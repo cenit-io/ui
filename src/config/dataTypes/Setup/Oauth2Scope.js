@@ -18,12 +18,5 @@ export default {
             viewport: '{provider {namespace name} name description origin}'
         }
     },
-    fields: {
-        description: {
-            controlProps: {
-                multiline: true
-            }
-        }
-    },
     orchestrator: sharedOriginFields(...fields)
 };

@@ -24,8 +24,10 @@ export function StringValidator(schema) {
 
 function StringControl(props) {
 
+    const { multiline } = props;
+
     return (
-        <InputControl {...props} validator={StringValidator(props.schema)}/>
+        <InputControl {...props} validator={StringValidator(props.schema)} multiline={multiline !== false}/>
     );
 }
 

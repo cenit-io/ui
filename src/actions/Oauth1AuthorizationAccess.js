@@ -47,25 +47,6 @@ function Oauth1AuthorizationAccess({ docked, dataType, record, onSubjectPicked, 
                 }
             }
         },
-        [Config]: {
-            fields: {
-                access_token: {
-                    controlProps: {
-                        multiline: true
-                    }
-                },
-                access_token_secret: {
-                    controlProps: {
-                        multiline: true
-                    }
-                },
-                realm_id: {
-                    controlProps: {
-                        multiline: true
-                    }
-                }
-            }
-        }
     }));
 
     useEffect(() => {
