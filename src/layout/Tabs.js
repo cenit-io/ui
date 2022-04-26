@@ -6,6 +6,7 @@ import Tab from '@material-ui/core/Tab/index';
 import Button from '@material-ui/core/Button/index';
 import IconButton from '@material-ui/core/IconButton/index';
 import CloseIcon from '@material-ui/icons/Clear';
+import CloseTabIcon from '@material-ui/icons/CancelRounded';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
 import Subjects, { NavSubject, TabsSubject } from "../services/subjects";
@@ -15,7 +16,7 @@ import useResizeObserver from "@react-hook/resize-observer";
 import { from } from "rxjs";
 import { AppGateway } from "../services/AuthorizationService";
 import EmbeddedApp from "../components/EmbeddedApp";
-import { useMediaQuery } from '@material-ui/core';
+import { useMediaQuery, Tooltip } from '@material-ui/core';
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
@@ -64,6 +65,20 @@ class ClosableComponent extends React.Component {
     }
 }
 
+const CloseAllTabBtn = ({ onClose }) => {
+  const classes = useStyles();
+
+  return (
+    <div className={classes.closeAllTabs}>
+      <Tooltip title="Close all tabs" arrow>
+      <IconButton aria-label="Close all tabs " size="small" onClick={onClose}>
+        <CloseTabIcon fontSize="inherit" />
+      </IconButton>
+      </Tooltip>
+    </div>
+  );
+};
+
 const useStyles = makeStyles(theme => ({
     root: {
         flexGrow: 1,
@@ -74,20 +89,27 @@ const useStyles = makeStyles(theme => ({
         display: 'flex',
         height: 'min-content',
         width: '100%'
+    },
+    closeAllTabs:{
+        position: 'absolute',
+        right: '.5rem',
+        bottom: '-10px',
     }
 }));
 
 const onSubjectPicked = (key, actionKey) => TabsSubject.next({ key, actionKey });
 
+const initialTabs = {
+    tabs: [],
+    tabIndex: 0,
+    alertBannerHeight: 1
+}
+
 export default function NavTabs({ docked, width }) {
     const classes = useStyles();
     const theme = useTheme();
     const smUp = useMediaQuery(theme.breakpoints.up('sm'));
-    const [state, setState] = useSpreadState({
-        tabs: [],
-        tabIndex: 0,
-        alertBannerHeight: 1
-    });
+    const [state, setState] = useSpreadState(initialTabs);
     const [actionsKeys, setActionKeys] = useSpreadState();
 
     const { tabs, tabIndex, alertBannerHeight, bannerURL } = state;
@@ -161,6 +183,13 @@ export default function NavTabs({ docked, width }) {
         ConfigService.update(config)
     };
 
+    const handleCloseAllTabs = () => {
+      setState(initialTabs);
+      ConfigService.update(initialTabs);
+    };
+
+    const isVisibleCloseAllTabs = state.tabs.length > 5
+
     const itemTabs = tabs.map(
         (key, index) => <ItemTab key={`tab_${key}`}
                                  docked={docked}
@@ -213,6 +242,7 @@ export default function NavTabs({ docked, width }) {
                       style={{ minHeight: 'inherit' }}>
                     {itemTabs}
                 </Tabs>
+                { isVisibleCloseAllTabs && <CloseAllTabBtn  onClose={handleCloseAllTabs} />}
             </AppBar>
             <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
                             index={tabIndex}
