@@ -50,25 +50,6 @@ function Oauth2AuthorizationAccess({ docked, dataType, record, onSubjectPicked, 
                 }
             }
         },
-        [Config]: {
-            fields: {
-                access_token: {
-                    controlProps: {
-                        multiline: true
-                    }
-                },
-                refresh_token: {
-                    controlProps: {
-                        multiline: true
-                    }
-                },
-                id_token: {
-                    controlProps: {
-                        multiline: true
-                    }
-                }
-            }
-        }
     }));
 
     useEffect(() => {

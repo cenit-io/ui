@@ -26,15 +26,15 @@ const SuccessAuthorization = () => <SuccessAlert mainIcon={AuthorizeIcon}/>;
 
 function BasicAuthorizationForm({ docked, dataType, record, onSubjectPicked, onUpdate, height }) {
 
-    const [_,setContainerState] = useContainerContext();
+    const [_, setContainerState] = useContainerContext();
 
     useEffect(() => {
         setContainerState({ breadcrumbActionName: "Authorize" });
 
         return () => {
-          setContainerState({ breadcrumbActionName: null });
+            setContainerState({ breadcrumbActionName: null });
         };
-      }, []);
+    }, []);
 
     const value = useRef(new FormRootValue(record));
 
@@ -76,7 +76,7 @@ function BasicAuthorizationForm({ docked, dataType, record, onSubjectPicked, onU
                 if (error) {
                     throw ({ response: { data: error } });
                 }
-                return dataType.post(value.get());
+                return dataType.post({ ...record, ...value.get() });
             }),
             map(() => value.get())
         );

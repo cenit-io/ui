@@ -138,11 +138,6 @@ const AccessTokens = ({ dataType, record, height, width, docked }) => {
                 }
             },
             fields: {
-                note: {
-                    controlProps: {
-                        multiline: true
-                    }
-                },
                 expires_in: {
                     controlProps: {
                         deleteDisabled: true
