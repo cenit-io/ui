@@ -6,7 +6,6 @@ import Tab from '@material-ui/core/Tab/index';
 import Button from '@material-ui/core/Button/index';
 import IconButton from '@material-ui/core/IconButton/index';
 import CloseIcon from '@material-ui/icons/Clear';
-import CloseTabIcon from '@material-ui/icons/CancelRounded';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
 import Subjects, { NavSubject, TabsSubject } from "../services/subjects";
@@ -16,11 +15,36 @@ import useResizeObserver from "@react-hook/resize-observer";
 import { from } from "rxjs";
 import { AppGateway } from "../services/AuthorizationService";
 import EmbeddedApp from "../components/EmbeddedApp";
-import { useMediaQuery, Tooltip } from '@material-ui/core';
+import { useMediaQuery} from '@material-ui/core';
+import Dialog from "@material-ui/core/Dialog";
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
-function ItemTab({ subject, onClick, onClose }) {
+const useStyles = makeStyles((theme) => ({
+  root: {
+    flexGrow: 1,
+    backgroundColor: theme.palette.background.paper,
+    position: "relative",
+  },
+  banner: {
+    display: "flex",
+    height: "min-content",
+    width: "100%",
+  },
+  closeAllTabs: {
+    position: "absolute",
+    right: ".5rem",
+    bottom: "-10px",
+  },
+  modal: {
+    backdropFilter: "blur(6px) saturate(120%)",
+  },
+}));
+
+function ItemTab({ subject, onClick, onClose, onCloseAllTabs, onCloseAllKeepMe }) {
 
     const [title, setTitle] = useState(subject?.titleCache || '...');
 
@@ -35,67 +59,87 @@ function ItemTab({ subject, onClick, onClose }) {
         <Tab component={ClosableComponent}
              label={title}
              onClick={onClick}
-             onClose={onClose}/>
+             onClose={onClose}
+             onCloseAllTabs={onCloseAllTabs}
+             onCloseAllKeepMe={onCloseAllKeepMe}/>
     );
 }
 
-class ClosableComponent extends React.Component {
-
-    state = {};
-
-    setOver = over => () => this.setState({ over });
-
-    render() {
-        const { onClick, children, onClose } = this.props,
-
-            { over } = this.state;
-
-        return (
-            <div onMouseMove={this.setOver(true)}
-                 onMouseLeave={this.setOver(false)}>
-                <Button onClick={onClick}>{children}</Button>
-
-                <IconButton aria-label="Close" size="small"
-                            style={{ visibility: over ? 'visible' : 'hidden' }}
-                            onClick={onClose}>
-                    <CloseIcon fontSize="inherit"/>
-                </IconButton>
-            </div>
-        );
-    }
-}
-
-const CloseAllTabBtn = ({ onClose }) => {
+const CloseTabsDialog = ({
+  closeAllKeepMe,
+  handleCloseAllTabs,
+  handleCloseBox,
+  showCLose,
+}) => {
   const classes = useStyles();
 
   return (
-    <div className={classes.closeAllTabs}>
-      <Tooltip title="Close all tabs" arrow>
-      <IconButton aria-label="Close all tabs " size="small" onClick={onClose}>
-        <CloseTabIcon fontSize="inherit" />
+    <Dialog className={classes.modal} onClose={handleCloseBox} open={showCLose}>
+      <List>
+        <ListItem button onClick={handleCloseAllTabs} pt={0}>
+          <ListItemText primary="Close All Tabs" />
+        </ListItem>
+        <ListItem button onClick={closeAllKeepMe}>
+          <ListItemText primary="Close All Other Tabs" />
+        </ListItem>
+      </List>
+    </Dialog>
+  );
+};
+
+const ClosableComponent = ({
+  onClick,
+  children,
+  onClose,
+  onCloseAllTabs,
+  onCloseAllKeepMe,
+}) => {
+  const [over, setOver] = useState(false);
+  const [showCLose, setShowCLose] = useState(false);
+
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowCLose(true);
+  };
+
+  const handleCloseAllTabs = () => {
+    setShowCLose(false);
+    onCloseAllTabs();
+  };
+
+  const closeAllKeepMe = () => {
+    setShowCLose(false);
+    onCloseAllKeepMe();
+  };
+
+  const handleCloseBox = () => setShowCLose(false);
+
+  return (
+    <div onMouseMove={() => setOver(true)} onMouseLeave={() => setOver(false)}>
+      <Button onClick={onClick} onContextMenu={handleContextMenu}>
+        {children}
+      </Button>
+
+      <IconButton
+        aria-label="Close"
+        size="small"
+        style={{ visibility: over ? "visible" : "hidden" }}
+        onClick={onClose}
+      >
+        <CloseIcon fontSize="inherit" />
       </IconButton>
-      </Tooltip>
+
+      <CloseTabsDialog
+        handleCloseBox={handleCloseBox}
+        handleCloseAllTabs={handleCloseAllTabs}
+        closeAllKeepMe={closeAllKeepMe}
+        showCLose={showCLose}
+      />
     </div>
   );
 };
 
-const useStyles = makeStyles(theme => ({
-    root: {
-        flexGrow: 1,
-        backgroundColor: theme.palette.background.paper,
-        position: 'relative'
-    },
-    banner: {
-        display: 'flex',
-        height: 'min-content',
-        width: '100%'
-    },
-    closeAllTabs:{
-        position: 'absolute',
-        right: '.5rem',
-        bottom: '-10px',
-    }
-}));
 
 const onSubjectPicked = (key, actionKey) => TabsSubject.next({ key, actionKey });
 
@@ -188,14 +232,24 @@ export default function NavTabs({ docked, width }) {
       ConfigService.update(initialTabs);
     };
 
-    const isVisibleCloseAllTabs = state.tabs.length > 5
+    const handleCloseAllKeepMe = (index) => () => {
+      const keepTap = {
+        tabs: [tabs[index]],
+        tabIndex: 0,
+      };
+
+      setState(keepTap);
+      handleSelect(0);
+    };
 
     const itemTabs = tabs.map(
         (key, index) => <ItemTab key={`tab_${key}`}
                                  docked={docked}
                                  subject={Subjects[key]}
                                  onClick={handleSelect(index)}
-                                 onClose={handleClose(index)}/>
+                                 onClose={handleClose(index)}
+                                 onCloseAllTabs={handleCloseAllTabs}
+                                 onCloseAllKeepMe={handleCloseAllKeepMe(index)}/>
     );
 
     const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)} - ${alertBannerHeight}px`;
@@ -242,7 +296,6 @@ export default function NavTabs({ docked, width }) {
                       style={{ minHeight: 'inherit' }}>
                     {itemTabs}
                 </Tabs>
-                { isVisibleCloseAllTabs && <CloseAllTabBtn  onClose={handleCloseAllTabs} />}
             </AppBar>
             <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
                             index={tabIndex}
