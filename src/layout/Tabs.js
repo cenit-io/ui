@@ -15,11 +15,36 @@ import useResizeObserver from "@react-hook/resize-observer";
 import { from } from "rxjs";
 import { AppGateway } from "../services/AuthorizationService";
 import EmbeddedApp from "../components/EmbeddedApp";
-import { useMediaQuery } from '@material-ui/core';
+import { useMediaQuery} from '@material-ui/core';
+import Dialog from "@material-ui/core/Dialog";
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 
 export const tabsHeight = theme => `${theme.spacing(4) + 4}px`;
 
-function ItemTab({ subject, onClick, onClose }) {
+const useStyles = makeStyles((theme) => ({
+  root: {
+    flexGrow: 1,
+    backgroundColor: theme.palette.background.paper,
+    position: "relative",
+  },
+  banner: {
+    display: "flex",
+    height: "min-content",
+    width: "100%",
+  },
+  closeAllTabs: {
+    position: "absolute",
+    right: ".5rem",
+    bottom: "-10px",
+  },
+  modal: {
+    backdropFilter: "blur(6px) saturate(120%)",
+  },
+}));
+
+function ItemTab({ subject, onClick, onClose, onCloseAllTabs, onCloseAllKeepMe, isDisabledKeepMe }) {
 
     const [title, setTitle] = useState(subject?.titleCache || '...');
 
@@ -34,60 +59,105 @@ function ItemTab({ subject, onClick, onClose }) {
         <Tab component={ClosableComponent}
              label={title}
              onClick={onClick}
-             onClose={onClose}/>
+             onClose={onClose}
+             onCloseAllTabs={onCloseAllTabs}
+             onCloseAllKeepMe={onCloseAllKeepMe}
+             isDisabledKeepMe={isDisabledKeepMe}/>
     );
 }
 
-class ClosableComponent extends React.Component {
+const CloseTabsDialog = ({
+  closeAllKeepMe,
+  isDisabledKeepMe,
+  handleCloseAllTabs,
+  handleCloseBox,
+  showCLose,
+}) => {
+  const classes = useStyles();
 
-    state = {};
+  return (
+    <Dialog className={classes.modal} onClose={handleCloseBox} open={showCLose} >
+      <List>
+        <ListItem button onClick={handleCloseAllTabs} pt={0}>
+          <ListItemText primary="Close All Tabs" />
+        </ListItem>
+        <ListItem button onClick={closeAllKeepMe} disabled={isDisabledKeepMe}>
+          <ListItemText primary="Close All Other Tabs" />
+        </ListItem>
+      </List>
+    </Dialog>
+  );
+};
 
-    setOver = over => () => this.setState({ over });
+const ClosableComponent = ({
+  onClick,
+  children,
+  onClose,
+  onCloseAllTabs,
+  onCloseAllKeepMe,
+  isDisabledKeepMe
+}) => {
+  const [over, setOver] = useState(false);
+  const [showCLose, setShowCLose] = useState(false);
 
-    render() {
-        const { onClick, children, onClose } = this.props,
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowCLose(true);
+  };
 
-            { over } = this.state;
+  const handleCloseAllTabs = () => {
+    setShowCLose(false);
+    onCloseAllTabs();
+  };
 
-        return (
-            <div onMouseMove={this.setOver(true)}
-                 onMouseLeave={this.setOver(false)}>
-                <Button onClick={onClick}>{children}</Button>
+  const closeAllKeepMe = () => {
+    setShowCLose(false);
+    onCloseAllKeepMe();
+  };
 
-                <IconButton aria-label="Close" size="small"
-                            style={{ visibility: over ? 'visible' : 'hidden' }}
-                            onClick={onClose}>
-                    <CloseIcon fontSize="inherit"/>
-                </IconButton>
-            </div>
-        );
-    }
-}
+  const handleCloseBox = () => setShowCLose(false);
 
-const useStyles = makeStyles(theme => ({
-    root: {
-        flexGrow: 1,
-        backgroundColor: theme.palette.background.paper,
-        position: 'relative'
-    },
-    banner: {
-        display: 'flex',
-        height: 'min-content',
-        width: '100%'
-    }
-}));
+  return (
+    <div onMouseMove={() => setOver(true)} onMouseLeave={() => setOver(false)}>
+      <Button onClick={onClick} onContextMenu={handleContextMenu}>
+        {children}
+      </Button>
+
+      <IconButton
+        aria-label="Close"
+        size="small"
+        style={{ visibility: over ? "visible" : "hidden" }}
+        onClick={onClose}
+      >
+        <CloseIcon fontSize="inherit" />
+      </IconButton>
+
+      <CloseTabsDialog
+        handleCloseBox={handleCloseBox}
+        handleCloseAllTabs={handleCloseAllTabs}
+        closeAllKeepMe={closeAllKeepMe}
+        showCLose={showCLose}
+        isDisabledKeepMe={isDisabledKeepMe}
+      />
+    </div>
+  );
+};
+
 
 const onSubjectPicked = (key, actionKey) => TabsSubject.next({ key, actionKey });
+
+const initialTabs = {
+    tabs: [],
+    tabIndex: 0,
+    alertBannerHeight: 1
+}
 
 export default function NavTabs({ docked, width }) {
     const classes = useStyles();
     const theme = useTheme();
     const smUp = useMediaQuery(theme.breakpoints.up('sm'));
-    const [state, setState] = useSpreadState({
-        tabs: [],
-        tabIndex: 0,
-        alertBannerHeight: 1
-    });
+    const [state, setState] = useSpreadState(initialTabs);
     const [actionsKeys, setActionKeys] = useSpreadState();
 
     const { tabs, tabIndex, alertBannerHeight, bannerURL } = state;
@@ -161,12 +231,31 @@ export default function NavTabs({ docked, width }) {
         ConfigService.update(config)
     };
 
+    const handleCloseAllTabs = () => {
+      setState(initialTabs);
+      ConfigService.update(initialTabs);
+    };
+
+    const handleCloseAllKeepMe = (index) => () => {
+      const keepTap = {
+        tabs: [tabs[index]],
+        tabIndex: 0,
+      };
+
+      setState(keepTap);
+      handleSelect(0);
+    };
+
     const itemTabs = tabs.map(
         (key, index) => <ItemTab key={`tab_${key}`}
                                  docked={docked}
                                  subject={Subjects[key]}
                                  onClick={handleSelect(index)}
-                                 onClose={handleClose(index)}/>
+                                 onClose={handleClose(index)}
+                                 onCloseAllTabs={handleCloseAllTabs}
+                                 onCloseAllKeepMe={handleCloseAllKeepMe(index)}
+                                 isDisabledKeepMe={tabs.length === 1}
+                                 />
     );
 
     const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)} - ${alertBannerHeight}px`;
