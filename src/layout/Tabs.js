@@ -44,7 +44,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function ItemTab({ subject, onClick, onClose, onCloseAllTabs, onCloseAllKeepMe }) {
+function ItemTab({ subject, onClick, onClose, onCloseAllTabs, onCloseAllKeepMe, isDisabledKeepMe }) {
 
     const [title, setTitle] = useState(subject?.titleCache || '...');
 
@@ -61,12 +61,14 @@ function ItemTab({ subject, onClick, onClose, onCloseAllTabs, onCloseAllKeepMe }
              onClick={onClick}
              onClose={onClose}
              onCloseAllTabs={onCloseAllTabs}
-             onCloseAllKeepMe={onCloseAllKeepMe}/>
+             onCloseAllKeepMe={onCloseAllKeepMe}
+             isDisabledKeepMe={isDisabledKeepMe}/>
     );
 }
 
 const CloseTabsDialog = ({
   closeAllKeepMe,
+  isDisabledKeepMe,
   handleCloseAllTabs,
   handleCloseBox,
   showCLose,
@@ -74,12 +76,12 @@ const CloseTabsDialog = ({
   const classes = useStyles();
 
   return (
-    <Dialog className={classes.modal} onClose={handleCloseBox} open={showCLose}>
+    <Dialog className={classes.modal} onClose={handleCloseBox} open={showCLose} >
       <List>
         <ListItem button onClick={handleCloseAllTabs} pt={0}>
           <ListItemText primary="Close All Tabs" />
         </ListItem>
-        <ListItem button onClick={closeAllKeepMe}>
+        <ListItem button onClick={closeAllKeepMe} disabled={isDisabledKeepMe}>
           <ListItemText primary="Close All Other Tabs" />
         </ListItem>
       </List>
@@ -93,6 +95,7 @@ const ClosableComponent = ({
   onClose,
   onCloseAllTabs,
   onCloseAllKeepMe,
+  isDisabledKeepMe
 }) => {
   const [over, setOver] = useState(false);
   const [showCLose, setShowCLose] = useState(false);
@@ -135,6 +138,7 @@ const ClosableComponent = ({
         handleCloseAllTabs={handleCloseAllTabs}
         closeAllKeepMe={closeAllKeepMe}
         showCLose={showCLose}
+        isDisabledKeepMe={isDisabledKeepMe}
       />
     </div>
   );
@@ -249,7 +253,9 @@ export default function NavTabs({ docked, width }) {
                                  onClick={handleSelect(index)}
                                  onClose={handleClose(index)}
                                  onCloseAllTabs={handleCloseAllTabs}
-                                 onCloseAllKeepMe={handleCloseAllKeepMe(index)}/>
+                                 onCloseAllKeepMe={handleCloseAllKeepMe(index)}
+                                 isDisabledKeepMe={tabs.length === 1}
+                                 />
     );
 
     const containerHeight = `100vh - ${appBarHeight(theme)} - ${tabsHeight(theme)} - ${alertBannerHeight}px`;
