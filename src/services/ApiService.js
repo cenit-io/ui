@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AuthorizationService, { Config } from './AuthorizationService';
 import { catchError, map } from "rxjs/operators";
-import { from, of } from "rxjs";
+import { from, of, throwError } from "rxjs";
 import { Status } from "../common/Symbols";
 
 const apiGateway = axios.create({
@@ -110,7 +110,10 @@ const API = {
                     throw e;
                 }
                 if (e.response) {
-                    if (e.response && e.response.status !== 404 && e.response.status !== 403) {
+                    if (e.response.status === 422) {
+                        return throwError(e);
+                    }
+                    if (e.response.status !== 404 && e.response.status !== 403) {
                         ErrorCallbacks.forEach(callback => callback(e));
                     }
                 } else {
