@@ -54,6 +54,18 @@ const useAlertContentStyles = makeStyles((theme) => ({
     },
 }));
 
+const extractErrorMessageFrom = err => {
+    let data = err.response?.data;
+    if (data?.$) {
+        const msgs = Array.isArray(data.$)
+            ? data.$
+            : [data.$];
+        return msgs.join(' ');
+    }
+
+    return err.message;
+};
+
 export default function ContainerContext({ kind, initialState, children, homeActionKey }) {
 
     const actionSubscription = useRef(null);
@@ -95,7 +107,7 @@ export default function ContainerContext({ kind, initialState, children, homeAct
                         actionSubscription.current = r.pipe(
                             catchError(e => value.confirm({
                                 title: 'Error',
-                                message: `An error occurred: ${e.message}`,
+                                message: `An error occurred: ${extractErrorMessageFrom(e)}`,
                                 justOk: true
                             }))
                         ).subscribe(() => {
@@ -137,7 +149,7 @@ export default function ContainerContext({ kind, initialState, children, homeAct
                                         return r.pipe(
                                             catchError(e => value.confirm({
                                                 title: 'Error',
-                                                message: `An error occurred: ${e.message}`,
+                                                message: `An error occurred: ${extractErrorMessageFrom(e)}`,
                                                 justOk: true
                                             }))
                                         );
