@@ -89,7 +89,7 @@ const UserCard = ({ idToken, onClose }) => {
     const avatar = <Avatar alt={idToken.name}
                            src={idToken.picture}
                            className={classes.avatar}
-                           component="svg"/>;
+                           component="div"/>;
 
     const setupPassword = () => setSettingPassword(SETTING_PASSWORD);
 
