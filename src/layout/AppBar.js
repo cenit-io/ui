@@ -2,11 +2,13 @@ import React, { useEffect } from 'react';
 import {
     AppBar,
     Avatar,
-    CircularProgress, ClickAwayListener,
-    IconButton, makeStyles,
+    CircularProgress,
+    ClickAwayListener,
+    IconButton,
+    makeStyles,
     Paper,
     Toolbar,
-    Typography, useMediaQuery
+    useMediaQuery
 } from "@material-ui/core";
 import HomeIcon from '@material-ui/icons/Home';
 import { fade } from '@material-ui/core/styles/colorManipulator';
@@ -17,7 +19,6 @@ import ConfigService from "../services/ConfigService";
 import { DataTypeSubject, MenuSubject, TabsSubject } from "../services/subjects";
 import Search from "../components/Search";
 import MenuIcon from "../icons/MenuIcon";
-import QuickAccessIcon from "../icons/QuickAccessIcon";
 import { useTenantContext } from "./TenantContext";
 import { useMainContext } from "./MainContext";
 import zzip from "../util/zzip";
@@ -25,8 +26,11 @@ import { DataType } from "../services/DataTypeService";
 import { useSpreadState } from "../common/hooks";
 import NotificationsIcon from "../icons/NotificationsIcon";
 import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
-import { TenantMenuIcon } from "../config/dataTypes/Account";
 import TenantActiveInfo from '../components/TenantActiveInfo';
+import Badge from "@material-ui/core/Badge";
+import NotificationIcon from '@material-ui/icons/CircleNotifications';
+
+const USER_NOTIFIED = 'USER_NOTIFIED';
 
 export const appBarHeight = theme => `${theme.spacing(8)}px`;
 
@@ -34,13 +38,13 @@ const useStyles = makeStyles(theme => ({
     grow: {
         flexGrow: 1,
     },
-    changeOrder:{   
+    changeOrder: {
         order: -1,
         [theme.breakpoints.up('sm')]: {
             order: 'initial'
         }
     },
-    moveRight:{
+    moveRight: {
         order: 2
     },
     brandContainer: {
@@ -52,7 +56,7 @@ const useStyles = makeStyles(theme => ({
         '&:hover': {
             backgroundColor: fade(theme.palette.common.black, 0.05)
         },
-    
+
     },
     search: {
         position: 'relative',
@@ -105,6 +109,11 @@ const useStyles = makeStyles(theme => ({
         [theme.breakpoints.up('sm')]: {
             order: 0,
         },
+    },
+    notification: {
+        color: theme.palette.error.main,
+        background: theme.palette.common.white,
+        borderRadius: '50%'
     }
 }));
 
@@ -118,7 +127,7 @@ export default function ({ onToggle }) {
 
     const [tenantState] = useTenantContext();
 
-    const { loading } = tenantState;
+    const { loading, user } = tenantState;
 
     const classes = useStyles();
 
@@ -143,6 +152,7 @@ export default function ({ onToggle }) {
     }, []);
 
     function handleClick(e) {
+        sessionStorage.setItem(USER_NOTIFIED, 'true');
         setState({ open: Boolean(e.currentTarget) });
     }
 
@@ -201,10 +211,15 @@ export default function ({ onToggle }) {
         </ClickAwayListener>;
     }
 
+    const userNotification = user.need_password_reset && !sessionStorage.getItem(USER_NOTIFIED)
+        ? <NotificationIcon component="svg" className={classes.notification} fontSize="small"/>
+        : undefined;
     const avatar = smUp && (
         <div style={{ position: 'relative' }}>
             <IconButton onClick={handleClick}>
-                <Avatar alt={idToken.name} src={idToken.picture}/>
+                <Badge badgeContent={userNotification}>
+                    <Avatar alt={idToken.name} src={idToken.picture}/>
+                </Badge>
             </IconButton>
             {menu}
         </div>
@@ -221,59 +236,60 @@ export default function ({ onToggle }) {
                 selectorComponent={TenantSelector}
                 onSelect={handleTenantSelected}
                 disabled={loading}/>
-        );
+    );
 
-    const brandLogo = !smUp && 
+    const brandLogo = !smUp &&
         <div onClick={handleQuickAccess} className={classes.brandContainer}>
-            <img src="https://server.cenit.io/images/brandLogo.svg" width="40px" alt=""  style={{filter: 'invert(1)'}}/>
+            <img src="https://server.cenit.io/images/brandLogo.svg" width="40px" alt=""
+                 style={{ filter: 'invert(1)' }}/>
         </div>
 
     const taskMenu = (
-      <IconButton
-        color="inherit"
-        disabled={loading}
-        onClick={handlePickTasks}
-        className={smUp ? classes.changeOrder : classes.taskIcon}
-      >
-        <TaskMenuIcon />
-      </IconButton>
-    );   
+        <IconButton
+            color="inherit"
+            disabled={loading}
+            onClick={handlePickTasks}
+            className={smUp ? classes.changeOrder : classes.taskIcon}
+        >
+            <TaskMenuIcon/>
+        </IconButton>
+    );
 
-    const notification = (
-      <IconButton
-        color="inherit"
-        disabled={loading}
-        onClick={handlePickNotifications}
-        className={smUp ? classes.changeOrder : classes.notificationIcon}
-      >
-        <NotificationsIcon />
-      </IconButton>
+    const notifications = (
+        <IconButton
+            color="inherit"
+            disabled={loading}
+            onClick={handlePickNotifications}
+            className={smUp ? classes.changeOrder : classes.notificationIcon}
+        >
+            <NotificationsIcon/>
+        </IconButton>
     );
 
     return (
-      <AppBar position="absolute">
-        <Toolbar>
-          {brandLogo}  
-          {!smUp && (
-            <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="Menu"
-              onClick={onToggle}
-              disabled={loading}
-              className={classes.moveRight}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          {/* {dataTypeSearch} */}
-          <div className={classes.grow} />
-          {notification}  
-          {taskMenu}  
-          {tenantSearch}
-          {avatar}
-          {smUp && <TenantActiveInfo />}
-        </Toolbar>
-      </AppBar>
+        <AppBar position="absolute">
+            <Toolbar>
+                {brandLogo}
+                {!smUp && (
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        aria-label="Menu"
+                        onClick={onToggle}
+                        disabled={loading}
+                        className={classes.moveRight}
+                    >
+                        <MenuIcon/>
+                    </IconButton>
+                )}
+                {/* {dataTypeSearch} */}
+                <div className={classes.grow}/>
+                {notifications}
+                {taskMenu}
+                {tenantSearch}
+                {avatar}
+                {smUp && <TenantActiveInfo/>}
+            </Toolbar>
+        </AppBar>
     );
 };
