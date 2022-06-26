@@ -3,23 +3,19 @@ FROM node:16-alpine as builder
 
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
-#COPY package.json .
-#COPY package-lock.json .
-#RUN npm install -g npm@latest
-#RUN npm ci --silent
-#RUN npm install react-scripts --production -g --silent
-#COPY env.sh .
-#COPY src src/
-#COPY public public/
-#COPY conf conf/
-#RUN npm install -g npm@latest
-#RUN npm run build
-COPY . .
-RUN npm install
+COPY package.json .
+COPY package-lock.json .
+RUN npm install -g npm@latest
+RUN npm ci --legacy-peer-deps
+RUN npm install react-scripts --production -g --silent
+COPY env.sh .
+COPY src src/
+COPY public public/
+COPY conf conf/
 RUN npm run build
 
 # => Run container
-FROM nginx:1.15.2-alpine
+FROM nginx:stable-alpine
 
 RUN rm -rf /etc/nginx/conf.d
 COPY conf /etc/nginx
