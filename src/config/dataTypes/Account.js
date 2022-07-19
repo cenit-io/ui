@@ -3,6 +3,7 @@ import HomeIcon from '@material-ui/icons/Home';
 import ErrorLevelViewer from "../../viewers/ErrorLevelViewer";
 import MenuIcon from "@material-ui/icons/HomeOutlined";
 import { isSuperAdmin } from "../../layout/TenantContext";
+import { LazyStringControl } from "../../components/LazyStringControl";
 
 export const TenantMenuIcon = MenuIcon;
 
@@ -38,7 +39,7 @@ export default {
             }
         },
         show: {
-            fields: ['name', 'notification_level', 'time_zone', 'unlocked', 'owner', 'users']
+            fields: ['name', 'notification_level', 'time_zone', 'unlocked', 'owner', 'users', 'authentication_token', 'number'],
         },
         delete: {
             confirmation: true
@@ -61,6 +62,14 @@ export default {
         },
         users: {
             disabled: (_, user) => !isSuperAdmin(user)
+        },
+        authentication_token: {
+            control: LazyStringControl,
+            readOnly: true
+        },
+        number: {
+            control: LazyStringControl,
+            readOnly: true
         }
     }
 };
