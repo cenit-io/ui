@@ -190,7 +190,7 @@ const UserCard = ({ idToken, onClose }) => {
                     <ListItemIcon>
                         <TenantMenuIcon component="svg"/>
                     </ListItemIcon>
-                    <ListItemText primary="Current Tenant"/>
+                    <ListItemText primary="Current tenant"/>
                 </ListItem>
                 <ListItem button onClick={logout} component="li">
                     <ListItemIcon>
