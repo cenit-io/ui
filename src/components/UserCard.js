@@ -13,6 +13,9 @@ import { switchMap } from "rxjs/operators";
 import { from } from "rxjs";
 import Snackbar from "@material-ui/core/Snackbar";
 import { Alert } from "@material-ui/lab";
+import { TenantMenuIcon } from "../config/dataTypes/Account";
+import { RecordSubject, TabsSubject } from "../services/subjects";
+import { DataType } from "../services/DataTypeService";
 
 const useStyles = makeStyles(theme => ({
     avatarContainer: {
@@ -98,6 +101,14 @@ const UserCard = ({ idToken, onClose }) => {
         AuthorizationService.logout();
     };
 
+    const showCurrentTenant = () => {
+        DataType.find({ namespace: '', name: 'Account' }).subscribe(dataType => {
+            TabsSubject.next({
+                key: RecordSubject.for(dataType.id, tenantState.tenant.id).key
+            });
+        });
+    };
+
     const handleSwitchSudo = () => {
         setTenantState({ switchSudo: true });
         onClose && onClose();
@@ -175,6 +186,12 @@ const UserCard = ({ idToken, onClose }) => {
             <List component="ul">
                 {sudoControl}
                 {passwordControl}
+                <ListItem button onClick={showCurrentTenant} component="li">
+                    <ListItemIcon>
+                        <TenantMenuIcon component="svg"/>
+                    </ListItemIcon>
+                    <ListItemText primary="Current Tenant"/>
+                </ListItem>
                 <ListItem button onClick={logout} component="li">
                     <ListItemIcon>
                         <LogoutIcon component="svg"/>

@@ -26,7 +26,6 @@ import { DataType } from "../services/DataTypeService";
 import { useSpreadState } from "../common/hooks";
 import NotificationsIcon from "../icons/NotificationsIcon";
 import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
-import TenantActiveInfo from '../components/TenantActiveInfo';
 import Badge from "@material-ui/core/Badge";
 import NotificationIcon from '@material-ui/icons/CircleNotifications';
 
@@ -288,7 +287,6 @@ export default function ({ onToggle }) {
                 {taskMenu}
                 {tenantSearch}
                 {avatar}
-                {smUp && <TenantActiveInfo/>}
             </Toolbar>
         </AppBar>
     );
