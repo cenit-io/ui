@@ -165,7 +165,7 @@ export const AuthorizationService = {
     },
 
     logout: function () {
-        localStorage.removeItem(AccessKey);
+        localStorage.clear();
         window.location = LogoutURL;
     },
 
