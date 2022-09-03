@@ -6,7 +6,7 @@ export default function DateTimeViewer({ value }) {
 
   const cDate = moment();
   const vDate = moment(value);
-  const format = vDate.year() === cDate.year() ? 'MMM D, HH:mm:ss' : 'MMM D, YYYY, HH:mm:ss';
+  const format = vDate.year() === cDate.year() ? 'MMM D' : 'MMM D, YYYY';
 
   return <span>{vDate.format(format)}</span>;
 }

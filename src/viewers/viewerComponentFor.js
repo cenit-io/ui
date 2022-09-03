@@ -4,6 +4,8 @@ import EmbedsOneViewer from "./EmbedsOneViewer";
 import EmbedsManyViewer from "./EmbedsManyViewer";
 import BooleanViewer from "./BooleanViewer";
 import DateTimeViewer from "./DateTimeViewer";
+import DateViewer from "./DateViewer";
+import TimeViewer from "./TimeViewer";
 import StringViewer from "./StringViewer";
 import JsonViewer from "./JsonViewer";
 import TypePropertyViewer from "./TypePropertyViewer";
@@ -46,9 +48,11 @@ export default function viewerComponentFor(property, config) {
         case 'string': {
             switch (property.propertySchema.format) {
                 case 'date-time':
-                case 'time':
-                case 'date':
                     return DateTimeViewer;
+                case 'time':
+                    return TimeViewer;
+                case 'date':
+                    return DateViewer;
 
                 default:
                     return StringViewer;
