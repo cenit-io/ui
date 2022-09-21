@@ -15,117 +15,117 @@ import { underscore } from "../common/strutls";
 import { ExecutionMonitor } from "./ExecutionMonitor";
 
 function pullParametersSchema(pull_parameters) {
-    const properties = {};
-    const requiredProperties = [];
-    const schema = { type: 'object', properties, required: requiredProperties };
-    pull_parameters.forEach(({ id, label, type, many, required, description }) => {
-        const propertySchema = properties[id] = { title: label, description };
-        if (many) {
-            propertySchema.type = 'array';
-            if (type) {
-                propertySchema.items = { type }
-            }
-        } else if (type) {
-            propertySchema.type = type;
-        }
-        if (required) {
-            requiredProperties.push(id);
-        }
-    });
-    if (!requiredProperties.length) {
-        delete schema.required;
+  const properties = {};
+  const requiredProperties = [];
+  const schema = { type: 'object', properties, required: requiredProperties };
+  pull_parameters.forEach(({ id, label, type, many, required, description }) => {
+    const propertySchema = properties[id] = { title: label, description };
+    if (many) {
+      propertySchema.type = 'array';
+      if (type) {
+        propertySchema.items = { type }
+      }
+    } else if (type) {
+      propertySchema.type = type;
     }
-    return schema;
+    if (required) {
+      requiredProperties.push(id);
+    }
+  });
+  if (!requiredProperties.length) {
+    delete schema.required;
+  }
+  return schema;
 }
 
 const Pull = ({ dataType, docked, record, onSubjectPicked, height }) => {
 
-    const [state, setState] = useSpreadState();
+  const [state, setState] = useSpreadState();
 
-    const value = useRef(new FormRootValue({}));
+  const value = useRef(new FormRootValue({}));
 
-    const { pull_parameters, formDataType } = state;
+  const { pull_parameters, formDataType } = state;
 
-    useEffect(() => {
-        const subscription = dataType.get(record.id, {
-            viewport: '{pull_parameters {id label type many required description}}'
-        }).subscribe(
-            ({ pull_parameters }) => {
-                pull_parameters = pull_parameters || [];
-                const formDataType = DataType.from({
-                    name: 'Pull',
-                    schema: pullParametersSchema(pull_parameters)
-                });
+  useEffect(() => {
+    const subscription = dataType.get(record.id, {
+      viewport: '{pull_parameters {id label type many required description}}'
+    }).subscribe(
+      ({ pull_parameters }) => {
+        pull_parameters = pull_parameters || [];
+        const formDataType = DataType.from({
+          name: 'Pull',
+          schema: pullParametersSchema(pull_parameters)
+        });
 
-                if (!pull_parameters.length) {
-                    formDataType[Config] = {
-                        formViewComponent: ClickAndRun
-                    };
-                }
+        if (!pull_parameters.length) {
+          formDataType[Config] = {
+            formViewComponent: ClickAndRun
+          };
+        }
 
-                setState({ pull_parameters, formDataType });
-            }
-        );
+        setState({ pull_parameters, formDataType });
+      }
+    );
 
-        return () => subscription.unsubscribe();
-    }, [dataType, record.id]);
+    return () => subscription.unsubscribe();
+  }, [dataType, record.id]);
 
-    const handleFormSubmit = (_, formValue) => {
-        const value = formValue.get();
-        const pp = {};
-        pull_parameters.forEach(({ id }) => pp[id] = value[id]);
-        const formData = { pull_parameters: pp };
-        return of(true).pipe(
-            switchMap(() => {
-                let error;
-                pull_parameters.forEach(p => {
-                    if (p.required && !pp[p.id]) {
-                        error = { [p.id]: ['is required'] };
-                    }
-                });
-                if (error) {
-                    throw ({ response: { data: error } });
-                }
+  const handleFormSubmit = (_, formValue) => {
+    const value = formValue.get();
+    const pp = {};
+    pull_parameters.forEach(({ id }) => pp[id] = value[id]);
+    const formData = { pull_parameters: pp };
+    return of(true).pipe(
+      switchMap(() => {
+        let error;
+        pull_parameters.forEach(p => {
+          if (p.required && !pp[p.id]) {
+            error = { [p.id]: ['is required'] };
+          }
+        });
+        if (error) {
+          throw ({ response: { data: error } });
+        }
 
-                const slug = underscore(dataType.name);
+        const slug = underscore(dataType.name);
 
-                return API.post('setup', slug, record.id, 'digest', 'pull', formData);
-            })
-        );
-    };
+        return API.post('setup', slug, record.id, 'digest', 'pull', formData);
+      })
+    );
+  };
 
-    if (formDataType) {
-        return (
-            <div className="relative">
-                <FormEditor docked={docked}
-                            dataType={formDataType}
-                            height={height}
-                            submitIcon={<PullIcon component="svg"/>}
-                            onFormSubmit={handleFormSubmit}
-                            onSubjectPicked={onSubjectPicked}
-                            successControl={ExecutionMonitor}
-                            value={value.current}
-                            noSubmitButton={!pull_parameters.length}
-                            noJSON={!pull_parameters.length}/>
-            </div>
-        );
-    }
+  if (formDataType) {
+    return (
+      <div className="relative">
+        <FormEditor docked={docked}
+                    dataType={formDataType}
+                    height={height}
+                    submitIcon={<PullIcon component="svg" />}
+                    onFormSubmit={handleFormSubmit}
+                    onSubjectPicked={onSubjectPicked}
+                    successControl={ExecutionMonitor}
+                    value={value.current}
+                    noSubmitButton={!pull_parameters.length}
+                    noJSON={!pull_parameters.length} />
+      </div>
+    );
+  }
 
-    return <Loading/>;
+  return <Loading />;
 };
 
 export default ActionRegistry.register(Pull, {
-    kind: ActionKind.member,
-    arity: 1,
-    icon: PullIcon,
-    title: 'Pull',
-    onlyFor: [
-        {
-            namespace: 'Setup',
-            name: 'CrossSharedCollection'
-        },
-        {
-            namespace: 'Setup',
-            name: 'ApiSpec'
-        }]
+  kind: ActionKind.member,
+  arity: 1,
+  icon: PullIcon,
+  title: 'Pull',
+  onlyFor: [
+    {
+      namespace: 'Setup',
+      name: 'CrossSharedCollection'
+    },
+    {
+      namespace: 'Setup',
+      name: 'ApiSpec'
+    }]
 });

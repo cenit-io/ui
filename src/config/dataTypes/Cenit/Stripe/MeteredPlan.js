@@ -7,14 +7,14 @@ const fields = ['id', 'nickname', 'product', 'interval', 'currency', 'amount', '
 export const PlanMenuIcon = MenuIcon;
 
 export default {
-    title: 'Metered Plan',
-    icon: <PlanIcon component="svg"/>,
-    actions: {
-        index: {
-            fields: [...fields, 'updated_at']
-        },
-        new: {
-            fields
-        }
+  title: 'Metered Plan',
+  icon: <PlanIcon component="svg" />,
+  actions: {
+    index: {
+      fields: [...fields, 'updated_at']
     },
+    new: {
+      fields
+    }
+  },
 };

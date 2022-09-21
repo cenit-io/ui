@@ -6,15 +6,15 @@ import { CRUD } from "../../actions/ActionRegistry";
 export const RoleMenuIcon = MenuIcon;
 
 export default {
-    title: 'Role',
-    icon: <RoleIcon component="svg"/>,
-    actions: {
-        index: {
-            fields: ['name', 'metadata', 'updated_at']
-        },
-        new: {
-            fields: ['name', 'metadata']
-        }
+  title: 'Role',
+  icon: <RoleIcon component="svg" />,
+  actions: {
+    index: {
+      fields: ['name', 'metadata', 'updated_at']
     },
-    crud: [CRUD.read, CRUD.update, CRUD.create]
+    new: {
+      fields: ['name', 'metadata']
+    }
+  },
+  crud: [CRUD.read, CRUD.update, CRUD.create]
 };

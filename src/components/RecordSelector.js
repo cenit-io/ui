@@ -4,33 +4,33 @@ import { InputBase, LinearProgress } from "@material-ui/core";
 import RefPicker from "./RefPicker";
 
 const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputClasses, disabled, readOnly, anchor }) => {
-    const [dataType, setDataType] = useState(null);
+  const [dataType, setDataType] = useState(null);
 
-    useEffect(() => {
-        let fetchDataType;
-        if (dataTypeId) {
-            fetchDataType = DataType.getById(dataTypeId);
-        } else {
-            fetchDataType = DataType.find(dataTypeSelector);
-        }
-        const subscription = fetchDataType.subscribe(dt => setDataType(dt));
-        return () => subscription.unsubscribe();
-    }, [dataTypeId, dataTypeSelector]);
-
-    if (dataType) {
-        return <RefPicker dataType={dataType}
-                          onPick={onSelect}
-                          text={text}
-                          inputClasses={inputClasses}
-                          disabled={disabled}
-                          readOnly={readOnly}
-                          anchor={anchor}/>;
+  useEffect(() => {
+    let fetchDataType;
+    if (dataTypeId) {
+      fetchDataType = DataType.getById(dataTypeId);
+    } else {
+      fetchDataType = DataType.find(dataTypeSelector);
     }
+    const subscription = fetchDataType.subscribe(dt => setDataType(dt));
+    return () => subscription.unsubscribe();
+  }, [dataTypeId, dataTypeSelector]);
 
-    return <div>
-        <InputBase disabled classes={inputClasses}/>
-        <LinearProgress/>
-    </div>;
+  if (dataType) {
+    return <RefPicker dataType={dataType}
+                      onPick={onSelect}
+                      text={text}
+                      inputClasses={inputClasses}
+                      disabled={disabled}
+                      readOnly={readOnly}
+                      anchor={anchor} />;
+  }
+
+  return <div>
+    <InputBase disabled classes={inputClasses} />
+    <LinearProgress />
+  </div>;
 };
 
 export default RecordSelector;

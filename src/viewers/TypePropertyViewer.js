@@ -10,36 +10,36 @@ import { DataType } from "../services/DataTypeService";
 
 export default function TypePropertyViewer({ value }) {
 
-    const [state, setState] = useSpreadState();
+  const [state, setState] = useSpreadState();
 
-    const { title, dataType } = state;
+  const { title, dataType } = state;
 
-    useEffect(() => {
-        if (value) {
-            const subscription = DataType.byTypeName(value).pipe(
-                switchMap(dataType => zzip(
-                    of(dataType),
-                    (dataType && dataType.getTitle()) || of('-')
-                ))
-            ).subscribe(
-                ([dataType, title]) => setState({ dataType, title })
-            );
+  useEffect(() => {
+    if (value) {
+      const subscription = DataType.byTypeName(value).pipe(
+        switchMap(dataType => zzip(
+          of(dataType),
+          (dataType && dataType.getTitle()) || of('-')
+        ))
+      ).subscribe(
+        ([dataType, title]) => setState({ dataType, title })
+      );
 
-            return () => subscription.unsubscribe();
-        }
-    }, [value]);
-
-    if (dataType) {
-        return <Chip label={title}
-                     component="div"
-                     onClick={() => TabsSubject.next({
-                         key: DataTypeSubject.for(dataType.id).key
-                     })}/>;
+      return () => subscription.unsubscribe();
     }
+  }, [value]);
 
-    if (title) {
-        return <span>-</span>;
-    }
+  if (dataType) {
+    return <Chip label={title}
+                 component="div"
+                 onClick={() => TabsSubject.next({
+                   key: DataTypeSubject.for(dataType.id).key
+                 })} />;
+  }
 
-    return <Skeleton component="span" variant="text"/>;
+  if (title) {
+    return <span>-</span>;
+  }
+
+  return <Skeleton component="span" variant="text" />;
 }

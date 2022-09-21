@@ -5,26 +5,26 @@ import CheckIcon from "../icons/CheckIcon";
 import FalseIcon from "../icons/FalseIcon";
 
 export const useBooleanViewerStyles = makeStyles(theme => ({
-    true: {
-        color: theme.palette.success.main
-    },
-    false: {
-        color: theme.palette.error.main
-    },
-    undefined: {
-        color: theme.palette.text.secondary
-    },
-    null: {
-        color: theme.palette.text.secondary
-    }
+  true: {
+    color: theme.palette.success.main
+  },
+  false: {
+    color: theme.palette.error.main
+  },
+  undefined: {
+    color: theme.palette.text.secondary
+  },
+  null: {
+    color: theme.palette.text.secondary
+  }
 }));
 
 export default function BooleanViewer({ value }) {
-    const classes = useBooleanViewerStyles();
+  const classes = useBooleanViewerStyles();
 
-    const Icon = value === undefined || value === null
-        ? NotDefinedIcon
-        : (value ? CheckIcon : FalseIcon);
+  const Icon = value === undefined || value === null
+    ? NotDefinedIcon
+    : (value ? CheckIcon : FalseIcon);
 
-    return <Icon className={classes[String(value)]} fontSize="small"/>;
+  return <Icon className={classes[String(value)]} fontSize="small" />;
 }

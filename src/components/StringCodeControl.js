@@ -5,9 +5,9 @@ import CodeMirrorControl from "./CodeMirrorControl";
 
 function StringCodeControl(props) {
 
-    return (
-        <CodeMirrorControl lineNumbers={true} {...props}/>
-    );
+  return (
+    <CodeMirrorControl lineNumbers={true} {...props} />
+  );
 }
 
 export default StringCodeControl;

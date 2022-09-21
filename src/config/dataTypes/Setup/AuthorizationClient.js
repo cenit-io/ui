@@ -5,14 +5,14 @@ import itemLabelFor from "../../itemLabelFor";
 const title = 'Authorization Client';
 
 export default {
-    title,
-    itemLabel: itemLabelFor(title),
-    icon: <AuthorizationClientsFilledIcon/>,
-    titleViewport: '{provider {namespace name} name',
-    actions: {
-        index: {
-            fields: ['_type', 'provider', 'name', 'updated_at'],
-            viewport: '{id _type provider {namespace name} name updated_at origin}'
-        }
+  title,
+  itemLabel: itemLabelFor(title),
+  icon: <AuthorizationClientsFilledIcon />,
+  titleViewport: '{provider {namespace name} name',
+  actions: {
+    index: {
+      fields: ['_type', 'provider', 'name', 'updated_at'],
+      viewport: '{id _type provider {namespace name} name updated_at origin}'
     }
+  }
 };

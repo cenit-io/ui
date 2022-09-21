@@ -13,76 +13,76 @@ import Show from './Show';
 import Random from '../util/Random';
 
 function SuccessShred() {
-    return (
-        <SuccessAlert mainIcon={ShredIcon}/>
-    );
+  return (
+    <SuccessAlert mainIcon={ShredIcon} />
+  );
 }
 
 function ShredAlert() {
-    const { record } = useContainerContext()[0];
+  const { record } = useContainerContext()[0];
 
-    return <WarningAlert title="Warning"
-                         message={`All the data in the tenant  ${record.name} will be destroyed`}
-                         mainIcon={ShredIcon}/>;
+  return <WarningAlert title="Warning"
+                       message={`All the data in the tenant  ${record.name} will be destroyed`}
+                       mainIcon={ShredIcon} />;
 }
 
 const ShredTenant = ({ docked, record, onSubjectPicked, height }) => {
 
-    const containerContext = useContainerContext();
-    const [, setContainerState] = containerContext;
+  const containerContext = useContainerContext();
+  const [, setContainerState] = containerContext;
 
-    useEffect(() => {
-        setContainerState({ breadcrumbActionName: "Shred" });
-  
-        return () => {
-          setContainerState({ breadcrumbActionName: null });
-        };
-      }, []);
+  useEffect(() => {
+    setContainerState({ breadcrumbActionName: "Shred" });
 
-    const handleCancel = () => {
-      setContainerState({
-        selectedItems: [],
-        landingActionKey: Show.key,
-        actionKey: Show.key,
-        actionComponentKey: Random.string(),
-      });
+    return () => {
+      setContainerState({ breadcrumbActionName: null });
     };
+  }, []);
 
-    const formDataType = useRef(DataType.from({
-        name: 'Shred',
-        schema: {
-            type: 'object',
-            properties: {}
-        },
-        [Config]: {
-            formControl: ShredAlert
-        }
-    }));
+  const handleCancel = () => {
+    setContainerState({
+      selectedItems: [],
+      landingActionKey: Show.key,
+      actionKey: Show.key,
+      actionComponentKey: Random.string(),
+    });
+  };
 
-    const handleFormSubmit = () => API.delete('setup', 'account', record.id, 'digest', 'shred', {}).pipe(
-        map(() => record)
-    );
+  const formDataType = useRef(DataType.from({
+    name: 'Shred',
+    schema: {
+      type: 'object',
+      properties: {}
+    },
+    [Config]: {
+      formControl: ShredAlert
+    }
+  }));
 
-    return (
-        <div className="relative">
-            <FormEditor docked={docked}
-                        dataType={formDataType.current}
-                        height={height}
-                        submitIcon={<ShredIcon/>}
-                        onFormSubmit={handleFormSubmit}
-                        onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessShred}
-                        cancelEditor={handleCancel}
-                        noJSON={true}/>
-        </div>
-    );
+  const handleFormSubmit = () => API.delete('setup', 'account', record.id, 'digest', 'shred', {}).pipe(
+    map(() => record)
+  );
+
+  return (
+    <div className="relative">
+      <FormEditor docked={docked}
+                  dataType={formDataType.current}
+                  height={height}
+                  submitIcon={<ShredIcon />}
+                  onFormSubmit={handleFormSubmit}
+                  onSubjectPicked={onSubjectPicked}
+                  successControl={SuccessShred}
+                  cancelEditor={handleCancel}
+                  noJSON={true} />
+    </div>
+  );
 };
 
 export default ActionRegistry.register(ShredTenant, {
-    kind: ActionKind.member,
-    arity: 1,
-    icon: ShredIcon,
-    title: 'Shred',
-    onlyFor: [{ namespace: '', name: 'Account' }],
-    group: 4
+  kind: ActionKind.member,
+  arity: 1,
+  icon: ShredIcon,
+  title: 'Shred',
+  onlyFor: [{ namespace: '', name: 'Account' }],
+  group: 4
 });

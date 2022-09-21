@@ -9,32 +9,32 @@ import recordViewer from "../../../../viewers/recordViewer";
 const ActionProjection = t => t?.action;
 
 export default {
-    title: 'Trace',
-    icon: <TraceIcon/>,
-    actions: {
-        index: {
-            fields: ['data_type', 'target', 'action', 'message', 'created_at'],
-            viewport: '{_id data_type {id name title _id} target action created_at origin}'
-        },
-        new: {
-            fields: ['data_type', 'target', 'action', 'message', 'created_at', 'changes_set']
-        }
+  title: 'Trace',
+  icon: <TraceIcon />,
+  actions: {
+    index: {
+      fields: ['data_type', 'target', 'action', 'message', 'created_at'],
+      viewport: '{_id data_type {id name title _id} target action created_at origin}'
     },
-    fields: {
-        data_type: {
-            control: ViewerControl
-        },
-        target: {
-            control: ViewerControl,
-            viewer: recordViewer(trace => trace?.data_type)
-        },
-        action: {
-            control: ViewerControl,
-            viewer: TraceActionViewer(ActionProjection, 'background')
-        },
-        changes_set: {
-            control: ChangesSetControl
-        }
+    new: {
+      fields: ['data_type', 'target', 'action', 'message', 'created_at', 'changes_set']
+    }
+  },
+  fields: {
+    data_type: {
+      control: ViewerControl
     },
-    crud: [CRUD.read, CRUD.delete]
+    target: {
+      control: ViewerControl,
+      viewer: recordViewer(trace => trace?.data_type)
+    },
+    action: {
+      control: ViewerControl,
+      viewer: TraceActionViewer(ActionProjection, 'background')
+    },
+    changes_set: {
+      control: ChangesSetControl
+    }
+  },
+  crud: [CRUD.read, CRUD.delete]
 };

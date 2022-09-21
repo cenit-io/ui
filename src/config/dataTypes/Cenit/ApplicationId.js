@@ -5,15 +5,15 @@ import { CRUD } from "../../../actions/ActionRegistry";
 const fields = ['name', 'registered', 'trusted', 'oauth_name', 'slug', 'identifier', 'updated_at'];
 
 export default {
-    title: 'Application ID',
-    icon: <ApplicationFilledIcon/>,
-    actions: {
-        index: {
-            fields
-        },
-        edit: {
-            fields
-        }
+  title: 'Application ID',
+  icon: <ApplicationFilledIcon />,
+  actions: {
+    index: {
+      fields
     },
-    crud: [CRUD.read]
+    edit: {
+      fields
+    }
+  },
+  crud: [CRUD.read]
 };
