@@ -8,68 +8,68 @@ import { LazyStringControl } from "../../components/LazyStringControl";
 export const TenantMenuIcon = MenuIcon;
 
 export default {
-    title: 'Tenant',
-    icon: <HomeIcon component="svg"/>,
-    actions: {
-        index: {
-            fields: user => {
-                const fields = ['name', 'notification_level', 'time_zone', 'unlocked', 'updated_at'];
-                if (isSuperAdmin(user)) {
-                    fields.splice(fields.length - 1, 0, 'owner', 'users');
-                }
-                return fields;
-            }
-        },
-        new: {
-            fields: user => {
-                const fields = ['name', 'notification_level', 'time_zone'];
-                if (isSuperAdmin(user)) {
-                    fields.splice(fields.length, 0, 'owner', 'users');
-                }
-                return fields;
-            }
-        },
-        edit: {
-            fields: user => {
-                const fields = ['name', 'notification_level', 'time_zone', 'unlocked']
-                if (isSuperAdmin(user)) {
-                    fields.splice(fields.length, 0, 'owner', 'users');
-                }
-                return fields;
-            }
-        },
-        show: {
-            fields: ['name', 'notification_level', 'time_zone', 'unlocked', 'owner', 'users', 'authentication_token', 'number'],
-        },
-        delete: {
-            confirmation: true
+  title: 'Tenant',
+  icon: <HomeIcon component="svg" />,
+  actions: {
+    index: {
+      fields: user => {
+        const fields = ['name', 'notification_level', 'time_zone', 'unlocked', 'updated_at'];
+        if (isSuperAdmin(user)) {
+          fields.splice(fields.length - 1, 0, 'owner', 'users');
         }
+        return fields;
+      }
     },
-    fields: {
-        notification_level: {
-            viewer: ErrorLevelViewer(
-                ({ notification_level }) => notification_level,
-                'background'
-            )
-        },
-        unlocked: {
-            controlProps: {
-                deleteDisabled: true,
-            }
-        },
-        owner: {
-            disabled: (_, user) => !isSuperAdmin(user)
-        },
-        users: {
-            disabled: (_, user) => !isSuperAdmin(user)
-        },
-        authentication_token: {
-            control: LazyStringControl,
-            readOnly: true
-        },
-        number: {
-            control: LazyStringControl,
-            readOnly: true
+    new: {
+      fields: user => {
+        const fields = ['name', 'notification_level', 'time_zone'];
+        if (isSuperAdmin(user)) {
+          fields.splice(fields.length, 0, 'owner', 'users');
         }
+        return fields;
+      }
+    },
+    edit: {
+      fields: user => {
+        const fields = ['name', 'notification_level', 'time_zone', 'unlocked']
+        if (isSuperAdmin(user)) {
+          fields.splice(fields.length, 0, 'owner', 'users');
+        }
+        return fields;
+      }
+    },
+    show: {
+      fields: ['name', 'notification_level', 'time_zone', 'unlocked', 'owner', 'users', 'authentication_token', 'number'],
+    },
+    delete: {
+      confirmation: true
     }
+  },
+  fields: {
+    notification_level: {
+      viewer: ErrorLevelViewer(
+        ({ notification_level }) => notification_level,
+        'background'
+      )
+    },
+    unlocked: {
+      controlProps: {
+        deleteDisabled: true,
+      }
+    },
+    owner: {
+      disabled: (_, user) => !isSuperAdmin(user)
+    },
+    users: {
+      disabled: (_, user) => !isSuperAdmin(user)
+    },
+    authentication_token: {
+      control: LazyStringControl,
+      readOnly: true
+    },
+    number: {
+      control: LazyStringControl,
+      readOnly: true
+    }
+  }
 };

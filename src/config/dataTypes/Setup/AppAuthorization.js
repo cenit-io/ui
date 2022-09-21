@@ -4,13 +4,13 @@ import AuthorizationFilledIcon from "../../../icons/AuthorizationFilledIcon";
 import deepDup from "../../../common/deepDup";
 
 const AppAuthorization = {
-    ...deepDup(Oauth2Authorization),
-    title: 'App Authorization',
-    icon: <AuthorizationFilledIcon/>
+  ...deepDup(Oauth2Authorization),
+  title: 'App Authorization',
+  icon: <AuthorizationFilledIcon />
 };
 
 AppAuthorization.fields.client.selector = {
-    origin: 'app'
+  origin: 'app'
 };
 
 export default AppAuthorization;

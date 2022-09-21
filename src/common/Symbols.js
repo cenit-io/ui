@@ -1,4 +1,3 @@
-
 export const NEW = Symbol.for('_new');
 
 export const FETCHED = Symbol.for('_fetched');

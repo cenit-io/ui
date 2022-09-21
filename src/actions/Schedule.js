@@ -12,86 +12,86 @@ import Loading from "../components/Loading";
 import { useContainerContext } from './ContainerContext';
 
 function SuccessSchedule() {
-    return (
-        <SuccessAlert mainIcon={ScheduleIcon}/>
-    );
+  return (
+    <SuccessAlert mainIcon={ScheduleIcon} />
+  );
 }
 
 const Schedule = ({ dataType, docked, record, onSubjectPicked, height }) => {
-    const [state, setState] = useSpreadState();
-    const containerContext = useContainerContext();
-    const [,setContainerState] = containerContext;
+  const [state, setState] = useSpreadState();
+  const containerContext = useContainerContext();
+  const [, setContainerState] = containerContext;
 
-    const { value, formDataType } = state;
+  const { value, formDataType } = state;
 
-    useEffect(() => {
-        setContainerState({ breadcrumbActionName: "Schedule" });
+  useEffect(() => {
+    setContainerState({ breadcrumbActionName: "Schedule" });
 
-        return () => {
-          setContainerState({ breadcrumbActionName: null });
-        };
-      }, []);
-
-    useEffect(() => {
-        const subscription = dataType.get(record.id, {
-            viewport: '{scheduler {namespace name}}',
-            include_id: true
-        }).subscribe(({ scheduler }) => {
-                setState({
-                    value: new FormRootValue({
-                        scheduler
-                    }),
-                    formDataType: DataType.from({
-                        name: 'Schedule',
-                        schema: {
-                            type: 'object',
-                            properties: {
-                                scheduler: {
-                                    referenced: true,
-                                    $ref: {
-                                        namespace: 'Setup',
-                                        name: 'Scheduler'
-                                    }
-                                }
-                            }
-                        }
-                    })
-                })
-            }
-        );
-
-        return () => subscription.unsubscribe();
-    }, [record.id, dataType]);
-
-    const handleFormSubmit = (_, value) => {
-        const { scheduler } = value.get();
-        return API.post(
-            'setup', 'task', record.id, 'digest', 'schedule', scheduler || {}
-        );
+    return () => {
+      setContainerState({ breadcrumbActionName: null });
     };
+  }, []);
 
-    if (formDataType) {
-        return (
-            <div className="relative">
-                <FormEditor docked={docked}
-                            dataType={formDataType}
-                            height={height}
-                            submitIcon={<ScheduleIcon component="svg"/>}
-                            onFormSubmit={handleFormSubmit}
-                            onSubjectPicked={onSubjectPicked}
-                            successControl={SuccessSchedule}
-                            value={value}/>
-            </div>
-        );
-    }
+  useEffect(() => {
+    const subscription = dataType.get(record.id, {
+      viewport: '{scheduler {namespace name}}',
+      include_id: true
+    }).subscribe(({ scheduler }) => {
+        setState({
+          value: new FormRootValue({
+            scheduler
+          }),
+          formDataType: DataType.from({
+            name: 'Schedule',
+            schema: {
+              type: 'object',
+              properties: {
+                scheduler: {
+                  referenced: true,
+                  $ref: {
+                    namespace: 'Setup',
+                    name: 'Scheduler'
+                  }
+                }
+              }
+            }
+          })
+        })
+      }
+    );
 
-    return <Loading/>;
+    return () => subscription.unsubscribe();
+  }, [record.id, dataType]);
+
+  const handleFormSubmit = (_, value) => {
+    const { scheduler } = value.get();
+    return API.post(
+      'setup', 'task', record.id, 'digest', 'schedule', scheduler || {}
+    );
+  };
+
+  if (formDataType) {
+    return (
+      <div className="relative">
+        <FormEditor docked={docked}
+                    dataType={formDataType}
+                    height={height}
+                    submitIcon={<ScheduleIcon component="svg" />}
+                    onFormSubmit={handleFormSubmit}
+                    onSubjectPicked={onSubjectPicked}
+                    successControl={SuccessSchedule}
+                    value={value} />
+      </div>
+    );
+  }
+
+  return <Loading />;
 };
 
 export default ActionRegistry.register(Schedule, {
-    kind: ActionKind.member,
-    icon: ScheduleIcon,
-    title: 'Schedule',
-    arity: 1,
-    onlyFor: TasksHierarchy
+  kind: ActionKind.member,
+  icon: ScheduleIcon,
+  title: 'Schedule',
+  arity: 1,
+  onlyFor: TasksHierarchy
 });

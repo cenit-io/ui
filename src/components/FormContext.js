@@ -7,22 +7,22 @@ const FormContext = React.createContext({});
 export default FormContext;
 
 export function useFormContext() {
-    return useContext(FormContext);
+  return useContext(FormContext);
 }
 
 export function useFormObjectValue() {
-    const { value } = useFormContext();
-    const [json, setJSON] = useState(value.get());
+  const { value } = useFormContext();
+  const [json, setJSON] = useState(value.get());
 
-    useEffect(() => {
-        const subscription = value.changed().pipe(
-            debounce(() => interval(200))
-        ).subscribe(
-            value => setJSON(value)
-        );
-        value.changed().next(value.get());
-        return () => subscription.unsubscribe();
-    }, [value]);
+  useEffect(() => {
+    const subscription = value.changed().pipe(
+      debounce(() => interval(200))
+    ).subscribe(
+      value => setJSON(value)
+    );
+    value.changed().next(value.get());
+    return () => subscription.unsubscribe();
+  }, [value]);
 
-    return json;
+  return json;
 }

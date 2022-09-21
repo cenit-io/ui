@@ -132,8 +132,8 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
     marginLeft: "1.35rem",
     marginBottom: "1.3rem",
-    width:"100%"
-  },  
+    width: "100%"
+  },
   brandImgWrapper: {
     width: "43px"
   },

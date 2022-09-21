@@ -9,22 +9,22 @@ const LevelProjection = ({ type }) => type;
 export const SystemReportMenuIcon = MenuIcon;
 
 export default {
-    title: 'System Report',
-    icon: <NotificationFilledIcon/>,
-    actions: {
-        index: {
-            fields: ['created_at', 'tenant', 'type', 'message', 'attachment']
-        }
-    },
-    fields: {
-        type: {
-            viewer: ErrorLevelViewer(LevelProjection, 'background')
-        },
-        message: {
-            viewer: ErrorLevelViewer(LevelProjection)
-        },
-        attachment: {
-            viewer: AttachmentViewer
-        }
+  title: 'System Report',
+  icon: <NotificationFilledIcon />,
+  actions: {
+    index: {
+      fields: ['created_at', 'tenant', 'type', 'message', 'attachment']
     }
+  },
+  fields: {
+    type: {
+      viewer: ErrorLevelViewer(LevelProjection, 'background')
+    },
+    message: {
+      viewer: ErrorLevelViewer(LevelProjection)
+    },
+    attachment: {
+      viewer: AttachmentViewer
+    }
+  }
 };

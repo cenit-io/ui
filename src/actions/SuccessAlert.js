@@ -5,28 +5,28 @@ import useTheme from "@material-ui/core/styles/useTheme";
 
 
 export default function SuccessAlert(
-    {
-        title, message, children, mainIcon, mainIconColor, smallIcon, smallIconColor, background
-    }
+  {
+    title, message, children, mainIcon, mainIconColor, smallIcon, smallIconColor, background
+  }
 ) {
 
-    const theme = useTheme();
+  const theme = useTheme();
 
-    smallIcon = smallIcon || SuccessIcon;
-    smallIconColor = smallIconColor || theme.palette.success.main;
-    background = background || theme.palette.success.light;
+  smallIcon = smallIcon || SuccessIcon;
+  smallIconColor = smallIconColor || theme.palette.success.main;
+  background = background || theme.palette.success.light;
 
-    return (
-        <Alert title={title}
-               message={message}
-               mainIconColor={mainIconColor}
-               smallIcon={smallIcon}
-               smallIconColor={smallIconColor}
-               background={background}
-               mainIcon={mainIcon}>
-            {children}
-        </Alert>
-    );
+  return (
+    <Alert title={title}
+           message={message}
+           mainIconColor={mainIconColor}
+           smallIcon={smallIcon}
+           smallIconColor={smallIconColor}
+           background={background}
+           mainIcon={mainIcon}>
+      {children}
+    </Alert>
+  );
 }
 
-export const SuccessAlertWith = props => () => <SuccessAlert {...props}/>;
+export const SuccessAlertWith = props => () => <SuccessAlert {...props} />;

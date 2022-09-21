@@ -7,14 +7,14 @@ const fields = ['name', 'plans'];
 export const PlanMenuIcon = MenuIcon;
 
 export default {
-    title: 'Subscription Group',
-    icon: <PlanIcon component="svg"/>,
-    actions: {
-        index: {
-            fields: [...fields, 'updated_at']
-        },
-        new: {
-            fields
-        }
+  title: 'Subscription Group',
+  icon: <PlanIcon component="svg" />,
+  actions: {
+    index: {
+      fields: [...fields, 'updated_at']
+    },
+    new: {
+      fields
     }
+  }
 };

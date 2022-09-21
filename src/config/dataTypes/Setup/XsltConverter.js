@@ -7,24 +7,24 @@ import { arrayDiff } from "../../../common/arrays";
 const fields = ['namespace', 'name', 'source_data_type', 'target_data_type', 'discard_events', 'code'];
 
 export default {
-    title: 'XSLT Converter',
-    icon: <ConverterFilledIcon/>,
-    actions: {
-        index: {
-            fields: ['namespace', 'name', 'source_data_type', 'target_data_type', 'discard_events', 'updated_at']
-        },
-        new: { fields },
-        edit: {
-            viewportFields: [...fields, 'origin']
-        }
+  title: 'XSLT Converter',
+  icon: <ConverterFilledIcon />,
+  actions: {
+    index: {
+      fields: ['namespace', 'name', 'source_data_type', 'target_data_type', 'discard_events', 'updated_at']
     },
-    fields: {
-        code: {
-            control: SharedCode,
-            controlProps: {
-                mime: 'application/xml'
-            }
-        }
-    },
-    orchestrator: sharedOriginFields(...arrayDiff(fields, 'code'))
+    new: { fields },
+    edit: {
+      viewportFields: [...fields, 'origin']
+    }
+  },
+  fields: {
+    code: {
+      control: SharedCode,
+      controlProps: {
+        mime: 'application/xml'
+      }
+    }
+  },
+  orchestrator: sharedOriginFields(...arrayDiff(fields, 'code'))
 };

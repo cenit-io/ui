@@ -8,29 +8,29 @@ import ViewerControl from "../../../components/ViewerControl";
 const LevelProjection = n => n?.type;
 
 export default {
-    title: 'System Notification',
-    icon: <NotificationFilledIcon/>,
-    actions: {
-        index: {
-            fields: ['created_at', 'type', 'message', 'attachment', 'task']
-        }
+  title: 'System Notification',
+  icon: <NotificationFilledIcon />,
+  actions: {
+    index: {
+      fields: ['created_at', 'type', 'message', 'attachment', 'task']
+    }
+  },
+  fields: {
+    type: {
+      control: ViewerControl,
+      viewer: ErrorLevelViewer(LevelProjection, 'background')
     },
-    fields: {
-        type: {
-            control: ViewerControl,
-            viewer: ErrorLevelViewer(LevelProjection, 'background')
-        },
-        attachment: {
-            control: ViewerControl,
-            viewer: AttachmentViewer
-        },
-        message: {
-            control: ViewerControl,
-            viewer: ErrorLevelViewer(LevelProjection)
-        },
-        task: {
-            control: ViewerControl
-        }
+    attachment: {
+      control: ViewerControl,
+      viewer: AttachmentViewer
     },
-    crud: [CRUD.read, CRUD.delete]
+    message: {
+      control: ViewerControl,
+      viewer: ErrorLevelViewer(LevelProjection)
+    },
+    task: {
+      control: ViewerControl
+    }
+  },
+  crud: [CRUD.read, CRUD.delete]
 };
