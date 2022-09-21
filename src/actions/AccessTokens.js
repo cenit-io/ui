@@ -25,7 +25,7 @@ import { catchError, switchMap, map, tap } from "rxjs/operators";
 import Random from "../util/Random";
 import Button from "@material-ui/core/Button";
 import zzip from "../util/zzip";
-import AuthorizationService from "../services/AuthorizationService";
+import { getAccessToken } from "../services/AuthorizationService";
 import clsx from "clsx";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
@@ -194,10 +194,8 @@ const AccessTokens = ({ dataType, record, height, width, docked }) => {
 
   useEffect(() => {
     const subscription = zzip(
-      AuthorizationService.getAccessToken(),
-      API.get(
-        'cenit', 'oauth_access_grant', record.id, 'digest', 'tokens'
-      )
+      getAccessToken(),
+      API.get('cenit', 'oauth_access_grant', record.id, 'digest', 'tokens')
     ).subscribe(
       ([current_token, tokens]) => {
         tokens.forEach(token => token.expires_at = token.expires_at && Date.parse(token.expires_at));

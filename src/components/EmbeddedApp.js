@@ -2,10 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import { makeStyles } from "@material-ui/core";
 import Random from "../util/Random";
 import { fromEvent, of, Subject } from "rxjs";
-import { switchMap, map, filter, tap } from "rxjs/operators";
-import AuthorizationService from "../services/AuthorizationService";
+import { switchMap, map, filter, tap, first, catchError } from "rxjs/operators";
+import { getAccess } from "../services/AuthorizationService";
 import { DataTypeSubject, EmbeddedAppSubject, RecordSubject, TabsSubject } from "../services/subjects";
 import EmbeddedAppService from "../services/EnbeddedAppService";
+import session from "../util/session";
+import request from "../util/request";
 
 const useStyles = makeStyles(theme => ({
   iframe: {
@@ -29,15 +31,75 @@ export default function EmbeddedApp({ url, height, width, autoHeight }) {
 
   const iframe = useRef(null);
 
+  function onResize(data) {
+    if (autoHeight && data.height >= 0) iframe.current.style.height = `${data.height}px`;
+  }
+
+  function onOpenTap(data) {
+    let subject;
+    if (data.dataTypeId) {
+      if (data.recordId) {
+        subject = RecordSubject.for(data.dataTypeId, data.recordId);
+      } else {
+        subject = DataTypeSubject.for(data.dataTypeId);
+      }
+    } else if (data.embeddedApp) {
+      const { id, url } = data.embeddedApp;
+      if (id) {
+        subject = EmbeddedAppSubject.for(id)
+      } else {
+        return EmbeddedAppService.all().pipe(
+          tap(apps => {
+            const app = apps.find(({ url: appUrl }) => appUrl === url);
+            if (app) {
+              TabsSubject.next({
+                key: EmbeddedAppSubject.for(app.id).key,
+                actionKey: data.actionKey
+              });
+            }
+          })
+        );
+      }
+    }
+
+    if (subject) {
+      TabsSubject.next({
+        key: subject.key,
+        actionKey: data.actionKey
+      });
+    }
+  }
+
+  function onSend(data) {
+    const { message, domain } = data;
+    if (message && domain) {
+      if (message.cmd === 'refresh') message.tenantId = session.xTenantId;
+      window.frames.forEach((frame) => frame.postMessage(message, domain));
+    }
+  }
+
+  function onRequest(data, appWindow) {
+    const { options, requestId } = data;
+
+    request(options).pipe(first()).pipe(
+      map(({ data }) => data),
+      catchError((error) => of(error))
+    ).subscribe((data) => {
+      const message = { cmd: 'response', requestId };
+      message[data instanceof Error ? 'error' : 'response'] = data;
+      appWindow.postMessage(message, '*');
+    });
+  }
+
   useEffect(() => {
     const subscription = accessSubject.current.pipe(
-      switchMap(window => AuthorizationService.getAccess().pipe(
+      switchMap(window => getAccess().pipe(
         map(access => ([window, access]))
       ))
     ).subscribe(
-      ([window, access]) => window.postMessage({
-        access, tenantId: AuthorizationService.getXTenantId()
-      }, '*')
+      ([window, access]) => {
+        window.postMessage({ access, tenantId: session.xTenantId }, '*')
+      }
     );
 
     return () => subscription.unsubscribe();
@@ -48,77 +110,31 @@ export default function EmbeddedApp({ url, height, width, autoHeight }) {
       filter(({ data }) => data.token === token.current),
       switchMap(({ data, source: { window: appWindow } }) => {
         const { cmd } = data || {};
+
         switch (cmd) {
-          case 'getAccess': {
+          case 'getAccess':
             accessSubject.current.next(appWindow);
-          }
             break;
 
-          case 'reload': {
+          case 'reload':
             window.location.reload();
-          }
             break;
 
-          case 'resize': {
-            if (autoHeight) {
-              if (data.height >= 0) {
-                iframe.current.style.height = `${data.height}px`;
-              }
-            }
-          }
+          case 'resize':
+            onResize(data);
             break;
 
-          case 'openTab': {
-            let subject;
-            if (data.dataTypeId) {
-              if (data.recordId) {
-                subject = RecordSubject.for(data.dataTypeId, data.recordId);
-              } else {
-                subject = DataTypeSubject.for(data.dataTypeId);
-              }
-            } else if (data.embeddedApp) {
-              const { id, url } = data.embeddedApp;
-              if (id) {
-                subject = EmbeddedAppSubject.for(id)
-              } else {
-                return EmbeddedAppService.all().pipe(
-                  tap(apps => {
-                    const app = apps.find(({ url: appUrl }) => appUrl === url);
-                    if (app) {
-                      TabsSubject.next({
-                        key: EmbeddedAppSubject.for(app.id).key,
-                        actionKey: data.actionKey
-                      });
-                    }
-                  })
-                );
-              }
-            }
-
-            if (subject) {
-              TabsSubject.next({
-                key: subject.key,
-                actionKey: data.actionKey
-              });
-            }
-          }
+          case 'openTab':
+            onOpenTap(data);
             break;
 
-          case 'send': {
-            const { message, domain } = data;
-            if (message && domain) {
-              if (message.cmd === 'refresh') {
-                message.tenantId = AuthorizationService.getXTenantId();
-              }
-              const frames = window.frames;
-              for (let i = 0; i < frames.length; i++) {
-                frames[i].postMessage(message, domain);
-              }
-            }
-          }
+          case 'send':
+            onSend(data);
+            break;
 
-          default:
-          // Nothing to do here
+          case 'doRequest':
+            onRequest(data, appWindow);
+            break;
         }
 
         return of(true);

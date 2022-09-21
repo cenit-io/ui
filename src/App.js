@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import QueryString from 'querystring';
-import AuthorizationService, { CenitHostKey, Config } from "./services/AuthorizationService";
+import { authorize, clearSession, authWithAuthCode, getAccess } from "./services/AuthorizationService";
 import { CircularProgress } from "@material-ui/core";
 import Main from "./layout/Main";
 import API from "./services/ApiService";
@@ -14,13 +14,14 @@ import NetworkErrorIcon from "@material-ui/icons/WifiOff";
 import AlertTitle from "@material-ui/lab/AlertTitle";
 import { Alert } from "@material-ui/lab";
 import Button from "@material-ui/core/Button";
+import session from "./util/session";
+import localStorage from "./util/localStorage";
 
-API.onError(() => AuthorizationService.authorize());
+API.onError(authorize);
 
 function reset() {
-  AuthorizationService.cleanAccess();
-  AuthorizationService.cleanHost();
-  AuthorizationService.authorize();
+  clearSession();
+  authorize();
 }
 
 function App() {
@@ -43,22 +44,18 @@ function App() {
     if (authorizing) {
       const params = QueryString.parse(window.location.search.slice(1, window.location.search.length));
 
-      if (params.cenitHost) {
-        sessionStorage.setItem(CenitHostKey, params.cenitHost);
-      }
+      if (params.cenitHost) session.cenitBackendBaseUrl = params.cenitHost;
 
       let authorize;
       if (params.code) {
-        authorize = AuthorizationService.getAccessWith(params);
+        authorize = authWithAuthCode(params.code);
       } else {
-        authorize = AuthorizationService.getAccess();
+        authorize = getAccess();
       }
 
       const subscription = authorize.pipe(
         tap(access => {
-          if (!access) {
-            throw new Error('Auth with no access shoud not happens');
-          }
+          if (!access) throw new Error('Auth with no access shoud not happens');
         })
       ).subscribe(
         () => setAuthorizing(false),
@@ -94,8 +91,8 @@ function App() {
             <b>Unable to connect</b>
           </AlertTitle>
           <p>
-            Connection refused from <a href={Config.getCenitHost()} target="_blank">
-            {Config.getCenitHost()} </a>
+            Connection refused from <a href={session.cenitBackendBaseUrl} target="_blank">
+            {session.cenitBackendBaseUrl} </a>
           </p>
           <p>
             To reset and try again <Button href="#" onClick={reset} variant="outlined">

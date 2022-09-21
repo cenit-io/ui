@@ -6,8 +6,8 @@ import ResponsiveContainer from "../components/ResponsiveContainer";
 import SvgIcon from "@material-ui/core/SvgIcon";
 import { useContainerContext } from "./ContainerContext";
 import { of } from "rxjs";
-import AuthorizationService from "../services/AuthorizationService";
 import { useSpreadState } from "../common/hooks";
+import request from "../util/request";
 import Random from "../util/Random";
 import InfoAlert from "./InfoAlert";
 import ScheduleIcon from '@material-ui/icons/Schedule';
@@ -186,11 +186,11 @@ function PullCheck(props) {
 
   useEffect(() => {
     if (record.pull_request?.url) {
-      const subscription = AuthorizationService.request({
+      const subscription = request({
         url: record.pull_request.url,
         method: 'GET'
       }).subscribe(
-        pull_data => setContainerState({ pull_data })
+        ({ data }) => setContainerState({ pull_data: data })
       );
 
       return () => subscription.unsubscribe();

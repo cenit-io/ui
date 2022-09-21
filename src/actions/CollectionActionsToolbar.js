@@ -7,6 +7,7 @@ import { useContainerContext } from "./ContainerContext";
 import Index from "./Index";
 import Filter, { FilterIcon } from "./Filter";
 import IconButton from "@material-ui/core/IconButton";
+import localStorage from '../util/localStorage'
 
 const useToolbarStyles = makeStyles(theme => ({
   root: {
@@ -94,7 +95,7 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     }
   }
 
-  const mainSectionTitle = localStorage.getItem(`${dataType.name}`);
+  const mainSectionTitle = localStorage.get(`${dataType.name}`);
 
   return (
     <Toolbar className={classes.root}

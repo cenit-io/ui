@@ -7,7 +7,6 @@ import { makeStyles, useTheme } from "@material-ui/core";
 import { of } from "rxjs";
 import AttachmentViewer from "../viewers/AttachmentViewer";
 import Typography from "@material-ui/core/Typography";
-import AuthorizationService from "../services/AuthorizationService";
 import { DataType, isSimpleSchema } from "../services/DataTypeService";
 import { TaskStatusConfig, TaskStatusViewer } from "../config/dataTypes/Setup/Task";
 import Skeleton from "@material-ui/lab/Skeleton";
@@ -16,6 +15,7 @@ import IconButton from "@material-ui/core/IconButton";
 import OpenIcon from "@material-ui/icons/OpenInNew";
 import { RecordSubject, TabsSubject } from "../services/subjects";
 import zzip from "../util/zzip";
+import request from "../util/request";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import LinearProgress from "@material-ui/core/LinearProgress";
@@ -139,11 +139,11 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
       const { url, size, metadata } = attachment;
       if (url && size && size < 30 && isSimpleSchema(metadata?.schema)) {
         setState({ retrievingResult: true });
-        const subscription = AuthorizationService.request({
+        const subscription = request({
           url: attachment.url,
           method: 'GET'
         }).subscribe(
-          resultData => setState({ resultData, retrievingResult: false })
+          ({ data }) => setState({ resultData: data, retrievingResult: false })
         );
 
         return () => subscription.unsubscribe();

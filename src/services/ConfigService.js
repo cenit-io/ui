@@ -1,7 +1,7 @@
 import BLoC from "./BLoC";
-import AuthorizationService from "./AuthorizationService";
-import { debounce, switchMap, map } from "rxjs/operators";
-import { interval } from "rxjs";
+import { updateConfig } from "./AuthorizationService";
+import { debounce, switchMap, map, } from "rxjs/operators";
+import { interval, of } from "rxjs";
 
 function sanitize(config) {
   const { navigation, subjects, tabs } = config;
@@ -34,16 +34,16 @@ function sanitize(config) {
 
 const configBLoC = new BLoC();
 
-configBLoC.on(config => config).pipe(
+configBLoC.on((config) => config).pipe(
   debounce(() => interval(5000)),
-  map(config => sanitize(config)),
-  switchMap(config => AuthorizationService.config(config))
+  map((config) => sanitize(config)),
+  switchMap((config) => updateConfig(config))
 ).subscribe(
-  () => console.log('Config updated!')
+  (config) => console.log('Config updated!', config)
 );
 
-const tenantId = config => config.tenant_id;
-const navigation = config => config.navigation;
+const tenantId = (config) => config.tenant_id;
+const navigation = (config) => config.navigation;
 
 const ConfigService = {
 
@@ -57,8 +57,9 @@ const ConfigService = {
 
   update: function (config) {
     if (config.tenant_id && config.tenant_id !== configBLoC.state.tenant_id) {
-      AuthorizationService.config(config).subscribe(
-        newConfig => configBLoC.set(sanitize(newConfig))
+      // configBLoC.set(sanitize(updateConfig(config)));
+      updateConfig(config).subscribe(
+        (newConfig) => configBLoC.set(sanitize(newConfig))
       )
     } else {
       configBLoC.update(config);

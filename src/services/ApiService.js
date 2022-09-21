@@ -1,29 +1,7 @@
 import axios from 'axios';
-import AuthorizationService, { Config } from './AuthorizationService';
-import { catchError, map } from "rxjs/operators";
+import { apiRequest } from './AuthorizationService';
+import { catchError } from "rxjs/operators";
 import { from, of, throwError } from "rxjs";
-import { Status } from "../common/Symbols";
-
-const apiGateway = axios.create({
-  baseURL: `${Config.getCenitHost()}/api/v3`,
-  timeout: Config.timeoutSpan
-});
-
-apiGateway.interceptors.request.use(async config => {
-  const accessToken = await AuthorizationService.getAccessToken().toPromise();
-  if (!config.headers) {
-    config.headers = {};
-  }
-  config.headers.Authorization = `Bearer ${accessToken}`;
-  const xTenantId = AuthorizationService.getXTenantId();
-  if (xTenantId) {
-    config.headers['X-Tenant-Id'] = xTenantId;
-  }
-
-  return config;
-});
-
-//const ApiCache = {};
 
 export const ApiResource = function () {
 
@@ -65,37 +43,13 @@ export const ApiResource = function () {
     responseType
   };
 
-  this.path = '/' + args.join('/');
+  this.path = args.join('/');
 
-  this.get = () => from(
-    apiGateway.get(this.path, config)
-  ).pipe(
-    map(response => {
-      const { data } = response;
-      if (data?.constructor === Object) {
-        data[Status] = response.status;
-      }
-      return data;
-    })
-  );
+  this.get = () => from(apiRequest({ url: this.path, method: 'GET', ...config }));
 
-  this.delete = () => from(
-    apiGateway.delete(this.path, config)
-  ).pipe(
-    map(response => response && response.data)
-  );
+  this.delete = () => from(apiRequest({ url: this.path, method: 'DELETE', ...config }));
 
-  this.post = data => from(
-    apiGateway.post(this.path, data, config)
-  ).pipe(
-    map(response => {
-      const { data } = response;
-      if (data?.constructor === Object) {
-        data[Status] = response.status;
-      }
-      return data;
-    })
-  );
+  this.post = (data) => from(apiRequest({ url: this.path, method: 'POST', data, ...config }));
 };
 
 const ErrorCallbacks = [];

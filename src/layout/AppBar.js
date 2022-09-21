@@ -28,6 +28,7 @@ import NotificationsIcon from "../icons/NotificationsIcon";
 import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
 import Badge from "@material-ui/core/Badge";
 import NotificationIcon from '@material-ui/icons/CircleNotifications';
+import session from '../util/session';
 
 const USER_NOTIFIED = 'USER_NOTIFIED';
 
@@ -151,7 +152,7 @@ export default function ({ onToggle }) {
   }, []);
 
   function handleClick(e) {
-    sessionStorage.setItem(USER_NOTIFIED, 'true');
+    session.set(USER_NOTIFIED, 'true');
     setState({ open: Boolean(e.currentTarget) });
   }
 
@@ -210,7 +211,7 @@ export default function ({ onToggle }) {
     </ClickAwayListener>;
   }
 
-  const userNotification = user.need_password_reset && !sessionStorage.getItem(USER_NOTIFIED)
+  const userNotification = user.need_password_reset && !session.get(USER_NOTIFIED)
     ? <NotificationIcon component="svg" className={classes.notification} fontSize="small" />
     : undefined;
   const avatar = smUp && (

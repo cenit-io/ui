@@ -12,9 +12,9 @@ import { Config as ConfigSymbol } from "../common/Symbols";
 import { of } from "rxjs";
 import { switchMap, map } from "rxjs/operators";
 import SuccessAlert from "./SuccessAlert";
-import { Config } from "../services/AuthorizationService";
 import { useContainerContext } from './ContainerContext';
 import { useTenantContext } from "../layout/TenantContext";
+import session from "../util/session";
 
 const useStyles = makeStyles(() => ({
   link: {
@@ -112,7 +112,7 @@ const Authorize = (props) => {
                title="Redirection Alert"
                message="To start the authorization process you will be redirected to an other location in a new browser view">
       <a className={classes.link}
-         href={`${Config.getCenitHost()}/authorization/${tenant.id}/${record.id}/authorize`}
+         href={`${session.cenitBackendBaseUrl}/authorization/${tenant.id}/${record.id}/authorize`}
          target="_blank">
         <Button variant="outlined"
                 color="primary"

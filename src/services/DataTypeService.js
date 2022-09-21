@@ -4,7 +4,7 @@ import { catchError, map, share, switchMap, tap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import FormContext from "./FormContext";
 import LiquidEngine from "./LiquidEngine";
-import { AppGateway, Config } from "./AuthorizationService";
+import { appRequest } from "./AuthorizationService";
 import { Async } from "../common/Symbols";
 import { deepMergeArrayConcat, deepMergeObjectsOnly } from "../common/merge";
 import deepDup from "../common/deepDup";
@@ -12,6 +12,7 @@ import Hash from 'object-hash';
 import { Config as ConfigSymbol } from "../common/Symbols";
 import { titleize } from "../common/strutls";
 import FileDataTypeConfig from "../config/FileDataTypeConfig";
+import session from "../util/session";
 
 const SimpleTypes = ['integer', 'number', 'string', 'boolean'];
 
@@ -57,7 +58,7 @@ export class DataType {
     }
 
     if (!DataType.loading) {
-      DataType.loading = from(AppGateway().get('build_in_types')).pipe(
+      DataType.loading = from(appRequest({ url: 'build_in_types' })).pipe(
         tap(({ data }) => {
           DataType.initBuildIns(data);
           DataType.loaded = true;
@@ -537,7 +538,7 @@ export class DataType {
     return sch.pipe(
       tap(sch => {
           if (sch) {
-            sch.id = `${Config.getCenitHost()}/data_type/${data_type.id}${fragment}`;
+            sch.id = `${session.cenitBackendBaseUrl}/data_type/${data_type.id}${fragment}`;
           }
         }
       )

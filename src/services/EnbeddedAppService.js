@@ -1,8 +1,8 @@
 import { isObservable, of, from } from "rxjs";
 import { map } from "rxjs/operators";
-import AuthorizationService, { AppGateway } from "./AuthorizationService";
+import { appRequest } from "./AuthorizationService";
 import { EmbeddedAppSubject } from "./subjects";
-
+import session from "../util/session";
 
 const EmbeddedAppService = {
 
@@ -21,7 +21,7 @@ const EmbeddedAppService = {
       return of(this.apps);
     }
 
-    return this.apps = from(AppGateway().get('/meta_config')).pipe(
+    return this.apps = from(appRequest({ url: '/meta_config' })).pipe(
       map(({ data: { embedded_apps } }) => this.apps = (embedded_apps || []).reduce(
         (hash, app) => (hash[app.id] = app) && hash, {}
       ))
@@ -62,7 +62,7 @@ const EmbeddedAppService = {
       for (let i = 0; i < frames.length; i++) {
         frames[i].postMessage({
           cmd: 'refresh',
-          tenantId: AuthorizationService.getXTenantId()
+          tenantId: session.xTenantId
         }, '*');
       }
     }

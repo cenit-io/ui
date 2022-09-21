@@ -6,6 +6,7 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { makeStyles } from '@material-ui/core/styles';
 import Show from "./Show";
 import Random from "../util/Random";
+import localStorage from '../util/localStorage'
 import { switchMap, tap } from "rxjs/operators";
 import { of } from "rxjs";
 import ActionPicker from "./ActionPicker";
@@ -191,7 +192,7 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
                          width={theme.spacing(3)}
                          height={theme.spacing(3)} />;
   }
-  const mainSectionTitle = localStorage.getItem(`${dataType.name}`);
+  const mainSectionTitle = localStorage.get(`${dataType.name}`);
 
   const breadcrumb = (
     <Breadcrumbs separator="|" aria-label="breadcrumb" className={classes.breadcrumbs}>

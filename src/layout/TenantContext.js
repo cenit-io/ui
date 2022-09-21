@@ -8,7 +8,7 @@ import { Status } from "../common/Symbols";
 import EmbeddedAppService from "../services/EnbeddedAppService";
 import { defer, of, zip } from "rxjs";
 import { catchError } from "rxjs/operators";
-import AuthorizationService from "../services/AuthorizationService";
+import session from "../util/session";
 
 const TC = React.createContext({});
 
@@ -56,10 +56,8 @@ export default function TenantContext({ children }) {
       subscription = API.get('setup', 'account', tenant.id).pipe(
         catchError(() => of(null))
       ).subscribe(remote => {
-        if (remote?.id !== tenant.id) {
-          remote = tenant;
-        }
-        AuthorizationService.setXTenantId(tenant.id);
+        if (remote?.id !== tenant.id) remote = tenant;
+        session.xTenantId = tenant.id;
         setState({ tenant: remote, loading: false });
         ConfigService.update({ tenant_id: remote.id });
         EmbeddedAppService.refreshAll();
@@ -68,20 +66,15 @@ export default function TenantContext({ children }) {
       subscription = zip(
         API.get('setup', 'user', 'me'),
         defer(() => {
-          const tenantId = AuthorizationService.getXTenantId();
-          if (tenantId) {
-            return API.get('setup', 'account', tenantId);
-          }
-
+          const tenantId = session.xTenantId;
+          if (tenantId) return API.get('setup', 'account', tenantId);
           return of(null);
         })
       ).subscribe(([user, tenant]) => {
           if (user) {
             tenant = tenant || user.account
-            setState({
-              user, tenant, loading: false
-            });
-            AuthorizationService.setXTenantId(tenant.id);
+            setState({ user, tenant, loading: false });
+            session.xTenantId = tenant.id;
             ConfigService.update({ tenant_id: tenant.id });
             EmbeddedAppService.refreshAll();
           }

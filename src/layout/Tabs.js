@@ -13,7 +13,7 @@ import ConfigService from "../services/ConfigService";
 import { useSpreadState } from "../common/hooks";
 import useResizeObserver from "@react-hook/resize-observer";
 import { from } from "rxjs";
-import { AppGateway } from "../services/AuthorizationService";
+import { appRequest } from "../services/AuthorizationService";
 import EmbeddedApp from "../components/EmbeddedApp";
 import { useMediaQuery } from '@material-ui/core';
 import Dialog from "@material-ui/core/Dialog";
@@ -175,7 +175,7 @@ export default function NavTabs({ docked, width }) {
   }));
 
   useEffect(() => {
-    const subscription = from(AppGateway().get('/meta_config')).subscribe(
+    const subscription = from(appRequest({ url: '/meta_config' })).subscribe(
       ({ data: { banner_url: bannerURL } }) => setState({ bannerURL })
     );
 

@@ -12,9 +12,7 @@ import { delay } from "rxjs/operators";
 import MainContext, { useMainContext } from "./MainContext";
 import TenantContext from "./TenantContext";
 import { ThemeProvider, createMuiTheme } from "@material-ui/core";
-import { AppGateway } from "../services/AuthorizationService";
-import { DataType } from "../services/DataTypeService";
-import { from } from "rxjs";
+import localStorage from '../util/localStorage';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -88,7 +86,7 @@ function MainLayout() {
   }
 
   const switchNavigation = () => {
-    localStorage.setItem('docked', String(!docked));
+    localStorage.set('docked', String(!docked));
     setDocked(!docked);
   };
 

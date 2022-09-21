@@ -1,7 +1,7 @@
 import { Avatar, CircularProgress, ListItem, ListItemText, makeStyles, Typography, useTheme } from "@material-ui/core";
 import SudoIcon from '@material-ui/icons/SupervisorAccountTwoTone';
 import React, { useEffect, useState } from "react";
-import AuthorizationService, { AppGateway } from "../services/AuthorizationService";
+import { logout, appRequest, getAccess } from "../services/AuthorizationService";
 import List from "@material-ui/core/List";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import { useTenantContext } from "../layout/TenantContext";
@@ -66,12 +66,8 @@ const UserCard = ({ idToken, onClose }) => {
 
   useEffect(() => {
     if (settingPassword === SETTING_PASSWORD) {
-      const subscription = AuthorizationService.getAccess().pipe(
-        switchMap(access => from(
-          AppGateway().get('send_reset_password_instructions', {
-            headers: { Authorization: `Bearer ${access.access_token}` }
-          })
-        )),
+      const subscription = getAccess().pipe(
+        switchMap(access => from(appRequest({ url: 'send_reset_password_instructions' }))),
       ).subscribe(() => {
           setSettingPassword(SETTING_PASSWORD_OK);
           setTimeout(onClose, SETTING_PASSWORD_TIMEOUT)
@@ -96,9 +92,9 @@ const UserCard = ({ idToken, onClose }) => {
 
   const setupPassword = () => setSettingPassword(SETTING_PASSWORD);
 
-  const logout = () => {
+  const handleLogout = () => {
     onClose && onClose();
-    AuthorizationService.logout();
+    logout();
   };
 
   const showCurrentTenant = () => {
@@ -192,7 +188,7 @@ const UserCard = ({ idToken, onClose }) => {
           </ListItemIcon>
           <ListItemText primary="Current tenant" />
         </ListItem>
-        <ListItem button onClick={logout} component="li">
+        <ListItem button onClick={handleLogout} component="li">
           <ListItemIcon>
             <LogoutIcon component="svg" />
           </ListItemIcon>
