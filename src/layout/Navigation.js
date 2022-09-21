@@ -21,17 +21,14 @@ import Subjects, {
 } from "../services/subjects";
 import Collapse from "@material-ui/core/Collapse";
 import zzip from "../util/zzip";
+import localStorage from '../util/localStorage'
 import { useSpreadState } from "../common/hooks";
 import { useMainContext } from "./MainContext";
 import Menu from "../config/Menu";
 import { DataType } from "../services/DataTypeService";
 import FrezzerLoader from "../components/FrezzerLoader";
 import { isSuperAdmin, useTenantContext } from "./TenantContext";
-import { from } from "rxjs";
-import { AppGateway } from "../services/AuthorizationService";
 import EmbeddedAppService from "../services/EnbeddedAppService";
-import { appBarHeight } from "./AppBar";
-
 
 function NavItem({ icon, onClick, disabled, text, isRoot, isOpen }) {
   return (
@@ -132,8 +129,8 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
     marginLeft: "1.35rem",
     marginBottom: "1.3rem",
-    width:"100%"
-  },  
+    width: "100%"
+  },
   brandImgWrapper: {
     width: "43px"
   },
@@ -289,7 +286,7 @@ export default function Navigation({ xs, onToggle }) {
   };
 
   const selectItem = (item, text) => {
-    localStorage.setItem(`${item.$ref.name}`, text);
+    localStorage.set(`${item.$ref.name}`, text);
     setState({ item });
   };
 

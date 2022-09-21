@@ -1,199 +1,77 @@
-import axios from "axios";
-import Random from "../util/Random";
-import { from, of } from "rxjs";
-import { map, switchMap } from "rxjs/operators";
+import { of } from "rxjs";
+import { map } from "rxjs/operators";
 
-export const AppConfig = window.appConfig;
+import session from "../util/session";
+import localStorage from "../util/localStorage";
+import {
+  request,
+  authorize as _authorize,
+  authWithAuthCode as _authWithAuthCode,
+  apiRequest as _apiRequest,
+} from "../util/request";
 
-const EnvironmentAppConfig = {
-    localhost: AppConfig.REACT_APP_LOCALHOST,
-    cenitHost: AppConfig.REACT_APP_CENIT_HOST,
-    timeoutSpan: +AppConfig.REACT_APP_TIMEOUT_SPAN,
-    appIdentifier: AppConfig.REACT_APP_APP_ID
-};
+const appIdentifier = process.env.REACT_APP_APP_ID || 'admin';
 
-const EnvironmentProcessConfig = {
-    localhost: process.env.REACT_APP_LOCALHOST,
-    cenitHost: process.env.REACT_APP_CENIT_HOST,
-    timeoutSpan: +process.env.REACT_APP_TIMEOUT_SPAN,
-    appIdentifier: process.env.REACT_APP_APP_ID
-};
+const { cenitBackendBaseUrl } = session;
 
-export const Config = AppConfig.REACT_APP_USE_ENVIRONMENT_CONFIG === 'true' ? EnvironmentProcessConfig : EnvironmentAppConfig;
+export const clearSession = () => session.clear();
+export const authorize = _authorize;
+export const authWithAuthCode = _authWithAuthCode;
+export const apiRequest = _apiRequest;
 
-export const CenitHostKey = 'cenitHost';
+export const getAccess = () => {
+  const access = session.get('accessToken');
 
-Config.getCenitHost = function () {
-    return sessionStorage.getItem(CenitHostKey) || Config.cenitHost;
-};
+  if (!access) authorize();
 
-let _appGateway = null;
+  return of(access);
+}
 
-export const AppGateway = function () {
-    if (!_appGateway || _appGateway.baseUrl !== Config.getCenitHost()) {
-        console.log(`Creating app gateway for ${Config.getCenitHost()}`);
-        return _appGateway = axios.create({
-            baseURL: `${Config.getCenitHost()}/app/${Config.appIdentifier}`,
-            timeout: Config.timeoutSpan,
-        });
-    }
+export const getAccessToken = () => {
+  return getAccess().pipe(map(access => (access && access.access_token) || null));
+}
 
-    return _appGateway;
-};
+export const getIdToken = () => {
+  let idToken = session.get('idToken');
 
-export const AccessKey = 'access';
+  if (idToken) return of(idToken);
 
-const getAuthorizeURL = () => `${Config.getCenitHost()}/app/${Config.appIdentifier}/authorize?redirect_uri=${Config.localhost}`;
+  return getAccess().pipe(
+    map(access => {
+      if (access) {
+        const base64 = access.id_token.split('.')[1].replace('-', '+').replace('_', '/');
+        idToken = JSON.parse(window.atob(base64));
+        session.set('idToken', idToken);
+      }
 
-const LogoutURL = `${Config.getCenitHost()}/users/sign_out`;
+      return idToken;
+    })
+  );
+}
 
-const StateKeyPrefix = 'state-';
+export const logout = () => {
+  localStorage.clear();
+  session.clear();
+  window.location = `${cenitBackendBaseUrl}/users/sign_out`;
+}
 
-const stateKey = state => `${StateKeyPrefix}${state}`;
+export const appRequest = (options) => {
+  options.url = `/app/${appIdentifier}/${options.url}`;
+  return request(options);
+}
 
-const isStateKey = key => key.startsWith(StateKeyPrefix);
+export const updateConfig = (data = {}) => {
+  return appRequest({ url: 'config', method: 'POST', data }).pipe(
+    map((response) => response.data)
+  );
+}
 
-const TENANT_ID_KEY = 'tenantId';
-
-const BANED_QUERY_PARAMS = ['cenitHost', 'code', 'state'];
-
-export const AuthorizationService = {
-
-    xTenantId: localStorage.getItem(TENANT_ID_KEY),
-
-    getXTenantId: function () {
-        return this.xTenantId;
-    },
-
-    setXTenantId: function (id) {
-        localStorage.setItem(TENANT_ID_KEY, id);
-        this.xTenantId = id;
-    },
-
-    authorize: () => {
-        Object.keys(localStorage).forEach(key => {
-            if (isStateKey(key)) {
-                localStorage.removeItem(key);
-            }
-        });
-        const state = Random.string();
-        localStorage.setItem(stateKey(state), window.location);
-        window.location = `${getAuthorizeURL()}&state=${state}`;
-    },
-
-    getAccess: function () {
-        let access;
-        try {
-            access = JSON.parse(localStorage.getItem(AccessKey));
-            let expirationDate = new Date(access.created_at + access.expires_in + Config.timeoutSpan);
-            if (expirationDate < new Date() || access.host !== Config.getCenitHost()) {
-                access = null;
-            }
-        } catch (e) {
-            access = null;
-        }
-
-        if (!access) {
-            this.authorize();
-        }
-
-        return of(access);
-    },
-
-    getAccessToken: function () {
-        return this.getAccess().pipe(
-            map(access => (access && access.access_token) || null)
-        );
-    },
-
-    cleanAccess: function () {
-        localStorage.removeItem(AccessKey);
-    },
-
-    cleanHost: function () {
-        sessionStorage.removeItem(CenitHostKey);
-    },
-
-    getAccessWith: params => {
-        return from(AppGateway().post('token', params.code)).pipe(
-            map(response => {
-                const access = response.data;
-
-                localStorage.setItem(AccessKey, JSON.stringify(access));
-
-                const key = stateKey(params.state);
-                const prevLocation = localStorage.getItem(key);
-
-                localStorage.removeItem(key);
-
-                if (prevLocation) {
-                    let [url, ...query] = prevLocation.split('?');
-                    query = query
-                        .join('?')
-                        .split('&')
-                        .filter(param => !BANED_QUERY_PARAMS.find(
-                            baned => param.startsWith(baned)
-                        ))
-                        .join('&');
-                    if (query) {
-                        url = `${url}?${query}`;
-                    }
-                    window.location.replace(url);
-                }
-
-                return access;
-            })
-        );
-    },
-
-    getIdToken: function () {
-        if (this.idToken) {
-            return of(this.idToken);
-        }
-
-        return this.getAccess().pipe(
-            map(access => {
-                if (access) {
-                    const base64 = access.id_token.split('.')[1]
-                        .replace('-', '+')
-                        .replace('_', '/');
-                    this.idToken = JSON.parse(window.atob(base64));
-                }
-                return this.idToken;
-            })
-        );
-    },
-
-    logout: function () {
-        localStorage.clear();
-        window.location = LogoutURL;
-    },
-
-    config: function (data = {}) {
-        return this.getAccess().pipe(
-            switchMap(access => from(
-                AppGateway().post('config', data, {
-                    headers: { Authorization: `Bearer ${access.access_token}` }
-                })
-            ).pipe(map(response => response.data)))
-        );
-    },
-
-    request: function (opts) {
-        return this.getAccess().pipe(
-            switchMap(
-                access => {
-                    const headers = { ...opts.headers };
-                    headers.Authorization = `Bearer ${access.access_token}`;
-                    opts = { ...opts, headers };
-                    return from(axios(opts));
-                }
-            ),
-            map(
-                response => response.data
-            )
-        );
-    }
-};
-
-export default AuthorizationService;
+// TODO: Set config in local storage.
+// export const updateConfig = (data = {}) => {
+//   let config = localStorage.get('config', {});
+//
+//   config = deepMergeObjectsOnly(config, data);
+//   localStorage.set('config', config);
+//
+//   return of(config);
+// }

@@ -7,56 +7,56 @@ import CenitTypesIcon from "../icons/CenitTypesIcon";
 import { tap } from "rxjs/operators";
 
 function DataType({ dataType }) {
-    let dataTypeCrit;
-    switch (dataType._type) {
-        case FILE_TYPE: {
-            dataTypeCrit = {
-                namespace: 'Setup',
-                name: 'FileDataType'
-            }
-        }
-            break;
-        case JSON_TYPE: {
-            dataTypeCrit = {
-                namespace: 'Setup',
-                name: 'JsonDataType'
-            }
-        }
-            break;
-
-        case CENIT_TYPE: {
-            dataTypeCrit = {
-                namespace: 'Setup',
-                name: 'CenitDataType'
-            }
-        }
-            break;
-
-        default: {
-            dataTypeCrit = {
-                namespace: 'Setup',
-                name: 'DataType'
-            }
-        }
+  let dataTypeCrit;
+  switch (dataType._type) {
+    case FILE_TYPE: {
+      dataTypeCrit = {
+        namespace: 'Setup',
+        name: 'FileDataType'
+      }
     }
+      break;
+    case JSON_TYPE: {
+      dataTypeCrit = {
+        namespace: 'Setup',
+        name: 'JsonDataType'
+      }
+    }
+      break;
 
-    return DataTypeService.find(dataTypeCrit).pipe(
-        tap(
-            dt => {
-                if (dt) {
-                    TabsSubject.next({
-                        key: RecordSubject.for(dt.id, dataType.id).key
-                    });
-                }
-            }
-        )
-    );
+    case CENIT_TYPE: {
+      dataTypeCrit = {
+        namespace: 'Setup',
+        name: 'CenitDataType'
+      }
+    }
+      break;
+
+    default: {
+      dataTypeCrit = {
+        namespace: 'Setup',
+        name: 'DataType'
+      }
+    }
+  }
+
+  return DataTypeService.find(dataTypeCrit).pipe(
+    tap(
+      dt => {
+        if (dt) {
+          TabsSubject.next({
+            key: RecordSubject.for(dt.id, dataType.id).key
+          });
+        }
+      }
+    )
+  );
 }
 
 export default ActionRegistry.register(DataType, {
-    kind: ActionKind.collection,
-    icon: CenitTypesIcon,
-    title: 'Data Type',
-    executable: true,
-    group: 5
+  kind: ActionKind.collection,
+  icon: CenitTypesIcon,
+  title: 'Data Type',
+  executable: true,
+  group: 5
 });

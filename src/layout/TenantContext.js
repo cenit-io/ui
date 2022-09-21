@@ -8,98 +8,91 @@ import { Status } from "../common/Symbols";
 import EmbeddedAppService from "../services/EnbeddedAppService";
 import { defer, of, zip } from "rxjs";
 import { catchError } from "rxjs/operators";
-import AuthorizationService from "../services/AuthorizationService";
+import session from "../util/session";
 
 const TC = React.createContext({});
 
 export function useTenantContext() {
-    return useContext(TC);
+  return useContext(TC);
 }
 
 const useLoaderStyles = makeStyles(() => ({
-    backdrop: {
-        background: 'transparent'
-    }
+  backdrop: {
+    background: 'transparent'
+  }
 }));
 
 export default function TenantContext({ children }) {
-    const [state, setState] = useSpreadState({
-        loading: true,
-        switchSudo: false
-    });
+  const [state, setState] = useSpreadState({
+    loading: true,
+    switchSudo: false
+  });
 
-    const classes = useLoaderStyles();
+  const classes = useLoaderStyles();
 
-    const { tenant, loading, switchSudo } = state;
+  const { tenant, loading, switchSudo } = state;
 
-    useEffect(() => {
-        if (switchSudo) {
-            setState({ loading: true });
-            const subscription = API.get('setup', 'user', 'me', 'digest', 'switch_sudo').subscribe(
-                user => {
-                    if (user[Status] === 200) {
-                        setState({ user, switchSudo: false, loading: false });
-                    } else {
-                        setState({ switchSudo: false, loading: false })
-                    }
-                }
-            );
-
-            return () => subscription.unsubscribe();
+  useEffect(() => {
+    if (switchSudo) {
+      setState({ loading: true });
+      const subscription = API.get('setup', 'user', 'me', 'digest', 'switch_sudo').subscribe(
+        user => {
+          if (user[Status] === 200) {
+            setState({ user, switchSudo: false, loading: false });
+          } else {
+            setState({ switchSudo: false, loading: false })
+          }
         }
-    }, [switchSudo]);
+      );
 
-    useEffect(() => {
-        let subscription;
-        setState({ loading: true });
-        if (tenant) {
-            subscription = API.get('setup', 'account', tenant.id).pipe(
-                catchError(() => of(null))
-            ).subscribe(remote => {
-                if (remote?.id !== tenant.id) {
-                    remote = tenant;
-                }
-                AuthorizationService.setXTenantId(tenant.id);
-                setState({ tenant: remote, loading: false });
-                ConfigService.update({ tenant_id: remote.id });
-                EmbeddedAppService.refreshAll();
-            });
-        } else {
-            subscription = zip(
-                API.get('setup', 'user', 'me'),
-                defer(() => {
-                    const tenantId = AuthorizationService.getXTenantId();
-                    if (tenantId) {
-                        return API.get('setup', 'account', tenantId);
-                    }
+      return () => subscription.unsubscribe();
+    }
+  }, [switchSudo]);
 
-                    return of(null);
-                })
-            ).subscribe(([user, tenant]) => {
-                    if (user) {
-                        tenant = tenant || user.account
-                        setState({
-                            user, tenant, loading: false
-                        });
-                        AuthorizationService.setXTenantId(tenant.id);
-                        ConfigService.update({ tenant_id: tenant.id });
-                        EmbeddedAppService.refreshAll();
-                    }
-                }
-            );
+  useEffect(() => {
+    let subscription;
+    setState({ loading: true });
+    if (tenant) {
+      subscription = API.get('setup', 'account', tenant.id).pipe(
+        catchError(() => of(null))
+      ).subscribe(remote => {
+        if (remote?.id !== tenant.id) remote = tenant;
+        session.xTenantId = tenant.id;
+        setState({ tenant: remote, loading: false });
+        ConfigService.update({ tenant_id: remote.id });
+        EmbeddedAppService.refreshAll();
+      });
+    } else {
+      subscription = zip(
+        API.get('setup', 'user', 'me'),
+        defer(() => {
+          const tenantId = session.xTenantId;
+          if (tenantId) return API.get('setup', 'account', tenantId);
+          return of(null);
+        })
+      ).subscribe(([user, tenant]) => {
+          if (user) {
+            tenant = tenant || user.account
+            setState({ user, tenant, loading: false });
+            session.xTenantId = tenant.id;
+            ConfigService.update({ tenant_id: tenant.id });
+            EmbeddedAppService.refreshAll();
+          }
         }
-        return () => subscription.unsubscribe();
-    }, [tenant?.id]);
+      );
+    }
+    return () => subscription.unsubscribe();
+  }, [tenant?.id]);
 
-    return (
-        <TC.Provider value={[state, setState]}>
-            {tenant && children}
-            {loading && <FrezzerLoader backdropClass={classes.backdrop}/>}
-        </TC.Provider>
-    );
+  return (
+    <TC.Provider value={[state, setState]}>
+      {tenant && children}
+      {loading && <FrezzerLoader backdropClass={classes.backdrop} />}
+    </TC.Provider>
+  );
 }
 
 export function isSuperAdmin(user) {
-    return user?.super_admin_enabled &&
-        !!(user.roles || []).find(({ name }) => name === "super_admin");
+  return user?.super_admin_enabled &&
+    !!(user.roles || []).find(({ name }) => name === "super_admin");
 }

@@ -12,58 +12,58 @@ import Random from '../util/Random';
 import Index from './Index';
 
 function ShredAlert() {
-    const { record } = useContainerContext()[0];
+  const { record } = useContainerContext()[0];
 
-    return <WarningAlert title="Warning"
-                         message={`Collection ${record.name} and all of it's related data will be destroyed`}
-                         mainIcon={ShredIcon}/>;
+  return <WarningAlert title="Warning"
+                       message={`Collection ${record.name} and all of it's related data will be destroyed`}
+                       mainIcon={ShredIcon} />;
 }
 
 const ShredCollection = ({ docked, record, onSubjectPicked, height, onClose }) => {
-    const containerContext = useContainerContext();
-    const [, setContainerState] = containerContext;
+  const containerContext = useContainerContext();
+  const [, setContainerState] = containerContext;
 
-    useEffect(() => {
-        setContainerState({ breadcrumbActionName: "Shred" });
-  
-        return () => {
-          setContainerState({ breadcrumbActionName: null });
-        };
-      }, []);
-    
-    const formDataType = useRef(DataType.from({
-        name: 'Shred',
-        schema: {
-            type: 'object',
-            properties: {}
-        },
-        [Config]: {
-            formControl: ShredAlert
-        }
-    }));
+  useEffect(() => {
+    setContainerState({ breadcrumbActionName: "Shred" });
 
-    const handleFormSubmit = () => API.delete('setup', 'collection', record.id, 'digest', 'shred', {}).pipe(
-        tap(() => setTimeout(onClose, 1000))
-    );
+    return () => {
+      setContainerState({ breadcrumbActionName: null });
+    };
+  }, []);
 
-    return (
-        <div className="relative">
-            <FormEditor docked={docked}
-                        dataType={formDataType.current}
-                        height={height}
-                        submitIcon={<ShredIcon component="svg"/>}
-                        onFormSubmit={handleFormSubmit}
-                        onSubjectPicked={onSubjectPicked}
-                        noJSON={true}/>
-        </div>
-    );
+  const formDataType = useRef(DataType.from({
+    name: 'Shred',
+    schema: {
+      type: 'object',
+      properties: {}
+    },
+    [Config]: {
+      formControl: ShredAlert
+    }
+  }));
+
+  const handleFormSubmit = () => API.delete('setup', 'collection', record.id, 'digest', 'shred', {}).pipe(
+    tap(() => setTimeout(onClose, 1000))
+  );
+
+  return (
+    <div className="relative">
+      <FormEditor docked={docked}
+                  dataType={formDataType.current}
+                  height={height}
+                  submitIcon={<ShredIcon component="svg" />}
+                  onFormSubmit={handleFormSubmit}
+                  onSubjectPicked={onSubjectPicked}
+                  noJSON={true} />
+    </div>
+  );
 };
 
 export default ActionRegistry.register(ShredCollection, {
-    kind: ActionKind.member,
-    arity: 1,
-    icon: ShredIcon,
-    title: 'Shred',
-    onlyFor: [{ namespace: 'Setup', name: 'Collection' }],
-    group: 4
+  kind: ActionKind.member,
+  arity: 1,
+  icon: ShredIcon,
+  title: 'Shred',
+  onlyFor: [{ namespace: 'Setup', name: 'Collection' }],
+  group: 4
 });

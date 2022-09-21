@@ -8,25 +8,25 @@ import ViewerControl from "../../../components/ViewerControl";
 const fields = ['namespace', 'name', 'activated', 'expression'];
 
 export default {
-    title: 'Scheduler',
-    icon: <SchedulerFilledIcon/>,
-    actions: {
-        index: {
-            fields: ['namespace', 'name', 'activated', 'expression', 'updated_at']
-        },
-        new: {
-            fields
-        },
-        edit: {
-            viewportFields: [...fields, 'origin']
-        }
+  title: 'Scheduler',
+  icon: <SchedulerFilledIcon />,
+  actions: {
+    index: {
+      fields: ['namespace', 'name', 'activated', 'expression', 'updated_at']
     },
-    fields: {
-        expression: {
-            control: SchedulerExpressionControl
-        },
-        activated: {
-            control: ViewerControl
-        }
+    new: {
+      fields
+    },
+    edit: {
+      viewportFields: [...fields, 'origin']
     }
+  },
+  fields: {
+    expression: {
+      control: SchedulerExpressionControl
+    },
+    activated: {
+      control: ViewerControl
+    }
+  }
 };

@@ -8,7 +8,7 @@ import Loading from "../components/Loading";
 import API from "../services/ApiService";
 import SuccessAlert from "./SuccessAlert";
 import { Config, FETCHED } from "../common/Symbols";
-import {  switchMap } from "rxjs/operators";
+import { switchMap } from "rxjs/operators";
 import { FormRootValue } from "../services/FormValue";
 import { underscore } from "../common/strutls";
 import Random from "../util/Random";
@@ -17,108 +17,108 @@ import { useContainerContext } from './ContainerContext';
 
 export function SuccessConfig() {
 
-    return (
-        <SuccessAlert mainIcon={ConfigIcon}/>
-    );
+  return (
+    <SuccessAlert mainIcon={ConfigIcon} />
+  );
 }
 
 const DataTypeConfig = ({ docked, record, onSubjectPicked, height }) => {
-    const [state, setState] = useSpreadState({
-        retry: Random.string()
+  const [state, setState] = useSpreadState({
+    retry: Random.string()
+  });
+
+  const { value, formDataType } = state;
+
+  const containerContext = useContainerContext();
+  const [, setContainerState] = containerContext;
+
+  useEffect(() => {
+    setContainerState({ breadcrumbActionName: "Configure" });
+
+    return () => {
+      setContainerState({ breadcrumbActionName: null });
+    };
+  }, []);
+
+  useEffect(() => {
+    const schema = {
+      type: 'object',
+      properties: {
+        slug: {
+          type: 'string',
+          default: underscore(record.name)
+        }
+      }
+    };
+    if (record._type === JSON_TYPE) {
+      schema.properties.trace_on_default = {
+        type: 'boolean'
+      }
+    }
+    setState({
+      formDataType: DataType.from({
+        name: 'Config',
+        schema
+      })
     });
 
-    const { value, formDataType } = state;
+    const subscription = API.get(
+      'setup', 'data_type', record.id, 'digest', 'config'
+    ).subscribe(config => {
+      config[FETCHED] = true;
+      setState({ value: new FormRootValue(config) });
+    }); // TODO On error?
 
-    const containerContext = useContainerContext();
-    const [,setContainerState] = containerContext;
-    
-    useEffect(() => {
-        setContainerState({ breadcrumbActionName: "Configure" });
+    return () => subscription.unsubscribe();
+  }, [record]);
 
-        return () => {
-          setContainerState({ breadcrumbActionName: null });
-        };
-      }, []);
-
-    useEffect(() => {
-        const schema = {
-            type: 'object',
-            properties: {
-                slug: {
-                    type: 'string',
-                    default: underscore(record.name)
-                }
-            }
-        };
-        if (record._type === JSON_TYPE) {
-            schema.properties.trace_on_default = {
-                type: 'boolean'
-            }
+  const handleFormSubmit = (_, value) => {
+    let { trace_on_default, slug } = value.get();
+    slug = (slug || '').trim();
+    return of(true).pipe(
+      switchMap(() => {
+        let error;
+        if (!slug) {
+          error = { slug: ["can't be blank"] };
+        } else if (underscore(slug) !== slug) {
+          error = { slug: ["is not valid"] };
         }
-        setState({
-            formDataType: DataType.from({
-                name: 'Config',
-                schema
-            })
+        if (error) {
+          throw ({ response: { data: error } });
+        }
+
+        return API.post('setup', 'data_type', record.id, 'digest', 'config', {
+          slug,
+          trace_on_default
         });
+      })
+    );
+  };
 
-        const subscription = API.get(
-            'setup', 'data_type', record.id, 'digest', 'config'
-        ).subscribe(config => {
-            config[FETCHED] = true;
-            setState({ value: new FormRootValue(config) });
-        }); // TODO On error?
+  if (value && formDataType) {
+    return (
+      <FormEditor key={record.id}
+                  docked={docked}
+                  dataType={formDataType}
+                  height={height}
+                  submitIcon={<ConfigIcon />}
+                  onFormSubmit={handleFormSubmit}
+                  onSubjectPicked={onSubjectPicked}
+                  successControl={SuccessConfig}
+                  value={value} />
+    );
+  }
 
-        return () => subscription.unsubscribe();
-    }, [record]);
-
-    const handleFormSubmit = (_, value) => {
-        let { trace_on_default, slug } = value.get();
-        slug = (slug || '').trim();
-        return of(true).pipe(
-            switchMap(() => {
-                let error;
-                if (!slug) {
-                    error = { slug: ["can't be blank"] };
-                } else if (underscore(slug) !== slug) {
-                    error = { slug: ["is not valid"] };
-                }
-                if (error) {
-                    throw ({ response: { data: error } });
-                }
-
-                return API.post('setup', 'data_type', record.id, 'digest', 'config', {
-                    slug,
-                    trace_on_default
-                });
-            })
-        );
-    };
-
-    if (value && formDataType) {
-        return (
-            <FormEditor key={record.id}
-                        docked={docked}
-                        dataType={formDataType}
-                        height={height}
-                        submitIcon={<ConfigIcon/>}
-                        onFormSubmit={handleFormSubmit}
-                        onSubjectPicked={onSubjectPicked}
-                        successControl={SuccessConfig}
-                        value={value}/>
-        );
-    }
-
-    return <Loading/>;
+  return <Loading />;
 };
 
 export default ActionRegistry.register(DataTypeConfig, {
-    kind: ActionKind.member,
-    icon: ConfigIcon,
-    title: 'Configure',
-    arity: 1,
-    onlyFor: [
-        { namespace: 'Setup', name: 'JsonDataType' },
-        { namespace: 'Setup', name: 'FileDataType' }
-    ]
+  kind: ActionKind.member,
+  icon: ConfigIcon,
+  title: 'Configure',
+  arity: 1,
+  onlyFor: [
+    { namespace: 'Setup', name: 'JsonDataType' },
+    { namespace: 'Setup', name: 'FileDataType' }
+  ]
 });

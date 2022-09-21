@@ -12,61 +12,61 @@ import { useContainerContext } from './ContainerContext';
 
 const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
 
-    const [seed, setSeed] = useState(null);
-    const containerContext = useContainerContext();
-    const [, setContainerState] = containerContext;
+  const [seed, setSeed] = useState(null);
+  const containerContext = useContainerContext();
+  const [, setContainerState] = containerContext;
 
-    const handleCancel = () => {
-        setContainerState({ actionKey: 'index' });
+  const handleCancel = () => {
+    setContainerState({ actionKey: 'index' });
+  };
+
+  useEffect(() => {
+    setContainerState({ breadcrumbActionName: "New" });
+
+    return () => {
+      setContainerState({ breadcrumbActionName: null });
     };
+  }, []);
 
-    useEffect(() => {
-        setContainerState({ breadcrumbActionName: "New" });
+  useEffect(() => {
+    const subscription = DataTypeSubject.for(dataType.id).config().pipe(
+      switchMap(config => {
+        let seed = config.actions?.new?.seed;
+        if (typeof seed === 'function') {
+          seed = seed(dataType);
+        }
+        if (isObservable(seed)) {
+          return seed;
+        }
+        return of(seed || {});
+      })
+    ).subscribe(seed => {
+      seed[FETCHED] = true;
+      setSeed(seed);
+    });
 
-        return () => {
-            setContainerState({ breadcrumbActionName: null });
-        };
-    }, []);
+    return () => subscription.unsubscribe();
+  }, [dataType]);
 
-    useEffect(() => {
-        const subscription = DataTypeSubject.for(dataType.id).config().pipe(
-            switchMap(config => {
-                let seed = config.actions?.new?.seed;
-                if (typeof seed === 'function') {
-                    seed = seed(dataType);
-                }
-                if (isObservable(seed)) {
-                    return seed;
-                }
-                return of(seed || {});
-            })
-        ).subscribe(seed => {
-            seed[FETCHED] = true;
-            setSeed(seed);
-        });
+  if (seed) {
+    return <FormEditor value={seed}
+                       height={height}
+                       width={width}
+                       docked={docked}
+                       dataType={dataType}
+                       rootId={rootId}
+                       cancelEditor={handleCancel}
+                       onSubjectPicked={onSubjectPicked}
+                       formActionKey={New.key} />;
+  }
 
-        return () => subscription.unsubscribe();
-    }, [dataType]);
-
-    if (seed) {
-        return <FormEditor value={seed}
-                           height={height}
-                           width={width}
-                           docked={docked}
-                           dataType={dataType}
-                           rootId={rootId}
-                           cancelEditor={handleCancel}
-                           onSubjectPicked={onSubjectPicked}
-                           formActionKey={New.key}/>;
-    }
-
-    return <Loading/>;
+  return <Loading />;
 };
 
 export default ActionRegistry.register(New, {
-    kind: ActionKind.collection,
-    icon: NewIcon,
-    title: 'New',
-    crud: [CRUD.create],
-    key: 'new'
+  kind: ActionKind.collection,
+  icon: NewIcon,
+  title: 'New',
+  crud: [CRUD.create],
+  key: 'new'
 });

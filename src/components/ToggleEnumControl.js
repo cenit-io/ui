@@ -7,93 +7,93 @@ import clsx from "clsx";
 import { Alert } from "@material-ui/lab";
 
 const useStyles = makeStyles(theme => ({
-    option: {
-        margin: theme.spacing(1)
-    }
+  option: {
+    margin: theme.spacing(1)
+  }
 }));
 
 export default function EnumControl({
-                                        title,
-                                        value,
-                                        disabled,
-                                        readOnly,
-                                        error, // TODO Unused error parameter
-                                        onChange,
-                                        onDelete,
-                                        property,
-                                        optionsClasses
-                                    }) {
-    const [state, setState] = useSpreadState({
-        options: {}
-    });
+  title,
+  value,
+  disabled,
+  readOnly,
+  error, // TODO Unused error parameter
+  onChange,
+  onDelete,
+  property,
+  optionsClasses
+}) {
+  const [state, setState] = useSpreadState({
+    options: {}
+  });
 
-    const classes = useStyles();
+  const classes = useStyles();
 
-    const { options } = state;
+  const { options } = state;
 
-    useEffect(() => {
-        const subscription = value.changed().subscribe(() => setState({}));
-        return () => subscription.unsubscribe();
-    }, [value]);
+  useEffect(() => {
+    const subscription = value.changed().subscribe(() => setState({}));
+    return () => subscription.unsubscribe();
+  }, [value]);
 
-    useEffect(() => {
-        const enumOptions = property.propertySchema.enum;
-        const options = {};
-        const { enumNames } = property.propertySchema;
-        enumOptions.forEach(
-            (option, index) => options[option] = (enumNames && enumNames[index]) || `${option}`
-        );
-        setState({ options });
-    }, [property]);
-
-    const selectOption = option => () => {
-        if (!readOnly) {
-            if (value.get() === option) {
-                value.delete();
-                onDelete && onDelete()
-            } else {
-                value.set(option);
-                onChange && onChange(option)
-            }
-            setState({}); //to refresh
-        }
-    };
-
-    value.get();
-
-    let optionsControls = Object.keys(options).map(
-        option => (
-            <Button key={option}
-                    variant={option === value.cache ? 'contained' : 'outlined'}
-                    className={clsx(
-                        classes.option,
-                        optionsClasses && optionsClasses[option],
-                        (optionsClasses && option === value.cache) && 'selected'
-                    )}
-                    color={optionsClasses ? undefined : (option === value.cache ? 'primary' : 'default')}
-                    onClick={selectOption(option)}
-                    disabled={disabled}>
-                {options[option]}
-            </Button>
-        )
+  useEffect(() => {
+    const enumOptions = property.propertySchema.enum;
+    const options = {};
+    const { enumNames } = property.propertySchema;
+    enumOptions.forEach(
+      (option, index) => options[option] = (enumNames && enumNames[index]) || `${option}`
     );
+    setState({ options });
+  }, [property]);
 
-    if (!optionsControls.length) {
-        optionsControls = (
-            <Alert severity="info">
-                No options available
-            </Alert>
-        )
+  const selectOption = option => () => {
+    if (!readOnly) {
+      if (value.get() === option) {
+        value.delete();
+        onDelete && onDelete()
+      } else {
+        value.set(option);
+        onChange && onChange(option)
+      }
+      setState({}); //to refresh
     }
+  };
 
-    return (
-        <div>
-            <Typography variant="subtitle2">
-                {title}
-            </Typography>
-            <div className="flex justify-content-center align-items-center wrap">
-                {optionsControls}
-            </div>
-        </div>
-    );
+  value.get();
+
+  let optionsControls = Object.keys(options).map(
+    option => (
+      <Button key={option}
+              variant={option === value.cache ? 'contained' : 'outlined'}
+              className={clsx(
+                classes.option,
+                optionsClasses && optionsClasses[option],
+                (optionsClasses && option === value.cache) && 'selected'
+              )}
+              color={optionsClasses ? undefined : (option === value.cache ? 'primary' : 'default')}
+              onClick={selectOption(option)}
+              disabled={disabled}>
+        {options[option]}
+      </Button>
+    )
+  );
+
+  if (!optionsControls.length) {
+    optionsControls = (
+      <Alert severity="info">
+        No options available
+      </Alert>
+    )
+  }
+
+  return (
+    <div>
+      <Typography variant="subtitle2">
+        {title}
+      </Typography>
+      <div className="flex justify-content-center align-items-center wrap">
+        {optionsControls}
+      </div>
+    </div>
+  );
 }

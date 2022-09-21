@@ -16,183 +16,183 @@ import { of } from "rxjs";
 import { ExecutionMonitor } from "./ExecutionMonitor";
 
 function exportDataTypeFormFor(sourceDataType, formats, selectedItems) {
-    const properties = {};
-    if (formats.length > 1) {
-        properties.format = {
-            type: 'string',
-            enum: formats
-        };
-    }
-    properties.template = {
-        referenced: true,
-        $ref: {
-            namespace: 'Setup',
-            name: 'Template'
-        }
+  const properties = {};
+  if (formats.length > 1) {
+    properties.format = {
+      type: 'string',
+      enum: formats
     };
-    const dt = DataType.from({
-        name: 'Export',
-        schema: {
-            type: 'object',
-            properties
-        }
-    });
-
-    const defaultSelector = {
-        $or: [
-            { source_data_type_id: { $exists: false } },
-            { source_data_type_id: sourceDataType.id }
-        ]
-    };
-
-    const config = dt[Config] = {
-        fields: {
-            template: {
-                controlProps: {
-                    additionalViewportProps: ['file_extension'],
-                },
-                selector: defaultSelector
-            }
-        }
-    };
-
-    if (selectedItems.length !== 1) {
-        defaultSelector.bulk_source = true;
+  }
+  properties.template = {
+    referenced: true,
+    $ref: {
+      namespace: 'Setup',
+      name: 'Template'
     }
-
-    if (formats.length > 1) {
-        config.fields.format = {
-            control: ToggleEnumControl,
-            controlProps: {
-                title: 'Available formats'
-            }
-        };
-        config.dynamicConfig = ({ format }, state) => {
-            const selector = defaultSelector;
-            if (format) {
-                if (format !== state.template?.selector?.file_extension) {
-                    selector.file_extension = format;
-
-                    return {
-                        template: { selector }
-                    }
-                }
-            } else if (!eq(state.template?.selector, selector)) {
-                return {
-                    template: { selector }
-                };
-            }
-        };
+  };
+  const dt = DataType.from({
+    name: 'Export',
+    schema: {
+      type: 'object',
+      properties
     }
+  });
 
-    return dt;
+  const defaultSelector = {
+    $or: [
+      { source_data_type_id: { $exists: false } },
+      { source_data_type_id: sourceDataType.id }
+    ]
+  };
+
+  const config = dt[Config] = {
+    fields: {
+      template: {
+        controlProps: {
+          additionalViewportProps: ['file_extension'],
+        },
+        selector: defaultSelector
+      }
+    }
+  };
+
+  if (selectedItems.length !== 1) {
+    defaultSelector.bulk_source = true;
+  }
+
+  if (formats.length > 1) {
+    config.fields.format = {
+      control: ToggleEnumControl,
+      controlProps: {
+        title: 'Available formats'
+      }
+    };
+    config.dynamicConfig = ({ format }, state) => {
+      const selector = defaultSelector;
+      if (format) {
+        if (format !== state.template?.selector?.file_extension) {
+          selector.file_extension = format;
+
+          return {
+            template: { selector }
+          }
+        }
+      } else if (!eq(state.template?.selector, selector)) {
+        return {
+          template: { selector }
+        };
+      }
+    };
+  }
+
+  return dt;
 }
 
 const Export = ({ docked, dataType, onSubjectPicked, height }) => {
-    const [state, setState] = useSpreadState();
+  const [state, setState] = useSpreadState();
 
-    const [containerState, setContainerState] = useContainerContext();
+  const [containerState, setContainerState] = useContainerContext();
 
-    const { selectedItems, selector } = containerState;
+  const { selectedItems, selector } = containerState;
 
-    const value = useRef(new FormRootValue({
-        data_type: {
-            id: dataType.id,
-            _reference: true
-        },
-        selector: selectedItems.length
-            ? { _id: { $in: selectedItems.map(({ id }) => id) } }
-            : selector || {}
-    }));
+  const value = useRef(new FormRootValue({
+    data_type: {
+      id: dataType.id,
+      _reference: true
+    },
+    selector: selectedItems.length
+      ? { _id: { $in: selectedItems.map(({ id }) => id) } }
+      : selector || {}
+  }));
 
-    const { formDataType } = state;
+  const { formDataType } = state;
 
-    useEffect(() => {
-        setContainerState({ breadcrumbActionName: "Export" });
-  
-        return () => {
-          setContainerState({ breadcrumbActionName: null });
-        };
-      }, []);
+  useEffect(() => {
+    setContainerState({ breadcrumbActionName: "Export" });
 
-    useEffect(() => {
-        const subscription = value.current.changed().subscribe(
-            ({ format, template }) => {
-                if (template && format && template.file_extension !== format) {
-                    setTimeout(
-                        () => value.current.propertyValue('template').delete(true)
-                    );
-                }
-            }
-        );
-
-        return () => subscription.unsubscribe();
-    }, []);
-
-    useEffect(() => {
-        const subscription = DataType.find({
-            namespace: 'Setup',
-            name: 'Template'
-        }).pipe(
-            switchMap(
-                templateDataType => {
-                    const selector = {};
-                    if (selectedItems.length !== 1) {
-                        selector.bulk_source = true;
-                    }
-                    return templateDataType.distinct('file_extension', { selector });
-                }
-            )
-        ).subscribe(
-            formats => {
-                formats = formats.filter(f => f);
-                setState({ formDataType: exportDataTypeFormFor(dataType, formats, selectedItems) })
-            }
-        );
-
-        return () => subscription.unsubscribe();
-    }, [dataType, selectedItems]);
-
-    const handleFormSubmit = (_, value) => {
-        const { data_type, selector, template } = value.get();
-        return of(true).pipe(
-            switchMap(() => {
-                let error;
-                if (!template?.id) {
-                    error = { template: ['is required'] };
-                }
-                if (error) {
-                    throw ({ response: { data: error } });
-                }
-                return API.post('setup', 'template', template.id, 'digest', {
-                    source_data_type_id: data_type.id,
-                    selector
-                });
-            })
-        );
+    return () => {
+      setContainerState({ breadcrumbActionName: null });
     };
+  }, []);
 
-    if (formDataType) {
-        return (
-            <div className="relative">
-                <FormEditor docked={docked}
-                            dataType={formDataType}
-                            height={height}
-                            submitIcon={<SharedCollectionIcon/>}
-                            onFormSubmit={handleFormSubmit}
-                            onSubjectPicked={onSubjectPicked}
-                            successControl={ExecutionMonitor}
-                            value={value.current}/>
-            </div>
-        );
-    }
+  useEffect(() => {
+    const subscription = value.current.changed().subscribe(
+      ({ format, template }) => {
+        if (template && format && template.file_extension !== format) {
+          setTimeout(
+            () => value.current.propertyValue('template').delete(true)
+          );
+        }
+      }
+    );
 
-    return <Loading/>;
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const subscription = DataType.find({
+      namespace: 'Setup',
+      name: 'Template'
+    }).pipe(
+      switchMap(
+        templateDataType => {
+          const selector = {};
+          if (selectedItems.length !== 1) {
+            selector.bulk_source = true;
+          }
+          return templateDataType.distinct('file_extension', { selector });
+        }
+      )
+    ).subscribe(
+      formats => {
+        formats = formats.filter(f => f);
+        setState({ formDataType: exportDataTypeFormFor(dataType, formats, selectedItems) })
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [dataType, selectedItems]);
+
+  const handleFormSubmit = (_, value) => {
+    const { data_type, selector, template } = value.get();
+    return of(true).pipe(
+      switchMap(() => {
+        let error;
+        if (!template?.id) {
+          error = { template: ['is required'] };
+        }
+        if (error) {
+          throw ({ response: { data: error } });
+        }
+        return API.post('setup', 'template', template.id, 'digest', {
+          source_data_type_id: data_type.id,
+          selector
+        });
+      })
+    );
+  };
+
+  if (formDataType) {
+    return (
+      <div className="relative">
+        <FormEditor docked={docked}
+                    dataType={formDataType}
+                    height={height}
+                    submitIcon={<SharedCollectionIcon />}
+                    onFormSubmit={handleFormSubmit}
+                    onSubjectPicked={onSubjectPicked}
+                    successControl={ExecutionMonitor}
+                    value={value.current} />
+      </div>
+    );
+  }
+
+  return <Loading />;
 };
 
 export default ActionRegistry.register(Export, {
-    bulkable: true,
-    icon: SharedCollectionIcon,
-    title: 'Export',
-    group: 2
+  bulkable: true,
+  icon: SharedCollectionIcon,
+  title: 'Export',
+  group: 2
 });

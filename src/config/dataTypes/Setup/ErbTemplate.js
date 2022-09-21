@@ -10,27 +10,27 @@ const fields = ['namespace', 'name', 'source_data_type', 'mime_type', 'file_exte
 const orchestrator = templateMimeOrchestrator(arrayDiff(fields, 'code'));
 
 export default {
-    title: 'ERB Template',
-    icon: <TemplateFilledIcon/>,
-    actions: {
-        index: {
-            fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'bulk_source', 'updated_at']
-        },
-        new: { fields },
-        edit: {
-            viewportFields: [...fields, 'origin']
-        }
+  title: 'ERB Template',
+  icon: <TemplateFilledIcon />,
+  actions: {
+    index: {
+      fields: ['namespace', 'name', 'source_data_type', 'mime_type', 'file_extension', 'bulk_source', 'updated_at']
     },
-    fields: {
-        mime_type: {
-            control: AutocompleteControl
-        },
-        file_extension: {
-            control: AutocompleteControl
-        },
-        code: {
-            control: SharedCode
-        }
+    new: { fields },
+    edit: {
+      viewportFields: [...fields, 'origin']
+    }
+  },
+  fields: {
+    mime_type: {
+      control: AutocompleteControl
     },
-    orchestrator
+    file_extension: {
+      control: AutocompleteControl
+    },
+    code: {
+      control: SharedCode
+    }
+  },
+  orchestrator
 };

@@ -15,160 +15,160 @@ import { useContainerContext } from './ContainerContext';
 
 export function SuccessAppConfig() {
 
-    return (
-        <SuccessAlert mainIcon={ConfigIcon}/>
-    );
+  return (
+    <SuccessAlert mainIcon={ConfigIcon} />
+  );
 }
 
 const SimpleTypes = [
-    'integer',
-    'number',
-    'boolean',
-    'string',
-    'object'
+  'integer',
+  'number',
+  'boolean',
+  'string',
+  'object'
 ];
 
 function parameterSchema({ type, many, group, description }) {
-    let schema;
+  let schema;
 
-    type = (type || '').trim();
+  type = (type || '').trim();
 
-    if (type) {
-        if (SimpleTypes.indexOf(type) === -1) {
-            type = type.split(' ').map(token => capitalize(token)).join('');
-            if (type === 'RemoteOauthClient') {
-                type = 'OauthClient'
-            } else if (type === 'PlainWebhook') {
-                type = 'Webhook'
-            }
-            schema = {
-                referenced: true,
-                $ref: {
-                    namespace: 'Setup',
-                    name: type
-                }
-            };
-        } else {
-            schema = { type };
+  if (type) {
+    if (SimpleTypes.indexOf(type) === -1) {
+      type = type.split(' ').map(token => capitalize(token)).join('');
+      if (type === 'RemoteOauthClient') {
+        type = 'OauthClient'
+      } else if (type === 'PlainWebhook') {
+        type = 'Webhook'
+      }
+      schema = {
+        referenced: true,
+        $ref: {
+          namespace: 'Setup',
+          name: type
         }
+      };
     } else {
-        schema = {}
+      schema = { type };
     }
+  } else {
+    schema = {}
+  }
 
-    if (many) {
-        const referenced = schema.referenced;
-        delete schema.referenced;
-        schema = { type: 'array', items: schema };
-        if (referenced) {
-            schema.referenced = true;
-        }
+  if (many) {
+    const referenced = schema.referenced;
+    delete schema.referenced;
+    schema = { type: 'array', items: schema };
+    if (referenced) {
+      schema.referenced = true;
     }
+  }
 
-    if (group) {
-        schema.group = group;
-    }
+  if (group) {
+    schema.group = group;
+  }
 
-    if (description) {
-        schema.description = description;
-    }
+  if (description) {
+    schema.description = description;
+  }
 
-    return schema;
+  return schema;
 }
 
 const ConfigureApp = ({ docked, dataType, record, onSubjectPicked, height }) => {
-    const [state, setState] = useSpreadState();
-    const [_, setContainerState] = useContainerContext();
+  const [state, setState] = useSpreadState();
+  const [_, setContainerState] = useContainerContext();
 
-    const { formDataType, value } = state;
-    
-    useEffect(() => {
-        setContainerState({ breadcrumbActionName: "Configure" });
+  const { formDataType, value } = state;
 
-        return () => {
-          setContainerState({ breadcrumbActionName: null });
-        };
-      }, []);
+  useEffect(() => {
+    setContainerState({ breadcrumbActionName: "Configure" });
 
-    useEffect(() => {
-        const subscription = dataType.get(record.id, {
-            viewport: '{application_parameters configuration}',
-            include_id: true
-        }).subscribe(({ application_parameters, configuration }) => {
-                application_parameters = application_parameters || [];
-                const formDataType = DataType.from({
-                    name: 'Config',
-                    schema: {
-                        properties: {
-                            ...(dataType.name === 'Application' && ({
-                                authentication_method: {
-                                    type: 'string',
-                                    enum: ['User credentials', 'Application ID'],
-                                    group: 'Security',
-                                    default: 'User credentials'
-                                }
-                            }) || undefined),
-                            logo: {
-                                type: 'string',
-                                group: 'UI'
-                            },
-                            redirect_uris: {
-                                type: 'array',
-                                items: {
-                                    type: 'string'
-                                },
-                                group: 'OAuth'
-                            },
-                            ...application_parameters.reduce((config, p) => {
-                                config[p.name] = parameterSchema(p);
-                                return config;
-                            }, {})
-                        }
-                    }
-                });
-                configuration[FETCHED] = true;
-                setState({
-                    formDataType,
-                    application_parameters,
-                    value: new FormRootValue(configuration)
-                });
+    return () => {
+      setContainerState({ breadcrumbActionName: null });
+    };
+  }, []);
+
+  useEffect(() => {
+    const subscription = dataType.get(record.id, {
+      viewport: '{application_parameters configuration}',
+      include_id: true
+    }).subscribe(({ application_parameters, configuration }) => {
+        application_parameters = application_parameters || [];
+        const formDataType = DataType.from({
+          name: 'Config',
+          schema: {
+            properties: {
+              ...(dataType.name === 'Application' && ({
+                authentication_method: {
+                  type: 'string',
+                  enum: ['User credentials', 'Application ID'],
+                  group: 'Security',
+                  default: 'User credentials'
+                }
+              }) || undefined),
+              logo: {
+                type: 'string',
+                group: 'UI'
+              },
+              redirect_uris: {
+                type: 'array',
+                items: {
+                  type: 'string'
+                },
+                group: 'OAuth'
+              },
+              ...application_parameters.reduce((config, p) => {
+                config[p.name] = parameterSchema(p);
+                return config;
+              }, {})
             }
-        );
-
-        return () => subscription.unsubscribe();
-    }, [record.id, dataType]);
-
-
-    const handleFormSubmit = (_, value) => API.post(
-        underscore(dataType.namespace), underscore(dataType.name), record.id, 'digest', 'config', value.get()
-    ).pipe(
-        map(() => ({}))
+          }
+        });
+        configuration[FETCHED] = true;
+        setState({
+          formDataType,
+          application_parameters,
+          value: new FormRootValue(configuration)
+        });
+      }
     );
 
-    if (formDataType) {
-        return (
-            <div className="relative">
-                <FormEditor docked={docked}
-                            dataType={formDataType}
-                            height={height}
-                            submitIcon={<ConfigIcon/>}
-                            onFormSubmit={handleFormSubmit}
-                            onSubjectPicked={onSubjectPicked}
-                            successControl={SuccessAppConfig}
-                            value={value}/>
-            </div>
-        );
-    }
+    return () => subscription.unsubscribe();
+  }, [record.id, dataType]);
 
-    return <Loading/>;
+
+  const handleFormSubmit = (_, value) => API.post(
+    underscore(dataType.namespace), underscore(dataType.name), record.id, 'digest', 'config', value.get()
+  ).pipe(
+    map(() => ({}))
+  );
+
+  if (formDataType) {
+    return (
+      <div className="relative">
+        <FormEditor docked={docked}
+                    dataType={formDataType}
+                    height={height}
+                    submitIcon={<ConfigIcon />}
+                    onFormSubmit={handleFormSubmit}
+                    onSubjectPicked={onSubjectPicked}
+                    successControl={SuccessAppConfig}
+                    value={value} />
+      </div>
+    );
+  }
+
+  return <Loading />;
 };
 
 export default ActionRegistry.register(ConfigureApp, {
-    kind: ActionKind.member,
-    icon: ConfigIcon,
-    title: 'Configure',
-    arity: 1,
-    onlyFor: [
-        { namespace: 'Setup', name: 'Application' },
-        { namespace: 'Cenit', name: 'BuildInApp' }
-    ]
+  kind: ActionKind.member,
+  icon: ConfigIcon,
+  title: 'Configure',
+  arity: 1,
+  onlyFor: [
+    { namespace: 'Setup', name: 'Application' },
+    { namespace: 'Cenit', name: 'BuildInApp' }
+  ]
 });
