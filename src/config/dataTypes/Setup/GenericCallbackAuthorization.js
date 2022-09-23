@@ -17,6 +17,7 @@ export default {
       fields: ['namespace', 'name', 'authorized', 'client', 'updated_at'],
       viewport: '{id namespace name authorized client {id provider {namespace name} name} updated_at}'
     },
+    show: { fields },
     new: { fields: arrayDiff(fields, 'id', 'authorized') },
     edit: {
       fields,
