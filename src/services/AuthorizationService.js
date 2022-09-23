@@ -3,21 +3,15 @@ import { map } from "rxjs/operators";
 
 import session from "../util/session";
 import localStorage from "../util/localStorage";
-import {
-  request,
-  authorize as _authorize,
-  authWithAuthCode as _authWithAuthCode,
-  apiRequest as _apiRequest,
-} from "../util/request";
+import { request, authorize } from "../util/request";
 
 const appIdentifier = process.env.REACT_APP_APP_ID || 'admin';
 
 const { cenitBackendBaseUrl } = session;
 
+export { authorize, authWithAuthCode, apiRequest } from "../util/request";
+
 export const clearSession = () => session.clear();
-export const authorize = _authorize;
-export const authWithAuthCode = _authWithAuthCode;
-export const apiRequest = _apiRequest;
 
 export const getAccess = () => {
   const access = session.get('accessToken');
@@ -27,9 +21,7 @@ export const getAccess = () => {
   return of(access);
 }
 
-export const getAccessToken = () => {
-  return getAccess().pipe(map(access => (access && access.access_token) || null));
-}
+export const getAccessToken = () => getAccess().pipe(map(access => (access && access.access_token) || null));
 
 export const getIdToken = () => {
   let idToken = session.get('idToken');
