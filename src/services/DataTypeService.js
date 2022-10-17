@@ -288,7 +288,7 @@ export class DataType {
                   prop.type = 'embedsOne';
                 }
               } else {
-                prop.type = propSch['type'];
+                prop.type = propSch['type'] ? propSch['type'] : (prop.name === 'id' ? 'string' : undefined);
               }
               return prop;
             }
