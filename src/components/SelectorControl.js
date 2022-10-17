@@ -130,6 +130,11 @@ const StringOperators = [
   '$exists'
 ];
 
+const IdentifyOperators = [
+  '$eq',
+  '$ne'
+]
+
 function StringValue({ operator, value, onChange, disabled }) {
   const strValue = (value === null && (operator === '$eq' || operator === '$ne'))
     ? null :
@@ -164,6 +169,19 @@ function StringCondition({ field, operator, value, onChange, disabled, property 
   return (
     <ValueCondition valueControl={StringValue}
                     operators={StringOperators}
+                    operator={operator}
+                    value={value}
+                    onChange={onChange}
+                    field={field}
+                    property={property}
+                    disabled={disabled} />
+  );
+}
+
+function IdentifyCondition({ field, operator, value, onChange, disabled, property }) {
+  return (
+    <ValueCondition valueControl={StringValue}
+                    operators={IdentifyOperators}
                     operator={operator}
                     value={value}
                     onChange={onChange}
@@ -486,16 +504,10 @@ function conditionControlFor(property) {
       return RefOneCondition;
     }
     case 'string': {
-      if (property.propertySchema.enum) {
-        return EnumCondition;
-      }
-      if (
-        property.propertySchema.format === 'date' ||
-        property.propertySchema.format === 'date-time' ||
-        property.propertySchema.format === 'time'
-      ) {
-        return DateCondition;
-      }
+      const { name, propertySchema: { format = '', enum: isEnum } } = property;
+      if (isEnum) return EnumCondition;
+      if (format.match(/^(date|date-time|time)$/)) return DateCondition;
+      if (name === 'id') return IdentifyCondition;
     }
     default:
       return StringCondition;
@@ -566,6 +578,9 @@ function defaultConditionFor(property, current) {
     case 'string': {
       if (property.propertySchema.enum) {
         return defaultConditionFrom(EnumOperators, current, []);
+      }
+      if (property.name === 'id') {
+        return defaultConditionFrom(IdentifyOperators, current, property.name);
       }
       if (
         property.propertySchema.format === 'date' ||
@@ -638,7 +653,9 @@ export default function SelectorControl({ title, dataType, value, disabled, read
         map(virtualFlags => virtualFlags.map((virtual, index) => !virtual && props[index]).filter(p => p))
       ))
     ).subscribe(
-      props => setState({ props: props.filter(({ type }) => SelectableTypes.includes(type)) })
+      props => {
+        setState({ props: props.filter(({ type }) => SelectableTypes.includes(type)) })
+      }
     );
 
     return () => subscription.unsubscribe();
