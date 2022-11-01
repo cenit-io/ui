@@ -33,9 +33,13 @@ This is a React application for the administration of a Cenit IO integration Pla
 instance of Cenit IO server should run listening to a different one, in the example the port `3001`. 
 
 Set the docker runtime environment variables to the right values:
-- `REACT_APP_LOCALHOST=http://127.0.0.1:3000`
-- `REACT_APP_CENIT_HOST=http://127.0.0.1:3001`
 
+- `REACT_APP_APP_ID=admin`
+- `REACT_APP_CENIT_HOST=http://127.0.0.1:3001`
+- `REACT_APP_OAUTH_CLIENT_ID=***********`
+- `REACT_APP_OAUTH_CLIENT_SECRET=***********`
+
+Your can get the REACT_APP_OAUTH_XXX vars running `rake cenit:admin:app:credentials` in cenit-backend root directory.
 
 ## Configuring the Cenit Backend Server
 
