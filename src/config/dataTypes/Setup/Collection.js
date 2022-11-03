@@ -13,7 +13,7 @@ const groups = {
     fields: ['translators', 'algorithms', 'applications', 'snippets']
   },
   workflows: {
-    fields: ['flows', 'events']
+    fields: ['flows', 'events', 'notification_flows', 'email_channels', 'smtp_providers']
   },
   connectors: {
     fields: ['connections', 'resources', 'webhooks']
