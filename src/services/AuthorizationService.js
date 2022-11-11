@@ -7,8 +7,6 @@ import { request, authorize } from "../util/request";
 
 const appIdentifier = process.env.REACT_APP_APP_ID || 'admin';
 
-const { cenitBackendBaseUrl } = session;
-
 export { authorize, authWithAuthCode, apiRequest } from "../util/request";
 
 export const clearSession = () => session.clear();
@@ -44,7 +42,7 @@ export const getIdToken = () => {
 export const logout = () => {
   localStorage.clear();
   session.clear();
-  window.location = `${cenitBackendBaseUrl}/users/sign_out`;
+  window.location = `${session.cenitBackendBaseUrl}/users/sign_out`;
 }
 
 export const appRequest = (options) => {
