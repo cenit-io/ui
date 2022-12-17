@@ -29,6 +29,8 @@ const Show = ({ docked, dataType, record, onSubjectPicked, height }) => {
 
   const classes = useStyles();
 
+  const jsonProjection = ({ id }) => dataType.get(id);
+
   useEffect(() => {
     setContainerState({ breadcrumbActionName: "Show" });
   }, []);
@@ -65,6 +67,7 @@ const Show = ({ docked, dataType, record, onSubjectPicked, height }) => {
                   height={height}
                   readOnly={true}
                   noSubmitButton={true}
+                  jsonProjection={jsonProjection}
                   formActionKey={Show.key} />
       {editButton}
     </div>

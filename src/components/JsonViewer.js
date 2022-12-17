@@ -1,20 +1,26 @@
-import clsx from "clsx";
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useFormObjectValue } from "./FormContext";
+import { useSpreadState } from "../common/hooks";
+import Loading from "./Loading";
 
 export default function JsonViewer({ className, projection }) {
 
-  let value = useFormObjectValue();
+  const value = useFormObjectValue();
+  const [state, setState] = useSpreadState({ record: {}, loaded: false });
+  const { record, loaded } = state;
 
-  if (projection) {
-    value = projection(value);
-  }
+  useEffect(() => {
+    if (projection) {
+      const subscription = projection(value).subscribe((record) => setState({ record, loaded: true }));
+      return () => subscription.unsubscribe();
+    } else {
+      setState({ record: value, loaded: true });
+    }
+  }, [value]);
 
   return (
     <div className={className}>
-                <pre>
-                    {JSON.stringify(value, null, 2)}
-                </pre>
+      {loaded ? <pre>{JSON.stringify(record, null, 2)}</pre> : <Loading/>}
     </div>
   );
 }
