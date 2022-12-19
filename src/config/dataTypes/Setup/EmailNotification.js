@@ -1,5 +1,6 @@
 import React from 'react';
-import EmailNotificationIcon from "@material-ui/icons/ForwardToInbox";
+// import EmailNotificationIcon from "@material-ui/icons/ForwardToInbox";
+import EmailNotificationIcon from '@material-ui/icons/MailOutline';
 import { arrayDiff } from "../../../common/arrays";
 import API from "../../../services/ApiService";
 import { map } from "rxjs/operators";
