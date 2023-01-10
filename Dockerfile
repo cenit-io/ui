@@ -5,7 +5,7 @@ WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 COPY package.json .
 COPY package-lock.json .
-RUN npm install -g npm@latest
+RUN npm install -g npm@latestss
 RUN npm ci --legacy-peer-deps
 RUN npm install react-scripts --production -g --silent
 COPY env.sh .

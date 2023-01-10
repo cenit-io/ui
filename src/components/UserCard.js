@@ -5,7 +5,7 @@ import { logout, appRequest, getAccess } from "../services/AuthorizationService"
 import List from "@material-ui/core/List";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import { useTenantContext } from "../layout/TenantContext";
-import LogoutIcon from "@material-ui/icons/Logout";
+import LogoutIcon from '@material-ui/icons/ExitToAppOutlined';
 import PasswordIcon from '@material-ui/icons/VpnKey';
 import OkIcon from '@material-ui/icons/Check';
 import FailIcon from '@material-ui/icons/CancelOutlined';

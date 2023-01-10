@@ -27,7 +27,8 @@ import { useSpreadState } from "../common/hooks";
 import NotificationsIcon from "../icons/NotificationsIcon";
 import { TaskMenuIcon } from "../config/dataTypes/Setup/Task";
 import Badge from "@material-ui/core/Badge";
-import NotificationIcon from '@material-ui/icons/CircleNotifications';
+// import NotificationIcon from '@material-ui/icons/CircleNotifications';
+import NotificationIcon from '@material-ui/icons/NotificationsActiveOutlined';
 import session from '../util/session';
 
 const USER_NOTIFIED = 'USER_NOTIFIED';
