@@ -2,7 +2,8 @@ import React from 'react';
 import TraceActionViewer from "../../../../viewers/TraceActionViewer";
 import { CRUD } from "../../../../actions/ActionRegistry";
 import ChangesSetControl from "../../../../components/ChangesSetControl";
-import TraceIcon from "@material-ui/icons/HistoryToggleOff";
+// import TraceIcon from "@material-ui/icons/HistoryToggleOff";
+import TraceIcon from '@material-ui/icons/ToggleOffOutlined';
 import ViewerControl from "../../../../components/ViewerControl";
 import recordViewer from "../../../../viewers/recordViewer";
 
