@@ -17,8 +17,10 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from '@material-ui/core/DialogTitle';
 import useTheme from "@material-ui/core/styles/useTheme";
 import ErrorMessages from "./ErrorMessages";
-import OpenInIcon from "@material-ui/icons/OpenInFullOutlined";
-import OpenInOffIcon from "@material-ui/icons/CloseFullscreenOutlined";
+// import OpenInIcon from "@material-ui/icons/OpenInFullOutlined";
+import OpenInIcon from '@material-ui/icons/Fullscreen';
+// import OpenInOffIcon from "@material-ui/icons/CloseFullscreenOutlined";
+import OpenInOffIcon from '@material-ui/icons/FullscreenExit';
 
 const useStyles = makeStyles(theme => ({
   editor: {
