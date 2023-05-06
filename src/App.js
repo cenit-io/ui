@@ -27,6 +27,7 @@ function reset() {
 function App() {
 
   const [authorizing, setAuthorizing] = useState(true);
+  const [clientId, setClientId] = useState(session.clientId);
   const [error, setError] = useState(false);
   const [networkError, setNetworkError] = useState(false);
 
@@ -38,10 +39,13 @@ function App() {
     API.onConnectionRefused(() => {
       setNetworkError(true);
     });
+    if (!clientId) API.setupOAuth2Credentials().then(([clientId]) => {
+      setClientId(clientId);
+    });
   }, []);
 
   useEffect(() => {
-    if (authorizing) {
+    if (authorizing && clientId) {
       const params = QueryString.parse(window.location.search.slice(1, window.location.search.length));
 
       if (params.cenitHost) session.cenitBackendBaseUrl = params.cenitHost;
@@ -64,7 +68,7 @@ function App() {
 
       return () => subscription.unsubscribe();
     }
-  }, [authorizing]);
+  }, [authorizing, clientId]);
 
   if (authorizing) {
     return <div className='flex full-width full-v-height justify-content-center align-items-center'>

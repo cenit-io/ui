@@ -2,6 +2,7 @@ import axios from 'axios';
 import { apiRequest } from './AuthorizationService';
 import { catchError } from "rxjs/operators";
 import { from, of, throwError } from "rxjs";
+import session from "../util/session";
 
 export const ApiResource = function () {
 
@@ -125,7 +126,21 @@ const API = {
 
   onError: callback => ErrorCallbacks.push(callback),
 
-  onConnectionRefused: callback => ConnectionRefusedCallbacks.push(callback)
+  onConnectionRefused: callback => ConnectionRefusedCallbacks.push(callback),
+
+  setupOAuth2Credentials: () => {
+    const url = `${session.cenitBackendBaseUrl}/app/admin/oauth2/client/credentials`;
+    const reverse = (str) => str.split('').reverse().join('');
+
+    return axios.get(url).then(({ data: { client_token } }) => {
+      const { OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET } = JSON.parse(window.atob(reverse(client_token)));
+
+      session.set('OAUTH_CLIENT_ID', OAUTH_CLIENT_ID);
+      session.set('OAUTH_CLIENT_SECRET', OAUTH_CLIENT_SECRET);
+
+      return [OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET];
+    });
+  }
 };
 
 export default API;
