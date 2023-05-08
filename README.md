@@ -36,10 +36,6 @@ Set the docker runtime environment variables to the right values:
 
 - `REACT_APP_APP_ID=admin`
 - `REACT_APP_CENIT_HOST=http://127.0.0.1:3001`
-- `REACT_APP_OAUTH_CLIENT_ID=***********`
-- `REACT_APP_OAUTH_CLIENT_SECRET=***********`
-
-Your can get the REACT_APP_OAUTH_XXX vars running `rake cenit:admin:app:credentials` in cenit-backend root directory.
 
 ## Configuring the Cenit Backend Server
 
