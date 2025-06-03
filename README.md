@@ -1,4 +1,4 @@
-````markdown
+
 ![cenit_io](https://user-images.githubusercontent.com/4213488/150586701-53545c9b-b4f9-497f-9782-ef6a19715ecd.svg)
 
 [![codebeat](https://codebeat.co/badges/1b596784-b6c1-4ce7-b739-c91b873e4b5d)](https://codebeat.co/projects/github-com-cenit-io-cenit)
@@ -50,7 +50,6 @@ docker run -dti \
   -p 3002:80 \
   --name cenit-ui ghcr.io/cenit-io/ui:latest
 ```
-````
 
 Navigate to [http://localhost:3002](http://localhost:3002) in your browser to access the Admin App.
 
@@ -73,4 +72,4 @@ Cenit IO is an open‐source project and we welcome contributions. Here are some
 
 - Review and merge pull requests
 
----
+
