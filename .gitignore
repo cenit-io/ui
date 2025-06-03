@@ -5,6 +5,10 @@
 /.pnp
 .pnp.js
 
+
+tree.sh
+relevant_files_content.txt
+
 # testing
 /coverage
 
