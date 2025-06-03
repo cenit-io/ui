@@ -18,7 +18,7 @@ This is a React‐based administration interface for the Cenit IO integration pl
 
 ## Installation
 
-For a complete, Docker‐based installation of both the backend (`cenit-server`) and this UI, see the [Docker Installation Guide](docker-installation.md).  
+For a complete, Docker‐based installation of both the backend (`cenit-server`) and this UI, see the [Docker Installation Guide](Docker-instalation.md).  
 (The guide includes links to the relevant `docker-compose.yml` and Dockerfiles.)
 
 ---
