@@ -26,6 +26,11 @@ function reset() {
 
 function App() {
 
+  // 1) At startup, read the runtime config.js value into session.cenitBackendBaseUrl:
+  if (window.appConfig && window.appConfig.REACT_APP_CENIT_HOST) {
+    session.cenitBackendBaseUrl = window.appConfig.REACT_APP_CENIT_HOST;
+  }
+
   const [authorizing, setAuthorizing] = useState(true);
   const [clientId, setClientId] = useState(session.clientId);
   const [error, setError] = useState(false);
@@ -48,7 +53,9 @@ function App() {
     if (authorizing && clientId) {
       const params = QueryString.parse(window.location.search.slice(1, window.location.search.length));
 
-      if (params.cenitHost) session.cenitBackendBaseUrl = params.cenitHost;
+      if (params.cenitHost) {
+        session.cenitBackendBaseUrl = params.cenitHost;
+      }
 
       let authorize;
       if (params.code) {
