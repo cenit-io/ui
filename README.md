@@ -1,4 +1,3 @@
-````markdown
 ![cenit_io](https://user-images.githubusercontent.com/4213488/150586701-53545c9b-b4f9-497f-9782-ef6a19715ecd.svg)
 
 [![codebeat](https://codebeat.co/badges/1b596784-b6c1-4ce7-b739-c91b873e4b5d)](https://codebeat.co/projects/github-com-cenit-io-cenit)
@@ -6,39 +5,55 @@
 
 # Cenit IO Admin App (UI)
 
-This is a React‐based administration interface for the Cenit IO integration platform (iPaaS).
+React-based administration interface for the Cenit platform.
 
-- **cenit-server (GitHub “cenit” repo)**:  
-  https://github.com/cenit-io/cenit
+## Repositories
 
-- **cenit-ui (GitHub “ui” repo)**:  
-  https://github.com/cenit-io/ui
+- Backend (`cenit`): https://github.com/cenit-io/cenit
+- Frontend (`ui`): https://github.com/cenit-io/ui
 
----
+## Run Locally with Docker Compose
 
-## Installation
+This UI is started by the Docker Compose stack in the backend repository.
 
-For a complete, Docker‐based installation of both the backend (`cenit-server`) and this UI, see the [Docker Installation Guide](docker-installation.md).  
-(The guide includes links to the relevant `docker-compose.yml` and Dockerfiles.)
+1. Clone both repositories side by side:
 
----
+```bash
+git clone https://github.com/cenit-io/cenit.git
+git clone https://github.com/cenit-io/ui.git
+```
 
-## Configuration
+2. Start from the backend repository:
 
-If you need to customize the Admin App (outside of Docker), set the following environment variables:
+```bash
+cd cenit
+docker compose up -d --build
+docker compose ps
+```
+
+3. Open the apps:
+
+- UI: http://localhost:3002
+- Backend: http://localhost:3000
+- RabbitMQ: http://localhost:15672
+
+If the UI repository is not at `../ui`, set:
+
+```bash
+export CENIT_UI_CONTEXT=/absolute/path/to/ui
+docker compose up -d --build
+```
+
+## Runtime Configuration
+
+Runtime values are injected through `config.js` and `window.appConfig`.
 
 - `REACT_APP_USE_ENVIRONMENT_CONFIG=true`
 - `REACT_APP_APP_ID=admin`
 - `REACT_APP_LOCALHOST=http://localhost:3002`
-- `REACT_APP_CENIT_HOST=http://<YOUR_CENIT_SERVER_HOST>:<PORT>`
+- `REACT_APP_CENIT_HOST=http://localhost:3000`
 
-These values will be injected at runtime into `config.js`.
-
----
-
-## Run with Docker
-
-To pull and run the latest UI image:
+## Run UI Image Standalone
 
 ```bash
 docker pull ghcr.io/cenit-io/ui:latest
@@ -50,27 +65,23 @@ docker run -dti \
   -p 3002:80 \
   --name cenit-ui ghcr.io/cenit-io/ui:latest
 ```
-````
 
-Navigate to [http://localhost:3002](http://localhost:3002) in your browser to access the Admin App.
+Then open http://localhost:3002.
 
----
+## Validate Login Flow
+
+From the backend repository:
+
+```bash
+/Users/sanchojaf/Documents/cenit-io/cenit/scripts/e2e/cenit_ui_login.sh
+```
+
+## Docker Guide
+
+For end-to-end setup details, see [Docker-instalation.md](Docker-instalation.md).
 
 ## Contributing
 
-Cenit IO is an open‐source project and we welcome contributions. Here are some ways to get involved:
-
-- Report bugs or request features: [Issues](https://github.com/cenit-io/cenit/issues/new)
-- Improve documentation:
-
-  - Platform docs: [https://github.com/cenit-io/cenit-docs](https://github.com/cenit-io/cenit-docs)
-  - UI docs: [https://github.com/cenit-io/ui](https://github.com/cenit-io/ui)
-
-- Submit code changes:
-
-  - Feature requests: [https://github.com/cenit-io/cenit/labels/feature_request](https://github.com/cenit-io/cenit/labels/feature_request)
-  - Feedback/bug fixes: [https://github.com/cenit-io/cenit/labels/address_feedback](https://github.com/cenit-io/cenit/labels/address_feedback)
-
-- Review and merge pull requests
-
----
+- Report bugs or request features: https://github.com/cenit-io/cenit/issues/new
+- Improve docs: https://github.com/cenit-io/cenit-docs
+- Submit UI changes: https://github.com/cenit-io/ui

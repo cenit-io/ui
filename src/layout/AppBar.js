@@ -30,6 +30,7 @@ import Badge from "@material-ui/core/Badge";
 // import NotificationIcon from '@material-ui/icons/CircleNotifications';
 import NotificationIcon from '@material-ui/icons/NotificationsActiveOutlined';
 import session from '../util/session';
+import brandLogoUrl from "../util/brandLogoUrl";
 
 const USER_NOTIFIED = 'USER_NOTIFIED';
 
@@ -241,7 +242,7 @@ export default function ({ onToggle }) {
 
   const brandLogo = !smUp &&
     <div onClick={handleQuickAccess} className={classes.brandContainer}>
-      <img src="https://server.cenit.io/images/brandLogo.svg" width="40px" alt=""
+      <img src={brandLogoUrl()} width="40px" alt=""
            style={{ filter: 'invert(1)' }} />
     </div>
 

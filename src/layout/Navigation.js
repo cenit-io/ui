@@ -29,6 +29,7 @@ import { DataType } from "../services/DataTypeService";
 import FrezzerLoader from "../components/FrezzerLoader";
 import { isSuperAdmin, useTenantContext } from "./TenantContext";
 import EmbeddedAppService from "../services/EnbeddedAppService";
+import brandLogoUrl from "../util/brandLogoUrl";
 
 function NavItem({ icon, onClick, disabled, text, isRoot, isOpen }) {
   return (
@@ -371,7 +372,7 @@ export default function Navigation({ xs, onToggle }) {
       <div className={classes.brandImgWrapper}>
         {!xs && (
           <img
-            src="https://server.cenit.io/images/brandLogo.svg"
+            src={brandLogoUrl()}
             alt="Brand Logo"
             onClick={handleHomeAccess}
             className={classes.brandImg}
