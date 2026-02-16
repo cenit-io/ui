@@ -1,29 +1,54 @@
-![cenit_io](https://user-images.githubusercontent.com/4213488/150586701-53545c9b-b4f9-497f-9782-ef6a19715ecd.svg)
+# Cenit UI
 
-[![codebeat](https://codebeat.co/badges/1b596784-b6c1-4ce7-b739-c91b873e4b5d)](https://codebeat.co/projects/github-com-cenit-io-cenit)
-[![license](https://img.shields.io/packagist/l/doctrine/orm.svg)]()
+![Cenit banner](https://user-images.githubusercontent.com/4213488/150586701-53545c9b-b4f9-497f-9782-ef6a19715ecd.svg)
 
-# Cenit IO Admin App (UI)
+[![GHCR Docker Publish](https://github.com/cenit-io/ui/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/cenit-io/ui/actions/workflows/docker-publish.yml)
+[![License](https://img.shields.io/github/license/cenit-io/ui)](LICENSE.md)
 
-React-based administration interface for the Cenit platform.
+React-based administration interface for the [Cenit](https://github.com/cenit-io/cenit) platform.
+
+## Table of contents
+
+- [Repositories](#repositories)
+- [Quick start (recommended: backend compose)](#quick-start-recommended-backend-compose)
+- [Local development](#local-development)
+- [Runtime configuration](#runtime-configuration)
+- [E2E checks](#e2e-checks)
+- [Run UI image standalone](#run-ui-image-standalone)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Repositories
 
-- Backend (`cenit`): https://github.com/cenit-io/cenit
-- Frontend (`ui`): https://github.com/cenit-io/ui
+- Backend: [cenit-io/cenit](https://github.com/cenit-io/cenit)
+- UI (this repo): [cenit-io/ui](https://github.com/cenit-io/ui)
 
-## Run Locally with Docker Compose
+## Quick start (recommended: backend compose)
 
-This UI is started by the Docker Compose stack in the backend repository.
+This UI is usually run by the backend Docker Compose stack.
 
-1. Clone both repositories side by side:
+### Prerequisites
+
+- Docker Desktop (or Docker Engine + Compose v2 plugin)
+- `git`
+
+### 1) Clone both repos side by side
 
 ```bash
 git clone https://github.com/cenit-io/cenit.git
 git clone https://github.com/cenit-io/ui.git
 ```
 
-2. Start from the backend repository:
+Expected layout:
+
+```text
+cenit-io/
+  cenit/
+  ui/
+```
+
+### 2) Start from backend repo
 
 ```bash
 cd cenit
@@ -31,29 +56,110 @@ docker compose up -d --build
 docker compose ps
 ```
 
-3. Open the apps:
+### 3) Open services
 
-- UI: http://localhost:3002
-- Backend: http://localhost:3000
-- RabbitMQ: http://localhost:15672
+- UI: [http://localhost:3002](http://localhost:3002)
+- Backend: [http://localhost:3000](http://localhost:3000)
+- RabbitMQ: [http://localhost:15672](http://localhost:15672)
 
-If the UI repository is not at `../ui`, set:
+If `ui` is not at `../ui`, set:
 
 ```bash
 export CENIT_UI_CONTEXT=/absolute/path/to/ui
 docker compose up -d --build
 ```
 
-## Runtime Configuration
+## Local development
 
-Runtime values are injected through `config.js` and `window.appConfig`.
+Install dependencies and run Create React App dev server:
 
-- `REACT_APP_USE_ENVIRONMENT_CONFIG=true`
-- `REACT_APP_APP_ID=admin`
-- `REACT_APP_LOCALHOST=http://localhost:3002`
-- `REACT_APP_CENIT_HOST=http://localhost:3000`
+```bash
+npm install
+npm start
+```
 
-## Run UI Image Standalone
+Notes:
+
+- CRA dev server defaults to `http://localhost:3000`.
+- Docker UI runtime is served at `http://localhost:3002`.
+- In the current local migration flow, backend is expected at `http://localhost:3000`.
+
+Other scripts:
+
+```bash
+npm test
+npm run build
+```
+
+## Runtime configuration
+
+Runtime values are injected through `config.js` (`window.appConfig`), especially in Docker runtime.
+
+Important variables:
+
+```env
+REACT_APP_USE_ENVIRONMENT_CONFIG=true
+REACT_APP_TIMEOUT_SPAN=300000
+REACT_APP_APP_ID=admin
+REACT_APP_LOCALHOST=http://localhost:3002
+REACT_APP_CENIT_HOST=http://localhost:3000
+```
+
+Related backend values (from backend compose):
+
+```env
+HOMEPAGE=http://localhost:3000
+CENIT_UI=http://localhost:3002
+```
+
+## E2E checks
+
+UI E2E scripts in this repo delegate to backend scripts so both repos share one stable contract.
+
+### Login check
+
+```bash
+scripts/e2e/cenit_ui_login.sh
+# or
+npm run e2e:login
+```
+
+### Contact flow (idempotent contract)
+
+```bash
+scripts/e2e/cenit_ui_contact_flow.sh
+# or
+npm run e2e:contact-flow
+```
+
+Default contract:
+
+- Namespace: `E2E_CONTACT_FLOW`
+- Data type: `Contact`
+- Record: `John Contact E2E`
+- Cleanup enabled by default (`CENIT_E2E_CLEANUP=1`)
+
+Useful overrides:
+
+```bash
+# Reuse running backend stack
+CENIT_E2E_AUTOSTART=0 scripts/e2e/cenit_ui_contact_flow.sh
+
+# Run headed
+CENIT_E2E_HEADED=1 scripts/e2e/cenit_ui_contact_flow.sh
+```
+
+If backend repo is not a sibling at `../cenit`:
+
+```bash
+export CENIT_ROOT=/absolute/path/to/cenit
+```
+
+Artifacts are produced by the backend runner at:
+
+- `../cenit/output/playwright`
+
+## Run UI image standalone
 
 ```bash
 docker pull ghcr.io/cenit-io/ui:latest
@@ -63,69 +169,28 @@ docker run -dti \
   -e REACT_APP_LOCALHOST=http://127.0.0.1:3002 \
   -e REACT_APP_CENIT_HOST=http://127.0.0.1:3000 \
   -p 3002:80 \
-  --name cenit-ui ghcr.io/cenit-io/ui:latest
+  --name cenit-ui \
+  ghcr.io/cenit-io/ui:latest
 ```
 
-Then open http://localhost:3002.
+Then open [http://localhost:3002](http://localhost:3002).
 
-## Validate Login Flow
+## Troubleshooting
 
-From the UI repository:
+For end-to-end Docker setup details, see:
 
-```bash
-scripts/e2e/cenit_ui_login.sh
-```
-
-Or with npm:
-
-```bash
-npm run e2e:login
-```
-
-## Validate Contact Flow (Idempotent)
-
-Run the full UI OAuth + create data type + create record flow:
-
-```bash
-scripts/e2e/cenit_ui_contact_flow.sh
-```
-
-Or with npm:
-
-```bash
-npm run e2e:contact-flow
-```
-
-Default contract mirrors `cenit`:
-
-- Namespace: `E2E_CONTACT_FLOW`
-- Data type: `Contact`
-- Record: `John Contact E2E`
-- Cleanup enabled by default (`CENIT_E2E_CLEANUP=1`)
-- Safe to run multiple times in a row
-- Artifacts are written by the backend E2E runner under `../cenit/output/playwright`
-
-Optional overrides:
-
-```bash
-CENIT_E2E_AUTOSTART=0 \
-CENIT_E2E_DRIVER=node \
-CENIT_E2E_CLEANUP=1 \
-scripts/e2e/cenit_ui_contact_flow.sh
-```
-
-If your backend repo is not in `../cenit`, set:
-
-```bash
-export CENIT_ROOT=/absolute/path/to/cenit
-```
-
-## Docker Guide
-
-For end-to-end setup details, see [Docker-instalation.md](Docker-instalation.md).
+- [Docker-instalation.md](Docker-instalation.md)
+- [development.md](development.md)
 
 ## Contributing
 
-- Report bugs or request features: https://github.com/cenit-io/cenit/issues/new
-- Improve docs: https://github.com/cenit-io/cenit-docs
-- Submit UI changes: https://github.com/cenit-io/ui
+Contributions are welcome.
+
+- Report bugs and request features in the backend issue tracker:
+  [github.com/cenit-io/cenit/issues](https://github.com/cenit-io/cenit/issues)
+- Open UI pull requests here:
+  [github.com/cenit-io/ui/pulls](https://github.com/cenit-io/ui/pulls)
+
+## License
+
+See [LICENSE.md](LICENSE.md).
