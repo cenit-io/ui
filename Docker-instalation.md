@@ -87,7 +87,8 @@ CENIT_UI=http://localhost:3002
 Run the scripted UI login flow:
 
 ```bash
-/Users/sanchojaf/Documents/cenit-io/cenit/scripts/e2e/cenit_ui_login.sh
+cd /path/to/ui
+scripts/e2e/cenit_ui_login.sh
 ```
 
 Optional custom credentials:
@@ -97,5 +98,36 @@ CENIT_E2E_EMAIL="support@cenit.io" \
 CENIT_E2E_PASSWORD="password" \
 CENIT_SERVER_URL="http://localhost:3000" \
 CENIT_UI_URL="http://localhost:3002" \
-/Users/sanchojaf/Documents/cenit-io/cenit/scripts/e2e/cenit_ui_login.sh
+scripts/e2e/cenit_ui_login.sh
+```
+
+## Validate Contact Flow (Idempotent)
+
+Run the full scripted flow:
+
+```bash
+scripts/e2e/cenit_ui_contact_flow.sh
+```
+
+Default resource contract:
+
+- Namespace: `E2E_CONTACT_FLOW`
+- Data type: `Contact`
+- Record: `John Contact E2E`
+- Cleanup enabled (`CENIT_E2E_CLEANUP=1`)
+- Artifacts under `../cenit/output/playwright`
+
+Optional:
+
+```bash
+CENIT_E2E_AUTOSTART=0 \
+CENIT_E2E_DRIVER=node \
+CENIT_E2E_CLEANUP=1 \
+scripts/e2e/cenit_ui_contact_flow.sh
+```
+
+If backend repository is not sibling `../cenit`:
+
+```bash
+export CENIT_ROOT=/absolute/path/to/cenit
 ```

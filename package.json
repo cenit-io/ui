@@ -45,7 +45,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "e2e:login": "scripts/e2e/cenit_ui_login.sh",
+    "e2e:contact-flow": "scripts/e2e/cenit_ui_contact_flow.sh"
   },
   "eslintConfig": {
     "extends": "react-app"

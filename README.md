@@ -70,10 +70,54 @@ Then open http://localhost:3002.
 
 ## Validate Login Flow
 
-From the backend repository:
+From the UI repository:
 
 ```bash
-/Users/sanchojaf/Documents/cenit-io/cenit/scripts/e2e/cenit_ui_login.sh
+scripts/e2e/cenit_ui_login.sh
+```
+
+Or with npm:
+
+```bash
+npm run e2e:login
+```
+
+## Validate Contact Flow (Idempotent)
+
+Run the full UI OAuth + create data type + create record flow:
+
+```bash
+scripts/e2e/cenit_ui_contact_flow.sh
+```
+
+Or with npm:
+
+```bash
+npm run e2e:contact-flow
+```
+
+Default contract mirrors `cenit`:
+
+- Namespace: `E2E_CONTACT_FLOW`
+- Data type: `Contact`
+- Record: `John Contact E2E`
+- Cleanup enabled by default (`CENIT_E2E_CLEANUP=1`)
+- Safe to run multiple times in a row
+- Artifacts are written by the backend E2E runner under `../cenit/output/playwright`
+
+Optional overrides:
+
+```bash
+CENIT_E2E_AUTOSTART=0 \
+CENIT_E2E_DRIVER=node \
+CENIT_E2E_CLEANUP=1 \
+scripts/e2e/cenit_ui_contact_flow.sh
+```
+
+If your backend repo is not in `../cenit`, set:
+
+```bash
+export CENIT_ROOT=/absolute/path/to/cenit
 ```
 
 ## Docker Guide
