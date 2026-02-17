@@ -69,6 +69,10 @@ REACT_APP_LOCALHOST=http://localhost:3002
 REACT_APP_CENIT_HOST=http://localhost:3000
 ```
 
+Build note:
+
+- UI image now builds with Vite (`npm run build`) and serves static assets from `/usr/share/nginx/html`.
+
 Backend container defaults:
 
 ```env
