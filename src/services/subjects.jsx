@@ -396,9 +396,11 @@ const Subjects = {
   }
 };
 
-ConfigService.tenantIdChanges().subscribe(
+const tenantIdSyncSubscription = ConfigService.tenantIdChanges().subscribe(
   () => Subjects.syncWith(ConfigService.state().subjects)
 );
+
+export const disposeSubjectsSubscription = () => tenantIdSyncSubscription.unsubscribe();
 
 
 export const TabsSubject = new Subject();

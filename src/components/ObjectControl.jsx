@@ -17,6 +17,7 @@ import { deepMergeObjectsOnly } from "../common/merge";
 import { useTenantContext } from "../layout/TenantContext";
 import Edit from "../actions/Edit";
 import New from "../actions/New";
+import useSubscriptionBag from "../common/rx/useSubscriptionBag";
 
 function actionFields(config, actionKey, user = null) {
   const actionConfig = config.actions && config.actions[actionKey || Edit.key];
@@ -143,6 +144,7 @@ function ObjectControl(props) {
   const orchestratorState = useRef({});
 
   const dynamicConfigState = useRef({});
+  const subscriptionBag = useSubscriptionBag();
 
   const {
     properties, controlConfig, ready,
@@ -242,24 +244,26 @@ function ObjectControl(props) {
         v => {
           let newState = orchestrator(v, orchestratorState.current, value, { readOnly, user });
           if (newState) {
-            if (isObservable(newState)) {
-              newState.subscribe(s => { // TODO unsubscribe
+            const stateObservable = isObservable(newState) ? newState : of(newState);
+            subscriptionBag.add(
+              'ObjectControl.orchestrator',
+              stateObservable.subscribe(s => {
                 if (s) {
                   orchestratorState.current = s || {};
                   setState({});
                 }
-              });
-            } else {
-              orchestratorState.current = newState || {};
-              setState({});
-            }
+              })
+            );
           }
         }
       );
       value.changed().next(value.get());
-      return () => subscription.unsubscribe();
+      return () => {
+        subscriptionBag.remove('ObjectControl.orchestrator');
+        subscription.unsubscribe();
+      };
     }
-  }, [orchestrator, value, readOnly, user]);
+  }, [orchestrator, value, readOnly, user, subscriptionBag]);
 
   useEffect(() => {
     if (dynamicConfig) {
@@ -270,22 +274,26 @@ function ObjectControl(props) {
             errors
           }, user);
           if (newState) {
-            if (!isObservable(newState)) {
-              newState = of(newState);
-            }
-            newState.subscribe(s => { // TODO unsubscribe
-              if (s) {
-                dynamicConfigState.current = s || {};
-                setState({});
-              }
-            });
+            const stateObservable = isObservable(newState) ? newState : of(newState);
+            subscriptionBag.add(
+              'ObjectControl.dynamicConfig',
+              stateObservable.subscribe(s => {
+                if (s) {
+                  dynamicConfigState.current = s || {};
+                  setState({});
+                }
+              })
+            );
           }
         }
       );
       value.changed().next(value.get());
-      return () => subscription.unsubscribe();
+      return () => {
+        subscriptionBag.remove('ObjectControl.dynamicConfig');
+        subscription.unsubscribe();
+      };
     }
-  }, [dynamicConfig, value, readOnly, errors, user]);
+  }, [dynamicConfig, value, readOnly, errors, user, subscriptionBag]);
 
   const handleChange = (prop, handler) => () => {
     if (!handler || handler() !== 'abort') {

@@ -22,7 +22,7 @@ import ExpirationDateTimeViewer from "../viewers/ExpirationDateTimeViewer";
 import copy from 'copy-to-clipboard';
 import { of } from "rxjs";
 import { useContainerContext } from "./ContainerContext";
-import { catchError, switchMap, map, tap } from "rxjs/operators";
+import { catchError, switchMap, map, tap, take } from "rxjs/operators";
 import Random from "../util/Random";
 import Button from "@mui/material/Button";
 import zzip from "../util/zzip";
@@ -32,6 +32,7 @@ import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import { Config } from "../common/Symbols";
 import { SuccessAlertWith } from "./SuccessAlert";
+import useSubscriptionBag from "../common/rx/useSubscriptionBag";
 
 const HeaderHeight = 8;
 
@@ -102,6 +103,7 @@ const StyledTableRow = withStyles((theme) => ({
 
 const AccessTokens = ({ dataType, record, height, width, docked }) => {
   const [state, setState] = useSpreadState();
+  const subscriptionBag = useSubscriptionBag();
 
   const containerContext = useContainerContext();
 
@@ -225,7 +227,10 @@ const AccessTokens = ({ dataType, record, height, width, docked }) => {
   const deleteToken = tokenId => () => {
     const token = tokens.find(({ id }) => id === tokenId);
     if (token) {
-      (
+      const key = `AccessTokens.delete.${tokenId}`;
+      subscriptionBag.add(
+        key,
+        (
         (token.expires_at && token.expires_at < new Date())
           ? of(true)
           : containerContext.confirm({
@@ -245,9 +250,16 @@ const AccessTokens = ({ dataType, record, height, width, docked }) => {
 
           return of(false);
         })
+      ).pipe(
+        take(1)
       ).subscribe(
-        done => done && setContainerState({ actionComponentKey: Random.string() })
-      ); // TODO Unsubscribe subscription
+        done => {
+          subscriptionBag.remove(key);
+          done && setContainerState({ actionComponentKey: Random.string() });
+        },
+        () => subscriptionBag.remove(key)
+      )
+      );
     }
   };
 

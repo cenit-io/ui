@@ -14,7 +14,7 @@ import { switchMap } from "rxjs/operators";
 import { from } from "rxjs";
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from '@mui/material';
-import { TenantMenuIcon } from "../config/dataTypes/Account";
+import ApartmentIcon from "@mui/icons-material/Apartment";
 import { RecordSubject, TabsSubject } from "../services/subjects";
 import { DataType } from "../services/DataTypeService";
 
@@ -185,7 +185,7 @@ const UserCard = ({ idToken, onClose }) => {
         {passwordControl}
         <ListItem button onClick={showCurrentTenant} component="li">
           <ListItemIcon>
-            <TenantMenuIcon component="svg" />
+            <ApartmentIcon component="svg" />
           </ListItemIcon>
           <ListItemText primary="Current tenant" />
         </ListItem>

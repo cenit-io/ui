@@ -8,6 +8,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import RefPicker from "./RefPicker";
 import '../common/FlexBox.css';
 import { map } from "rxjs/operators";
+import { firstValueFrom } from "rxjs";
 import { useSpreadState } from "../common/hooks";
 import { FormRootValue } from "../services/FormValue";
 import { FETCHED, Title } from "../common/Symbols";
@@ -130,13 +131,12 @@ export default function RefManyControl({
       dataType: property.dataType,
       controlConfig: config?.formConfig,
       title: v => property.dataType.titleFor(v).pipe(map(title => `[${property.name} #${index}] ${title}`)),
-      callback: item => property.dataType.titleFor(item).subscribe( //TODO sanitize with unsubscribe
-        title => {
-          item[Title] = title;
-          value.indexValue(index).set(item);
-          value.indexValue(index).checkPid();
-        }
-      ),
+      callback: async item => {
+        const title = await firstValueFrom(property.dataType.titleFor(item));
+        item[Title] = title;
+        value.indexValue(index).set(item);
+        value.indexValue(index).checkPid();
+      },
       rootId: value.get()[index].id
     });
   };

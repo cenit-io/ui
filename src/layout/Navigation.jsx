@@ -25,7 +25,6 @@ import zzip from "../util/zzip";
 import localStorage from '../util/localStorage'
 import { useSpreadState } from "../common/hooks";
 import { useMainContext } from "./MainContext";
-import Menu from "../config/Menu";
 import { DataType } from "../services/DataTypeService";
 import FrezzerLoader from "../components/FrezzerLoader";
 import { isSuperAdmin, useTenantContext } from "./TenantContext";
@@ -227,19 +226,27 @@ export default function Navigation({ xs, onToggle }) {
     navigation: ConfigService.state().navigation || [],
     history: true,
     embeddedApps: [],
+    menuGroups: [],
   });
 
   const classes = useStyles();
 
   const itemClasses = useItemStyles();
 
-  const { navigation, over, openIndex, item, embeddedApps } = state;
+  const { navigation, over, openIndex, item, embeddedApps, menuGroups } = state;
 
   useEffect(() => {
     const subscription = EmbeddedAppService.all().subscribe((embeddedApps) =>
       setState({ embeddedApps })
     );
 
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const subscription = MenuSubject.instance().config().subscribe((menuConfig) =>
+      setState({ menuGroups: menuConfig?.groups || [] })
+    );
     return () => subscription.unsubscribe();
   }, []);
 
@@ -292,7 +299,7 @@ export default function Navigation({ xs, onToggle }) {
     setState({ item });
   };
 
-  let menuItems = Menu.groups.map((group, index) => (
+  let menuItems = menuGroups.map((group, index) => (
     <NavGroup
       {...group}
       key={`g_${index}`}

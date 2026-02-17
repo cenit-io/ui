@@ -23,19 +23,10 @@ import RefPicker from "./RefPicker";
 import CircularProgress from "@mui/material/CircularProgress";
 import { switchMap, map } from "rxjs/operators";
 import zzip from "../util/zzip";
+import { conditionLabel } from "../features/filters/ConditionModel";
+import ConditionEditor from "../features/filters/ConditionEditor";
 
-const Operators = {
-  $eq: 'Equal',
-  $ne: 'Not equal',
-  $gt: 'Greater than',
-  $gte: 'Greater than or equal',
-  $lt: 'Less than',
-  $lte: 'Less than or equal',
-  $in: 'Is in',
-  $nin: 'Is not in',
-  $exists: 'Exists',
-  $regex: 'Is like'
-};
+const SelectorOperators = ['$eq', '$ne', '$gt', '$gte', '$lt', '$lte', '$in', '$nin', '$exists', '$regex'];
 
 const useSelectorStyles = makeStyles(theme => ({
   selector: {
@@ -66,16 +57,10 @@ function ValueCondition({ property, operators, valueControl, operator, value, fi
 
   const handleClose = () => setState({ menuAnchor: null });
 
-  const options = operators.filter(op => !field.hasOwnProperty(op)).map(
-    op => (
-      <MenuItem key={op} onClick={() => onChange({ [op]: value })}>
-        {Operators[op]}
-      </MenuItem>
-    )
-  );
+  const options = operators.filter(op => !field.hasOwnProperty(op));
 
-  const handleClick = options.length
-    ? ({ target }) => setState({ menuAnchor: target })
+  const handleOpen = options.length
+    ? ({ currentTarget }) => setState({ menuAnchor: currentTarget })
     : undefined;
 
   let v;
@@ -108,15 +93,16 @@ function ValueCondition({ property, operators, valueControl, operator, value, fi
 
   return (
     <>
-      <Button onClick={handleClick} disabled={disabled}>
-        {Operators[operator]}
-      </Button>
+      <ConditionEditor
+        disabled={disabled}
+        labelKey={operator}
+        menuAnchor={menuAnchor}
+        options={options}
+        onOpen={handleOpen}
+        onClose={handleClose}
+        onSelect={op => onChange({ [op]: value })}
+      />
       {v}
-      <Menu open={Boolean(menuAnchor)}
-            anchorEl={menuAnchor}
-            onClose={handleClose}>
-        {options}
-      </Menu>
     </>
   );
 }
@@ -538,10 +524,10 @@ function PropertyCondition({ property, operator, field, value, onDelete, disable
     </IconButton>
   );
 
-  const options = Object.keys(Operators).filter(op => !field.hasOwnProperty(op)).map(
+  const options = SelectorOperators.filter(op => !field.hasOwnProperty(op)).map(
     op => (
       <MenuItem key={op} onClick={() => onChange({ [op]: value })}>
-        {Operators[op]}
+        {conditionLabel(op)}
       </MenuItem>
     )
   );
