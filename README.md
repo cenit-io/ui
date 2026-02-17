@@ -98,6 +98,7 @@ Other scripts:
 ```bash
 npm test
 npm run build
+npm run typecheck
 ```
 
 ## Runtime configuration
@@ -185,7 +186,8 @@ This repo includes a `UI CI` workflow for `pull_request` to `develop`/`master` a
 
 1. `npm ci --legacy-peer-deps`
 2. `npm run build`
-3. headless delegated contact-flow E2E (`scripts/e2e/cenit_ui_contact_flow.sh`)
+3. `npm run typecheck` (temporary non-blocking during JS->TS rollout)
+4. `npm test`
 
 ## Run UI image standalone
 

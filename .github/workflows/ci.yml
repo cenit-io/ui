@@ -27,3 +27,10 @@ jobs:
 
       - name: Build UI
         run: npm run build
+
+      - name: Typecheck (temporary non-blocking during TS rollout)
+        continue-on-error: true
+        run: npm run typecheck
+
+      - name: Run unit tests
+        run: npm test

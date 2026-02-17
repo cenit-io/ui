@@ -23,7 +23,6 @@
     "htmlhint": "^0.14.2",
     "liquidjs": "^9.19.0",
     "mime-types": "^2.1.27",
-    "moment": "^2.29.4",
     "object-hash": "^2.1.1",
     "pluralize": "^8.0.0",
     "pretty-bytes": "^5.6.0",
@@ -42,12 +41,14 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
     "jsdom": "^28.1.0",
+    "typescript": "^5.9.2",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"
   },
   "scripts": {
     "start": "vite --host 0.0.0.0 --port 3002",
     "build": "vite build",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "e2e:login": "scripts/e2e/cenit_ui_login.sh",

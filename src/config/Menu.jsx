@@ -40,15 +40,15 @@ import NamespaceIcon from "@mui/icons-material/DnsOutlined";
 import ConfigIcon from "@mui/icons-material/Settings";
 // import AdministrationIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import AdministrationIcon from '@mui/icons-material/SettingsOutlined';
-import { RoleMenuIcon } from "./dataTypes/Role";
-import { UserMenuIcon } from "./dataTypes/User";
-import { ScriptMenuIcon } from "./dataTypes/Script";
-import { TaskMenuIcon } from "./dataTypes/Setup/Task";
-import { ActiveTenantMenuIcon } from "./dataTypes/Cenit/ActiveTenant";
-import { RabbitConsumerMenuIcon } from "./dataTypes/RabbitConsumer";
-import { SystemReportMenuIcon } from "./dataTypes/Setup/SystemReport";
-import { DelayedMessageMenuIcon } from "./dataTypes/Setup/DelayedMessage";
-import { TenantMenuIcon } from "./dataTypes/Account";
+import ApartmentIcon from "@mui/icons-material/Apartment";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import TaskOutlinedIcon from "@mui/icons-material/TaskOutlined";
+import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
+import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
+import ScheduleSendOutlinedIcon from "@mui/icons-material/ScheduleSendOutlined";
+import AssessmentOutlinedIcon from "@mui/icons-material/AssessmentOutlined";
 import WebhookIcon from "../icons/WebhookIcon";
 
 export default {
@@ -64,7 +64,7 @@ export default {
             namespace: '',
             name: 'Account'
           },
-          icon: <TenantMenuIcon component="svg" />
+          icon: <ApartmentIcon component="svg" />
         },
         {
           type: DataTypeSubject.type,
@@ -83,7 +83,7 @@ export default {
             namespace: '',
             name: 'User'
           },
-          icon: <UserMenuIcon component="svg" />,
+          icon: <PersonOutlineIcon component="svg" />,
           superUser: true
         },
         {
@@ -93,7 +93,7 @@ export default {
             namespace: '',
             name: 'Role'
           },
-          icon: <RoleMenuIcon component="svg" />,
+          icon: <AdminPanelSettingsOutlinedIcon component="svg" />,
           superUser: true
         },
         {
@@ -103,7 +103,7 @@ export default {
             namespace: '',
             name: 'Script'
           },
-          icon: <ScriptMenuIcon component="svg" />,
+          icon: <DescriptionOutlinedIcon component="svg" />,
           superUser: true
         },
         {
@@ -113,7 +113,7 @@ export default {
             namespace: '',
             name: 'ScriptExecution'
           },
-          icon: <TaskMenuIcon component="svg" />,
+          icon: <TaskOutlinedIcon component="svg" />,
           superUser: true
         },
         {
@@ -123,7 +123,7 @@ export default {
             namespace: 'Cenit',
             name: 'ActiveTenant'
           },
-          icon: <ActiveTenantMenuIcon component="svg" />,
+          icon: <BusinessOutlinedIcon component="svg" />,
           superUser: true
         },
         {
@@ -133,7 +133,7 @@ export default {
             namespace: '',
             name: 'RabbitConsumer'
           },
-          icon: <RabbitConsumerMenuIcon component="svg" />,
+          icon: <SensorsOutlinedIcon component="svg" />,
           superUser: true
         },
         {
@@ -143,7 +143,7 @@ export default {
             namespace: 'Setup',
             name: 'DelayedMessage'
           },
-          icon: <DelayedMessageMenuIcon component="svg" />,
+          icon: <ScheduleSendOutlinedIcon component="svg" />,
           superUser: true
         },
         {
@@ -153,7 +153,7 @@ export default {
             namespace: 'Setup',
             name: 'SystemReport'
           },
-          icon: <SystemReportMenuIcon component="svg" />,
+          icon: <AssessmentOutlinedIcon component="svg" />,
           superUser: true
         }
       ]

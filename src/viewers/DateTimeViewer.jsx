@@ -1,12 +1,13 @@
 import React from 'react';
-import moment from 'moment';
+import { format, isValid, parseISO } from "date-fns";
 
 export default function DateTimeViewer({ value }) {
   if (!value) return <span>-</span>
 
-  const cDate = moment();
-  const vDate = moment(value);
-  const format = vDate.year() === cDate.year() ? 'MMM D, HH:mm:ss' : 'MMM D, YYYY, HH:mm:ss';
+  const cDate = new Date();
+  const vDate = parseISO(value);
+  if (!isValid(vDate)) return <span>-</span>;
+  const pattern = vDate.getFullYear() === cDate.getFullYear() ? 'MMM d, HH:mm:ss' : 'MMM d, yyyy, HH:mm:ss';
 
-  return <span>{vDate.format(format)}</span>;
+  return <span>{format(vDate, pattern)}</span>;
 }

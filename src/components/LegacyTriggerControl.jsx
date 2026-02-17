@@ -21,30 +21,13 @@ import { Key } from "../common/Symbols";
 import Random from "../util/Random";
 import Skeleton from '@mui/material/Skeleton';
 import { useTheme } from '@mui/material/styles';
-
-const Operation = {
-  like: 'Contains',
-  is: 'Is exactly',
-  starts_with: 'Starts with',
-  ends_with: 'Ends with',
-  _not_null: 'Is present',
-  _null: 'Is blank',
-  _change: 'Changes',
-  _presence_change: 'Present & Changes',
-  between: 'Is between',
-  today: 'Today',
-  yesterday: 'Yesterday',
-  this_week: 'This week',
-  last_week: 'Last week'
-};
-
-const DefaultOperations = ['_not_null', '_null', '_change', '_presence_change'];
+import { conditionLabel, DefaultConditionOperations } from "../features/filters/ConditionModel";
 
 function defaultOperationsWith(props) {
   const handleClick = op => () => props.onClick(op);
-  return DefaultOperations.map(op => (
+  return DefaultConditionOperations.map(op => (
     <MenuItem key={`operation_${op}`} onClick={handleClick(op)}>
-      {Operation[op]}
+      {conditionLabel(op)}
     </MenuItem>
   ));
 }
@@ -76,7 +59,7 @@ function StringCondition({ value, disabled, onChange }) {
 
   const strOperations = StringOperations.map(op => (
     <MenuItem key={`operator_${op}`} onClick={() => selectOperation(op)}>
-      {Operation[op]}
+      {conditionLabel(op)}
     </MenuItem>
   ));
 
@@ -91,7 +74,7 @@ function StringCondition({ value, disabled, onChange }) {
   return (
     <>
       <Button onClick={handleClick} disabled={disabled}>
-        {Operation[condition.o]}
+        {conditionLabel(condition.o)}
       </Button>
       {input}
       <Menu open={Boolean(menuAnchor)}
@@ -172,7 +155,7 @@ function EnumCondition({ value, disabled, onChange, property }) {
   return (
     <>
       <Button onClick={handleClick} disabled={disabled}>
-        {Operation[condition.o] || 'Value is'}
+        {conditionLabel(condition.o) || 'Value is'}
       </Button>
       {values}
       <Menu open={Boolean(menuAnchor)}
@@ -215,7 +198,7 @@ function BooleanCondition({ value, disabled, onChange }) {
   return (
     <>
       <Button onClick={handleClick} disabled={disabled}>
-        {Operation[condition.o] || `Is ${condition.v}`}
+        {conditionLabel(condition.o) || `Is ${condition.v}`}
       </Button>
       <Menu open={Boolean(menuAnchor)}
             anchorEl={menuAnchor}
@@ -299,7 +282,7 @@ function NumberCondition({ value, disabled, onChange }) {
   return (
     <>
       <Button onClick={handleClick} disabled={disabled}>
-        {Operation[condition.o] || 'Is number'}
+        {conditionLabel(condition.o) || 'Is number'}
       </Button>
       {inputs}
       <Menu open={Boolean(menuAnchor)}
@@ -361,7 +344,7 @@ function DateCondition({ value, disabled, onChange }) {
 
   const unaryDateOperatios = UnaryDateOperator.map(op => (
     <MenuItem key={`operator_${op}`} onClick={setOperation(op)}>
-      {Operation[op]}
+      {conditionLabel(op)}
     </MenuItem>
   ));
 
@@ -408,7 +391,7 @@ function DateCondition({ value, disabled, onChange }) {
   return (
     <>
       <Button onClick={handleClick} disabled={disabled}>
-        {Operation[condition.o] || 'Is date'}
+        {conditionLabel(condition.o) || 'Is date'}
       </Button>
       {inputs}
       <Menu open={Boolean(menuAnchor)}

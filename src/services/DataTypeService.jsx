@@ -1,5 +1,5 @@
 import API from './ApiService';
-import { from, isObservable, of } from "rxjs";
+import { firstValueFrom, from, isObservable, of } from "rxjs";
 import { catchError, map, share, switchMap, tap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import FormContext from "./FormContext";
@@ -13,44 +13,22 @@ import { Config as ConfigSymbol } from "../common/Symbols";
 import { titleize } from "../common/strutls";
 import FileDataTypeConfig from "../config/FileDataTypeConfig";
 import session from "../util/session";
+import { createDataTypeStore, buildCriteriaKey } from "./dataType/cache";
+import { buildDigestHeaders, buildFindSelectorHeaders, buildTemplateOptionsHeader } from "./dataType/repository";
+import { deriveDataTypeTitle, deriveItemTitle } from "./dataType/titleService";
+import { injectCommonProperties, isSimpleSchema, stripDecoratorProps } from "./dataType/schemaResolver";
 
-const SimpleTypes = ['integer', 'number', 'string', 'boolean'];
+export { isSimpleSchema } from "./dataType/schemaResolver";
 
-export function isSimpleSchema(schema) {
-  return SimpleTypes.indexOf(schema?.type) !== -1;
-}
-
-function injectCommonProperties(schema) {
-  const properties = schema?.properties;
-  if (properties) {
-    if (!properties.created_at) {
-      properties.created_at = {
-        type: 'string',
-        format: 'date-time',
-        edi: {
-          discard: true
-        }
-      }
-    }
-    if (!properties.updated_at) {
-      properties.updated_at = {
-        type: 'string',
-        format: 'date-time',
-        edi: {
-          discard: true
-        }
-      }
-    }
-  }
-}
+const initialDataTypeStore = createDataTypeStore();
 
 export class DataType {
 
-  static loaded;
-  static loading;
-  static dataTypes = {}; // TODO Store data types cache using a pair key tenant.id -> dataType.id
-  static criteria = {};
-  static gets = {};
+  static loaded = initialDataTypeStore.loaded;
+  static loading = initialDataTypeStore.loading;
+  static dataTypes = initialDataTypeStore.dataTypes; // TODO Store data types cache using a pair key tenant.id -> dataType.id
+  static criteria = initialDataTypeStore.criteria;
+  static gets = initialDataTypeStore.gets;
 
   static load(obs) {
     if (DataType.loaded === true) {
@@ -81,17 +59,17 @@ export class DataType {
   }
 
   static from(spec) {
-    if (spec._type === JSON_TYPE) {
-      delete spec.schema;
+    const data = { ...spec };
+    if (data._type === JSON_TYPE) {
+      delete data.schema;
     } else {
-      injectCommonProperties(spec.schema);
+      injectCommonProperties(data.schema);
     }
-    if (spec._type === FILE_TYPE) {
-      spec.__proto__ = new FileDataType();
+    if (data._type === FILE_TYPE) {
+      return Object.assign(new FileDataType(), data);
     } else {
-      spec.__proto__ = new DataType();
+      return Object.assign(new DataType(), data);
     }
-    return spec;
   }
 
   static getById(id) {
@@ -103,7 +81,7 @@ export class DataType {
     if (!dataType) {
       dataType = DataType.load(
         API.get('setup', 'data_type', id, {
-          headers: { 'X-Template-Options': JSON.stringify({ viewport: '{_id namespace name title _type schema id_type}' }) }
+          headers: buildTemplateOptionsHeader('{_id namespace name title _type schema id_type}')
         }).pipe(
           tap(dataType => {
             if (dataType) {
@@ -148,10 +126,7 @@ export class DataType {
   }
 
   static criteriaKey(criteria) {
-    return Object.keys(criteria)
-      .sort()
-      .map(key => `${key}(${JSON.stringify(criteria[key])})`)
-      .join();
+    return buildCriteriaKey(criteria);
   }
 
   static find(criteria) {
@@ -171,10 +146,7 @@ export class DataType {
       get = DataType.load(
         API.get('setup', 'data_type', {
           params: { limit: 1 },
-          headers: {
-            'X-Template-Options': JSON.stringify({ viewport: '{_id}' }),
-            'X-Query-Selector': JSON.stringify(criteria)
-          }
+          headers: buildFindSelectorHeaders(criteria)
         }).pipe(
           switchMap(response => {
 
@@ -388,7 +360,7 @@ export class DataType {
           merged = merging = true;
           let ref;
           if (typeof base_model === 'string') {
-            base_model = await this.find_ref_schema(ref = base_model).toPromise();
+            base_model = await firstValueFrom(this.find_ref_schema(ref = base_model));
           }
           if (base_model) {
             base_model = await this.async_merge_schema(base_model);
@@ -426,7 +398,7 @@ export class DataType {
           }
           merged = merging = true;
           if (typeof base_model === 'string') {
-            base_model = await this.find_ref_schema(base_model).toPromise();
+            base_model = await firstValueFrom(this.find_ref_schema(base_model));
           }
           base_model = await this.async_merge_schema(base_model);
           if (base_model.extends) {
@@ -473,7 +445,7 @@ export class DataType {
             value = (value && typeof value === 'object' && value.constructor === Array && value) || [value];
             for (let j = 0; j < value.length; j++) {
               let ref = value[j];
-              let ref_sch = await this.find_ref_schema(ref).toPromise();
+              let ref_sch = await firstValueFrom(this.find_ref_schema(ref));
               if (ref_sch) {
                 sch = deepMergeArrayConcat(ref_sch, sch);
               } else if (!options.silent) {
@@ -653,7 +625,7 @@ export class DataType {
             if (title) {
               return title.toString();
             }
-            return this.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            return deriveDataTypeTitle(this.name);
           })
         );
       })
@@ -755,16 +727,7 @@ export class DataType {
   }
 
   strip(schema) {
-    let nakedSchema = null;
-    if (schema) {
-      nakedSchema = {};
-      Object.keys(schema).forEach(key => {
-        if (DECORATOR_PROPS.indexOf(key) === -1) {
-          nakedSchema[key] = schema[key];
-        }
-      });
-    }
-    return nakedSchema;
+    return stripDecoratorProps(schema);
   }
 
   createFrom(data) {
@@ -833,15 +796,13 @@ export class DataType {
         const sort = opts?.sort || {};
         const params = { limit, page };
 
-        const headers = {
-          'X-Template-Options': JSON.stringify({
-            viewport,
-            polymorphic: true,
-            include_id: Boolean(opts.include_id)
-          }),
-          'X-Query-Options': JSON.stringify({ sort }),
-          'X-Query-Selector': JSON.stringify(opts.selector || {})
-        };
+        const headers = buildDigestHeaders(
+          viewport,
+          sort,
+          opts.selector || {},
+          true,
+          Boolean(opts.include_id)
+        );
 
         const request = ['setup', 'data_type', this.id, 'digest'];
 
@@ -926,11 +887,7 @@ export class DataType {
                 )
               );
             }
-            return of(
-              item.title ||
-              (item.namespace && item.name && `${item.namespace} | ${item.name}`) ||
-              item.name || `${dtTitle} ${item.id || '(blank)'}`
-            );
+            return of(deriveItemTitle(item, dtTitle));
           })
         );
       })
@@ -1037,19 +994,7 @@ export class DataType {
                       if (schema.label) {
                         return from(LiquidEngine.parseAndRender(schema.label, item));
                       }
-                      let { title, origin } = item;
-                      if (!title) {
-                        const { namespace, name } = item;
-                        if (namespace && name) {
-                          title = `${namespace} | ${name}`
-                        } else {
-                          title = name || `${dtTitle} ${item.id || '(blank)'}`;
-                        }
-                      }
-                      if (origin !== undefined && origin !== 'default') {
-                        title = `${title} [${origin}]`
-                      }
-                      return of(title);
+                      return of(deriveItemTitle(item, dtTitle, true));
                     })
                   )
                 )
@@ -1324,26 +1269,3 @@ export class Property {
 export const JSON_TYPE = 'Setup::JsonDataType';
 export const FILE_TYPE = 'Setup::FileDataType';
 export const CENIT_TYPE = 'Setup::CenitDataType';
-
-
-const DECORATOR_PROPS = [
-  'types',
-  'contextual_params',
-  'data',
-  'filter',
-  'group',
-  'xml',
-  'unique',
-  'title',
-  'description',
-  'edi',
-  'format',
-  'example',
-  'enum',
-  'readOnly',
-  'default',
-  'visible',
-  'referenced_by',
-  'export_embedded',
-  'exclusive'
-];
