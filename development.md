@@ -5,7 +5,7 @@ This React app is the admin UI for a local Cenit backend.
 ## Local Flow (Migration Baseline)
 
 - Backend URL: `http://localhost:3000`
-- UI URL: `http://localhost:3002` (Docker) or `http://localhost:3000` (CRA dev server)
+- UI URL: `http://localhost:3002` (Docker and Vite dev server)
 
 For Docker-based local development, run the stack from the backend repo:
 
@@ -35,7 +35,7 @@ npm test
 npm run build
 ```
 
-`npm start` serves the UI on `http://localhost:3000` by default (Create React App behavior).
+`npm start` serves the UI on `http://localhost:3002` (Vite behavior in this repo).
 
 ## Docker (UI image only)
 

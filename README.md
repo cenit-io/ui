@@ -10,6 +10,7 @@ React-based administration interface for the [Cenit](https://github.com/cenit-io
 ## Table of contents
 
 - [Repositories](#repositories)
+- [Tech Stack](#tech-stack)
 - [Quick start (recommended: backend compose)](#quick-start-recommended-backend-compose)
 - [Local development](#local-development)
 - [Runtime configuration](#runtime-configuration)
@@ -24,6 +25,13 @@ React-based administration interface for the [Cenit](https://github.com/cenit-io
 - Backend: [cenit-io/cenit](https://github.com/cenit-io/cenit)
 - UI (this repo): [cenit-io/ui](https://github.com/cenit-io/ui)
 
+## Tech Stack
+
+- React 19
+- Vite 7
+- MUI 7 (`@mui/material`, `@mui/icons-material`, `@mui/x-date-pickers`)
+- Runtime config via `window.appConfig` (`config.js`)
+
 ## Quick start (recommended: backend compose)
 
 This UI is usually run by the backend Docker Compose stack.
@@ -32,6 +40,7 @@ This UI is usually run by the backend Docker Compose stack.
 
 - Docker Desktop (or Docker Engine + Compose v2 plugin)
 - `git`
+- Node.js 20.x (for local `npm` workflows)
 
 ### 1) Clone both repos side by side
 
@@ -71,18 +80,18 @@ docker compose up -d --build
 
 ## Local development
 
-Install dependencies and run Create React App dev server:
+Install dependencies and run the Vite dev server:
 
 ```bash
-npm install
+npm ci --legacy-peer-deps
 npm start
 ```
 
 Notes:
 
-- CRA dev server defaults to `http://localhost:3000`.
-- Docker UI runtime is served at `http://localhost:3002`.
-- In the current local migration flow, backend is expected at `http://localhost:3000`.
+- UI dev server runs at `http://localhost:3002`.
+- Backend is expected at `http://localhost:3000`.
+- If `3002` is already in use, stop the running UI container/process first.
 
 Other scripts:
 
@@ -94,6 +103,12 @@ npm run build
 ## Runtime configuration
 
 Runtime values are injected through `config.js` (`window.appConfig`), especially in Docker runtime.
+
+Resolution order:
+
+1. `window.appConfig` (runtime `config.js`)
+2. `import.meta.env`
+3. UI defaults (`admin`, `http://localhost:3000`, `http://localhost:3002`)
 
 Important variables:
 
@@ -147,6 +162,11 @@ CENIT_E2E_AUTOSTART=0 scripts/e2e/cenit_ui_contact_flow.sh
 
 # Run headed
 CENIT_E2E_HEADED=1 scripts/e2e/cenit_ui_contact_flow.sh
+
+# Use a unique namespace (helps CI and local validation without cleanup collisions)
+CENIT_E2E_DATATYPE_NAMESPACE="E2E_UI_$(date +%s)" \
+CENIT_E2E_CLEANUP=0 \
+scripts/e2e/cenit_ui_contact_flow.sh
 ```
 
 If backend repo is not a sibling at `../cenit`:
@@ -158,6 +178,14 @@ export CENIT_ROOT=/absolute/path/to/cenit
 Artifacts are produced by the backend runner at:
 
 - `../cenit/output/playwright`
+
+## CI checks
+
+This repo includes a `UI CI` workflow for `pull_request` to `develop`/`master` and `push` to `develop`:
+
+1. `npm ci --legacy-peer-deps`
+2. `npm run build`
+3. headless delegated contact-flow E2E (`scripts/e2e/cenit_ui_contact_flow.sh`)
 
 ## Run UI image standalone
 

@@ -1,0 +1,47 @@
+name: UI CI
+
+on:
+  pull_request:
+    branches: [develop, master]
+  push:
+    branches: [develop]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout UI repository
+        uses: actions/checkout@v4
+
+      - name: Checkout backend repository
+        uses: actions/checkout@v4
+        with:
+          repository: cenit-io/cenit
+          path: cenit
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install UI dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build UI
+        run: npm run build
+
+      - name: Install Playwright runtime for node driver
+        run: npm install --no-save playwright@1.52.0 --legacy-peer-deps
+
+      - name: Run headless contact-flow contract
+        env:
+          CENIT_ROOT: ${{ github.workspace }}/cenit
+          CENIT_E2E_AUTOSTART: "1"
+          CENIT_E2E_CLEANUP: "0"
+          CENIT_E2E_DATATYPE_NAMESPACE: E2E_UI_CI_${{ github.run_id }}_${{ github.run_attempt }}
+        run: scripts/e2e/cenit_ui_contact_flow.sh
+

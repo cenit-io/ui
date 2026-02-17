@@ -1,18 +1,17 @@
-FROM node:20-alpine as builder
+FROM node:20-alpine AS builder
 WORKDIR /app
-ENV PATH /app/node_modules/.bin:$PATH
+ENV PATH=/app/node_modules/.bin:$PATH
 COPY package.json .
 COPY package-lock.json .
 RUN npm install -g npm@latest
 RUN npm ci --legacy-peer-deps
-RUN npm install react-scripts --production -g --silent
 COPY env.sh .
 COPY src src/
 COPY public public/
+COPY index.html .
+COPY vite.config.mjs .
 COPY conf conf/
 
-# Ensure Webpack uses legacy OpenSSL provider on Node 20
-ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN npm run build
 
 FROM nginx:stable-alpine
