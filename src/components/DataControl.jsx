@@ -1,31 +1,17 @@
 import React, { useEffect } from 'react';
 import { useSpreadState } from "../common/hooks";
-import makeStyles from '@mui/styles/makeStyles';
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import clsx from "clsx";
 import UploadIcon from "@mui/icons-material/CloudUpload";
 import PlainDataIcon from "@mui/icons-material/Edit";
 import DropFileControl from "./DropFileControl";
 import StringCodeControl from "./StringCodeControl";
 import Link from "@mui/material/Link";
 
-const useStyles = makeStyles(theme => ({
-  switchLink: {
-    color: theme.palette.text.secondary,
-    textAlign: 'center',
-    padding: theme.spacing(2, 1)
-  },
-  icon: {
-    marginLeft: theme.spacing(1)
-  }
-}));
-
 export default function DataControl(props) {
   const { value, fileEntryName, plainDataEntryName, onChange } = props;
 
   const [state, setState] = useSpreadState({ type: 'file' });
-
-  const classes = useStyles();
 
   const { type } = state;
 
@@ -57,12 +43,19 @@ export default function DataControl(props) {
       {control}
       <Link href="#"
             onClick={switchType}
-            className={clsx('flex align-items-center justify-content-center', classes.switchLink)}>
+            className="flex align-items-center justify-content-center"
+            sx={{
+              color: theme => theme.palette.text.secondary,
+              textAlign: 'center',
+              px: 1,
+              py: 2,
+            }}>
         <Typography variant="caption">
           {switchMsg}
         </Typography>
-        <Icon className={classes.icon}
-              fontSize="small" />
+        <Box sx={{ ml: 1, display: 'flex' }}>
+          <Icon fontSize="small" />
+        </Box>
       </Link>
     </div>
   );

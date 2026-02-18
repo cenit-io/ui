@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import Loading from "./Loading";
 import { alpha, useTheme } from "@mui/material/styles";
-import makeStyles from '@mui/styles/makeStyles';
 import clsx from "clsx";
 import { DataTypeSubject, TabsSubject } from "../services/subjects";
 import { DataType } from "../services/DataTypeService";
+import Box from "@mui/material/Box";
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
@@ -16,70 +16,9 @@ import FrezzerLoader from "./FrezzerLoader";
 import { useSpreadState } from "../common/hooks";
 import { useTenantContext } from "../layout/TenantContext";
 
-const useStyles = makeStyles(theme => ({
-  header: {
-    position: 'absolute',
-    display: 'flex',
-    width: '100%',
-    height: theme.spacing(8),
-    alignItems: 'center',
-    background: theme.palette.background.default,
-    top: 0
-  },
-  title: {
-    padding: theme.spacing(0, 2)
-  },
-  groups: {
-    position: 'absolute',
-    top: theme.spacing(8),
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    overflowY: 'auto',
-    backgroundColor: theme.palette.background.default
-  },
-  group: {
-    margin: theme.spacing(1),
-    boxShadow: '0 4px 8px 0 rgba(55, 71, 79, .3)',
-    borderTopLeftRadius: theme.spacing(1),
-    borderTopRightRadius: theme.spacing(1),
-    width: '80vw',
-    [theme.breakpoints.up('sm')]: {
-      width: 'auto'
-    },
-  },
-  groupHeader: {
-    padding: theme.spacing(1.5, 4, 1.5, 6),
-    borderTopLeftRadius: theme.spacing(1),
-    borderTopRightRadius: theme.spacing(1),
-    background: alpha(theme.palette.primary.main, 0.85),
-    color: theme.palette.getContrastText(theme.palette.primary.main)
-  },
-  groupTitle: {
-    marginLeft: theme.spacing(4),
-    fontWeight: 'bold'
-  },
-  groupItems: {
-    padding: theme.spacing(1, 4, 0, 4),
-    borderBottomLeftRadius: theme.spacing(1),
-    borderBottomRightRadius: theme.spacing(1),
-    background: theme.palette.background.paper,
-  },
-  items: {
-    background: theme.palette.background.paper,
-    borderRadius: theme.spacing(1)
-  },
-  item: {
-    '& + &': {
-      borderTop: `solid 1px ${theme.palette.text.disabled}`
-    }
-  }
-}));
-
 export default function ({ subject, height }) {
 
   const [state, setState] = useSpreadState();
-  const classes = useStyles();
   const theme = useTheme();
 
   const [tenantState] = useTenantContext();
@@ -147,8 +86,12 @@ export default function ({ subject, height }) {
         (item, iIndex) => (
           <ListItem button
                     component="li"
-                    className={classes.item}
                     key={`g_${gIndex}_${iIndex}`}
+                    sx={{
+                      '& + &': {
+                        borderTop: theme => `solid 1px ${theme.palette.text.disabled}`,
+                      },
+                    }}
                     onClick={handleSelect(item)}>
             <ListItemIcon>
               {item.icon}
@@ -162,19 +105,56 @@ export default function ({ subject, height }) {
 
       return (
         <div key={`g_${gIndex}`}>
-          <div className={clsx(classes.group, 'column')}>
-            <div className={clsx(classes.groupHeader, 'flex align-items-center')}>
+          <Box
+            className={clsx('column')}
+            sx={{
+              m: 1,
+              boxShadow: '0 4px 8px 0 rgba(55, 71, 79, .3)',
+              borderTopLeftRadius: 1,
+              borderTopRightRadius: 1,
+              width: '80vw',
+              [theme.breakpoints.up('sm')]: {
+                width: 'auto',
+              },
+            }}
+          >
+            <Box
+              className={clsx('flex align-items-center')}
+              sx={{
+                px: 6,
+                py: 1.5,
+                borderTopLeftRadius: 1,
+                borderTopRightRadius: 1,
+                background: theme => alpha(theme.palette.primary.main, 0.85),
+                color: theme => theme.palette.getContrastText(theme.palette.primary.main),
+              }}
+            >
               <IconComponent />
-              <div className={classes.groupTitle}>
+              <Box sx={{ ml: 4, fontWeight: 'bold' }}>
                 {group.title}
-              </div>
-            </div>
-            <div className={classes.groupItems}>
-              <List className={classes.items} component="ul">
+              </Box>
+            </Box>
+            <Box
+              sx={{
+                pt: 1,
+                pb: 0,
+                px: 4,
+                borderBottomLeftRadius: 1,
+                borderBottomRightRadius: 1,
+                background: theme => theme.palette.background.paper,
+              }}
+            >
+              <List
+                component="ul"
+                sx={{
+                  background: theme => theme.palette.background.paper,
+                  borderRadius: 1,
+                }}
+              >
                 {items}
               </List>
-            </div>
-          </div>
+            </Box>
+          </Box>
         </div>
       )
     }
@@ -187,8 +167,18 @@ export default function ({ subject, height }) {
 
   return (
     <div className="relative" style={{ height: `calc(${height})` }}>
-      <div className={classes.header}>
-        <Typography variant="h6" className={classes.title} component="h6">
+      <Box
+        className="flex"
+        sx={{
+          position: 'absolute',
+          width: '100%',
+          height: theme => theme.spacing(8),
+          alignItems: 'center',
+          background: theme => theme.palette.background.default,
+          top: 0,
+        }}
+      >
+        <Typography variant="h6" component="h6" sx={{ px: 2 }}>
           Menu
         </Typography>
         <div className="grow-1" />
@@ -196,10 +186,21 @@ export default function ({ subject, height }) {
                 backColor="#ffffff"
                 backOverColor="#fffffe"
                 onSelect={({ record }) => handleDataTypeSelected(record)} />
-      </div>
-      <div className={classes.groups} style={{ height: `calc(${height} - ${theme.spacing(8)})` }}>
+      </Box>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: theme => theme.spacing(8),
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          overflowY: 'auto',
+          backgroundColor: theme => theme.palette.background.default,
+        }}
+        style={{ height: `calc(${height} - ${theme.spacing(8)})` }}
+      >
         {groups}
-      </div>
+      </Box>
       {loader}
     </div>
   );

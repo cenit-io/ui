@@ -1,6 +1,6 @@
 # UI Dependency Upgrade Matrix
 
-Updated: February 17, 2026
+Updated: February 18, 2026
 Branch: `codex/ui-techdebt-roadmap`
 
 ## Baseline Evidence
@@ -26,7 +26,7 @@ Branch: `codex/ui-techdebt-roadmap`
 |---|---|---|---|---|
 | Build tool | `react-scripts@4` (CRA) | `vite@7`, `@vitejs/plugin-react`, `vitest` | High (bundler/runtime behavior) | `package.json`, `vite.config.mjs`, `index.html`, `Dockerfile` |
 | React | `react@17`, `react-dom@17` | `react@19`, `react-dom@19` | High (render/runtime changes) | `package.json`, `src/main.jsx`, `src/index.jsx` |
-| MUI core/icons | `@material-ui/*` v4 | `@mui/material@7`, `@mui/icons-material@7`, `@mui/styles` | High (import/theme/styling APIs) | `src/**/*` |
+| MUI core/icons | `@material-ui/*` v4 | `@mui/material@7`, `@mui/icons-material@7` + `sx`/theme styles | High (import/theme/styling APIs) | `src/**/*` |
 | Date pickers | `@material-ui/pickers` + `@date-io/*` | `@mui/x-date-pickers` + `AdapterDateFns` | Medium/High (component API changes) | `src/App.jsx`, `src/components/*Date*` |
 | HTTP/Rx/query | `axios@0.27`, `rxjs@6`, `query-string@6` | `axios@1`, `rxjs@7`, `query-string@9` | Medium | `package.json`, `src/services/*`, `src/App.jsx` |
 | Date utils | mixed (`date-fns` + `moment`) | `date-fns@4` only | Medium | `package.json`, `src/viewers/*Date*` |
@@ -37,7 +37,7 @@ Branch: `codex/ui-techdebt-roadmap`
 
 ## Hotspot Inventory (Implementation Focus)
 
-- Styling surface (`makeStyles` / `withStyles` / `useTheme`): ~101 call sites.
+- Styling surface migrated from `makeStyles`/`withStyles` to `sx`/theme primitives.
 - Date/time controls (`DatePicker` / `DateTimePicker` / `TimePicker` / provider): ~21 call sites.
 - JSX-bearing files migrated to `.jsx`: 407 files.
 - Legacy markers removed (`@material-ui`, `react-scripts`, `ReactDOM.render`): 0 remaining matches in `src` and `package.json`.
@@ -46,5 +46,5 @@ Branch: `codex/ui-techdebt-roadmap`
 
 - `scripts/e2e/cenit_ui_login.sh` remains flaky in some environments due OAuth redirect timeout.
 - Contact flow cleanup can still fail when delete controls render outside viewport in delegated backend runner.
-- `@mui/styles` remains present and should be incrementally migrated to `sx`/`styled`.
+- `@mui/styles` dependency removed from source and package manifest.
 - Bundle size is still large; manual chunking can be tuned in a follow-up.

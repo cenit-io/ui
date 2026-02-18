@@ -6,14 +6,12 @@ import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import API from "../services/ApiService";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
-import makeStyles from '@mui/styles/makeStyles';
 import TableContainer from "@mui/material/TableContainer";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
-import withStyles from '@mui/styles/withStyles';
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 // import CopyIcon from "@mui/icons-material/ContentCopy";
@@ -27,79 +25,47 @@ import Random from "../util/Random";
 import Button from "@mui/material/Button";
 import zzip from "../util/zzip";
 import { getAccessToken } from "../services/AuthorizationService";
-import clsx from "clsx";
+import Box from "@mui/material/Box";
 import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import { Config } from "../common/Symbols";
 import { SuccessAlertWith } from "./SuccessAlert";
 import useSubscriptionBag from "../common/rx/useSubscriptionBag";
+import { styled } from "@mui/material/styles";
 
 const HeaderHeight = 8;
 
-const useStyles = makeStyles(theme => ({
-  root: {},
-  header: {
-    padding: theme.spacing(1, 1),
-    boxShadow: '0 4px 8px 0 rgba(55, 71, 79, .3)',
-    height: theme.spacing(HeaderHeight),
-    boxSizing: 'border-box',
-    display: 'flex',
-    alignItems: 'center'
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '& td:last-child button': {
+    visibility: 'hidden'
   },
-  tokens: {
-    height: ({ height }) => `calc(${height} - ${theme.spacing(HeaderHeight)})`,
-    width: ({ width }) => `calc(${width})`
-  },
-  token: {
-    padding: theme.spacing(2),
-    '& + &': {
-      borderTop: `solid 1px ${theme.palette.background.default}`
+  '&:hover td:last-child': {
+    background: theme.palette.background.paper,
+    '& button': {
+      visibility: 'visible'
     }
   },
-  note: {
-    minWidth: theme.spacing(20),
-    width: '80%'
-  },
-  tokenActions: {
-    position: 'sticky',
-    right: 0,
-    '& div': {
-      display: 'flex',
-      justifyContent: 'flex-end'
+  '&:nth-of-type(odd)': {
+    backgroundColor: theme.palette.background.default,
+    '&:hover td:last-child': {
+      background: theme.palette.background.default
     }
-  },
+  }
+}));
+
+const tableRowToneSx = {
   current: {
     '& td': {
-      color: theme.palette.success.main,
+      color: 'success.main',
       fontWeight: 600
     }
   },
   expired: {
     '& td': {
-      color: theme.palette.error.main
+      color: 'error.main'
     }
   }
-}));
-
-const StyledTableRow = withStyles((theme) => ({
-  root: {
-    '& td:last-child button': {
-      visibility: 'hidden'
-    },
-    '&:hover td:last-child': {
-      background: theme.palette.background.paper,
-      '& button': {
-        visibility: 'visible'
-      }
-    },
-    '&:nth-of-type(odd)': {
-      backgroundColor: theme.palette.background.default,
-      '&:hover td:last-child': {
-        background: theme.palette.background.default
-      }
-    }
-  }
-}))(TableRow);
+};
 
 const AccessTokens = ({ dataType, record, height, width, docked }) => {
   const [state, setState] = useSpreadState();
@@ -182,8 +148,6 @@ const AccessTokens = ({ dataType, record, height, width, docked }) => {
       }
     }
   }));
-
-  const classes = useStyles({ height, width });
 
   const { current_token, tokens, tokenForm } = state;
 
@@ -288,17 +252,24 @@ const AccessTokens = ({ dataType, record, height, width, docked }) => {
   const tokensRows = tokens.map(({ id, note, token, expires_at }) => (
     <StyledTableRow key={id}
                     tabIndex={-1}
-                    className={clsx(
-                      current_token === token && classes.current,
-                      expires_at && expires_at < now && classes.expired
-                    )}>
-      <TableCell className={classes.note}>
+                    sx={{
+                      ...(current_token === token ? tableRowToneSx.current : {}),
+                      ...(expires_at && expires_at < now ? tableRowToneSx.expired : {})
+                    }}>
+      <TableCell sx={{ minWidth: theme => theme.spacing(20), width: '80%' }}>
         {note || '<no note>'}
       </TableCell>
       <TableCell>
         <ExpirationDateTimeViewer value={expires_at} emptyMessage="Never expires" />
       </TableCell>
-      <TableCell className={classes.tokenActions}>
+      <TableCell sx={{
+        position: 'sticky',
+        right: 0,
+        '& div': {
+          display: 'flex',
+          justifyContent: 'flex-end'
+        }
+      }}>
         <div>
           <IconButton onClick={() => copy(token)} size="large">
             <CopyIcon />
@@ -336,8 +307,15 @@ const AccessTokens = ({ dataType, record, height, width, docked }) => {
   }
 
   return (
-    <div className={classes.root}>
-      <div className={classes.header}>
+    <div>
+      <Box
+           className="flex align-items-center"
+           sx={{
+             p: 1,
+             boxShadow: '0 4px 8px 0 rgba(55, 71, 79, .3)',
+             height: theme => theme.spacing(HeaderHeight),
+             boxSizing: 'border-box'
+           }}>
         <Typography variant="h6">
           <Chip label={tokens.length || 'none'} /> Access Tokens
         </Typography>
@@ -348,8 +326,11 @@ const AccessTokens = ({ dataType, record, height, width, docked }) => {
                 onClick={showTokenForm(true)}>
           Create
         </Button>
-      </div>
-      <TableContainer component={Paper} className={classes.tokens}>
+      </Box>
+      <TableContainer component={Paper} sx={{
+        height: theme => `calc(${height} - ${theme.spacing(HeaderHeight)})`,
+        width: `calc(${width})`
+      }}>
         <Table>
           <TableBody>
             {tokensRows}

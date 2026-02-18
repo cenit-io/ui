@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
 import Alert from '@mui/material/Alert';
+import Box from "@mui/material/Box";
 import { useFormContext } from "./FormContext";
 import StringCodeControl from "./StringCodeControl";
 import { useSpreadState } from "../common/hooks";
@@ -9,17 +9,6 @@ import zzip from "../util/zzip";
 import { DataType } from "../services/DataTypeService";
 import RefOneViewer from "../viewers/RefOneViewer";
 import ErrorAlert from "../actions/Alert";
-
-const useStyles = makeStyles(theme => ({
-  box: {
-    '& + &': {
-      marginTop: theme.spacing(2)
-    }
-  },
-  chip: {
-    margin: theme.spacing(0, .5)
-  }
-}));
 
 function isShared({ origin }) {
   return origin && origin !== 'default';
@@ -30,8 +19,6 @@ export default function SharedCode(props) {
   const [state, setState] = useSpreadState();
 
   const { rootId, rootDataType } = useFormContext();
-
-  const classes = useStyles();
 
   const {
     rootDataTypeTitle, snippetDataType, snippet, default_snippet,
@@ -86,7 +73,7 @@ export default function SharedCode(props) {
   let alerts = [];
   if (!rootId) {
     alerts.push(
-      <Alert key="new_snippet_info" severity="info" className={classes.box}>
+      <Alert key="new_snippet_info" severity="info" sx={{ '& + &': { mt: 2 } }}>
         A new snippet will be created and set as default.
       </Alert>
     );
@@ -95,17 +82,18 @@ export default function SharedCode(props) {
       defaultLink = <RefOneViewer refDataType={snippetDataType}
                                   value={default_snippet}
                                   variant="outlined"
-                                  color="primary"
-                                  className={classes.chip} />;
+                                  color="primary" />;
 
       const tail = default_snippet.id === snippet?.id
         ? "and it's actually the current code."
         : '';
 
       alerts.push(
-        <Alert key="default_snippet_info" severity="info" className={classes.box}>
+        <Alert key="default_snippet_info" severity="info" sx={{ '& + &': { mt: 2 } }}>
           The <b>default snippet</b> ref is pointing to
-          {defaultLink}
+          <Box component="span" sx={{ mx: 0.5 }}>
+            {defaultLink}
+          </Box>
           {tail}
         </Alert>
       );
@@ -114,7 +102,7 @@ export default function SharedCode(props) {
         !isShared(default_snippet) ||
         (parent.origin === 'shared' && default_snippet.origin !== 'shared'))) {
         alerts.push(
-          <Alert key="default_snippet_not_same_origin" severity="error" className={classes.box}>
+          <Alert key="default_snippet_not_same_origin" severity="error" sx={{ '& + &': { mt: 2 } }}>
             This {rootDataTypeTitle} [<b>{parent.origin || 'default'}</b>]
             and the default snippet [<b>{default_snippet.origin || 'default'}</b>]
             are not in the same sharing scope! To fix this go to {defaultLink}
@@ -124,13 +112,13 @@ export default function SharedCode(props) {
       }
     } else {
       alerts.push(
-        <Alert key="default_snippet_ref_broken" severity="error" className={classes.box}>
+        <Alert key="default_snippet_ref_broken" severity="error" sx={{ '& + &': { mt: 2 } }}>
           The default snippet ref is <b>broken</b> or unreachable!
         </Alert>
       );
       if (creator_access) {
         alerts.push(
-          <Alert key="default_snippet_ref_broken_creator_access" severity="info" className={classes.box}>
+          <Alert key="default_snippet_ref_broken_creator_access" severity="info" sx={{ '& + &': { mt: 2 } }}>
             However you're the creator of this code, <b>continue and save</b> to set this code
             as <b>default</b>.
           </Alert>
@@ -142,12 +130,11 @@ export default function SharedCode(props) {
       const currentLink = <RefOneViewer refDataType={snippetDataType}
                                         value={snippet}
                                         variant="outlined"
-                                        color="primary"
-                                        className={classes.chip} />;
+                                        color="primary" />;
 
       if (default_snippet && default_snippet.id !== snippet.id) {
         alerts.push(
-          <Alert key="delete_binding_alert" severity="info" className={classes.box}>
+          <Alert key="delete_binding_alert" severity="info" sx={{ '& + &': { mt: 2 } }}>
             Go to the bindings configuration and delete the binding to use the default code.
           </Alert>
         );
@@ -156,7 +143,7 @@ export default function SharedCode(props) {
       if (isShared(snippet)) {
         if (!readOnly) {
           alerts.push(
-            <Alert key="shared_editing" severity="warning" className={classes.box}>
+            <Alert key="shared_editing" severity="warning" sx={{ '& + &': { mt: 2 } }}>
               You're seeing the code from {defaultLink} which is shared and therefore not editable. If you
               continue and save <b>a new snippet will be created</b>.
             </Alert>
@@ -165,7 +152,7 @@ export default function SharedCode(props) {
       } else if (snippet.id !== default_snippet?.id) {
         alerts.push(
           <Alert key="current_snippet_link" severity={readOnly ? 'success' : 'warning'}
-                 className={classes.box}>
+                 sx={{ '& + &': { mt: 2 } }}>
             This code is from {currentLink} {readOnly ? '' : " and is being edited now."}
           </Alert>
         );
@@ -176,13 +163,13 @@ export default function SharedCode(props) {
     } else {
       if (snippet_ref_binding?.id) {
         alerts.push(
-          <Alert key="broken_snippet_ref_binding" severity="warning" className={classes.box}>
+          <Alert key="broken_snippet_ref_binding" severity="warning" sx={{ '& + &': { mt: 2 } }}>
             There's a snippet ref binding and it's <b>broken</b>! The broken ref binding will be <b>fixed
             when saved</b>.
           </Alert>
         );
         alerts.push(
-          <Alert key="delete_broken_binding_alert" severity="info" className={classes.box}>
+          <Alert key="delete_broken_binding_alert" severity="info" sx={{ '& + &': { mt: 2 } }}>
             Go to the bindings configuration and delete the binding to use the default code.
           </Alert>
         );
@@ -196,9 +183,9 @@ export default function SharedCode(props) {
   let control;
   if (!alertsOnly) {
     control = (
-      <div className={classes.box}>
+      <Box sx={{ '& + &': { mt: 2 } }}>
         <StringCodeControl {...props} />
-      </div>
+      </Box>
     );
   }
 

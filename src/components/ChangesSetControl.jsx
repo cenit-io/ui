@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Config } from "../common/Symbols";
-import AutocompleteControl from "./AutocompleteControl";
+import Box from "@mui/material/Box";
 import * as Diff from 'diff';
 import Collapsible from "./Collapsible";
-import makeStyles from '@mui/styles/makeStyles';
 
 function toStr(value) {
   const type = typeof value;
@@ -17,51 +15,6 @@ function toStr(value) {
   return String(value);
 }
 
-const useStyles = makeStyles(theme => ({
-  changes: {
-    listStyleType: 'none',
-    padding: 0,
-    border: `solid 1px ${theme.palette.text.disabled}`,
-    '& li': {
-      padding: theme.spacing(1, 0),
-      '& span': {
-        whiteSpace: 'pre-wrap',
-        fontFamily: 'courier',
-        display: 'inline-block',
-        fontWeight: 400,
-        fontSize: 14
-      },
-      '&:hover': {
-        background: '#ffc',
-      }
-    }
-  },
-  added: {
-    background: '#dfd',
-    color: '#080;',
-    '& span::before': {
-      content: '" +"',
-      paddingRight: theme.spacing(1)
-    }
-  },
-  removed: {
-    background: '#fee',
-    color: '#b00',
-    '& span::before': {
-      content: '" -"',
-      paddingRight: theme.spacing(1)
-    }
-  },
-  unchanged: {
-    background: theme.palette.background.paper,
-    color: theme.palette.getContrastText(theme.palette.background.paper),
-    '& span::before': {
-      content: '"  "',
-      paddingRight: theme.spacing(1)
-    }
-  }
-}));
-
 export default function ChangesSetControl({
   title,
   value,
@@ -72,8 +25,6 @@ export default function ChangesSetControl({
   property
 }) {
   const [diffs, setDiffs] = useState({});
-
-  const classes = useStyles();
 
   useEffect(() => {
     const subscription = value.changed().subscribe(
@@ -101,20 +52,55 @@ export default function ChangesSetControl({
     diffs[field].forEach((part, i) => {
       const klass = (part.added && 'added') || (part.removed && 'removed') || 'unchanged';
       part.value.match(/[^\r\n]+/g)?.forEach((l, j) => lines.push(
-        <li className={classes[klass]} key={`field_diff_${i}_${j}`}>
-                    <span>
-                    {l}
-                    </span>
-        </li>
+        <Box
+          component="li"
+          key={`field_diff_${i}_${j}`}
+          sx={{
+            py: 1,
+            ...(klass === 'added' ? { background: '#dfd', color: '#080' } : {}),
+            ...(klass === 'removed' ? { background: '#fee', color: '#b00' } : {}),
+            ...(klass === 'unchanged'
+              ? {
+                background: theme => theme.palette.background.paper,
+                color: theme => theme.palette.getContrastText(theme.palette.background.paper),
+              }
+              : {}),
+            '&:hover': {
+              background: '#ffc',
+            },
+            '& span': {
+              whiteSpace: 'pre-wrap',
+              fontFamily: 'courier',
+              display: 'inline-block',
+              fontWeight: 400,
+              fontSize: 14,
+            },
+            '& span::before': {
+              content: klass === 'added' ? '" +"' : klass === 'removed' ? '" -"' : '"  "',
+              pr: 1,
+            },
+          }}
+        >
+          <Box component="span">
+            {l}
+          </Box>
+        </Box>
       ));
     });
     return (
       <Collapsible title={field}
                    variant="subtitle1"
       >
-        <ul className={classes.changes}>
+        <Box
+          component="ul"
+          sx={{
+            listStyleType: 'none',
+            p: 0,
+            border: theme => `solid 1px ${theme.palette.text.disabled}`,
+          }}
+        >
           {lines}
-        </ul>
+        </Box>
       </Collapsible>
     )
   });

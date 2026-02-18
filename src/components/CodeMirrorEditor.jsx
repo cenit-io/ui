@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import CodeMirror from 'codemirror';
 import { from, of } from "rxjs";
 import clsx from "clsx";
+import Box from "@mui/material/Box";
 
 import 'codemirror/addon/mode/loadmode';
 import 'codemirror/mode/meta';
@@ -41,7 +42,7 @@ export default function CodeMirrorEditor(
   {
     property, value, disabled, readOnly, errors, onChange, mime, mode,
     theme, lineNumbers, viewportMargin, gutters, lint, foldGutter, onBlur,
-    autoHeight, addons, customCSS, classes, children, eraser, customHeight
+    autoHeight, addons, customCSS, editorSx, errorSx, children, eraser, customHeight
   }
 ) {
   const textElRef = useRef(null);
@@ -198,14 +199,20 @@ export default function CodeMirrorEditor(
   return (
     <React.Fragment>
       <style>
-        {`.${classes.editor}.${customCssRef.current} .CodeMirror { ${styles} }`}
+        {`.code-mirror-editor.${customCssRef.current} .CodeMirror { ${styles} }`}
         {customStyles}
       </style>
-      <div className={clsx(classes.editor, customCssRef.current, error && classes.error)}>
+      <Box
+        className={clsx("code-mirror-editor", customCssRef.current)}
+        sx={{
+          ...(editorSx || {}),
+          ...(error ? (errorSx || {}) : {}),
+        }}
+      >
         {children}
         <textarea ref={textElRef}
                   hidden={true} />
-      </div>
+      </Box>
     </React.Fragment>
   );
 }

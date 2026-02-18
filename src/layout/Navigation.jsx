@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import clsx from "clsx";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -10,7 +9,7 @@ import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeftRounded"
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
 import { IconButton, Typography, useTheme } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import Box from "@mui/material/Box";
 import Loading from "../components/Loading";
 import Skeleton from '@mui/material/Skeleton';
 import ConfigService from "../services/ConfigService";
@@ -102,79 +101,6 @@ function NavSubject({ subject, onClick }) {
 
 export const navigationWidth = (theme) => theme.spacing(35);
 
-const useStyles = makeStyles((theme) => ({
-  drawer: {
-    position: "relative",
-    boxShadow: "0 9px 4px rgba(0,0,0,0.30)",
-    zIndex: 1100,
-
-    background: theme.palette.background.paper,
-    order: 0,
-  },
-  navOpen: {
-    width: navigationWidth(theme),
-    boxSizing: "border-box",
-    transition: theme.transitions.create(["width"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  },
-  navClose: {
-    transition: theme.transitions.create(["width"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
-    width: theme.spacing(10) + 5,
-  },
-  brandImg: {
-    cursor: "pointer",
-    marginLeft: "1.35rem",
-    marginBottom: "1.3rem",
-    width: "100%"
-  },
-  brandImgWrapper: {
-    width: "43px"
-  },
-  brandText: {
-    fontWeight: "800",
-    marginLeft: "1.8rem",
-    cursor: "pointer",
-    lineHeight: "0.85",
-    fontSize: "1.8rem"
-  },
-  brandContainer: {
-    backgroundColor: theme.palette.background.paper,
-    boxSizing: "border-box",
-    position: "sticky",
-    top: 0,
-    zIndex: "1400",
-    width: "100%",
-    display: "flex",
-    justifyContent: "start",
-    padding: "0.7rem 0 0 0",
-  },
-  btnToggle: {
-    position: "absolute",
-    top: "1rem",
-    right: "-14px",
-    height: "1.5rem",
-    width: "1.5rem",
-    background: "#fff",
-    display: "flex",
-    alignItems: "center",
-    borderRadius: "50%",
-    boxShadow: "-1px 1px 4px rgba(0,0,0,0.30)",
-    zIndex: 1500,
-  },
-}));
-
-const useItemStyles = makeStyles((theme) => ({
-  root: {
-    background: theme.palette.action.selected,
-    padding: 0,
-  },
-}));
-
 function NavGroup({ title, IconComponent, items, open, onClick, onSelect }) {
   const [tenantState] = useTenantContext();
 
@@ -183,8 +109,6 @@ function NavGroup({ title, IconComponent, items, open, onClick, onSelect }) {
   const userRoles = user.roles || [];
 
   const isSuperUser = isSuperAdmin(user);
-
-  const itemClasses = useItemStyles();
 
   items = (items || []).filter(
     ({ superUser, roles }) =>
@@ -202,7 +126,12 @@ function NavGroup({ title, IconComponent, items, open, onClick, onSelect }) {
         isOpen={open}
       />
       <Collapse in={open}>
-        <List className={itemClasses.root} component="ul">
+        <List
+          component="ul"
+          sx={(theme) => ({
+            background: theme.palette.action.selected,
+            p: 0,
+          })}>
           {items.map((item, index) => (
             <NavItem
               key={`item_${index}`}
@@ -229,11 +158,8 @@ export default function Navigation({ xs, onToggle }) {
     menuGroups: [],
   });
 
-  const classes = useStyles();
-
-  const itemClasses = useItemStyles();
-
   const { navigation, over, openIndex, item, embeddedApps, menuGroups } = state;
+  const theme = useTheme();
 
   useEffect(() => {
     const subscription = EmbeddedAppService.all().subscribe((embeddedApps) =>
@@ -362,7 +288,12 @@ export default function Navigation({ xs, onToggle }) {
           <ListItemText>Recent</ListItemText>
         </ListItem>
         <Collapse in={openIndex === "recent"}>
-          <List component="ul" classes={itemClasses}>
+          <List
+            component="ul"
+            sx={{
+              background: theme.palette.action.selected,
+              p: 0,
+            }}>
             {nav}
           </List>
         </Collapse>
@@ -376,31 +307,67 @@ export default function Navigation({ xs, onToggle }) {
   const open = docked || over;
 
   const BrandLogo = () => (
-    <div className={classes.brandContainer}>
-      <div className={classes.brandImgWrapper}>
+    <Box
+      sx={(currentTheme) => ({
+        backgroundColor: currentTheme.palette.background.paper,
+        boxSizing: "border-box",
+        position: "sticky",
+        top: 0,
+        zIndex: 1400,
+        width: "100%",
+        display: "flex",
+        justifyContent: "start",
+        pt: "0.7rem",
+      })}>
+      <Box sx={{ width: "43px" }}>
         {!xs && (
           <img
             src={brandLogoUrl()}
             alt="Brand Logo"
             onClick={handleHomeAccess}
-            className={classes.brandImg}
+            style={{
+              cursor: "pointer",
+              marginLeft: "1.35rem",
+              marginBottom: "1.3rem",
+              width: "100%",
+            }}
           />
         )}
-      </div>
+      </Box>
       {open && !xs && (
-        <Typography variant="h5" className={classes.brandText} onClick={handleHomeAccess}>
+        <Typography
+          variant="h5"
+          onClick={handleHomeAccess}
+          sx={{
+            fontWeight: 800,
+            ml: "1.8rem",
+            cursor: "pointer",
+            lineHeight: "0.85",
+            fontSize: "1.8rem",
+          }}>
           Cenit IO
         </Typography>
       )}
-    </div>
+    </Box>
   );
 
   return (
-    <div
-      className={clsx(classes.drawer, {
-        [classes.navOpen]: open,
-        [classes.navClose]: !open,
-      })}
+    <Box
+      sx={{
+        position: "relative",
+        boxShadow: "0 9px 4px rgba(0,0,0,0.30)",
+        zIndex: 1100,
+        background: theme.palette.background.paper,
+        order: 0,
+        width: open ? navigationWidth(theme) : theme.spacing(10) + 5,
+        boxSizing: "border-box",
+        transition: theme.transitions.create(["width"], {
+          easing: theme.transitions.easing.sharp,
+          duration: open
+            ? theme.transitions.duration.enteringScreen
+            : theme.transitions.duration.leavingScreen,
+        }),
+      }}
       style={{
         position: docked ? "relative" : "absolute",
         height: docked && !xs ? "unset" : "100vh",
@@ -411,7 +378,7 @@ export default function Navigation({ xs, onToggle }) {
       onMouseEnter={() => setOver(true)}
       onMouseLeave={() => setOver(false)}
     >
-      <div
+      <Box
         style={{
           display: "block",
           overflow: xs ? "hidden" : "auto",
@@ -425,7 +392,20 @@ export default function Navigation({ xs, onToggle }) {
         {nav}
         {item && <FrezzerLoader />}
         {!xs && (
-          <div className={classes.btnToggle}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "1rem",
+              right: "-14px",
+              height: "1.5rem",
+              width: "1.5rem",
+              background: "#fff",
+              display: "flex",
+              alignItems: "center",
+              borderRadius: "50%",
+              boxShadow: "-1px 1px 4px rgba(0,0,0,0.30)",
+              zIndex: 1500,
+            }}>
             {docked && (
               <IconButton edge="start" color="inherit" onClick={onToggle} size="large">
                 <KeyboardArrowLeftIcon />
@@ -437,9 +417,9 @@ export default function Navigation({ xs, onToggle }) {
                 <KeyboardArrowRightIcon />
               </IconButton>
             )}
-          </div>
+          </Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

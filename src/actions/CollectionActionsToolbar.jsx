@@ -1,6 +1,5 @@
 import React from 'react';
-import { Toolbar, Typography, Chip } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, Toolbar, Typography, Chip } from "@mui/material";
 import { appBarHeight } from "../layout/AppBar";
 import ActionPicker from "./ActionPicker";
 import { ActionKind } from "./ActionRegistry";
@@ -10,43 +9,7 @@ import Filter, { FilterIcon } from "./Filter";
 import IconButton from "@mui/material/IconButton";
 import localStorage from '../util/localStorage'
 
-const useToolbarStyles = makeStyles(theme => ({
-  root: {
-    display: 'flex',
-    paddingLeft: theme.spacing(1),
-    paddingRight: theme.spacing(0),
-    height: appBarHeight(theme),
-    backgroundColor: theme.palette.background.default,
-    [theme.breakpoints.up('sm')]: {
-      paddingLeft: theme.spacing(4),
-      paddingRight: theme.spacing(4),
-    },
-  },
-  title: {
-    flex: '0 0 auto',
-    color: theme.palette.primary.dark,
-    maxWidth: () => `calc(100vw - 190px)`,
-  },
-  titleText: {
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden'
-  },
-  filterIcon: {
-    color: theme.palette.getContrastText(theme.palette.secondary.main)
-  },
-  selectedChip: {
-    backgroundColor: theme.palette.background.default,
-    color: theme.palette.text,
-    textTransform: "uppercase",
-    border: `2px solid ${theme.palette.text.secondary}`,
-    borderRadius: "4px"
-  }
-}));
-
 function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicked }) {
-
-  const classes = useToolbarStyles();
 
   const containerContext = useContainerContext();
 
@@ -68,7 +31,13 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
     chip = <Chip label={`${selectedItems.length} selected`}
                  component="div"
                  onDelete={clearSelection}
-                 className={classes.selectedChip}
+                 sx={(theme) => ({
+                   backgroundColor: theme.palette.background.default,
+                   color: theme.palette.text,
+                   textTransform: "uppercase",
+                   border: `2px solid ${theme.palette.text.secondary}`,
+                   borderRadius: "4px",
+                 })}
     />;
   } else {
     if (data) {
@@ -83,7 +52,11 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
                      onDelete={clearSelection}
                      onClick={clearSelection}
                      deleteIcon={(
-                       <IconButton size="small" className={classes.filterIcon}>
+                       <IconButton
+                         size="small"
+                         sx={(theme) => ({
+                           color: theme.palette.getContrastText(theme.palette.secondary.main),
+                         })}>
                          <FilterIcon />
                        </IconButton>
                      )} />;
@@ -99,16 +72,36 @@ function CollectionActionsToolbar({ dataType, title, selectedKey, onSubjectPicke
   const mainSectionTitle = localStorage.get(`${dataType.name}`);
 
   return (
-    <Toolbar className={classes.root}
+    <Toolbar
+             sx={(theme) => ({
+               display: 'flex',
+               pl: theme.spacing(1),
+               pr: 0,
+               height: appBarHeight(theme),
+               backgroundColor: theme.palette.background.default,
+               [theme.breakpoints.up('sm')]: {
+                 pl: theme.spacing(4),
+                 pr: theme.spacing(4),
+               },
+             })}
              component="div">
-      <div className={classes.title}>
+      <Box
+        sx={(theme) => ({
+          flex: '0 0 auto',
+          color: theme.palette.primary.dark,
+          maxWidth: 'calc(100vw - 190px)',
+        })}>
         <Typography variant="h6"
-                    className={classes.titleText}
+                    sx={{
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                    }}
                     component="h6">
           {mainSectionTitle && `${mainSectionTitle} |`} {title} {breadcrumbActionName && ` | ${breadcrumbActionName}`}
         </Typography>
-      </div>
-      <div className="grow-1" />
+      </Box>
+      <Box className="grow-1" />
       {chip}
       <ActionPicker kind={ActionKind.collection}
                     arity={selectedItems.length}

@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Loading from '../components/Loading';
 import { Checkbox, alpha, useMediaQuery, useTheme } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
-import withStyles from '@mui/styles/withStyles';
+import { styled } from "@mui/material/styles";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
+import Box from "@mui/material/Box";
 import ListIcon from '@mui/icons-material/List';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { map, switchMap } from "rxjs/operators";
@@ -17,58 +17,55 @@ import Pagination from "@mui/material/Pagination";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
-import clsx from "clsx";
 import { useSpreadState } from "../common/hooks";
 import { useContainerContext } from "./ContainerContext";
-import { useOriginsStyles } from "../components/OriginsColors";
+import { originBackgroundSx, originTextSx } from "../components/OriginsColors";
 import viewerComponentFor from "../viewers/viewerComponentFor";
 import { useTenantContext } from "../layout/TenantContext";
 import ActionPicker from "./ActionPicker";
 import pluralize from "pluralize";
 
-const StyledTableCell = withStyles((theme) => ({
-  head: {
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  '&.MuiTableCell-head': {
     fontWeight: 700,
     backgroundColor: theme.palette.background.paper
   },
-  body: {
+  '&.MuiTableCell-body': {
     fontSize: 14,
   },
-}))(TableCell);
+}));
 
-const StyledTableRow = withStyles((theme) => ({
-  root: {
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  height: '100%',
+  '& th:first-child': {
+    padding: 0
+  },
+  '& td:first-child': {
     height: '100%',
-    '& th:first-child': {
-      padding: 0
-    },
-    '& td:first-child': {
+    backgroundColor: theme.palette.background.paper,
+    padding: 0,
+    '& div': {
       height: '100%',
-      backgroundColor: theme.palette.background.paper,
-      padding: 0,
-      '& div': {
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center'
-      }
-    },
-    '&:nth-of-type(odd)': {
-      backgroundColor: alpha(theme.palette.action.hover, 0.02),
-      '& td:first-child': {
-        '& .check': {
-          backgroundColor: alpha(theme.palette.action.hover, 0.02),
-        }
-      }
-    },
-    '&:hover': {
-      '& td:first-child': {
-        '& .check': {
-          background: `${theme.palette.action.hover} !important`
-        }
+      display: 'flex',
+      alignItems: 'center'
+    }
+  },
+  '&:nth-of-type(odd)': {
+    backgroundColor: alpha(theme.palette.action.hover, 0.02),
+    '& td:first-child': {
+      '& .check': {
+        backgroundColor: alpha(theme.palette.action.hover, 0.02),
       }
     }
   },
-}))(TableRow);
+  '&:hover': {
+    '& td:first-child': {
+      '& .check': {
+        background: `${theme.palette.action.hover} !important`
+      }
+    }
+  }
+}));
 
 
 const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort }) => {
@@ -118,61 +115,11 @@ const EnhancedTableHead = ({ props, onSelectAllClick, order, orderBy, numSelecte
   );
 };
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    width: '100%',
-    overflow: 'auto',
-  },
-  table: {
-    height: 1
-  },
-  pagination: {
-    height: theme.spacing(7),
-    boxSizing: "border-box",
-    margin: theme.spacing(0, 3),
-    [theme.breakpoints.down('sm')]: {
-      padding: 0,
-      margin: 0,
-      justifyContent: 'space-evenly'
-    },
-  },
-  pageSize: {
-    margin: theme.spacing(0, 1),
-    height: '50%',
-    fontSize: 14
-  },
-  pageTableContainer: {
-    position: 'relative',
-    backgroundColor: theme.palette.background.default,
-    boxSizing: "border-box",
-    padding: theme.spacing(1, .5),
-    overflow: "hidden",
-    [theme.breakpoints.up('sm')]: {
-      padding: theme.spacing(3),
-    },
-  },
-  pageTableWrapper: {
-    maxHeight: "100%",
-    overflow: "auto",
-    boxSizing: "border-box",
-  },
-  pageShadow: {
-    boxShadow: "0 2px 5px 1px rgb(64 60 67 / 16%)",
-    borderRadius: "6px",
-    backgroundColor: theme.palette.background.paper,
-  },
-  memberActions: {
-    top: ({ highlightTop }) => highlightTop,
-    position: 'absolute',
-    right: theme.spacing(.5),
-    width: theme.spacing(31),
-    background: theme.palette.background.default,
-    borderRadius: theme.spacing(1.5),
-    [theme.breakpoints.up('sm')]: {
-      right: theme.spacing(3),
-    },
-  },
-}));
+const pageShadowSx = (theme) => ({
+  boxShadow: "0 2px 5px 1px rgb(64 60 67 / 16%)",
+  borderRadius: "6px",
+  backgroundColor: theme.palette.background.paper,
+});
 
 const MinItemsPerPage = 5;
 
@@ -191,15 +138,12 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
 
   const { data, selectedItems, props, withOrigin, handleAction } = containerState;
 
-  const originsClasses = useOriginsStyles();
   const theme = useTheme();
   const xs = useMediaQuery(theme.breakpoints.down('sm'));
 
   const tableContainerRef = useRef(null);
 
   const { dense, highlightTop, highlightIndex } = state;
-
-  const classes = useStyles({ highlightTop });
 
   const select = selectedItems => setContainerState({ selectedItems });
 
@@ -258,8 +202,9 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
                            left: 0,
                            zIndex: 2
                          }}>
-          <div className={clsx((withOrigin && originsClasses[item.origin]) || 'check')}>
-            <Checkbox className={clsx(withOrigin && originsClasses[`${item.origin}Text`])}
+          <div className="check"
+               style={withOrigin ? originBackgroundSx(item.origin) : undefined}>
+            <Checkbox sx={withOrigin ? originTextSx(theme, item.origin) : undefined}
                       checked={isSelected}
                       inputProps={{ 'aria-labelledby': item.id }}
                       onChange={handleSelect(item)} />
@@ -289,13 +234,26 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
   const clearHighlightTimer = () => clearTimeout(highlightTimer.current);
 
   return (
-    <div ref={tableContainerRef}
-         className={classes.pageTableContainer}
-         style={{ minHeight: `calc(${height} - 400px)` }}>
-      <div className={clsx(classes.pageTableWrapper, classes.pageShadow)}
-           style={{ maxHeight: `calc(${height} - ${xs ? '0px' : '2rem'})` }}
+    <Box ref={tableContainerRef}
+         style={{ minHeight: `calc(${height} - 400px)` }}
+         sx={{
+           position: 'relative',
+           backgroundColor: theme.palette.background.default,
+           boxSizing: "border-box",
+           padding: theme.spacing(1, .5),
+           overflow: "hidden",
+           [theme.breakpoints.up('sm')]: {
+             padding: theme.spacing(3),
+           },
+         }}>
+      <Box sx={{
+        ...pageShadowSx(theme),
+        maxHeight: `calc(${height} - ${xs ? '0px' : '2rem'})`,
+        overflow: "auto",
+        boxSizing: "border-box",
+      }}
            onMouseLeave={hideHighlight}>
-        <Table className={classes.table} size={dense ? "small" : "medium"}>
+        <Table sx={{ height: 1 }} size={dense ? "small" : "medium"}>
           <EnhancedTableHead
             props={props}
             onSelectAllClick={handleSelectAllClick}
@@ -304,9 +262,19 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
           />
           <TableBody>{rows}</TableBody>
         </Table>
-      </div>
+      </Box>
       {!selectedItems.length && highlightTop && (
-        <div className={classes.memberActions}
+        <Box sx={{
+          top: highlightTop,
+          position: 'absolute',
+          right: theme.spacing(.5),
+          width: theme.spacing(31),
+          background: theme.palette.background.default,
+          borderRadius: theme.spacing(1.5),
+          [theme.breakpoints.up('sm')]: {
+            right: theme.spacing(3),
+          },
+        }}
              onMouseEnter={clearHighlightTimer}
              onMouseLeave={hideHighlight}>
           <ActionPicker kind={ActionKind.member}
@@ -317,9 +285,9 @@ function ListView({ height, dataType, config, onSubjectPicked }) {
                         dataType={dataType}
                         record={data.items[highlightIndex]} />
 
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -331,7 +299,6 @@ function DefaultIndex({ dataType, height, width, dataTypeConfig, onSubjectPicked
 
   const { data, page, limit, props, itemsViewport, selector, containerTitle } = containerState;
 
-  const classes = useStyles();
   const theme = useTheme();
   const xs = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -448,15 +415,31 @@ function DefaultIndex({ dataType, height, width, dataTypeConfig, onSubjectPicked
       ? 'Page size'
       : `${pluralize(containerTitle)} per page`;
     pagination = (
-      <div className={clsx('flex align-items-center', classes.pagination, !xs && classes.pageShadow)}>
-        <div className="grow-1" />
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          height: theme.spacing(7),
+          boxSizing: "border-box",
+          mx: xs ? 0 : 3,
+          p: 0,
+          justifyContent: xs ? "space-evenly" : "flex-start",
+          ...(xs ? {} : pageShadowSx(theme)),
+        }}>
+        <Box sx={{ flexGrow: 1 }} />
         <Typography variant="subtitle2" component="div">
           {pageSizeLabel}
         </Typography>
-        <Select className={classes.pageSize}
+        <Select
                 value={limit}
                 onChange={handleChangeRowsPerPage}
-                variant="outlined">
+                variant="outlined"
+                sx={{
+                  mx: 1,
+                  height: "50%",
+                  fontSize: 14,
+                  minWidth: 64,
+                }}>
           {
             ItemsPerPage.map((c, index) => (
               <MenuItem key={`ipp_${index}_${c}`}
@@ -472,7 +455,7 @@ function DefaultIndex({ dataType, height, width, dataTypeConfig, onSubjectPicked
                     onChange={handleChangePage}
                     size="small"
                     color="primary" />
-      </div>
+      </Box>
     );
   }
 

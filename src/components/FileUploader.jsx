@@ -12,7 +12,6 @@ import {
   ListItemSecondaryAction,
   TextField,
 } from "@mui/material";
-import withStyles from '@mui/styles/withStyles';
 import UploadIcon from "@mui/icons-material/CloudUpload";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -24,6 +23,7 @@ import clsx from "clsx";
 import axios, { CancelToken } from "axios";
 import { DataTypeId } from "../common/Symbols";
 import { RecordSubject } from "../services/subjects";
+import { useTheme } from "@mui/material/styles";
 
 const FileStatus = Object.freeze({
   waiting: 'waiting',
@@ -43,11 +43,11 @@ const FileStatus = Object.freeze({
 });
 
 
-const dropStyles = theme => ({
+const createDropStyles = (theme, height) => ({
   dropArea: {
     background: theme.palette.background.default,
     width: '100%',
-    height: ({ height }) => `calc(${height} - ${theme.spacing(9)})`,
+    height: `calc(${height} - ${theme.spacing(9)})`,
     outline: 'transparent',
     border: 'solid 2px transparent',
     boxSizing: 'border-box'
@@ -68,7 +68,7 @@ const dropStyles = theme => ({
   fileList: {
     background: theme.palette.background.default,
     width: '95%',
-    maxHeight: ({ height }) => `calc(${height} - ${theme.spacing(9)})`,
+    maxHeight: `calc(${height} - ${theme.spacing(9)})`,
     overflow: 'auto',
     paddingLeft: theme.spacing(1),
     paddingRight: theme.spacing(1)
@@ -87,7 +87,7 @@ const dropStyles = theme => ({
   backToDrop: {
     position: 'absolute',
     left: theme.spacing(2),
-    top: ({ height }) => `calc(${height} - ${theme.spacing(8)})`
+    top: `calc(${height} - ${theme.spacing(8)})`
   },
   fileItem: {
     marginTop: theme.spacing(1),
@@ -95,11 +95,7 @@ const dropStyles = theme => ({
     padding: 0
   },
   launchButton: {
-    width: `calc(100% - ${theme.spacing(7)})`,
-    '& .MuiButton-label': {
-      justifyContent: 'left',
-      wordBreak: 'break-word'
-    }
+    width: `calc(100% - ${theme.spacing(7)})`
   },
   mb2: {
     marginBottom: theme.spacing(2)
@@ -261,7 +257,7 @@ function uploaderReducer(state, action) {
   }
 }
 
-function FileItem({ file, rootId, status, launch, dispatch, disabled, classes, id_type }) {
+function FileItem({ file, rootId, status, launch, dispatch, disabled, styles, id_type }) {
   let progress, action;
 
   const handleLaunch = e => {
@@ -347,7 +343,11 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes, i
   let id;
   let primary;
   if (file.status === FileStatus.success) {
-    primary = <Button className={classes.launchButton}
+    primary = <Button style={styles.launchButton}
+                      sx={{
+                        justifyContent: 'flex-start',
+                        wordBreak: 'break-word'
+                      }}
                       variant="outlined"
                       color="primary"
                       startIcon={<LaunchIcon />}
@@ -362,10 +362,9 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes, i
                       error={FileStatus.isError(file.status)}
                       value={file.id || ''}
                       helperText=""
-                      className={clsx(
-                        ((file.fake || file.status === FileStatus.finishing) && 'full-width') || classes.launchButton,
-                        classes.mb2
-                      )}
+                      className={clsx((file.fake || file.status === FileStatus.finishing) && 'full-width')}
+                      style={((file.fake || file.status === FileStatus.finishing) ? {} : styles.launchButton)}
+                      sx={styles.mb2}
                       onChange={handleIdChange}
                       onClick={e => e.stopPropagation()} />
     }
@@ -376,14 +375,13 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, classes, i
                          error={FileStatus.isError(file.status)}
                          value={file.customName || file.name || ''}
                          helperText={!file.fake && file.status}
-                         className={clsx(
-                           ((file.fake || file.status === FileStatus.finishing) && 'full-width') || classes.launchButton
-                         )}
+                         className={clsx((file.fake || file.status === FileStatus.finishing) && 'full-width')}
+                         style={((file.fake || file.status === FileStatus.finishing) ? {} : styles.launchButton)}
                          onChange={handleNameChange}
                          onClick={e => e.stopPropagation()} />
   }
 
-  return <ListItem className={clsx(classes.fileItem, classes[status])}>
+  return <ListItem style={{ ...styles.fileItem, ...styles[status] }}>
     <ListItemText primaryTypographyProps={{ component: 'div' }}
                   primary={(
                     <>
@@ -424,7 +422,9 @@ function computeFilesValue(files) {
   return filesValue;
 }
 
-function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, width, height, classes, theme, onChange, value, submitter, onSubmitDone, rootId }) {
+function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, width, height, onChange, value, submitter, onSubmitDone, rootId }) {
+  const theme = useTheme();
+  const styles = createDropStyles(theme, height);
   const [state, dispatch] = useReducer(uploaderReducer, {
     files: [],
     done: false
@@ -569,7 +569,7 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
     (file, index) => <FileItem key={`file_${index}`}
                                status={file.status}
                                file={file}
-                               classes={classes}
+                               styles={styles}
                                launch={launch}
                                dispatch={dispatch}
                                disabled={disabled}
@@ -578,7 +578,7 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
   );
   const remaining = max - files.length;
   let dropIt;
-  let activeDropClass;
+  let activeDropStyle;
   if (isDragActive) {
     let dropItIcon;
     let dropItMsg;
@@ -589,10 +589,10 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
     ) {
       dropItIcon = <UploadIcon fontSize='large' color="primary" />;
       dropItMsg = 'Drop it!';
-      activeDropClass = classes.activeDropArea;
+      activeDropStyle = styles.activeDropArea;
     } else {
       dropItIcon = <BanedIcon fontSize='large' color="error" />;
-      activeDropClass = classes.blockedDropArea;
+      activeDropStyle = styles.blockedDropArea;
       if (remaining) {
         dropItMsg = `Please select just ${remaining} file${remaining > 1 ? 's' : ''}!`;
       } else {
@@ -602,12 +602,14 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
     dropIt = <div
       className={clsx(
         'relative', 'flex', 'justify-content-center', 'align-items-center', 'column',
-        'full-width', 'full-height',
-        classes.dropIt,
-        files.length === 0 && classes.emptyDropArea,
-        activeDropClass
-      )}>
-      <div className={classes.dropMsg}>
+        'full-width', 'full-height'
+      )}
+      style={{
+        ...styles.dropIt,
+        ...(files.length === 0 ? styles.emptyDropArea : {}),
+        ...(activeDropStyle || {})
+      }}>
+      <div style={styles.dropMsg}>
         {dropItIcon}
         <Typography color='textPrimary' variant='h6'>
           {dropItMsg}
@@ -620,7 +622,7 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
   if (!disabled && files.length < max) {
     const dropFilesMsg = rootId ? 'Drop a file to update the content' : 'Drop files here'
     dropInstructions = (
-      <ListItem component="div" className={classes.dropMsg}>
+      <ListItem component="div" style={styles.dropMsg}>
         <UploadIcon fontSize='large' />
         <Typography color='textPrimary' variant='h6'>
           {dropFilesMsg}
@@ -640,12 +642,14 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
 
   return (
     <div key='drop'
-         className={clsx(
-           'relative', 'flex', 'align-items-center', 'column',
-           classes.dropArea,
-           files.length === 0 && classes.emptyDropArea,
-           activeDropClass
-         )}
+      className={clsx(
+         'relative', 'flex', 'align-items-center', 'column'
+       )}
+         style={{
+           ...styles.dropArea,
+           ...(files.length === 0 ? styles.emptyDropArea : {}),
+           ...(activeDropStyle || {})
+         }}
          {...getRootProps()}>
       <input {...getInputProps()} />
       {
@@ -655,7 +659,7 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
         </Typography>
       }
       <div key='list'
-           className={classes.fileList}>
+           style={styles.fileList}>
         <List>
           {fileList}
           {dropInstructions}
@@ -666,4 +670,4 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
   );
 }
 
-export default withStyles(dropStyles, { withTheme: true })(FileUploader);
+export default FileUploader;

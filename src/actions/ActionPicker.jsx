@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Tooltip } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, Tooltip } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import { useContainerContext } from "./ContainerContext";
@@ -12,23 +11,7 @@ import Refresh from "@mui/icons-material/Refresh";
 import MenuItem from "@mui/material/MenuItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Menu from "@mui/material/Menu";
-import clsx from "clsx";
 import Index from './Index';
-
-const useToolbarStyles = makeStyles(theme => ({
-  actions: {
-    display: 'flex',
-    flexGrow: 1,
-    color: theme.palette.text.secondary,
-    minWidth: theme.spacing(6),
-    overflow: 'hidden',
-    paddingLeft: theme.spacing(0.5),
-    justifyContent: 'flex-end'
-  },
-  selected: {
-    background: theme.palette.background.default
-  }
-}));
 
 function match(target, criteria) {
   const keys = Object.keys(criteria);
@@ -51,7 +34,6 @@ function ActionPicker(
   });
 
   const theme = useTheme();
-  const classes = useToolbarStyles();
 
   const { actions, width, moreEl, config } = state;
 
@@ -132,7 +114,11 @@ function ActionPicker(
     onAction(actionKey);
   };
 
-  let max = Math.max(0, Math.floor((width - theme.spacing(0.5)) / theme.spacing(6)));
+  const parseSpacing = (value) => typeof value === 'number' ? value : parseFloat(value);
+  let max = Math.max(
+    0,
+    Math.floor((width - parseSpacing(theme.spacing(0.5))) / parseSpacing(theme.spacing(6)))
+  );
 
   if (max < actions.length) {
     max--;
@@ -169,7 +155,9 @@ function ActionPicker(
           color={selectedKey === action.key ? (action.activeColor || 'primary') : 'default'}
           onClick={handleAction(action.key)}
           disabled={disabled}
-          className={clsx(selectedKey === action.key && classes.selected)}
+          sx={{
+            ...(selectedKey === action.key ? { background: theme.palette.background.default } : {}),
+          }}
           size="large">
           <Icon />
         </IconButton>
@@ -217,10 +205,20 @@ function ActionPicker(
   }
 
   return (
-    <div className={classes.actions} ref={frame}>
+    <Box
+      ref={frame}
+      sx={{
+        display: 'flex',
+        flexGrow: 1,
+        color: theme.palette.text.secondary,
+        minWidth: theme.spacing(6),
+        overflow: 'hidden',
+        pl: theme.spacing(0.5),
+        justifyContent: 'flex-end',
+      }}>
       {actionsControls}
       {menu}
-    </div>
+    </Box>
   );
 }
 

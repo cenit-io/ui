@@ -4,14 +4,13 @@ import { delay, switchMap, tap } from "rxjs/operators";
 import Random from "../util/Random";
 import Alert from "./Alert";
 import { useTheme } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
 import { of } from "rxjs";
 import AttachmentViewer from "../viewers/AttachmentViewer";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { DataType, isSimpleSchema } from "../services/DataTypeService";
 import { TaskStatusConfig, TaskStatusViewer } from "../config/dataTypes/Setup/Task";
 import Skeleton from '@mui/material/Skeleton';
-import clsx from "clsx";
 import IconButton from "@mui/material/IconButton";
 import OpenIcon from "@mui/icons-material/OpenInNew";
 import { RecordSubject, TabsSubject } from "../services/subjects";
@@ -22,33 +21,6 @@ import CircularProgress from "@mui/material/CircularProgress";
 import LinearProgress from "@mui/material/LinearProgress";
 
 const AliveStatuses = ['pending', 'running', 'retrying', 'paused'];
-
-const useStyles = makeStyles(theme => ({
-  result: {
-    marginTop: theme.spacing(1),
-    padding: theme.spacing(1),
-    background: theme.palette.background.paper
-  },
-  error: {
-    color: theme.palette.error.main
-  },
-  warning: {
-    color: theme.palette.warning.main
-  },
-  resultSkeleton: {
-    margin: theme.spacing(1, 0)
-  },
-  attachment: {
-    marginTop: theme.spacing(1)
-  },
-  refreshing: {
-    margin: theme.spacing(2, 0)
-  },
-  progress: {
-    width: '100%',
-    padding: theme.spacing(1, 0)
-  }
-}));
 
 const Delays = [1, 3, 5, 8, 13];
 
@@ -68,7 +40,6 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
   });
 
   const theme = useTheme();
-  const classes = useStyles();
 
   const {
     task, taskDataType, notificationDataType, delayIndex, taskProgress,
@@ -183,12 +154,16 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
       data = <Skeleton variant="rectangular"
                        width={theme.spacing(attachment.size)}
                        height={theme.spacing(3)}
-                       className={classes.resultSkeleton} />;
+                       sx={{ my: 1 }} />;
     } else if (resultData) {
       data = (
         <Typography component="pre"
                     variant="h6"
-                    className={classes.result}>
+                    sx={{
+                      mt: 1,
+                      p: 1,
+                      background: theme => theme.palette.background.paper
+                    }}>
           {resultData}
         </Typography>
       );
@@ -196,7 +171,9 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
     result = (
       <>
         {data}
-        <AttachmentViewer value={attachment} className={classes.attachment} />
+        <Box sx={{ mt: 1 }}>
+          <AttachmentViewer value={attachment} />
+        </Box>
       </>
     );
   }
@@ -210,14 +187,20 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
         notifications = (
           <Typography component="div"
                       variant="subtitle2"
-                      className={clsx(classes.result, classes[notificationType], 'flex column')}>
+                      className="flex column"
+                      sx={{
+                        mt: 1,
+                        p: 1,
+                        background: theme => theme.palette.background.paper,
+                        color: theme => theme.palette[notificationType].main
+                      }}>
             {notification.message}
             <div>
               <IconButton size="small"
                           onClick={() => TabsSubject.next({
                             key: RecordSubject.for(notificationDataType.id, notification.id).key
                           })}>
-                <OpenIcon className={classes[notificationType]} />
+                <OpenIcon sx={{ color: theme => theme.palette[notificationType].main }} />
               </IconButton>
             </div>
           </Typography>
@@ -232,7 +215,7 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
 
   let refresh;
   if (refreshing) {
-    refresh = <CircularProgress size={theme.spacing(3)} className={classes.refreshing} />;
+    refresh = <CircularProgress size={theme.spacing(3)} sx={{ my: 2 }} />;
   } else if (AliveStatuses.includes(status) && delayIndex > 3) {
     const handleRefresh = () => setState({
       refreshKey: Random.string(),
@@ -259,12 +242,12 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
            title={title}>
       <div className="flex column align-items-center full-width">
         <TaskStatusViewer value={status} item={task} />
-        <div className={classes.progress}>
+        <Box sx={{ width: '100%', py: 1 }}>
           <Typography component="div" variant="caption">
             {task.progress}%
           </Typography>
           <LinearProgress variant="determinate" value={task.progress} className="grow-1" />
-        </div>
+        </Box>
         {refresh}
         {result}
         {notifications}

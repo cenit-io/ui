@@ -1,5 +1,4 @@
 import { CircularProgress, Drawer } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
 import React from "react";
 import UserCard from "./UserCard";
 import { useMainContext } from "../layout/MainContext";
@@ -12,19 +11,18 @@ const AdminDrawer = ({ children, onClose }) => {
 
   if (!idToken) return <CircularProgress />;
 
-  const modalStyles = makeStyles((theme) => ({
-    root: {
-      backdropFilter: 'blur(6px) saturate(120%)',
-      '& .MuiBackdrop-root': {
-        backgroundColor: "rgba(0, 0, 0, 0.05)"
-      },
-    },
-  }));
-
-  const classes = modalStyles();
-
-
-  return <Drawer open={docked} onClose={onClose} anchor='right' classes={classes}>
+  return <Drawer
+    open={docked}
+    onClose={onClose}
+    anchor='right'
+    ModalProps={{
+      BackdropProps: {
+        sx: {
+          backdropFilter: 'blur(6px) saturate(120%)',
+          backgroundColor: "rgba(0, 0, 0, 0.05)"
+        }
+      }
+    }}>
     <UserCard idToken={idToken} onClose={onClose} />
     {children}
   </Drawer>

@@ -1,11 +1,9 @@
 import React, { useEffect } from 'react';
-import { useMediaQuery, StyledEngineProvider } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, useMediaQuery, StyledEngineProvider } from "@mui/material";
 import AppBar, { appBarHeight } from './AppBar';
 import Navigation, { navigationWidth } from "./Navigation";
 import { ThemeProvider, adaptV4Theme, createTheme, useTheme } from '@mui/material/styles';
 import Drawer from "../components/Drawer";
-import clsx from "clsx";
 import Tabs from "./Tabs";
 import ConfigService from "../services/ConfigService";
 import Subjects, { NavSubject } from "../services/subjects";
@@ -14,32 +12,8 @@ import MainContext, { useMainContext } from "./MainContext";
 import TenantContext from "./TenantContext";
 import localStorage from '../util/localStorage';
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    position: 'relative'
-  },
-  mainContainer: {
-    position: 'relative',
-    display: 'flex',
-    height: `calc(100vh - ${appBarHeight(theme)})`,
-    marginTop: appBarHeight(theme)
-  },
-  contentMargin: {
-    marginLeft: theme.spacing(10) + 5,
-  },
-  drop: {
-    position: 'absolute',
-    opacity: 0.5,
-    zIndex: 1100, top: 0,
-    left: 0,
-    background: '#ffffff'
-  }
-}));
-
 function MainLayout() {
   const [mainContextState, setMainContextState] = useMainContext();
-
-  const classes = useStyles();
 
   const theme = useTheme();
   const xs = useMediaQuery(theme.breakpoints.down('sm'));
@@ -106,23 +80,30 @@ function MainLayout() {
   const tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
 
   return (
-    <div className={classes.root}>
-      <div className={classes.mainContainer}>
-        <div className={clsx(!(xs || docked) && classes.contentMargin)}
-             style={{
-               flexGrow: 1,
-               order: 1,
-               width: `calc(${tabsWidth})`
-             }}>
+    <Box sx={{ position: 'relative' }}>
+      <Box
+        sx={{
+          position: 'relative',
+          display: 'flex',
+          height: `calc(100vh - ${appBarHeight(theme)})`,
+          mt: appBarHeight(theme),
+        }}>
+        <Box
+          sx={{
+            flexGrow: 1,
+            order: 1,
+            width: `calc(${tabsWidth})`,
+            ...(xs || docked ? {} : { ml: `calc(${theme.spacing(10)} + 5px)` }),
+          }}>
           <Tabs docked={docked}
                 width={tabsWidth} />
-        </div>
+        </Box>
         {
           navigationUI
         }
-      </div>
+      </Box>
       <AppBar onToggle={switchNavigation} />
-    </div>
+    </Box>
   );
 }
 

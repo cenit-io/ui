@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSpreadState } from "../common/hooks";
-import { IconButton } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, IconButton } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import { useDropzone } from "react-dropzone";
 import clsx from "clsx";
@@ -9,52 +8,6 @@ import UploadIcon from "@mui/icons-material/CloudUpload";
 import BanedIcon from "@mui/icons-material/Block";
 import Chip from "@mui/material/Chip";
 import ClearIcon from "@mui/icons-material/Clear";
-
-const useStyles = makeStyles(theme => ({
-  dropArea: {
-    background: theme.palette.background.default,
-    width: '100%',
-    padding: theme.spacing(1),
-    outline: 'transparent',
-    border: 'solid 2px transparent',
-    boxSizing: 'border-box'
-  },
-  dropIt: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    zIndex: 1
-  },
-  dropMsg: {
-    display: 'block',
-    textAlign: 'center'
-  },
-  activeDropArea: {
-    borderColor: theme.palette.primary.main,
-    background: theme.palette.background.default
-  },
-  blockedDropArea: {
-    borderColor: theme.palette.error.main,
-    background: theme.palette.background.default
-  },
-  fileChip: {
-    margin: theme.spacing(1)
-  },
-  header: {
-    minHeight: theme.spacing(7),
-    background: theme.palette.background.default,
-    borderTopLeftRadius: theme.spacing(.5),
-    borderTopRightRadius: theme.spacing(.5),
-    alignItems: 'center',
-    padding: theme.spacing(0, 2)
-  },
-  error: {
-    color: theme.palette.error.main,
-    '& *': {
-      color: theme.palette.error.main
-    }
-  }
-}));
 
 export default function DropFileControl({
   title,
@@ -72,8 +25,6 @@ export default function DropFileControl({
     files: {},
     untouched: true
   });
-
-  const classes = useStyles();
 
   const { files, untouched } = state;
 
@@ -127,17 +78,17 @@ export default function DropFileControl({
   if (isDragActive) {
     let dropItIcon;
     let dropItMsg;
-    let activeDropClass;
+    let isAllowedDrop;
     if (
       (draggedFiles.length <= remaining) &&
       (multiple || draggedFiles.length === 1)
     ) {
       dropItIcon = <UploadIcon fontSize='large' color="primary" />;
       dropItMsg = 'Drop it!';
-      activeDropClass = classes.activeDropArea;
+      isAllowedDrop = true;
     } else {
       dropItIcon = <BanedIcon fontSize='large' color="error" />;
-      activeDropClass = classes.blockedDropArea;
+      isAllowedDrop = false;
       const r = multiple ? remaining : 1;
       if (r > 0) {
         dropItMsg = `Please select just ${r} file${r > 1 ? 's' : ''}!`;
@@ -146,20 +97,37 @@ export default function DropFileControl({
       }
     }
     dropIt = (
-      <div
+      <Box
         className={clsx(
           'relative', 'flex', 'justify-content-center', 'align-items-center', 'column',
-          'full-width', 'full-height',
-          classes.dropIt,
-          activeDropClass
+          'full-width', 'full-height'
         )}>
-        <div className={classes.dropMsg}>
+        <Box
+          sx={(theme) => ({
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: 1,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'column',
+            textAlign: 'center',
+            borderColor: isAllowedDrop
+              ? theme.palette.primary.main
+              : theme.palette.error.main,
+            background: theme.palette.background.default,
+            borderStyle: 'solid',
+            borderWidth: '2px',
+          })}>
           {dropItIcon}
           <Typography color='textPrimary' variant='h6'>
             {dropItMsg}
           </Typography>
-        </div>
-      </div>
+        </Box>
+      </Box>
     );
   }
 
@@ -173,7 +141,7 @@ export default function DropFileControl({
   const filesChips = filesNames.map(
     fileName => (
       <Chip key={fileName}
-            className={classes.fileChip}
+            sx={(theme) => ({ m: theme.spacing(1) })}
             label={fileName}
             onDelete={removeFile(fileName)} />
     )
@@ -195,28 +163,48 @@ export default function DropFileControl({
   }
 
   return (
-    <div>
-      <div className={clsx('flex', classes.header)}>
+    <Box>
+      <Box
+        className="flex"
+        sx={(theme) => ({
+          minHeight: theme.spacing(7),
+          background: theme.palette.background.default,
+          borderTopLeftRadius: theme.spacing(.5),
+          borderTopRightRadius: theme.spacing(.5),
+          alignItems: 'center',
+          px: theme.spacing(2),
+        })}>
         <Typography variant="subtitle2">
           {title}
         </Typography>
         <div className="grow-1" />
         {clear}
-      </div>
-      <div key='drop'
-           className={clsx(
-             'relative', 'flex', 'align-items-center', 'column',
-             classes.dropArea,
-             errors && untouched && classes.error
-           )}
-           {...getRootProps()}>
+      </Box>
+      <Box
+        key='drop'
+        className={clsx('relative', 'flex', 'align-items-center', 'column')}
+        sx={(theme) => ({
+          background: theme.palette.background.default,
+          width: '100%',
+          p: theme.spacing(1),
+          outline: 'transparent',
+          border: 'solid 2px transparent',
+          boxSizing: 'border-box',
+          ...(errors && untouched ? {
+            color: theme.palette.error.main,
+            '& *': {
+              color: theme.palette.error.main
+            }
+          } : {}),
+        })}
+        {...getRootProps()}>
         <input {...getInputProps()} />
         <div className="flex wrap">
           {filesChips}
         </div>
         {dropInstructions}
         {dropIt}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

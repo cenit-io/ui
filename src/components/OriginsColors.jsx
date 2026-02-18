@@ -1,5 +1,3 @@
-import makeStyles from '@mui/styles/makeStyles';
-
 import { purple, green, orange, blue, red } from '@mui/material/colors';
 
 export const OriginsColors = {
@@ -10,15 +8,13 @@ export const OriginsColors = {
   tmp: red[200],
 };
 
-export const useOriginsStyles = makeStyles(theme => Object.keys(OriginsColors).reduce((classes, origin) => {
-  classes[origin] = {
-    background: OriginsColors[origin]
-  };
-  classes[`${origin}Text`] = {
-    color: `${theme.palette.getContrastText(OriginsColors[origin])} !important`,
-    '&.Mui-checked': {
-      color: theme.palette.getContrastText(OriginsColors[origin]),
-    }
-  };
-  return classes;
-}, {}));
+export const originBackgroundSx = (origin) => ({
+  background: OriginsColors[origin]
+});
+
+export const originTextSx = (theme, origin) => ({
+  color: `${theme.palette.getContrastText(OriginsColors[origin])} !important`,
+  '&.Mui-checked': {
+    color: theme.palette.getContrastText(OriginsColors[origin]),
+  },
+});

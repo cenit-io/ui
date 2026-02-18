@@ -15,34 +15,12 @@ import { switchMap, delay } from "rxjs/operators";
 import { of } from "rxjs";
 import Pagination from '@mui/material/Pagination';
 import Skeleton from '@mui/material/Skeleton';
-import makeStyles from '@mui/styles/makeStyles';
 import clsx from "clsx";
 import { useSpreadState } from "../common/hooks";
 import zzip from "../util/zzip";
 
-const useStyles = makeStyles(theme => ({
-  list: {
-    minWidth: theme.spacing(20),
-    position: 'absolute',
-    top: theme.spacing(6),
-    background: 'white',
-    border: 'gray',
-    zIndex: 5
-  },
-  pagination: {
-    padding: theme.spacing(1),
-    background: theme.palette.background.default
-  },
-  left: {
-    left: 0
-  },
-  right: {
-    right: 0
-  }
-}));
-
 function RefPicker({
-  text, label, disabled, inputClasses, readOnly, placeholder, dataType,
+  text, label, disabled, inputClasses, inputSx, readOnly, placeholder, dataType,
   onPick, anchor, baseSelector, additionalViewportProps
 }) {
 
@@ -55,8 +33,6 @@ function RefPicker({
   });
 
   const ref = useRef(null);
-
-  const classes = useStyles();
 
   const stateText = state.text;
 
@@ -193,19 +169,33 @@ function RefPicker({
     let pagination;
     if (total_pages > 1) {
       pagination = (
-        <div className={clsx('flex justify-content-center', classes.pagination)}>
+        <Box className={clsx('flex justify-content-center')}
+             sx={{
+               p: 1,
+               background: theme => theme.palette.background.default
+             }}>
           <Pagination count={total_pages}
                       page={page}
                       disabled={loading}
                       onChange={handlePageChange}
                       size="small"
                       color="primary" />
-        </div>
+        </Box>
       );
     }
     list = (
       <ClickAwayListener onClickAway={handleClickAway}>
-        <Paper className={clsx(classes.list, classes[anchor] || classes.left)}>
+        <Paper
+          sx={{
+            minWidth: theme => theme.spacing(20),
+            position: 'absolute',
+            top: theme => theme.spacing(6),
+            background: 'white',
+            border: 'gray',
+            zIndex: 5,
+            ...(anchor === 'right' ? { right: 0 } : { left: 0 }),
+          }}
+        >
           <List component="nav">
             {list}
           </List>
@@ -229,8 +219,8 @@ function RefPicker({
   };
 
   let input;
-  if (inputClasses) {
-    input = <InputBase {...inputProps} classes={inputClasses} style={{ flexGrow: 1 }} />;
+  if (inputClasses || inputSx) {
+    input = <InputBase {...inputProps} classes={inputClasses} sx={{ ...inputSx, flexGrow: 1 }} style={{ flexGrow: 1 }} />;
   } else {
     input = <TextField {...inputProps} style={{ flexGrow: 1 }} />;
   }

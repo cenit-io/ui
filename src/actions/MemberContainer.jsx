@@ -1,9 +1,8 @@
 import React, { useEffect, useCallback } from 'react';
 import Loading from '../components/Loading';
-import { Breadcrumbs, Chip, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Breadcrumbs, Chip, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { appBarHeight } from "../layout/AppBar";
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
-import makeStyles from '@mui/styles/makeStyles';
 import Show from "./Show";
 import Random from "../util/Random";
 import localStorage from '../util/localStorage'
@@ -48,43 +47,6 @@ import './RunAlgorithm';
 import './SwitchTenant';
 import './MetaConfig';
 
-const useActionContainerStyles = makeStyles(theme => ({
-  toolbar: {
-    width: ({ width }) => `calc(${width} - ${theme.spacing(3)})`,
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(1),
-    height: appBarHeight(theme),
-    backgroundColor: theme.palette.background.default
-  },
-  breadcrumbColor: {
-    color: theme.palette.primary.dark
-  },
-  breadcrumbs: {
-    color: theme.palette.primary.dark,
-    maxWidth: ({ width }) => `calc(${width} - ${theme.spacing(9)})`,
-    '& ol': {
-      flexWrap: 'nowrap',
-    },
-    '& li:last-child': {
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap',
-      overflow: 'hidden'
-    }
-  },
-  recordTitle: {
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden'
-  },
-  actionContainer: {
-    width: '100%',
-    overflow: 'auto',
-    position: 'relative',
-    height: props => `calc(${props.height} - ${appBarHeight(theme)})`,
-    backgroundColor: theme.palette.background.default
-  }
-}));
-
 function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked, onClose, onUpdate, activeActionKey }) {
   const [state, setState] = useSpreadState();
 
@@ -98,8 +60,6 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
   const theme = useTheme();
   const xs = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const classes = useActionContainerStyles({ width, height });
 
   const { dataTypeTitle, title, error, disabled } = state;
 
@@ -185,7 +145,9 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
   let dataLink;
   if (dataTypeTitle) {
     dataLink = <Chip label={pluralize(dataTypeTitle)}
-                     className={classes.breadcrumbColor}
+                     sx={{
+                       color: theme.palette.primary.dark
+                     }}
                      onClick={() => onSubjectPicked(DataTypeSubject.for(subject.dataTypeId).key)} />;
   } else {
     dataLink = <Skeleton variant="circular"
@@ -195,18 +157,50 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
   const mainSectionTitle = localStorage.get(`${dataType.name}`);
 
   const breadcrumb = (
-    <Breadcrumbs separator="|" aria-label="breadcrumb" className={classes.breadcrumbs}>
+    <Breadcrumbs
+      separator="|"
+      aria-label="breadcrumb"
+      sx={{
+        color: theme.palette.primary.dark,
+        maxWidth: `calc(${width} - ${theme.spacing(9)})`,
+        '& .MuiBreadcrumbs-ol': {
+          flexWrap: 'nowrap',
+        },
+        '& .MuiBreadcrumbs-li:last-child': {
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden'
+        }
+      }}>
       {mainSectionTitle && (
-        <Typography variant="h6" className={classes.recordTitle}>
+        <Typography
+          variant="h6"
+          sx={{
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden'
+          }}>
           {`${mainSectionTitle} `}
         </Typography>
       )}
       {dataLink}
-      <Typography variant="h6" className={classes.recordTitle}>
+      <Typography
+        variant="h6"
+        sx={{
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden'
+        }}>
         {title || <Skeleton variant="text" width={theme.spacing(5)} />}
       </Typography>
       {breadcrumbActionName && !xs && (
-        <Typography variant="h6" className={classes.recordTitle}>
+        <Typography
+          variant="h6"
+          sx={{
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden'
+          }}>
           {breadcrumbActionName}
         </Typography>
       )}
@@ -232,7 +226,14 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
   return (
     <>
-      <Toolbar className={classes.toolbar}>
+      <Toolbar
+        sx={{
+          width: `calc(${width} - ${theme.spacing(3)})`,
+          pl: theme.spacing(2),
+          pr: theme.spacing(1),
+          height: appBarHeight(theme),
+          backgroundColor: theme.palette.background.default
+        }}>
         {breadcrumb}
         <ActionPicker kind={ActionKind.member}
                       arity={1}
@@ -241,11 +242,17 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
                       dataType={dataType}
                       selectedKey={actionKey} />
       </Toolbar>
-      <div className={classes.actionContainer}
-           style={{ height: `calc(${componentHeight})` }}>
+      <Box
+        sx={{
+          width: '100%',
+          overflow: 'auto',
+          position: 'relative',
+          height: `calc(${componentHeight})`,
+          backgroundColor: theme.palette.background.default
+        }}>
         {action}
         {loading && <FrezzerLoader />}
-      </div>
+      </Box>
     </>
   );
 }

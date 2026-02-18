@@ -14,37 +14,10 @@ import { ExecutionMonitor } from "./ExecutionMonitor";
 import { Config } from "../common/Symbols";
 import ToggleEnumControl from "../components/ToggleEnumControl";
 import { OriginsColors } from "../components/OriginsColors";
-import makeStyles from '@mui/styles/makeStyles';
-
-const useOriginStyles = makeStyles(theme => ({
-  option: {
-    margin: theme.spacing(1)
-  },
-  default: {
-    borderColor: theme.palette.text.disabled,
-    '&.selected': {
-      backgroundColor: theme.palette.text.disabled,
-      color: theme.palette.getContrastText(theme.palette.text.disabled),
-      fontWeight: 700
-    }
-  },
-  ...Object.keys(OriginsColors).reduce(
-    (cls, origin) => (cls[origin] = {
-      borderColor: OriginsColors[origin],
-      '&.selected': {
-        backgroundColor: OriginsColors[origin],
-        color: theme.palette.getContrastText(OriginsColors[origin]),
-        fontWeight: 700
-      }
-    }) && cls, {}
-  )
-}));
 
 const Cross = ({ docked, dataType, onSubjectPicked, height }) => {
 
   const [state, setState] = useSpreadState();
-
-  const optionsClasses = useOriginStyles();
 
   const [containerState, setContainerState] = useContainerContext();
 
@@ -78,22 +51,42 @@ const Cross = ({ docked, dataType, onSubjectPicked, height }) => {
           schema: {
             type: 'object',
             properties: {
-              origin: {
-                type: 'string',
-                enum: origins
-              }
-            }
-          },
-          [Config]: {
-            fields: {
-              origin: {
-                control: ToggleEnumControl,
-                controlProps: {
-                  optionsClasses
+                  origin: {
+                    type: 'string',
+                    enum: origins
+                  }
+                }
+              },
+              [Config]: {
+                fields: {
+                  origin: {
+                    control: ToggleEnumControl,
+                    controlProps: {
+                      optionsSx: {
+                        ...Object.keys(OriginsColors).reduce((sxMap, origin) => {
+                          sxMap[origin] = {
+                            borderColor: OriginsColors[origin],
+                            selected: {
+                              backgroundColor: OriginsColors[origin],
+                              color: theme => theme.palette.getContrastText(OriginsColors[origin]),
+                              fontWeight: 700,
+                            },
+                          };
+                          return sxMap;
+                        }, {}),
+                        default: {
+                          borderColor: theme => theme.palette.text.disabled,
+                          selected: {
+                            backgroundColor: theme => theme.palette.text.disabled,
+                            color: theme => theme.palette.getContrastText(theme.palette.text.disabled),
+                            fontWeight: 700,
+                          },
+                        },
+                      }
+                    }
+                  }
                 }
               }
-            }
-          }
         })
       })
     );

@@ -2,52 +2,10 @@ import React from "react";
 import clsx from "clsx";
 import DefaultMainIcon from "@mui/icons-material/LinkOff";
 import DefaultSmallIcon from "@mui/icons-material/Cancel";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
 import ResponsiveContainer from "../components/ResponsiveContainer";
-
-const alertStyles = makeStyles(theme => ({
-  okBox: {
-    width: '100px',
-    minHeight: '100px',
-    borderRadius: '50%',
-    position: 'relative',
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(3),
-    justifyContent: 'center'
-  },
-  okIcon: {
-    position: 'absolute',
-    top: '8px',
-    right: 0,
-    background: theme.palette.background.paper,
-    borderRadius: '50%'
-  },
-  fullHeight: {
-    height: '100%'
-  },
-  center: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center'
-  },
-  actionButton: {
-    margin: theme.spacing(1)
-  },
-  okContainer: {
-    overflow: 'auto',
-    background: theme.palette.background.default,
-    padding: theme.spacing(3)
-  },
-  alignCenter: {
-    textAlign: 'center'
-  },
-  padding: {
-    padding: theme.spacing(1),
-    width: `calc(100% - ${theme.spacing(6)})`
-  }
-}));
 
 const DefaultIconColor = [
   'inherit', 'primary', 'secondary', 'action', 'error', 'disabled'
@@ -56,7 +14,6 @@ const DefaultIconColor = [
 export default function Alert(
   { title, message, children, mainIcon, mainIconColor, smallIcon, smallIconColor, background }
 ) {
-  const classes = alertStyles();
   const theme = useTheme();
 
   const MainIcon = mainIcon || DefaultMainIcon;
@@ -74,21 +31,53 @@ export default function Alert(
     ? { color: smallIconColor }
     : { style: { color: smallIconColor } };
 
-  return <ResponsiveContainer>
-    <div key='successAlert' className={clsx(classes.fullHeight, classes.center, classes.okContainer)}>
-      <div className={clsx(classes.okBox, classes.center)} style={{ background }}>
-        <SmallIcon className={classes.okIcon} {...smallIconColor} />
-        <MainIcon fontSize='large' {...mainIconColor} />
-      </div>
-      <Typography variant='h5' className="flex align-items-center">
-        {title}
-      </Typography>
-      <Typography variant='subtitle1' className={classes.alignCenter}>
-        {message}
-      </Typography>
-      <div className={clsx(classes.alignCenter, classes.padding)}>
-        {children}
-      </div>
-    </div>
-  </ResponsiveContainer>;
+  return (
+    <ResponsiveContainer>
+      <Box
+        key='successAlert'
+        className={clsx("flex column align-items-center")}
+        sx={{
+          height: '100%',
+          overflow: 'auto',
+          background: theme => theme.palette.background.default,
+          p: 3,
+        }}
+      >
+        <Box
+          className="flex column align-items-center"
+          sx={{
+            width: '100px',
+            minHeight: '100px',
+            borderRadius: '50%',
+            position: 'relative',
+            mt: 3,
+            mb: 3,
+            justifyContent: 'center',
+            background,
+          }}
+        >
+          <SmallIcon
+            sx={{
+              position: 'absolute',
+              top: '8px',
+              right: 0,
+              background: theme => theme.palette.background.paper,
+              borderRadius: '50%',
+            }}
+            {...smallIconColor}
+          />
+          <MainIcon fontSize='large' {...mainIconColor} />
+        </Box>
+        <Typography variant='h5' className="flex align-items-center">
+          {title}
+        </Typography>
+        <Typography variant='subtitle1' sx={{ textAlign: 'center' }}>
+          {message}
+        </Typography>
+        <Box sx={{ textAlign: 'center', p: 1, width: theme => `calc(100% - ${theme.spacing(6)})` }}>
+          {children}
+        </Box>
+      </Box>
+    </ResponsiveContainer>
+  );
 }

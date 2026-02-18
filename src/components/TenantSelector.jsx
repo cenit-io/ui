@@ -3,7 +3,7 @@ import RecordSelector from "./RecordSelector";
 import { useTenantContext } from "../layout/TenantContext";
 import TenantTypeSelector from "./TenantTypeSelector";
 
-export default function TenantSelector({ inputClasses, readOnly }) {
+export default function TenantSelector({ inputClasses, inputSx, readOnly }) {
   const [tenantState, setTenantState] = useTenantContext();
 
   const { tenant, loading } = tenantState;
@@ -13,6 +13,7 @@ export default function TenantSelector({ inputClasses, readOnly }) {
   return <RecordSelector key={tenant.id}
                          dataTypeSelector={TenantTypeSelector}
                          inputClasses={inputClasses}
+                         inputSx={inputSx}
                          text={tenant.name}
                          onSelect={handleSelect}
                          disabled={loading}
