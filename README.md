@@ -148,6 +148,11 @@ scripts/e2e/cenit_ui_contact_flow.sh
 npm run e2e:contact-flow
 ```
 
+Driver note:
+
+- `CENIT_E2E_DRIVER=pwcli` can fail on large inline `run-code` payloads in some environments.
+- The backend delegated runner now auto-falls back to the node-playwright driver for this case.
+
 Default contract:
 
 - Namespace: `E2E_CONTACT_FLOW`
