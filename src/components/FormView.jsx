@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import ObjectControl from "./ObjectControl";
-import { useTheme } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, useTheme } from "@mui/material";
 import { catchError, switchMap, map } from "rxjs/operators";
 import { isObservable, of } from "rxjs";
 import zzip from "../util/zzip";
@@ -17,18 +16,6 @@ import { useSpreadState } from "../common/hooks";
 import { FETCHED } from "../common/Symbols";
 import { CRUD } from "../actions/ActionRegistry";
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    display: 'flex',
-    height: ({ height }) => height ? `calc(${height})` : 'unset',
-    width: ({ width }) => width ? `calc(${width})` : 'unset',
-    overflow: 'auto'
-  },
-  bgDefault: {
-    background: theme.palette.background.default
-  }
-}));
-
 const FormView = (
   {
     rootId, submitter, viewport, dataType, width, height, value, _type,
@@ -40,7 +27,6 @@ const FormView = (
   const [state, setState] = useSpreadState({
     initialFormValue: value.get()[FETCHED] ? value.cache : {}
   });
-  const classes = useStyles();
   const theme = useTheme();
 
   const seeded = useRef(false);
@@ -234,7 +220,7 @@ const FormView = (
     control = (
       <div className="flex column full-width justify-content-center">
         <List style={{ height: `calc(${formHeight})` }} component="ul">
-          <ListSubheader className={classes.bgDefault} component="li">
+          <ListSubheader sx={{ background: theme => theme.palette.background.default }} component="li">
             <Typography variant="h6" component="h6">
               {titles ? 'Pick a type' : textSkeleton}
             </Typography>
@@ -256,10 +242,16 @@ const FormView = (
 
   return (
     <FormContext.Provider value={formContext}>
-      <div className={classes.root}
+      <Box
+           sx={{
+             display: 'flex',
+             height: height ? `calc(${height})` : 'unset',
+             width: width ? `calc(${width})` : 'unset',
+             overflow: 'auto'
+           }}
            style={{ minHeight: `calc(${formHeight})` }}>
         {control}
-      </div>
+      </Box>
     </FormContext.Provider>
   );
 };

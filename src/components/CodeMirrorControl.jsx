@@ -1,10 +1,8 @@
 import React, { useRef } from 'react';
 import CodeMirror from 'codemirror';
 import { Subject } from "rxjs";
-import { IconButton, Typography, useMediaQuery } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, IconButton, Typography, useMediaQuery } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
-import clsx from "clsx";
 
 import 'codemirror/addon/mode/loadmode';
 import 'codemirror/mode/meta';
@@ -22,29 +20,6 @@ import ErrorMessages from "./ErrorMessages";
 import OpenInIcon from '@mui/icons-material/Fullscreen';
 // import OpenInOffIcon from "@mui/icons-material/CloseFullscreenOutlined";
 import OpenInOffIcon from '@mui/icons-material/FullscreenExit';
-
-const useStyles = makeStyles(theme => ({
-  editor: {
-    paddingBottom: theme.spacing(.5),
-    borderBottom: `solid 2px ${theme.palette.background.default}`
-  },
-  header: {
-    minHeight: theme.spacing(7),
-    background: theme.palette.background.default,
-    borderTopLeftRadius: theme.spacing(.5),
-    borderTopRightRadius: theme.spacing(.5),
-    alignItems: 'center',
-    padding: theme.spacing(0, 2)
-  },
-  error: {
-    borderBottom: `solid 2px ${theme.palette.error.main}`
-  },
-  closeDialogButton: {
-    marginBottom: 'auto',
-    paddingTop: theme.spacing(1),
-    paddingRight: theme.spacing(1)
-  }
-}));
 
 const ExtraModeTypes = {
   Java: ['text/x-java-source']
@@ -82,8 +57,6 @@ export default function CodeMirrorControl(
     controlValue: value.get(),
     open: false
   });
-
-  const classes = useStyles();
 
   const eraser = useRef(new Subject());
 
@@ -137,7 +110,13 @@ export default function CodeMirrorControl(
                         disabled={disabled}
                         property={property}
                         customCSS={customCSS}
-                        classes={classes}
+                        editorSx={{
+                          pb: 0.5,
+                          borderBottom: theme => `solid 2px ${theme.palette.background.default}`,
+                        }}
+                        errorSx={{
+                          borderBottom: theme => `solid 2px ${theme.palette.error.main}`
+                        }}
                         mode={mode}
                         theme={theme}
                         errors={errors}
@@ -151,14 +130,21 @@ export default function CodeMirrorControl(
                         eraser={eraser.current}
                         onBlur={onBlur}>
 
-        <div className={clsx('flex', classes.header)}>
+        <Box className="flex" sx={{
+          minHeight: theme => theme.spacing(7),
+          background: theme => theme.palette.background.default,
+          borderTopLeftRadius: theme => theme.spacing(0.5),
+          borderTopRightRadius: theme => theme.spacing(0.5),
+          alignItems: 'center',
+          px: 2,
+        }}>
           <Typography variant="subtitle2" component="div">
             {title}
           </Typography>
           <div className="grow-1" />
           {openInDialog}
           {clear}
-        </div>
+        </Box>
       </CodeMirrorEditor>
       <Dialog open={open}
               onClose={handleClose}
@@ -170,11 +156,11 @@ export default function CodeMirrorControl(
             {title}
           </DialogTitle>
           <div className="grow-1" />
-          <div className={classes.closeDialogButton}>
+          <Box sx={{ mb: 'auto', pt: 1, pr: 1 }}>
             <IconButton aria-label="close" onClick={handleClose} size="large">
               <OpenInOffIcon component="svg" />
             </IconButton>
-          </div>
+          </Box>
         </div>
         <DialogContent>
           <ErrorMessages errors={errors}>
@@ -185,7 +171,13 @@ export default function CodeMirrorControl(
                               disabled={disabled}
                               property={property}
                               customCSS={customCSS}
-                              classes={classes}
+                              editorSx={{
+                                pb: 0.5,
+                                borderBottom: theme => `solid 2px ${theme.palette.background.default}`,
+                              }}
+                              errorSx={{
+                                borderBottom: theme => `solid 2px ${theme.palette.error.main}`
+                              }}
                               mode={mode}
                               theme={theme}
                               errors={errors}

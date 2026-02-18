@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import API from "../services/ApiService";
 import Loading from "./Loading";
-import makeStyles from '@mui/styles/makeStyles';
 import clsx from "clsx";
+import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
@@ -14,30 +14,11 @@ import { useSpreadState } from "../common/hooks";
 import InfoAlert from "../actions/InfoAlert";
 import { ActiveTenantIconFilled } from "../config/dataTypes/Cenit/ActiveTenant";
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    padding: theme.spacing(1)
-  },
-  card: {
-    paddingTop: theme.spacing(1),
-    cursor: 'pointer',
-    '&:hover': {
-      background: theme.palette.background.default
-    },
-    margin: theme.spacing(1, 0)
-  },
-  tenant: {
-    marginRight: theme.spacing(2)
-  }
-}));
-
 export default function ActiveTenants({ dataType, onSubjectPicked }) {
 
   const [state, setState] = useSpreadState();
 
   const { tenantDataType, items } = state;
-
-  const classes = useStyles();
 
   useEffect(() => {
     const subscription = zzip(
@@ -60,10 +41,17 @@ export default function ActiveTenants({ dataType, onSubjectPicked }) {
     if (items.length) {
       const activeTenants = items.map(({ tenant, tasks }) => (
         <Card key={tenant.id}
-              className={classes.card}
+              sx={(theme) => ({
+                pt: theme.spacing(1),
+                cursor: 'pointer',
+                '&:hover': {
+                  background: theme.palette.background.default
+                },
+                my: theme.spacing(1),
+              })}
               onClick={openTenant(tenant)}>
           <CardContent className="flex">
-            <Typography variant="subtitle1" className={classes.tenant}>
+            <Typography variant="subtitle1" sx={(theme) => ({ mr: theme.spacing(2) })}>
               {tenant.name}
             </Typography>
             <Chip label={tasks} />
@@ -72,9 +60,9 @@ export default function ActiveTenants({ dataType, onSubjectPicked }) {
       ));
 
       return (
-        <div className={clsx("flex wrap align-items-center space-around", classes.root)}>
+        <Box className={clsx("flex wrap align-items-center space-around")} sx={(theme) => ({ p: theme.spacing(1) })}>
           {activeTenants}
-        </div>
+        </Box>
       );
     }
 

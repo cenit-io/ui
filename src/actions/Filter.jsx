@@ -7,7 +7,7 @@ import FormEditor from "../components/FormEditor";
 import { DataType } from "../services/DataTypeService";
 import { Config } from "../common/Symbols";
 import { useContainerContext } from "./ContainerContext";
-import makeStyles from '@mui/styles/makeStyles';
+import Box from "@mui/material/Box";
 import Fab from "@mui/material/Fab";
 
 export const FilterIcon = ({ fontSize }) => (
@@ -21,19 +21,9 @@ export const FilterIcon = ({ fontSize }) => (
   </SvgIcon>
 );
 
-const useStyles = makeStyles(theme => ({
-  filterButton: {
-    position: 'absolute',
-    right: theme.spacing(3),
-    bottom: theme.spacing(3)
-  }
-}));
-
 const Filter = ({ docked, dataType, onSubjectPicked, height }) => {
 
   const [containerState, setContainerState] = useContainerContext();
-
-  const classes = useStyles();
 
   const { selector, landingActionKey } = containerState;
 
@@ -76,7 +66,7 @@ const Filter = ({ docked, dataType, onSubjectPicked, height }) => {
   });
 
   return (
-    <div className="relative">
+    <Box className="relative">
       <FormEditor docked={docked}
                   dataType={selectorDataType.current}
                   height={height}
@@ -86,11 +76,11 @@ const Filter = ({ docked, dataType, onSubjectPicked, height }) => {
                   noSubmitButton={true} />
       <Fab aria-label="filter"
            color="primary"
-           className={classes.filterButton}
+           sx={{ position: 'absolute', right: 3, bottom: 3 }}
            onClick={handleFilter}>
         <FilterIcon />
       </Fab>
-    </div>
+    </Box>
   );
 };
 

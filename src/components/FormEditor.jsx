@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import BackIcon from '@mui/icons-material/ArrowBack';
 import FormView from "./FormView";
 import { useMediaQuery, Fab, Tooltip, IconButton } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
-import clsx from 'clsx';
 import LoadingButton from "./LoadingButton";
 import SwipeableViews from "react-swipeable-views";
 import copy from 'copy-to-clipboard';
@@ -40,128 +38,6 @@ function withForm(item) {
 
 const stackHeaderSpacing = 5;
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    position: 'relative',
-    height: props => `calc(${props.height})`,
-    backgroundColor: theme.palette.background.default
-  },
-  stackHeader: {
-    height: theme.spacing(stackHeaderSpacing),
-    padding: theme.spacing(1),
-    boxSizing: 'border-box'
-  },
-  formContainer: {
-    height: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)})`,
-    overflow: 'auto',
-    boxSizing: 'border-box',
-    flexGrow: 1
-  },
-  jsonContainer: {
-    height: props => `calc(${props.height} - ${theme.spacing(stackHeaderSpacing)})`,
-    overflow: 'auto',
-    boxSizing: 'border-box',
-    background: theme.palette.background.default,
-    color: theme.palette.text.secondary,
-  },
-  jsonBox: {
-    width: '50%',
-    paddingLeft: theme.spacing(1),
-    paddingRight: theme.spacing(1)
-  },
-  mdFormContainer: {
-    paddingLeft: '25%',
-    paddingRight: '25%',
-  },
-  smFormContainer: {
-    paddingLeft: '15%',
-    paddingRight: '15%',
-  },
-  trailing: {
-    height: theme.spacing(8)
-  },
-  fabBack: {
-    position: 'absolute',
-    top: props => `calc(${props.height} - ${theme.spacing(12)})`,
-    right: theme.spacing(18),
-    color: theme.palette.text.secondary
-  },
-  fabSave: {
-    position: 'absolute',
-    top: props => `calc(${props.height} - ${theme.spacing(14)})`,
-    right: theme.spacing(2)
-  },
-  fabSaveLeft: {
-    right: theme.spacing(8)
-  },
-  fabCancel: {
-    position: 'absolute',
-    top: props => `calc(${props.height} - ${theme.spacing(12)})`,
-    right: theme.spacing(2),
-  },
-  fabJson: {
-    position: 'absolute',
-    top: theme.spacing(8),
-    right: theme.spacing(5),
-    fontWeight: 'bold',
-    color: theme.palette.text.secondary
-  },
-  fabCopy: {
-    position: 'absolute',
-    top: theme.spacing(15),
-    right: theme.spacing(3),
-    color: theme.palette.text.secondary
-  },
-  iconJsonActive: {
-    backgroundColor: ({ jsonMode }) => jsonMode && theme.palette.action.selected
-  },
-  iconJsonWrapper: {
-    width: "1.5rem",
-    marginLeft: "auto",
-    marginRight: '2rem',
-    marginBottom: '8px',
-  },
-  okBox: {
-    width: '100px',
-    minHeight: '100px',
-    borderRadius: '50%',
-    position: 'relative',
-    background: theme.palette.primary.light,
-    marginTop: theme.spacing(3),
-    marginBottom: theme.spacing(3),
-    justifyContent: 'center'
-  },
-  okIcon: {
-    position: 'absolute',
-    top: '8px',
-    right: 0,
-    background: theme.palette.background.paper,
-    borderRadius: '50%'
-  },
-  fullHeight: {
-    height: '100%'
-  },
-  center: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center'
-  },
-  actionButton: {
-    margin: theme.spacing(1)
-  },
-  okContainer: {
-    height: props => props.height,
-    overflow: 'auto',
-    background: theme.palette.background.default
-  },
-  successLabel: {
-    color: theme.palette.text.secondary
-  },
-  alignCenter: {
-    textAlign: 'center'
-  }
-}));
-
 const defaultFormProcessor = (viewport, rootId, onFormSubmit, onSubmitDone) => (formDataType, value, formSanitizer) => {
   const submitAction = onFormSubmit
     ? onFormSubmit(formDataType, value, formSanitizer)
@@ -190,29 +66,17 @@ const defaultFormProcessor = (viewport, rootId, onFormSubmit, onSubmitDone) => (
   );
 };
 
-const useSuccessStyles = makeStyles(theme => ({
-  alignCenter: {
-    textAlign: 'center'
-  },
-  actionButton: {
-    margin: theme.spacing(1)
-  },
-}));
-
 function DefaultSuccessControl({ title, rootId, onSubjectPicked, dataType, id, value }) {
-
-  const classes = useSuccessStyles();
-
   const success = value[Status] === 200 || value[Status] === 201;
 
   let actions;
   if (success && !rootId) {
     actions = (
-      <div className={classes.alignCenter}>
+      <div style={{ textAlign: 'center' }}>
         <Button variant="outlined"
                 color="primary"
                 startIcon={<ViewIcon />}
-                className={classes.actionButton}
+                sx={{ m: 1 }}
                 onClick={() => onSubjectPicked(RecordSubject.for(dataType.id, id).key)}>
           View
         </Button>
@@ -291,8 +155,81 @@ const FormEditor = (
   const [jsonMode, setJsonMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stackControls, setStackControls] = useState([]);
-
-  const classes = useStyles({ height, jsonMode });
+  const styles = {
+    root: {
+      position: 'relative',
+      height: `calc(${height})`,
+      backgroundColor: theme.palette.background.default
+    },
+    stackHeader: {
+      height: theme.spacing(stackHeaderSpacing),
+      padding: theme.spacing(1),
+      boxSizing: 'border-box'
+    },
+    formContainer: {
+      height: `calc(${height} - ${theme.spacing(stackHeaderSpacing)})`,
+      overflow: 'auto',
+      boxSizing: 'border-box',
+      flexGrow: 1
+    },
+    jsonContainer: {
+      height: `calc(${height} - ${theme.spacing(stackHeaderSpacing)})`,
+      overflow: 'auto',
+      boxSizing: 'border-box',
+      background: theme.palette.background.default,
+      color: theme.palette.text.secondary,
+    },
+    jsonBox: {
+      width: '50%',
+      paddingLeft: theme.spacing(1),
+      paddingRight: theme.spacing(1)
+    },
+    mdFormContainer: {
+      paddingLeft: '25%',
+      paddingRight: '25%',
+    },
+    smFormContainer: {
+      paddingLeft: '15%',
+      paddingRight: '15%',
+    },
+    trailing: {
+      height: theme.spacing(8)
+    },
+    fabBack: {
+      position: 'absolute',
+      top: `calc(${height} - ${theme.spacing(12)})`,
+      right: theme.spacing(18),
+      color: theme.palette.text.secondary
+    },
+    fabSave: {
+      position: 'absolute',
+      top: `calc(${height} - ${theme.spacing(14)})`,
+      right: theme.spacing(2)
+    },
+    fabSaveLeft: {
+      right: theme.spacing(8)
+    },
+    fabCancel: {
+      position: 'absolute',
+      top: `calc(${height} - ${theme.spacing(12)})`,
+      right: theme.spacing(2),
+    },
+    fabCopy: {
+      position: 'absolute',
+      top: theme.spacing(15),
+      right: theme.spacing(3),
+      color: theme.palette.text.secondary
+    },
+    iconJsonWrapper: {
+      width: "1.5rem",
+      marginLeft: "auto",
+      marginRight: '2rem',
+      marginBottom: '8px',
+    },
+    iconJsonActive: {
+      backgroundColor: jsonMode ? theme.palette.action.selected : undefined
+    }
+  };
 
   const current = stack[stack.length - 1];
 
@@ -395,7 +332,7 @@ const FormEditor = (
       <Fab key='back'
            size='small'
            aria-label="back"
-           className={classes.fabBack}
+           style={styles.fabBack}
            onClick={handleBack}>
         <BackIcon />
       </Fab>
@@ -422,7 +359,7 @@ const FormEditor = (
         <LoadingButton key='save'
                        loading={saving && !done}
                        onClick={save}
-                       className={clsx(classes.fabSave, cancelEditor && classes.fabSaveLeft)}
+                       style={{ ...styles.fabSave, ...(cancelEditor ? styles.fabSaveLeft : {}) }}
                        success={done}
                        actionIcon={stack.length === 2 && submitIcon} />
       );
@@ -430,7 +367,7 @@ const FormEditor = (
         actions.push(
           <Fab key='cancel'
                size="small"
-               className={classes.fabCancel}
+               style={styles.fabCancel}
                onClick={cancelEditor}>
             <Close component="svg" />
           </Fab>
@@ -441,8 +378,9 @@ const FormEditor = (
     if (md && jsonMode) {
       jsonView = (
         <FormContext.Provider value={{ value: current.value }}>
-          <JsonViewer className={clsx(classes.jsonContainer, classes.jsonBox)}
-                      projection={jsonProjection} />
+          <div style={{ ...styles.jsonContainer, ...styles.jsonBox }}>
+            <JsonViewer projection={jsonProjection} />
+          </div>
         </FormContext.Provider>
       );
 
@@ -450,7 +388,7 @@ const FormEditor = (
         <Fab key='copy'
              size='small'
              aria-label="JSON"
-             className={classes.fabCopy}
+             style={styles.fabCopy}
              onClick={() => copy(JSON.stringify(current.value.get(), null, 2))}>
           <CopyIcon component="svg" />
         </Fab>
@@ -519,19 +457,18 @@ const FormEditor = (
   }
 
   const breadCrumb = false && ( // TODO Breadcrumb
-    (<div ref={stackHeaderRef} className={classes.stackHeader}>
+    (<div ref={stackHeaderRef} style={styles.stackHeader}>
       {stack.length > 1 && stackTitles.join(' ')}
     </div>)
   );
 
   const jsonBtn = (!noJSON && md) && (
-    <div className={classes.iconJsonWrapper}>
+    <div style={styles.iconJsonWrapper}>
       <Tooltip title="Json Code" arrow>
         <IconButton aria-label="Json Code"
                     color='default'
                     onClick={() => setJsonMode(!jsonMode)}
-                    className={classes.iconJsonActive}
-                    style={{ color: jsonMode && "rgb(68, 119, 151)" }}
+                    style={{ ...styles.iconJsonActive, color: jsonMode ? "rgb(68, 119, 151)" : undefined }}
                     size="small">
           <Code component="svg" />
         </IconButton>
@@ -540,18 +477,18 @@ const FormEditor = (
   );
 
   return (
-    <div className={classes.root}>
+    <div style={styles.root}>
       {breadCrumb}
       {jsonBtn}
       <div style={{ display: 'flex', position: 'relative' }}>
         <div ref={ref}
-             className={clsx(
-               classes.formContainer,
-               !xs && !jsonView && (docked || !md) && classes.smFormContainer,
-               md && ((jsonMode && classes.jsonBox) || classes.mdFormContainer)
-             )}>
+             style={{
+               ...styles.formContainer,
+               ...(!xs && !jsonView && (docked || !md) ? styles.smFormContainer : {}),
+               ...(md ? (jsonMode ? styles.jsonBox : styles.mdFormContainer) : {}),
+             }}>
           {forms}
-          <div className={classes.trailing} />
+          <div style={styles.trailing} />
           {actions}
         </div>
         {jsonView}

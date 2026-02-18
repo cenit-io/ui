@@ -3,7 +3,6 @@ import { useSpreadState } from "../common/hooks";
 import API from "../services/ApiService";
 import FrezzerLoader from "../components/FrezzerLoader";
 import ConfigService from "../services/ConfigService";
-import makeStyles from '@mui/styles/makeStyles';
 import { Status } from "../common/Symbols";
 import EmbeddedAppService from "../services/EnbeddedAppService";
 import { defer, of, zip } from "rxjs";
@@ -16,19 +15,11 @@ export function useTenantContext() {
   return useContext(TC);
 }
 
-const useLoaderStyles = makeStyles(() => ({
-  backdrop: {
-    background: 'transparent'
-  }
-}));
-
 export default function TenantContext({ children }) {
   const [state, setState] = useSpreadState({
     loading: true,
     switchSudo: false
   });
-
-  const classes = useLoaderStyles();
 
   const { tenant, loading, switchSudo } = state;
 
@@ -87,7 +78,7 @@ export default function TenantContext({ children }) {
   return (
     <TC.Provider value={[state, setState]}>
       {tenant && children}
-      {loading && <FrezzerLoader backdropClass={classes.backdrop} />}
+      {loading && <FrezzerLoader backdropStyle={{ background: 'transparent' }} />}
     </TC.Provider>
   );
 }

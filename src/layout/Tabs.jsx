@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useTheme } from '@mui/material/styles';
-import makeStyles from '@mui/styles/makeStyles';
 import AppBar from '@mui/material/AppBar';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
+import Box from '@mui/material/Box';
 import CloseIcon from '@mui/icons-material/Clear';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
@@ -23,27 +23,6 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 
 export const tabsHeight = theme => `calc(${theme.spacing(4)} + 4px)`;
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flexGrow: 1,
-    backgroundColor: theme.palette.background.paper,
-    position: "relative",
-  },
-  banner: {
-    display: "flex",
-    height: "min-content",
-    width: "100%",
-  },
-  closeAllTabs: {
-    position: "absolute",
-    right: ".5rem",
-    bottom: "-10px",
-  },
-  modal: {
-    backdropFilter: "blur(6px) saturate(120%)",
-  },
-}));
 
 function ItemTab({ subject, onClick, onClose, onCloseAllTabs, onCloseAllKeepMe, isDisabledKeepMe }) {
 
@@ -74,10 +53,15 @@ const CloseTabsDialog = ({
   handleCloseBox,
   showCLose,
 }) => {
-  const classes = useStyles();
-
   return (
-    <Dialog className={classes.modal} onClose={handleCloseBox} open={showCLose}>
+    <Dialog
+      onClose={handleCloseBox}
+      open={showCLose}
+      sx={{
+        '& .MuiBackdrop-root': {
+          backdropFilter: "blur(6px) saturate(120%)",
+        },
+      }}>
       <List>
         <ListItem button onClick={handleCloseAllTabs} pt={0}>
           <ListItemText primary="Close All Tabs" />
@@ -155,7 +139,6 @@ const initialTabs = {
 }
 
 export default function NavTabs({ docked, width }) {
-  const classes = useStyles();
   const theme = useTheme();
   const smUp = useMediaQuery(theme.breakpoints.up('sm'));
   const [state, setState] = useSpreadState(initialTabs);
@@ -289,10 +272,21 @@ export default function NavTabs({ docked, width }) {
   }
 
   return (
-    <div className={classes.root}>
-      <div className={classes.banner} ref={alertBanner}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        backgroundColor: theme.palette.background.paper,
+        position: "relative",
+      }}>
+      <Box
+        ref={alertBanner}
+        sx={{
+          display: "flex",
+          height: "min-content",
+          width: "100%",
+        }}>
         {banner}
-      </div>
+      </Box>
       <AppBar position="sticky" color="default">
         <Tabs
           value={tabIndex}
@@ -312,6 +306,6 @@ export default function NavTabs({ docked, width }) {
                       onChangeIndex={tabIndex => setTabIndex(tabIndex)}>
         {containers}
       </SwipeableViews>
-    </div>
+    </Box>
   );
 }

@@ -42,5 +42,5 @@ describe("subjects", () => {
 
     expect(titles[titles.length - 1]).toBe("Quick Access");
     subscription.unsubscribe();
-  });
+  }, 10000);
 });

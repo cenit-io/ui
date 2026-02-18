@@ -1,35 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from "@mui/material/TextField";
-import makeStyles from '@mui/styles/makeStyles';
-import clsx from "clsx";
 import { useFormContext } from "./FormContext";
-
-const useStyles = makeStyles(theme => ({
-  root: {
-    '& .MuiAutocomplete-endAdornment': {
-      top: theme.spacing(0.5),
-      paddingRight: theme.spacing(0.5),
-      '& .MuiAutocomplete-clearIndicator': {
-        float: 'right',
-        display: 'none',
-        '& .MuiSvgIcon-root': {
-          fontSize: 'inherit'
-        }
-      }
-    }
-  },
-  clearable: {
-    '& .MuiAutocomplete-endAdornment': {
-      top: theme.spacing(0.5),
-      paddingRight: theme.spacing(0.5),
-      '& .MuiAutocomplete-clearIndicator': {
-        display: 'inherit',
-        visibility: 'inherit'
-      }
-    }
-  }
-}));
 
 export default function AutocompleteControl({
   title,
@@ -47,7 +19,6 @@ export default function AutocompleteControl({
   renderTags
 }) {
   const [state, setState] = useState(multiple ? [] : null);
-  const classes = useStyles();
 
   const { initialFormValue } = useFormContext();
 
@@ -118,15 +89,26 @@ export default function AutocompleteControl({
                        value={state}
                        onChange={handleChange}
                        disableClearable={deleteDisabled || readOnly}
+                       sx={{
+                         '& .MuiAutocomplete-endAdornment': {
+                           top: theme => theme.spacing(0.5),
+                           paddingRight: theme => theme.spacing(0.5),
+                           '& .MuiAutocomplete-clearIndicator': {
+                             float: 'right',
+                             display: state ? 'inherit' : 'none',
+                             visibility: state ? 'inherit' : 'hidden',
+                             '& .MuiSvgIcon-root': {
+                               fontSize: 'inherit'
+                             }
+                           }
+                         }
+                       }}
                        renderInput={
                          params => <TextField {...params}
                                               readOnly={readOnly}
                                               error={error}
                                               label={title}
                                               variant="filled"
-                                              className={clsx(
-                                                classes.root,
-                                                state && classes.clearable
-                                              )} />
+                                              className="full-width" />
                        } />;
 }

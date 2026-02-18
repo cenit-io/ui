@@ -1,16 +1,9 @@
 import React, { useEffect } from 'react';
 import Button from "@mui/material/Button";
 import { useSpreadState } from "../common/hooks";
-import makeStyles from '@mui/styles/makeStyles';
 import Typography from "@mui/material/Typography";
 import clsx from "clsx";
 import { Alert } from '@mui/material';
-
-const useStyles = makeStyles(theme => ({
-  option: {
-    margin: theme.spacing(1)
-  }
-}));
 
 export default function EnumControl({
   title,
@@ -21,13 +14,12 @@ export default function EnumControl({
   onChange,
   onDelete,
   property,
-  optionsClasses
+  optionsClasses,
+  optionsSx
 }) {
   const [state, setState] = useSpreadState({
     options: {}
   });
-
-  const classes = useStyles();
 
   const { options } = state;
 
@@ -66,10 +58,16 @@ export default function EnumControl({
       <Button key={option}
               variant={option === value.cache ? 'contained' : 'outlined'}
               className={clsx(
-                classes.option,
                 optionsClasses && optionsClasses[option],
                 (optionsClasses && option === value.cache) && 'selected'
               )}
+              sx={{
+                m: 1,
+                ...(optionsSx && optionsSx[option] ? optionsSx[option] : {}),
+                ...(optionsSx && option === value.cache && optionsSx[option]?.selected
+                  ? optionsSx[option].selected
+                  : {}),
+              }}
               color={optionsClasses ? undefined : (option === value.cache ? 'primary' : 'default')}
               onClick={selectOption(option)}
               disabled={disabled}>

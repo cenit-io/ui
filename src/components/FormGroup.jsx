@@ -1,25 +1,14 @@
 import React from 'react';
-import makeStyles from '@mui/styles/makeStyles';
-import clsx from 'clsx';
+import Box from '@mui/material/Box';
 import '../common/FlexBox.css';
 
-const useStyles = makeStyles(theme => ({
-  defaultStyle: {
-    borderLeft: 'solid',
-    borderLeftColor: theme.palette.text.secondary
-  },
-  errorStyle: {
-    borderLeft: 'solid',
-    borderLeftColor: theme.palette.error.light
-  }
-}));
-
 export const FormGroup = ({ children, error }) => {
-
-  const classes = useStyles();
-  const className = clsx('flex column full-width relative', (error && classes.errorStyle) || classes.defaultStyle);
-
-  return <div className={className}>
+  return <Box
+    className="flex column full-width relative"
+    sx={(theme) => ({
+      borderLeft: 'solid',
+      borderLeftColor: error ? theme.palette.error.light : theme.palette.text.secondary
+    })}>
     {children}
-  </div>;
+  </Box>;
 };

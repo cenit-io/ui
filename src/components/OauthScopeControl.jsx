@@ -1,5 +1,4 @@
-import { Chip, Tooltip, Typography } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { Box, Chip, Tooltip, Typography } from "@mui/material";
 import React from "react";
 import AutocompleteControl from "./AutocompleteControl";
 import { InfoRounded } from "@mui/icons-material";
@@ -29,56 +28,6 @@ const COLORS = {
   delete: red[200],
   digest: purple[200],
 };
-
-const useStyles = makeStyles((theme) =>
-  Object.keys(COLORS).reduce(
-    (classes, scope) => ({
-      ...classes,
-      [scope]: {
-        color: theme.palette.getContrastText(COLORS[scope]),
-        backgroundColor: COLORS[scope],
-      },
-    }),
-    {}
-  )
-);
-
-const useStylesReadOnlyView = makeStyles((theme) => ({
-  root: {
-    width: "100%",
-    minHeight: "4rem",
-    position: "relative",
-    marginTop: "1.7rem",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  header: {
-    width: "4rem",
-    height: "2rem",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    top: "-1.7rem",
-    left: "-1px",
-  },
-  list: {
-
-    "& li": {
-      marginBottom: "0.7rem",
-    },
-  },
-  listTitle: {
-    fontWeight: "bold",
-  },
-  listDataType: {
-    color: theme.palette.secondary.main,
-  },
-  icon: {
-    fill: theme.palette.secondary.main,
-  },
-}));
 
 const SCOPE_DESCRIPTIONS = {
   auth: {
@@ -209,9 +158,6 @@ const SCOPE_DESCRIPTIONS = {
 };
 
 const ScopeLi = ({ title, dataType }) => {
-
-  const classes = useStylesReadOnlyView();
-
   const scope = SCOPE_DESCRIPTIONS[title];
 
   let { description, descriptionDataType, tooltip } = scope;
@@ -220,7 +166,9 @@ const ScopeLi = ({ title, dataType }) => {
     <li>
       {description}
       {dataType && (
-        <spam className={classes.listDataType}> {descriptionDataType} </spam>
+        <Box component="span" sx={{ color: theme => theme.palette.secondary.main }}>
+          {" "}{descriptionDataType}{" "}
+        </Box>
       )}
       {tooltip && (
         <Tooltip
@@ -232,7 +180,7 @@ const ScopeLi = ({ title, dataType }) => {
           <InfoRounded
             fontSize="small"
             color="default"
-            className={classes.icon}
+            sx={{ fill: theme => theme.palette.secondary.main }}
           />
         </Tooltip>
       )}
@@ -241,9 +189,6 @@ const ScopeLi = ({ title, dataType }) => {
 };
 
 const ReadOnlyView = ({ scope }) => {
-
-  const classes = useStylesReadOnlyView();
-
   /*
        Here build the array with the structure
        [{ scope: "NameScope", dataType: "NameDatatype" },
@@ -255,13 +200,34 @@ const ReadOnlyView = ({ scope }) => {
     .map(scope => ({ scope }));
 
   return (
-    <div className={classes.root}>
-      <div className={classes.header}>
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: "4rem",
+        position: "relative",
+        marginTop: "1.7rem",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Box
+        sx={{
+          width: "4rem",
+          height: "2rem",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          position: "absolute",
+          top: "-1.7rem",
+          left: "-1px",
+        }}
+      >
         <Typography variant="subtitle2">
           Scope
         </Typography>
-      </div>
-      <ul className={classes.list}>
+      </Box>
+      <Box component="ul" sx={{ "& li": { mb: "0.7rem" } }}>
         {
           scopes.map((scope, index) => (
             <ScopeLi
@@ -271,14 +237,12 @@ const ReadOnlyView = ({ scope }) => {
             />
           ))
         }
-      </ul>
-    </div>
+      </Box>
+    </Box>
   );
 };
 
 export default function OauthScopeControl(props) {
-  const classes = useStyles();
-
   const { scopes, readOnly, disabled, value } = props;
 
   const renderTags = (tagValue, getTagProps) =>
@@ -291,7 +255,10 @@ export default function OauthScopeControl(props) {
         }
         return (
           <Chip
-            classes={{ root: classes[option] }}
+            sx={{
+              color: theme => theme.palette.getContrastText(COLORS[option]),
+              backgroundColor: COLORS[option],
+            }}
             label={option.toUpperCase()}
             {...tagProps}
             disabled={disabled}

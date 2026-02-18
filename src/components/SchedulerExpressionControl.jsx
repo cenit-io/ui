@@ -1,6 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
-import withStyles from '@mui/styles/withStyles';
 import { useSpreadState } from "../common/hooks";
 import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
@@ -11,22 +9,23 @@ import { addMonths } from 'date-fns'
 import Select from "@mui/material/Select";
 import AutosizeInput from 'react-input-autosize';
 import InputBase from "@mui/material/InputBase";
-import clsx from "clsx";
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ToggleButton from '@mui/material/ToggleButton';
 import Typography from "@mui/material/Typography";
 import Collapsible from "./Collapsible";
 import Random from "../util/Random";
+import Box from "@mui/material/Box";
+import { styled } from "@mui/material/styles";
 
 const toDate = (value) => (value ? new Date(value) : null);
 
-const PlainInput = withStyles((theme) => ({
-  input: {
+const PlainInput = styled(InputBase)(() => ({
+  '& .MuiInputBase-input': {
     border: 'none',
   },
-}))(InputBase);
+}));
 
-function OptionButton({ options, disabled, readOnly, className }) {
+function OptionButton({ options, disabled, readOnly, sx }) {
   const [state, setState] = useSpreadState({
     option: options.find(({ defaultOption }) => defaultOption) || options[0]
   });
@@ -57,7 +56,7 @@ function OptionButton({ options, disabled, readOnly, className }) {
     <>
       <Button disabled={disabled}
               onClick={handleClick}
-              className={className}>
+              sx={sx}>
         {option.title}
       </Button>
       <Menu onClose={selectOption(null)}
@@ -69,25 +68,6 @@ function OptionButton({ options, disabled, readOnly, className }) {
   );
 }
 
-const useStyles = makeStyles(theme => ({
-  marginRight: {
-    marginRight: theme.spacing(1)
-  },
-  marginTop: {
-    marginTop: theme.spacing(1)
-  },
-  period: {
-    padding: theme.spacing(3, 0)
-  },
-  word: {
-    textTransform: 'uppercase',
-    padding: theme.spacing(0, .5)
-  },
-  day: {
-    minWidth: theme.spacing(4)
-  }
-}));
-
 export default function SchedulerExpressionControl({ title, property, value, disabled, readOnly, onChange, errors }) {
 
   const [state, setState] = useSpreadState({
@@ -96,9 +76,7 @@ export default function SchedulerExpressionControl({ title, property, value, dis
 
   const key = useRef(Random.string());
 
-  const classes = useStyles();
-
-  const { menuAnchor, expression } = state;
+  const { expression } = state;
 
   const setExpression = useCallback((expression, state) => {
     setState({ expression, ...state });
@@ -269,11 +247,11 @@ export default function SchedulerExpressionControl({ title, property, value, dis
             Sat
           </ToggleButton>
         </ToggleButtonGroup>
-        <div className={clsx('flex align-items-center', classes.marginTop)}>
-          <Typography className={clsx(classes.marginRight, classes.word)} variant="button">
+        <Box className="flex align-items-center" sx={{ mt: 1 }}>
+          <Typography sx={{ mr: 1, textTransform: 'uppercase', px: 0.5 }} variant="button">
             the
           </Typography>
-          <ToggleButtonGroup className={classes.marginRight}
+          <ToggleButtonGroup sx={{ mr: 1 }}
                              value={monthWeeks}
                              onChange={(_, weeks_month) => {
                                if (!readOnly) {
@@ -305,10 +283,10 @@ export default function SchedulerExpressionControl({ title, property, value, dis
               Last
             </ToggleButton>
           </ToggleButtonGroup>
-          <Typography className={classes.word} variant="button">
+          <Typography sx={{ textTransform: 'uppercase', px: 0.5 }} variant="button">
             weeks
           </Typography>
-        </div>
+        </Box>
       </Collapsible>
     );
     const monthsDays = [...(expression.months_days || [])];
@@ -339,9 +317,9 @@ export default function SchedulerExpressionControl({ title, property, value, dis
         {
           days.map(day => (
             <ToggleButton key={`day_${day}`} value={day} disabled={disabled}>
-              <div className={classes.day}>
+              <Box sx={{ minWidth: theme => theme.spacing(4) }}>
                 {day}
-              </div>
+              </Box>
             </ToggleButton>
           ))
         }
@@ -384,7 +362,7 @@ export default function SchedulerExpressionControl({ title, property, value, dis
               Jun
             </ToggleButton>
           </ToggleButtonGroup>
-          <ToggleButtonGroup className={classes.marginRight}
+          <ToggleButtonGroup sx={{ mr: 1 }}
                              value={expression.months || []}
                              onChange={(_, months) => !readOnly && setExpression({
                                ...expression,
@@ -431,7 +409,7 @@ export default function SchedulerExpressionControl({ title, property, value, dis
     period = (
       <div className="flex align-items-center">
         <AutosizeInput value={unit}
-                       className={classes.marginRight}
+                       style={{ marginRight: 8 }}
                        onChange={setUnit}
                        type="number"
                        disabled={disabled}
@@ -464,24 +442,24 @@ export default function SchedulerExpressionControl({ title, property, value, dis
         <OptionButton options={startOptions}
                       disabled={disabled}
                       readOnly={readOnly}
-                      className={classes.marginRight} />
+                      sx={{ mr: 1 }} />
         {startAt}
       </div>
-      <div className={clsx('flex column', classes.period)}>
+      <Box className="flex column" sx={{ py: 3 }}>
         <div className="flex">
           <OptionButton options={repeatOptions}
                         disabled={disabled}
                         readOnly={readOnly}
-                        className={classes.marginRight} />
+                        sx={{ mr: 1 }} />
           {period}
         </div>
         {periodEx}
-      </div>
+      </Box>
       <div className="flex">
         <OptionButton options={endOptions}
                       disabled={disabled}
                       readOnly={readOnly}
-                      className={classes.marginRight} />
+                      sx={{ mr: 1 }} />
         {endAt}
       </div>
     </div>

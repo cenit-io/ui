@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import StringControl from './StringControl';
+import Box from "@mui/material/Box";
 import { LinearProgress } from '@mui/material';
-import makeStyles from '@mui/styles/makeStyles';
 import EmbedsOneControl from "./EmbedsOneControl";
 import EmbedsManyControl from "./EmbedsManyControl";
 import BooleanControl from "./BooleanControl";
@@ -100,15 +100,6 @@ function configProps(config, value, user) {
   }, {});
 }
 
-const useStyles = makeStyles(theme => ({
-  control: {
-    padding: theme.spacing(1)
-  },
-  error: {
-    color: theme.palette.error.main
-  }
-}));
-
 function PropertyControl(props) {
   const [tenantState] = useTenantContext();
 
@@ -118,7 +109,6 @@ function PropertyControl(props) {
 
   const { errors, property, onChange, config, value } = props;
   const { schema, controlErrors } = state;
-  const classes = useStyles();
 
   const { description } = state;
 
@@ -158,14 +148,14 @@ function PropertyControl(props) {
                                       onChange={handleChange} />;
 
     return (
-      <div className={classes.control}>
+      <Box sx={{ p: 1 }}>
         <ErrorMessages errors={currentErrors}>
           {control}
           <FormHelperText component="p">
             {description}
           </FormHelperText>
         </ErrorMessages>
-      </div>
+      </Box>
     );
   }
 

@@ -1,52 +1,36 @@
 import React from 'react';
+import Box from '@mui/material/Box';
 import clsx from 'clsx';
-import makeStyles from '@mui/styles/makeStyles';
 import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
 import CheckIcon from '@mui/icons-material/Check';
 import SaveIcon from '@mui/icons-material/Save';
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  wrapper: {
-    margin: theme.spacing(1),
-    position: 'relative',
-  },
-  loading: {
-    backgroundColor: theme.palette.primary.light
-  },
-  fabProgress: {
-    color: theme.palette.primary.main,
-    position: 'absolute',
-    top: -6,
-    left: -6,
-    zIndex: 1101,
-  }
-}));
-
 export default function LoadingButton({ loading, success, onClick, className, actionIcon }) {
-  const classes = useStyles();
-
-  const fabClassName = clsx({
-    [classes.loading]: loading,
-  });
-
-  const rootClassname = clsx(classes.root, className);
+  const rootClassname = clsx(className);
 
   return (
-    <div className={rootClassname}>
-      <div className={classes.wrapper}>
+    <Box className={rootClassname} sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ m: 1, position: 'relative' }}>
         <Fab aria-label="save"
              color="primary"
-             className={fabClassName}
+             sx={(theme) => (loading ? { backgroundColor: theme.palette.primary.light } : {})}
              onClick={() => !(loading || success) && onClick()}>
           {success ? <CheckIcon component="svg" /> : actionIcon || <SaveIcon component="svg" />}
         </Fab>
-        {loading && <CircularProgress size={68} className={classes.fabProgress} />}
-      </div>
-    </div>
+        {loading && (
+          <CircularProgress
+            size={68}
+            sx={(theme) => ({
+              color: theme.palette.primary.main,
+              position: 'absolute',
+              top: -6,
+              left: -6,
+              zIndex: 1101,
+            })}
+          />
+        )}
+      </Box>
+    </Box>
   );
 }

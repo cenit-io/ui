@@ -1,10 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import AuthorizeIcon from '@mui/icons-material/VerifiedUser';
 import ActionRegistry, { ActionKind } from './ActionRegistry';
-import makeStyles from '@mui/styles/makeStyles';
 import FormEditor from '../components/FormEditor';
 import InfoAlert from "./InfoAlert";
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 import OpenIcon from '@mui/icons-material/OpenInNew';
 import { FormRootValue } from "../services/FormValue";
 import { DataType } from "../services/DataTypeService";
@@ -15,12 +15,6 @@ import SuccessAlert from "./SuccessAlert";
 import { useContainerContext } from './ContainerContext';
 import { useTenantContext } from "../layout/TenantContext";
 import session from "../util/session";
-
-const useStyles = makeStyles(() => ({
-  link: {
-    textDecoration: 'none'
-  }
-}));
 
 const SuccessAuthorization = () => <SuccessAlert mainIcon={AuthorizeIcon} />;
 
@@ -101,8 +95,6 @@ const Authorize = (props) => {
 
   const { tenant } = tenantState;
 
-  const classes = useStyles();
-
   if (dataType.name === 'BasicAuthorization') {
     return <BasicAuthorizationForm {...props} />
   }
@@ -111,15 +103,17 @@ const Authorize = (props) => {
     <InfoAlert mainIcon={AuthorizeIcon}
                title="Redirection Alert"
                message="To start the authorization process you will be redirected to an other location in a new browser view">
-      <a className={classes.link}
-         href={`${session.cenitBackendBaseUrl}/authorization/${tenant.id}/${record.id}/authorize`}
-         target="_blank">
+      <Box component="a"
+           href={`${session.cenitBackendBaseUrl}/authorization/${tenant.id}/${record.id}/authorize`}
+           target="_blank"
+           rel="noreferrer"
+           sx={{ textDecoration: 'none' }}>
         <Button variant="outlined"
                 color="primary"
                 endIcon={<OpenIcon />}>
           Authorize
         </Button>
-      </a>
+      </Box>
     </InfoAlert>
   )
 };

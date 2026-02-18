@@ -7,7 +7,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import makeStyles from '@mui/styles/makeStyles';
+import Box from "@mui/material/Box";
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import { catchError, switchMap } from "rxjs/operators";
 import Random from "../util/Random";
@@ -21,38 +21,6 @@ const CC = React.createContext({});
 export function useContainerContext() {
   return useContext(CC);
 }
-
-const useModalStyles = makeStyles(() => ({
-  root: {
-    backdropFilter: 'blur(6px) saturate(120%)',
-    '& .MuiBackdrop-root': {
-      backgroundColor: "rgba(0, 0, 0, 0.05)"
-    },
-    '& .MuiTypography-h6': {
-      textAlign: 'center'
-    },
-    '& p': {
-      textAlign: 'center'
-    },
-    '& .MuiDialogActions-root': {
-      justifyContent: 'center',
-      marginBottom: '1rem'
-    }
-  }
-}));
-
-
-const useAlertContentStyles = makeStyles((theme) => ({
-  root: {
-    display: 'flex',
-    justifyContent: 'center',
-    width: '100%',
-    padding: theme.spacing(2, 0, 0, 0),
-    '& svg': {
-      fontSize: '5rem'
-    }
-  },
-}));
 
 const extractErrorMessageFrom = err => {
   let data = err.response?.data;
@@ -80,9 +48,6 @@ export default function ContainerContext({ kind, initialState, children, homeAct
 
   const confirmationSubject = useRef(new Subject());
   const confirmOptions = useRef({});
-
-  const modalClasses = useModalStyles();
-  const alertContentClasses = useAlertContentStyles();
 
   const { selector, selectedItems } = state;
 
@@ -188,9 +153,17 @@ export default function ContainerContext({ kind, initialState, children, homeAct
   let dialogContent;
 
   const alertContent = (
-    <div className={alertContentClasses.root}>
+    <Box sx={{
+      display: 'flex',
+      justifyContent: 'center',
+      width: '100%',
+      pt: 2,
+      '& svg': {
+        fontSize: '5rem'
+      }
+    }}>
       <ErrorOutlineOutlinedIcon color="action" component="svg" />
-    </div>
+    </Box>
   );
 
   if (confirm) {
@@ -239,7 +212,22 @@ export default function ContainerContext({ kind, initialState, children, homeAct
               onClose={closeDialog(false)}
               maxWidth="xs"
               fullWidth
-              classes={modalClasses}>
+              sx={{
+                backdropFilter: 'blur(6px) saturate(120%)',
+                '& .MuiBackdrop-root': {
+                  backgroundColor: "rgba(0, 0, 0, 0.05)"
+                },
+                '& .MuiTypography-h6': {
+                  textAlign: 'center'
+                },
+                '& p': {
+                  textAlign: 'center'
+                },
+                '& .MuiDialogActions-root': {
+                  justifyContent: 'center',
+                  mb: '1rem'
+                }
+              }}>
         {dialogContent}
       </Dialog>
     </CC.Provider>

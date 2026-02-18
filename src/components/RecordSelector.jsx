@@ -3,7 +3,7 @@ import { DataType } from "../services/DataTypeService";
 import { InputBase, LinearProgress } from "@mui/material";
 import RefPicker from "./RefPicker";
 
-const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputClasses, disabled, readOnly, anchor }) => {
+const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputClasses, inputSx, disabled, readOnly, anchor }) => {
   const [dataType, setDataType] = useState(null);
 
   useEffect(() => {
@@ -22,13 +22,14 @@ const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputCla
                       onPick={onSelect}
                       text={text}
                       inputClasses={inputClasses}
+                      inputSx={inputSx}
                       disabled={disabled}
                       readOnly={readOnly}
                       anchor={anchor} />;
   }
 
   return <div>
-    <InputBase disabled classes={inputClasses} />
+    <InputBase disabled classes={inputClasses} sx={inputSx} />
     <LinearProgress />
   </div>;
 };

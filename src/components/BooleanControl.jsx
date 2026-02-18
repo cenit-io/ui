@@ -66,7 +66,7 @@ const BooleanControl = ({ title, onChange, value, onDelete, disabled, readOnly, 
 
                        <IconButton onClick={handleChange} disabled={disabled || readOnly} size="large">
                          <CheckIcon color={focused ? 'primary' : 'inherit'}
-                                    className={classes[String(booleanValue)]} />
+                                    sx={{ color: classes[String(booleanValue)] }} />
                        </IconButton>
                        {handleDelete && (
                          <IconButton onClick={handleDelete} size="large">

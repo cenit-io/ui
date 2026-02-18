@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { FormControl, IconButton, InputAdornment, InputLabel } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
 import ClearIcon from "@mui/icons-material/Clear";
 import FilledInput from "@mui/material/FilledInput";
 import reactiveControlFor from "./reactiveControlFor";
@@ -9,32 +8,6 @@ import FormHelperText from "@mui/material/FormHelperText";
 import { position as getCaretPosition } from 'caret-pos';
 import { useSpreadState } from "../common/hooks";
 import Box from "@mui/material/Box";
-import clsx from "clsx";
-
-const useStyles = makeStyles(theme => ({
-  anchorMenu: {
-    background: theme.palette.background.paper,
-    position: 'absolute',
-    zIndex: 2,
-    '& ul': {
-      cursor: 'pointer',
-      margin: 0,
-      padding: 0,
-      listStyleType: 'none',
-      '& li': {
-        padding: theme.spacing(1),
-        '&:hover': {
-          background: theme.palette.text.disabled,
-          color: theme.palette.getContrastText(theme.palette.text.disabled)
-        },
-        '&.active': {
-          background: theme.palette.text.primary,
-          color: theme.palette.getContrastText(theme.palette.text.primary)
-        }
-      }
-    }
-  }
-}));
 
 const InputControl = reactiveControlFor(
   ({
@@ -67,7 +40,6 @@ const InputControl = reactiveControlFor(
 
     const inputRef = useRef();
     const anchorStart = useRef(-1);
-    const classes = useStyles();
 
     useEffect(() => {
       if (autoSuggest?.anchor && autoSuggest?.values) {
@@ -159,7 +131,7 @@ const InputControl = reactiveControlFor(
     if (anchorStart.current !== -1 && options.length) {
       anchorMenu = options.map((option, index) => (
         <li key={`opt_${option}`}
-            className={clsx(index === optionIndex && 'active')}
+            data-active={index === optionIndex ? "1" : "0"}
             onClick={selectOption(index)}>
           {option}
         </li>
@@ -167,7 +139,28 @@ const InputControl = reactiveControlFor(
       anchorMenu = (
         <Box bgcolor="background.paper"
              boxShadow={1}
-             className={classes.anchorMenu}
+             sx={{
+               background: theme => theme.palette.background.paper,
+               position: 'absolute',
+               zIndex: 2,
+               '& ul': {
+                 cursor: 'pointer',
+                 m: 0,
+                 p: 0,
+                 listStyleType: 'none',
+               },
+               '& ul li': {
+                 p: 1,
+                 '&:hover': {
+                   background: theme => theme.palette.text.disabled,
+                   color: theme => theme.palette.getContrastText(theme.palette.text.disabled)
+                 },
+                 '&[data-active=\"1\"]': {
+                   background: theme => theme.palette.text.primary,
+                   color: theme => theme.palette.getContrastText(theme.palette.text.primary)
+                 }
+               }
+             }}
              style={{
                left: caretPosition.left,
                top: caretPosition.top + caretPosition.height

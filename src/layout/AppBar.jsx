@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import {
   AppBar,
   Avatar,
+  Box,
   CircularProgress,
   ClickAwayListener,
   IconButton,
@@ -9,9 +10,8 @@ import {
   Toolbar,
   useMediaQuery,
 } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
 import HomeIcon from '@mui/icons-material/Home';
-import { alpha, useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import TenantSelector from "../components/TenantSelector";
 import UserCard from "../components/UserCard";
 import ConfigService from "../services/ConfigService";
@@ -35,89 +35,6 @@ const USER_NOTIFIED = 'USER_NOTIFIED';
 
 export const appBarHeight = theme => theme.spacing(8);
 
-const useStyles = makeStyles(theme => ({
-  grow: {
-    flexGrow: 1,
-  },
-  changeOrder: {
-    order: -1,
-    [theme.breakpoints.up('sm')]: {
-      order: 'initial'
-    }
-  },
-  moveRight: {
-    order: 2
-  },
-  brandContainer: {
-    transition: "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-    borderRadius: "50px",
-    cursor: "pointer",
-    padding: "0 .45rem 0 0",
-    order: -1,
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.common.black, 0.05)
-    },
-
-  },
-  search: {
-    position: 'relative',
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: alpha(theme.palette.common.white, 0.15),
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.common.white, 0.25),
-    },
-    marginRight: theme.spacing(2),
-    marginLeft: 0,
-    width: '100%',
-    [theme.breakpoints.up('sm')]: {
-      marginLeft: theme.spacing(3),
-      width: 'auto',
-    },
-  },
-  searchIcon: {
-    width: theme.spacing(7),
-    height: '100%',
-    position: 'absolute',
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inputRoot: {
-    color: 'inherit',
-  },
-  inputInput: {
-    padding: theme.spacing(1, 1, 1, 7),
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-      width: 200,
-    },
-  },
-  quickAccess: {
-    marginLeft: theme.spacing(2)
-  },
-  notificationIcon: {
-    padding: '4px !important',
-    order: 1,
-    [theme.breakpoints.up('sm')]: {
-      order: 0,
-    },
-  },
-  taskIcon: {
-    padding: '4px',
-    order: 1,
-    [theme.breakpoints.up('sm')]: {
-      order: 0,
-    },
-  },
-  notification: {
-    color: theme.palette.error.main,
-    background: theme.palette.common.white,
-    borderRadius: '50%'
-  }
-}));
-
 export const DataTypeSelector = { namespace: 'Setup', name: 'DataType' };
 
 export default function ({ onToggle }) {
@@ -129,8 +46,6 @@ export default function ({ onToggle }) {
   const [tenantState] = useTenantContext();
 
   const { loading, user } = tenantState;
-
-  const classes = useStyles();
 
   const theme = useTheme();
   const smUp = useMediaQuery(theme.breakpoints.up('sm'));
@@ -213,17 +128,27 @@ export default function ({ onToggle }) {
   }
 
   const userNotification = user.need_password_reset && !session.get(USER_NOTIFIED)
-    ? <NotificationIcon component="svg" className={classes.notification} fontSize="small" />
+    ? (
+      <NotificationIcon
+        component="svg"
+        fontSize="small"
+        sx={{
+          color: theme.palette.error.main,
+          background: theme.palette.common.white,
+          borderRadius: "50%",
+        }}
+      />
+    )
     : undefined;
   const avatar = smUp && (
-    <div style={{ position: 'relative' }}>
+    <Box sx={{ position: 'relative' }}>
       <IconButton onClick={handleClick} size="large">
         <Badge badgeContent={userNotification}>
           <Avatar alt={idToken.name} src={idToken.picture} />
         </Badge>
       </IconButton>
       {menu}
-    </div>
+    </Box>
   );
 
   const dataTypeSearch = smUp && (
@@ -240,17 +165,31 @@ export default function ({ onToggle }) {
   );
 
   const brandLogo = !smUp &&
-    <div onClick={handleQuickAccess} className={classes.brandContainer}>
+    <Box
+      onClick={handleQuickAccess}
+      sx={{
+        transition: "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+        borderRadius: "50px",
+        cursor: "pointer",
+        padding: "0 .45rem 0 0",
+        order: -1,
+        "&:hover": {
+          backgroundColor: "rgba(0, 0, 0, 0.05)",
+        },
+      }}>
       <img src={brandLogoUrl()} width="40px" alt=""
            style={{ filter: 'invert(1)' }} />
-    </div>
+    </Box>
 
   const taskMenu = (
     <IconButton
       color="inherit"
       disabled={loading}
       onClick={handlePickTasks}
-      className={smUp ? classes.changeOrder : classes.taskIcon}
+      sx={{
+        p: "4px",
+        order: smUp ? -1 : 1,
+      }}
       size="large">
       <TaskMenuIcon />
     </IconButton>
@@ -261,7 +200,10 @@ export default function ({ onToggle }) {
       color="inherit"
       disabled={loading}
       onClick={handlePickNotifications}
-      className={smUp ? classes.changeOrder : classes.notificationIcon}
+      sx={{
+        p: "4px",
+        order: smUp ? -1 : 1,
+      }}
       size="large">
       <NotificationsIcon />
     </IconButton>
@@ -278,13 +220,13 @@ export default function ({ onToggle }) {
             aria-label="Menu"
             onClick={onToggle}
             disabled={loading}
-            className={classes.moveRight}
+            sx={{ order: 2 }}
             size="large">
             <MenuIcon />
           </IconButton>
         )}
         {/* {dataTypeSearch} */}
-        <div className={classes.grow} />
+        <Box sx={{ flexGrow: 1 }} />
         {notifications}
         {taskMenu}
         {tenantSearch}

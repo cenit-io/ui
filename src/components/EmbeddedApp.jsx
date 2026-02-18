@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import makeStyles from '@mui/styles/makeStyles';
 import Random from "../util/Random";
 import { fromEvent, of, Subject } from "rxjs";
 import { switchMap, map, filter, tap, first, catchError } from "rxjs/operators";
@@ -8,22 +7,10 @@ import { DataTypeSubject, EmbeddedAppSubject, RecordSubject, TabsSubject } from 
 import EmbeddedAppService from "../services/EnbeddedAppService";
 import session from "../util/session";
 import request from "../util/request";
-
-const useStyles = makeStyles(theme => ({
-  iframe: {
-    height: ({ height }) => height
-      ? `calc(${height} - ${theme.spacing(0.5)})`
-      : 0,
-    width: ({ width }) => width
-      ? `calc(${width})`
-      : 'inherit',
-    border: 'none'
-  }
-}));
+import { useTheme } from '@mui/material/styles';
 
 export default function EmbeddedApp({ url, height, width, autoHeight }) {
-
-  const classes = useStyles({ height: autoHeight ? false : height, width });
+  const theme = useTheme();
 
   const token = useRef(Random.string());
 
@@ -146,7 +133,13 @@ export default function EmbeddedApp({ url, height, width, autoHeight }) {
 
   return (
     <iframe ref={iframe}
-            className={classes.iframe}
+            style={{
+              height: autoHeight
+                ? 0
+                : (height ? `calc(${height} - ${theme.spacing(0.5)})` : 0),
+              width: width ? `calc(${width})` : 'inherit',
+              border: 'none'
+            }}
             src={`${url}?token=${token.current}`} />
   );
 }

@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import Button from "@mui/material/Button";
 import { CircularProgress, LinearProgress } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
 import ResponsiveContainer from "../components/ResponsiveContainer";
 import SvgIcon from "@mui/material/SvgIcon";
 import { useContainerContext } from "./ContainerContext";
@@ -37,20 +36,12 @@ const ReviewIcon = () => (
   </SvgIcon>
 );
 
-const useStyles = makeStyles(theme => ({
-  margin: {
-    margin: theme.spacing(1)
-  }
-}));
-
 const MaxRecordsViews = 25;
 
 function RecordsView({ entry, records, collectionDataType }) {
   const [state, setState] = useSpreadState();
 
   const { dataType, dataTypeTitle, recordsTitles, openingId } = state;
-
-  const classes = useStyles();
 
   useEffect(() => {
     const subscription = (entry === 'collections'
@@ -100,7 +91,7 @@ function RecordsView({ entry, records, collectionDataType }) {
       const record = records[index];
       if (record.id) {
         return <Chip key={`item_${index}`}
-                     className={classes.margin}
+                     sx={{ m: 1 }}
                      label={title}
                      variant="outlined"
                      color="primary"
@@ -108,14 +99,14 @@ function RecordsView({ entry, records, collectionDataType }) {
       }
 
       return <Chip key={`item_${index}`}
-                   className={classes.margin}
+                   sx={{ m: 1 }}
                    label={title} />;
     });
 
     if (recordsTitles.length < records.length) {
       recordsChips.push(
         <Chip key="and_more_items"
-              className={classes.margin}
+              sx={{ m: 1 }}
               variant="outlined"
               label={`... and ${records.length - recordsTitles.length} more`} />
       )

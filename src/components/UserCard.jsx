@@ -1,5 +1,4 @@
-import { Avatar, CircularProgress, ListItem, ListItemText, Typography, useTheme } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { Avatar, Box, CircularProgress, ListItem, ListItemText, Typography, useTheme } from "@mui/material";
 import SudoIcon from '@mui/icons-material/SupervisorAccountTwoTone';
 import React, { useEffect, useState } from "react";
 import { logout, appRequest, getAccess } from "../services/AuthorizationService";
@@ -18,36 +17,6 @@ import ApartmentIcon from "@mui/icons-material/Apartment";
 import { RecordSubject, TabsSubject } from "../services/subjects";
 import { DataType } from "../services/DataTypeService";
 
-const useStyles = makeStyles(theme => ({
-  avatarContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: theme.spacing(1),
-  },
-  avatar: {
-    width: theme.spacing(8),
-    height: theme.spacing(8),
-  },
-  avatarContentWrapper: {
-    borderBottom: `solid 2px ${theme.palette.primary.light}`,
-    position: 'sticky',
-    top: 0,
-    zIndex: 1500,
-    background: theme.palette.common.white,
-    minWidth: theme.spacing(26)
-  },
-  danger: {
-    color: theme.palette.error.main
-  },
-  safe: {
-    color: theme.palette.success.main
-  },
-  warn: {
-    color: theme.palette.warning.main
-  }
-}));
-
 const NOT_SETTING_PASSWORD = 'NOT_SETTING_PASSWORD';
 const SETTING_PASSWORD = 'SETTING_PASSWORD';
 const SETTING_PASSWORD_OK = 'SETTING_PASSWORD_OK';
@@ -56,8 +25,6 @@ const SETTING_PASSWORD_FAIL = 'SETTING_PASSWORD_FAIL';
 const SETTING_PASSWORD_TIMEOUT = 10000;
 
 const UserCard = ({ idToken, onClose }) => {
-
-  const classes = useStyles();
   const theme = useTheme();
 
   const [settingPassword, setSettingPassword] = useState(NOT_SETTING_PASSWORD);
@@ -88,7 +55,10 @@ const UserCard = ({ idToken, onClose }) => {
 
   const avatar = <Avatar alt={idToken.name}
                          src={idToken.picture}
-                         className={classes.avatar}
+                         sx={{
+                           width: theme.spacing(8),
+                           height: theme.spacing(8),
+                         }}
                          component="div" />;
 
   const setupPassword = () => setSettingPassword(SETTING_PASSWORD);
@@ -115,9 +85,12 @@ const UserCard = ({ idToken, onClose }) => {
   if (isSuperUser) {
     const superEnabled = user.super_admin_enabled;
     const action = superEnabled ? 'Disable' : 'Enable';
-    sudoControl = (
+      sudoControl = (
       <ListItem button onClick={handleSwitchSudo} component="li">
-        <ListItemIcon className={superEnabled ? classes.safe : classes.warn}>
+        <ListItemIcon
+          sx={{
+            color: superEnabled ? theme.palette.success.main : theme.palette.warning.main
+          }}>
           <SudoIcon component="svg" />
         </ListItemIcon>
         <ListItemText primary={`${action} super user`} />
@@ -137,19 +110,19 @@ const UserCard = ({ idToken, onClose }) => {
         break;
 
       case SETTING_PASSWORD_OK: {
-        icon = <OkIcon component="svg" className={classes.safe} />;
+        icon = <OkIcon component="svg" sx={{ color: theme.palette.success.main }} />;
         text = 'Instructions sent!';
       }
         break;
 
       case SETTING_PASSWORD_FAIL: {
-        icon = <FailIcon component="svg" className={classes.danger} />;
+        icon = <FailIcon component="svg" sx={{ color: theme.palette.error.main }} />;
         text = 'Failed';
       }
         break;
 
       default: {
-        icon = <PasswordIcon component="svg" className={classes.danger} />;
+        icon = <PasswordIcon component="svg" sx={{ color: theme.palette.error.main }} />;
         text = 'Setup a password';
       }
     }
@@ -166,11 +139,26 @@ const UserCard = ({ idToken, onClose }) => {
   }
 
   return (
-    <div className={`flex column ${classes.avatarContentWrapper}`}>
-      <div className={classes.profile}>
-        <div className={classes.avatarContainer}>
+    <Box
+      className="flex column"
+      sx={{
+        borderBottom: `solid 2px ${theme.palette.primary.light}`,
+        position: 'sticky',
+        top: 0,
+        zIndex: 1500,
+        background: theme.palette.common.white,
+        minWidth: theme.spacing(26)
+      }}>
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            m: theme.spacing(1),
+          }}>
           {avatar}
-        </div>
+        </Box>
         <div className="flex column align-items-center">
           <Typography component="div" variant="subtitle2">
             {idToken.name}
@@ -179,7 +167,7 @@ const UserCard = ({ idToken, onClose }) => {
             {idToken.email}
           </Typography>
         </div>
-      </div>
+      </Box>
       <List component="ul">
         {sudoControl}
         {passwordControl}
@@ -202,7 +190,7 @@ const UserCard = ({ idToken, onClose }) => {
           An email with password reset instructions was sent to <strong>{user.email}</strong>
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   );
 };
 

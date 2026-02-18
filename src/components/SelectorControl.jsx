@@ -7,7 +7,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import TrashIcon from "@mui/icons-material/Delete";
-import makeStyles from '@mui/styles/makeStyles';
 import clsx from "clsx";
 import AutosizeInput from 'react-input-autosize';
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
@@ -28,30 +27,10 @@ import ConditionEditor from "../features/filters/ConditionEditor";
 
 const SelectorOperators = ['$eq', '$ne', '$gt', '$gte', '$lt', '$lte', '$in', '$nin', '$exists', '$regex'];
 
-const useSelectorStyles = makeStyles(theme => ({
-  selector: {
-    padding: theme.spacing(1),
-    border: `solid 1px ${theme.palette.text.disabled}`,
-    borderRadius: theme.spacing(2),
-    marginTop: theme.spacing(1),
-    marginLeft: theme.spacing(1)
-  },
-  checked: {
-    color: `${theme.palette.success.main} !important`
-  },
-  unchecked: {
-    color: `${theme.palette.error.main} !important`
-  },
-  chip: {
-    margin: theme.spacing(0.5, 1)
-  }
-}));
-
 function ValueCondition({ property, operators, valueControl, operator, value, field, disabled, onChange }) {
 
   const [state, setState] = useSpreadState({});
-
-  const classes = useSelectorStyles();
+  const theme = useTheme();
 
   const { menuAnchor } = state;
 
@@ -75,7 +54,7 @@ function ValueCondition({ property, operators, valueControl, operator, value, fi
       <>
         <span>{JSON.stringify(bValue).toUpperCase()}</span>
         <IconButton
-          className={bValue ? classes.checked : classes.unchecked}
+          sx={{ color: `${bValue ? theme.palette.success.main : theme.palette.error.main} !important` }}
           onClick={() => onChange({ [operator]: !value })}
           size="large">
           <Icon />
@@ -179,14 +158,6 @@ function IdentifyCondition({ field, operator, value, onChange, disabled, propert
   );
 }
 
-const useEnumStyles = makeStyles(theme => ({
-  root: {
-    '& .MuiAutocomplete-endAdornment': {
-      top: theme.spacing(-1)
-    }
-  }
-}));
-
 const EnumOperators = [
   '$in',
   '$nin',
@@ -194,7 +165,7 @@ const EnumOperators = [
 ];
 
 function EnumValue({ operator, value, onChange, disabled, property }) {
-  const classes = useEnumStyles();
+  const theme = useTheme();
   if (typeof value !== 'object') {
     value = [];
     setTimeout(() => onChange({ [operator]: [] }))
@@ -203,7 +174,11 @@ function EnumValue({ operator, value, onChange, disabled, property }) {
   const defaultValues = options.filter(({ name }) => value.includes(name));
   return (
     <Autocomplete multiple
-                  className={classes.root}
+                  sx={{
+                    '& .MuiAutocomplete-endAdornment': {
+                      top: theme.spacing(-1)
+                    }
+                  }}
                   options={options}
                   getOptionLabel={({ name }) => name}
                   value={defaultValues}
@@ -378,8 +353,6 @@ function RefOneValue({ property, operator, value, onChange, disabled }) {
 
   const theme = useTheme();
 
-  const classes = useSelectorStyles();
-
   const { items } = state;
 
   useEffect(() => {
@@ -455,7 +428,7 @@ function RefOneValue({ property, operator, value, onChange, disabled }) {
                    avatar={<CircularProgress size={theme.spacing(2)} />} />;
     }
     return (
-      <div key={id} className={classes.chip}>
+      <div key={id} style={{ margin: theme.spacing(0.5, 1) }}>
         {chip}
       </div>
     )
@@ -509,8 +482,7 @@ function conditionControlFor(property) {
 function PropertyCondition({ property, operator, field, value, onDelete, disabled, onChange }) {
 
   const [state, setState] = useSpreadState({});
-
-  const classes = useSelectorStyles();
+  const theme = useTheme();
 
   const { menuAnchor } = state;
 
@@ -535,7 +507,14 @@ function PropertyCondition({ property, operator, field, value, onDelete, disable
   const Condition = conditionControlFor(property);
 
   return (
-    <div className={clsx('flex wrap align-items-center', classes.selector)}>
+    <div className={clsx('flex wrap align-items-center')}
+         style={{
+           padding: theme.spacing(1),
+           border: `solid 1px ${theme.palette.text.disabled}`,
+           borderRadius: theme.spacing(2),
+           marginTop: theme.spacing(1),
+           marginLeft: theme.spacing(1)
+         }}>
       {TrashButton}
       <Chip label={property.name} />
       <Condition property={property}
@@ -589,20 +568,6 @@ function defaultConditionFor(property, current) {
   }
 }
 
-const useStyles = makeStyles(theme => ({
-  selectors: {
-    marginBottom: theme.spacing(2)
-  },
-  error: {
-    color: theme.palette.error.main
-  },
-  skeleton: {
-    padding: theme.spacing(1),
-    marginTop: theme.spacing(1),
-    marginLeft: theme.spacing(1)
-  }
-}));
-
 const SelectableTypes = ['integer', 'number', 'string', 'boolean', 'refOne'];
 
 const propertyAttribute = prop => prop.type === 'refOne'
@@ -614,8 +579,6 @@ export default function SelectorControl({ title, dataType, value, disabled, read
   const [state, setState] = useSpreadState({
     selector: {}
   });
-
-  const classes = useStyles();
 
   const theme = useTheme();
 
@@ -719,17 +682,23 @@ export default function SelectorControl({ title, dataType, value, disabled, read
                               variant="text"
                               height={theme.spacing(4)}
                               width={theme.spacing(22)}
-                              className={classes.skeleton} />
+                              sx={{
+                                p: 1,
+                                mt: 1,
+                                ml: 1
+                              }} />
     );
   }
 
 
   return (
     <div className="flex column align-items-center">
-      <div className={clsx('flex wrap justify-content-center', classes.selectors)}>
+      <div className={clsx('flex wrap justify-content-center')}
+           style={{ marginBottom: theme.spacing(2) }}>
         {selectors}
       </div>
-      <Button className={clsx(errors?.length && classes.error)} startIcon={<AddIcon />}
+      <Button sx={errors?.length ? { color: theme.palette.error.main } : undefined}
+              startIcon={<AddIcon />}
               disabled={disabled || readOnly || !props}
               onClick={handleAdd}>
         Add condition

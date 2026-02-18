@@ -10,7 +10,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import TrashIcon from "@mui/icons-material/Delete";
-import makeStyles from '@mui/styles/makeStyles';
 import clsx from "clsx";
 import Divider from "@mui/material/Divider";
 import AutosizeInput from 'react-input-autosize';
@@ -92,14 +91,6 @@ function StringCondition({ value, disabled, onChange }) {
   );
 }
 
-const useEnumStyles = makeStyles(theme => ({
-  root: {
-    '& .MuiAutocomplete-endAdornment': {
-      top: theme.spacing(-1)
-    }
-  }
-}));
-
 function EnumCondition({ value, disabled, onChange, property }) {
 
   const [state, setState] = useSpreadState({
@@ -107,7 +98,7 @@ function EnumCondition({ value, disabled, onChange, property }) {
     options: []
   });
 
-  const classes = useEnumStyles();
+  const theme = useTheme();
 
   const { condition, menuAnchor, options } = state;
 
@@ -139,7 +130,11 @@ function EnumCondition({ value, disabled, onChange, property }) {
     let defaultValues = [condition.v].flat(1);
     defaultValues = options.filter(({ name }) => defaultValues.indexOf(name) !== -1);
     values = <Autocomplete multiple
-                           className={classes.root}
+                           sx={{
+                             '& .MuiAutocomplete-endAdornment': {
+                               top: theme.spacing(-1)
+                             }
+                           }}
                            options={options}
                            getOptionLabel={({ name }) => name}
                            value={defaultValues}
@@ -214,22 +209,13 @@ function BooleanCondition({ value, disabled, onChange }) {
   );
 }
 
-const useConditionStyles = makeStyles(theme => ({
-  and: {
-    margin: theme.spacing(0, 1)
-  },
-  disabled: {
-    color: theme.palette.text.disabled
-  }
-}));
-
 function NumberCondition({ value, disabled, onChange }) {
 
   const [state, setState] = useSpreadState({
     condition: value
   });
 
-  const classes = useConditionStyles();
+  const theme = useTheme();
 
   const { condition, menuAnchor } = state;
 
@@ -269,7 +255,10 @@ function NumberCondition({ value, disabled, onChange }) {
                        onChange={({ target }) => setValue(['', target.value, undefined])}
                        disabled={disabled}
                        type="number" />
-        <span className={clsx(classes.and, disabled && classes.disabled)}>AND</span>
+        <span style={{
+          margin: theme.spacing(0, 1),
+          color: disabled ? theme.palette.text.disabled : undefined
+        }}>AND</span>
         <AutosizeInput value={condition.v[2] || ''}
                        placeholder="∞"
                        onChange={({ target }) => setValue(['', undefined, target.value])}
@@ -315,7 +304,7 @@ function DateCondition({ value, disabled, onChange }) {
     condition: value
   });
 
-  const classes = useConditionStyles();
+  const theme = useTheme();
 
   const { condition, menuAnchor } = state;
 
@@ -373,7 +362,10 @@ function DateCondition({ value, disabled, onChange }) {
                             placeholder: condition.v[1] ? undefined : "-∞"
                           }
                         }} />
-        <span className={clsx(classes.and, disabled && classes.disabled)}>AND</span>
+        <span style={{
+          margin: theme.spacing(0, 1),
+          color: disabled ? theme.palette.text.disabled : undefined
+        }}>AND</span>
         <DateTimePicker value={condition.v[2] ? new Date(condition.v[2]) : null}
                         onChange={(date) => setValue(["", undefined, stringifyDate(date)])}
                         disabled={disabled}
@@ -439,19 +431,8 @@ function conditionControlFor(property) {
   }
 }
 
-const useSelectorStyles = makeStyles(theme => ({
-  selector: {
-    padding: theme.spacing(1),
-    border: `solid 1px ${theme.palette.text.disabled}`,
-    borderRadius: theme.spacing(2),
-    marginTop: theme.spacing(1),
-    marginLeft: theme.spacing(1)
-  }
-}));
-
 function PropertySelector({ property, value, onDelete, disabled, onChange }) {
-
-  const classes = useSelectorStyles();
+  const theme = useTheme();
 
   const TrashButton = !disabled && (
     <IconButton size="small"
@@ -464,7 +445,14 @@ function PropertySelector({ property, value, onDelete, disabled, onChange }) {
   const Condition = conditionControlFor(property);
 
   return (
-    <div className={clsx('flex wrap align-items-center', classes.selector)}>
+    <div className={clsx('flex wrap align-items-center')}
+         style={{
+           padding: theme.spacing(1),
+           border: `solid 1px ${theme.palette.text.disabled}`,
+           borderRadius: theme.spacing(2),
+           marginTop: theme.spacing(1),
+           marginLeft: theme.spacing(1)
+         }}>
       {TrashButton}
       <Chip label={property.name} />
       <Condition key={value[Key]}
@@ -502,20 +490,6 @@ function defaultConditionFor(property) {
   }
 }
 
-const useStyles = makeStyles(theme => ({
-  selectors: {
-    marginBottom: theme.spacing(2)
-  },
-  error: {
-    color: theme.palette.error.main
-  },
-  skeleton: {
-    padding: theme.spacing(1),
-    marginTop: theme.spacing(1),
-    marginLeft: theme.spacing(1)
-  }
-}));
-
 export default function LegacyTriggerControl({ title, property, value, disabled, readOnly, onChange, errors }) {
 
   const [state, setState] = useSpreadState({
@@ -523,8 +497,6 @@ export default function LegacyTriggerControl({ title, property, value, disabled,
   });
 
   const dataTypeId = useRef();
-
-  const classes = useStyles();
 
   const theme = useTheme();
 
@@ -642,17 +614,23 @@ export default function LegacyTriggerControl({ title, property, value, disabled,
                               variant="text"
                               height={theme.spacing(4)}
                               width={theme.spacing(22)}
-                              className={classes.skeleton} />
+                              sx={{
+                                p: 1,
+                                mt: 1,
+                                ml: 1
+                              }} />
     );
   }
 
 
   return (
     <div>
-      <div className={clsx('flex wrap', classes.selectors)}>
+      <div className={clsx('flex wrap')}
+           style={{ marginBottom: theme.spacing(2) }}>
         {selectors}
       </div>
-      <Button className={clsx(errors?.length && classes.error)} startIcon={<AddIcon />}
+      <Button sx={errors?.length ? { color: theme.palette.error.main } : undefined}
+              startIcon={<AddIcon />}
               disabled={disabled || readOnly || !props}
               onClick={handleAdd}>
         Add trigger

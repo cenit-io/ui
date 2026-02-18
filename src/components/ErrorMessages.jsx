@@ -1,19 +1,10 @@
 import React from 'react';
-import makeStyles from '@mui/styles/makeStyles';
 import Typography from "@mui/material/Typography";
 
-const useStyles = makeStyles(theme => ({
-  error: {
-    color: theme.palette.error.main
-  }
-}));
-
 const ErrorMessages = ({ errors, position, children }) => {
-  const classes = useStyles();
-
   const errorMsgs = (((errors && errors.constructor === Array) ? errors : (errors && errors.$)) || [])
     .map((msg, index) => <Typography key={`msg${index}`}
-                                     className={classes.error}
+                                     sx={(theme) => ({ color: theme.palette.error.main })}
                                      variant="caption"
                                      display="block"
                                      gutterBottom>

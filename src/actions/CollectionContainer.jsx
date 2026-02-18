@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import Loading from '../components/Loading';
-import { useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { appBarHeight } from "../layout/AppBar";
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
-import makeStyles from '@mui/styles/makeStyles';
 
 import Index from "./Index";
 import './New';
@@ -30,36 +29,12 @@ import Alert from "./Alert";
 import Button from "@mui/material/Button";
 import ReloadIcon from "@mui/icons-material/Refresh";
 
-const miniDrawerStyles = makeStyles(theme => ({
-  drop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    background: theme.palette.common.black,
-    opacity: 0,
-    zIndex: 10,
-    transition: 'all 0.3s ease'
-  },
-  card: {
-    top: 0,
-    position: 'absolute',
-    width: theme.spacing(40),
-    height: '100%',
-    right: theme.spacing(-40),
-    background: theme.palette.background.paper,
-    zIndex: 11,
-    transition: 'all 0.3s ease'
-  }
-}));
-
 function MiniDrawer({ children, onClose }) {
   const [state, setState] = useSpreadState({
     open: true
   });
 
-  const classes = miniDrawerStyles();
+  const theme = useTheme();
 
   const { open, cardStyle, dropStyle } = state;
 
@@ -83,27 +58,38 @@ function MiniDrawer({ children, onClose }) {
 
   return (
     <>
-      <div className={classes.drop} style={dropStyle} onClick={handleClose}>
-      </div>
-      <div className={classes.card} style={cardStyle}>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: theme.palette.common.black,
+          opacity: 0,
+          zIndex: 10,
+          transition: 'all 0.3s ease'
+        }}
+        style={dropStyle}
+        onClick={handleClose}>
+      </Box>
+      <Box
+        sx={{
+          top: 0,
+          position: 'absolute',
+          width: theme.spacing(40),
+          height: '100%',
+          right: theme.spacing(-40),
+          background: theme.palette.background.paper,
+          zIndex: 11,
+          transition: 'all 0.3s ease'
+        }}
+        style={cardStyle}>
         {children}
-      </div>
+      </Box>
     </>
   );
 }
-
-const actionContainerStyles = makeStyles(theme => ({
-  root: {
-    position: 'relative'
-  },
-  actionContainer: {
-    width: '100%',
-    overflow: 'auto',
-    position: 'relative',
-    height: props => `calc(${props.height} - ${appBarHeight(theme)})`,
-    backgroundColor: theme.palette.background.default,
-  }
-}));
 
 const InitialState = {
   limit: 5,
@@ -123,7 +109,6 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
   const { selectedItems, loading, actionKey, actionComponentKey, drawerActionKey } = containerState;
 
   const theme = useTheme();
-  const classes = actionContainerStyles();
 
   const { dataType, title, error } = state;
   const { dataTypeId } = subject;
@@ -224,19 +209,25 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
   }
 
   return (
-    <div className={classes.root}>
+    <Box sx={{ position: 'relative' }}>
       <CollectionActionsToolbar dataType={dataType}
                                 title={title}
                                 onRefresh={() => setState({ actionComponentKey: Random.string() })}
                                 onSubjectPicked={onSubjectPicked}
                                 selectedKey={actionKey} />
-      <div className={classes.actionContainer}
-           style={{ height: `calc(${componentHeight})` }}>
+      <Box
+        sx={{
+          width: '100%',
+          overflow: 'auto',
+          position: 'relative',
+          height: `calc(${componentHeight})`,
+          backgroundColor: theme.palette.background.default,
+        }}>
         {action}
-      </div>
+      </Box>
       {loader}
       {drawerAction}
-    </div>
+    </Box>
   );
 }
 

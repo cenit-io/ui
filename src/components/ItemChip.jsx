@@ -1,19 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Chip, useTheme } from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
 import Skeleton from '@mui/material/Skeleton';
 import { switchMap } from "rxjs/operators";
 import { of } from "rxjs";
 import { Title } from "../common/Symbols";
 
-const useStyles = makeStyles(theme => ({
-  chip: {
-    margin: theme.spacing(1)
-  }
-}));
-
 export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, disabled, readOnly }) => {
-  const classes = useStyles();
   const [title, setTitle] = useState(null);
 
   const theme = useTheme();
@@ -40,7 +32,7 @@ export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, 
     return <Chip label={title}
                  onClick={onSelect}
                  onDelete={(!readOnly && onDelete) || null}
-                 className={classes.chip}
+                 sx={{ m: theme.spacing(1) }}
                  color={selected ? 'primary' : (error ? 'secondary' : 'default')}
                  disabled={disabled} />;
   }
@@ -48,5 +40,5 @@ export const ItemChip = ({ dataType, item, onSelect, onDelete, selected, error, 
   return <Skeleton variant="text"
                    width={theme.spacing(10)}
                    height={theme.spacing(5)}
-                   className={classes.chip} />;
+                   sx={{ m: theme.spacing(1) }} />;
 };
