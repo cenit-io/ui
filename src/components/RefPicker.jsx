@@ -7,7 +7,8 @@ import {
   ListItem,
   ListItemText,
   Paper,
-  TextField
+  TextField,
+  Box
 } from "@mui/material";
 import Random from "../util/Random";
 import '../common/FlexBox.css';
@@ -66,14 +67,14 @@ function RefPicker({
           }
         )
       ).subscribe(([items, titles]) => {
-          if (items && titles) {
-            items = titles.map((title, itemIndex) => ({
-              record: items[itemIndex],
-              title
-            }));
-            setState({ items, loading: false, itemsQuery: query });
-          }
+        if (items && titles) {
+          items = titles.map((title, itemIndex) => ({
+            record: items[itemIndex],
+            title
+          }));
+          setState({ items, loading: false, itemsQuery: query });
         }
+      }
       );
 
       return () => subscription.unsubscribe();
@@ -138,7 +139,7 @@ function RefPicker({
       list = items.map(
         (item, itemIndex) => (
           <ListItem key={item.record.id} button onClick={() => pick(itemIndex)}
-                    selected={itemIndex === index}>
+            selected={itemIndex === index}>
             <ListItemText primary={(!loading && item.title) || null}>
               {skeleton}
             </ListItemText>
@@ -170,16 +171,16 @@ function RefPicker({
     if (total_pages > 1) {
       pagination = (
         <Box className={clsx('flex justify-content-center')}
-             sx={{
-               p: 1,
-               background: theme => theme.palette.background.default
-             }}>
+          sx={{
+            p: 1,
+            background: theme => theme.palette.background.default
+          }}>
           <Pagination count={total_pages}
-                      page={page}
-                      disabled={loading}
-                      onChange={handlePageChange}
-                      size="small"
-                      color="primary" />
+            page={page}
+            disabled={loading}
+            onChange={handlePageChange}
+            size="small"
+            color="primary" />
         </Box>
       );
     }

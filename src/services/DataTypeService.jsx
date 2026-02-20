@@ -65,11 +65,25 @@ export class DataType {
     } else {
       injectCommonProperties(data.schema);
     }
-    if (data._type === FILE_TYPE) {
-      return Object.assign(new FileDataType(), data);
+
+    const _type = data._type;
+    delete data._type;
+
+    let dt;
+    if (_type === FILE_TYPE) {
+      dt = new FileDataType();
     } else {
-      return Object.assign(new DataType(), data);
+      dt = new DataType();
     }
+
+    Object.keys(data).forEach(key => {
+      if (typeof dt[key] !== 'function') {
+        dt[key] = data[key];
+      }
+    });
+
+    dt._type = _type;
+    return dt;
   }
 
   static getById(id) {
@@ -83,9 +97,9 @@ export class DataType {
         API.get('setup', 'data_type', id, {
           headers: buildTemplateOptionsHeader('{_id namespace name title _type schema id_type}')
         }).pipe(
-          tap(dataType => {
+          map(dataType => {
             if (dataType) {
-              DataType.dataTypes[id] = DataType.from(dataType);
+              return DataType.dataTypes[id] = DataType.from(dataType);
             }
             delete DataType.gets[id];
             return dataType;
@@ -247,23 +261,23 @@ export class DataType {
             prop.getSchema(),
             prop.isModel()
           ).pipe(map(([isRef, isMany, propSch, isModel]) => {
-              if (isModel) {
-                if (isRef || prop.dataType?._type === FILE_TYPE) { // Referenced
-                  if (isMany) { // Many
-                    prop.type = 'refMany';
-                  } else { // One
-                    prop.type = 'refOne';
-                  }
-                } else if (isMany) {
-                  prop.type = 'embedsMany';
-                } else {
-                  prop.type = 'embedsOne';
+            if (isModel) {
+              if (isRef || prop.dataType?._type === FILE_TYPE) { // Referenced
+                if (isMany) { // Many
+                  prop.type = 'refMany';
+                } else { // One
+                  prop.type = 'refOne';
                 }
+              } else if (isMany) {
+                prop.type = 'embedsMany';
               } else {
-                prop.type = propSch['type'] ? propSch['type'] : (prop.name === 'id' ? 'string' : undefined);
+                prop.type = 'embedsOne';
               }
-              return prop;
+            } else {
+              prop.type = propSch['type'] ? propSch['type'] : (prop.name === 'id' ? 'string' : undefined);
             }
+            return prop;
+          }
           ))
         ) || of(prop))
       )),
@@ -305,7 +319,7 @@ export class DataType {
             schema.format !== 'symbol' &&
             props[index].name !== '_type'
           ) ? props[index] : null
-          ).filter(p => p)
+        ).filter(p => p)
         )
       ))
     );
@@ -382,7 +396,7 @@ export class DataType {
             }
           } else {
             if (!options.silent) {
-              throw  `contains an unresolved reference ${ref}`;
+              throw `contains an unresolved reference ${ref}`;
             }
           }
         }
@@ -509,10 +523,10 @@ export class DataType {
     }
     return sch.pipe(
       tap(sch => {
-          if (sch) {
-            sch.id = `${session.cenitBackendBaseUrl}/data_type/${data_type.id}${fragment}`;
-          }
+        if (sch) {
+          sch.id = `${session.cenitBackendBaseUrl}/data_type/${data_type.id}${fragment}`;
         }
+      }
       )
     );
   }
@@ -653,7 +667,7 @@ export class DataType {
       switchMap(
         descendants => zzip(...(descendants || []).map(
           ({ id }) => DataType.getById(id)
-          )
+        )
         )
       )
     );
@@ -664,7 +678,7 @@ export class DataType {
     // Checking referenced schema
     if (
       schema.constructor === Object && (
-      ((ref = schema['$ref']) && ref.constructor !== Array) || schema['type'] === 'array')
+        ((ref = schema['$ref']) && ref.constructor !== Array) || schema['type'] === 'array')
     ) {
       if (ref && ref.constructor !== Object) {
         ref = ref.toString();
@@ -733,10 +747,10 @@ export class DataType {
   createFrom(data) {
     return API.post(
       'setup', 'data_type', this.id, 'digest', data, {
-        template: {
-          viewport: '{_id}'
-        }
-      });
+      template: {
+        viewport: '{_id}'
+      }
+    });
   }
 
   queryFind(query, opts = null) {
@@ -991,11 +1005,11 @@ export class DataType {
               return this.getTitle().pipe(
                 switchMap(
                   dtTitle => zzip(...items.map(item => {
-                      if (schema.label) {
-                        return from(LiquidEngine.parseAndRender(schema.label, item));
-                      }
-                      return of(deriveItemTitle(item, dtTitle, true));
-                    })
+                    if (schema.label) {
+                      return from(LiquidEngine.parseAndRender(schema.label, item));
+                    }
+                    return of(deriveItemTitle(item, dtTitle, true));
+                  })
                   )
                 )
               );
@@ -1190,6 +1204,10 @@ export class Property {
       return of(this.propertySchema);
     }
     return this.dataType.getSchema();
+  };
+
+  config = () => {
+    return this.dataType.config();
   };
 
   getSchemaEntry = key => {

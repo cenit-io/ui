@@ -61,8 +61,15 @@ cenit-io/
 
 ```bash
 cd cenit
-docker compose up -d --build
+docker compose up -d
 docker compose ps
+```
+
+For fast UI iteration (live reload from this repo without rebuilding UI image):
+
+```bash
+cd ../cenit
+docker compose --profile dev up -d mongo_server redis rabbitmq server ui_dev
 ```
 
 ### 3) Open services
@@ -159,11 +166,12 @@ Default contract:
 - Data type: `Contact`
 - Record: `John Contact E2E`
 - Cleanup enabled by default (`CENIT_E2E_CLEANUP=1`)
+- Deterministic DB reset enabled by default (`CENIT_E2E_RESET_STACK=1`, `CENIT_E2E_BUILD_STACK=0`)
 
 Useful overrides:
 
 ```bash
-# Reuse running backend stack
+# Reuse running backend stack (skip deterministic reset)
 CENIT_E2E_AUTOSTART=0 scripts/e2e/cenit_ui_contact_flow.sh
 
 # Run headed
