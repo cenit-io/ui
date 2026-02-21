@@ -13,48 +13,48 @@ export { authorize, authWithAuthCode, apiRequest } from "../util/request";
 export const clearSession = () => session.clear();
 
 export const getAccess = () => {
-  const access = session.get('accessToken');
+    const access = session.get('accessToken');
 
-  if (!access) authorize();
+    if (!access) authorize();
 
-  return of(access);
+    return of(access);
 }
 
 export const getAccessToken = () => getAccess().pipe(map(access => (access && access.access_token) || null));
 
 export const getIdToken = () => {
-  let idToken = session.get('idToken');
+    let idToken = session.get('idToken');
 
-  if (idToken) return of(idToken);
+    if (idToken) return of(idToken);
 
-  return getAccess().pipe(
-    map(access => {
-      if (access) {
-        const base64 = access.id_token.split('.')[1].replace('-', '+').replace('_', '/');
-        idToken = JSON.parse(window.atob(base64));
-        session.set('idToken', idToken);
-      }
+    return getAccess().pipe(
+        map(access => {
+            if (access) {
+                const base64 = access.id_token.split('.')[1].replace('-', '+').replace('_', '/');
+                idToken = JSON.parse(window.atob(base64));
+                session.set('idToken', idToken);
+            }
 
-      return idToken;
-    })
-  );
+            return idToken;
+        })
+    );
 }
 
 export const logout = () => {
-  localStorage.clear();
-  session.clear();
-  window.location = `${session.cenitBackendBaseUrl}/users/sign_out`;
+    localStorage.clear();
+    session.clear();
+    window.location.href = `${session.cenitBackendBaseUrl}/users/sign_out`;
 }
 
 export const appRequest = (options) => {
-  options.url = `/app/${appIdentifier}/${options.url}`;
-  return request(options);
+    options.url = `/app/${appIdentifier}/${options.url}`;
+    return request(options);
 }
 
 export const updateConfig = (data = {}) => {
-  return appRequest({ url: 'config', method: 'POST', data }).pipe(
-    map((response) => response.data)
-  );
+    return appRequest({ url: 'config', method: 'POST', data }).pipe(
+        map((response) => response.data)
+    );
 }
 
 // TODO: Set config in local storage.

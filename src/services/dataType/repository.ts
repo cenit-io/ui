@@ -1,3 +1,29 @@
+import API from '../ApiService';
+import { map, share, switchMap, of, from, tap, shareReplay } from 'rxjs';
+import { dataTypeCache } from './cache';
+import { appRequest } from '../AuthorizationService';
+
+export function loadDataTypes(obs: any, initBuildIns: (data: any) => void) {
+  if (dataTypeCache.loaded) {
+    return obs;
+  }
+
+  if (!dataTypeCache.loading) {
+    dataTypeCache.loading = from(appRequest({ url: 'build_in_types' })).pipe(
+      tap(({ data }: any) => {
+        initBuildIns(data);
+        dataTypeCache.loaded = true;
+        dataTypeCache.loading = null;
+      }),
+      shareReplay(1)
+    );
+  }
+
+  return dataTypeCache.loading.pipe(
+    switchMap(() => obs)
+  );
+}
+
 export function buildTemplateOptionsHeader(viewport: string, includeId = false) {
   const options: Record<string, unknown> = { viewport };
   if (includeId) {
@@ -31,4 +57,70 @@ export function buildDigestHeaders(
     "X-Query-Options": JSON.stringify({ sort }),
     "X-Query-Selector": JSON.stringify(selector),
   };
+}
+
+export function getDataTypeById(id: string, transform: (data: any) => any, initBuildIns: (data: any) => void) {
+  let dataType$: any = dataTypeCache.getDataType(id);
+  if (dataType$) {
+    return of(dataType$);
+  }
+  dataType$ = dataTypeCache.getInProgress(id);
+  if (!dataType$) {
+    dataType$ = loadDataTypes(
+      API.get('setup', 'data_type', id, {
+        headers: buildTemplateOptionsHeader('{_id namespace name title _type schema id_type}')
+      }),
+      initBuildIns
+    ).pipe(
+      map((data) => {
+        if (data) {
+          const result = transform(data);
+          dataTypeCache.setDataType(id, result);
+          dataTypeCache.deleteInProgress(id);
+          return result;
+        }
+        dataTypeCache.deleteInProgress(id);
+        return data;
+      }),
+      share()
+    );
+    dataTypeCache.setInProgress(id, dataType$);
+  }
+  return dataType$;
+}
+
+export function findDataType(criteria: Record<string, unknown>, transform: (data: any) => any, initBuildIns: (data: any) => void) {
+  const key = dataTypeCache.criteriaKey(criteria);
+  const id = dataTypeCache.getCriteria(key);
+
+  if (id) {
+    return getDataTypeById(id, transform, initBuildIns);
+  }
+
+  const findKey = `find_${key}`;
+  let find$ = dataTypeCache.getInProgress(findKey);
+
+  if (!find$) {
+    find$ = loadDataTypes(
+      API.get('setup', 'data_type', {
+        params: { limit: 1 },
+        headers: buildFindSelectorHeaders(criteria)
+      }),
+      initBuildIns
+    ).pipe(
+      switchMap((response: any) => {
+        dataTypeCache.deleteInProgress(findKey);
+        const item = response?.items?.[0];
+        if (item) {
+          dataTypeCache.setCriteria(key, item.id);
+          return getDataTypeById(item.id, transform, initBuildIns);
+        }
+        return of(null);
+      }),
+      share()
+    );
+    dataTypeCache.setInProgress(findKey, find$);
+  }
+
+  return find$;
 }

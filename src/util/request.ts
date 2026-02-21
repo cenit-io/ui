@@ -12,12 +12,12 @@ export const authorize = () => {
   return _authorize(scope);
 }
 
-export const authWithAuthCode = (authCode) => from(_authWithAuthCode(authCode));
+export const authWithAuthCode = (authCode: string) => from(_authWithAuthCode(authCode));
 
-export const request = (options) => from(_request(options));
+export const request = (options: any) => from(_request(options));
 
-export const apiRequest = (options) => {
-  return _apiRequest(options).then(({ data, status }) => {
+export const apiRequest = (options: any) => {
+  return _apiRequest(options).then(({ data, status }: { data: any, status: number }) => {
     if (data?.constructor === Object) data[Status] = status;
     return data;
   });

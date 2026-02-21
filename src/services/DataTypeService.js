@@ -12,42 +12,27 @@ import Hash from 'object-hash';
 import { Config as ConfigSymbol } from "../common/Symbols";
 import { titleize } from "../common/strutls";
 import FileDataTypeConfig from "../config/FileDataTypeConfig";
-import session from "../util/session";
-import { createDataTypeStore, buildCriteriaKey } from "./dataType/cache";
-import { buildDigestHeaders, buildFindSelectorHeaders, buildTemplateOptionsHeader } from "./dataType/repository";
-import { deriveDataTypeTitle, deriveItemTitle } from "./dataType/titleService";
-import { injectCommonProperties, isSimpleSchema, stripDecoratorProps } from "./dataType/schemaResolver";
+import { dataTypeCache } from "./dataType/cache";
+import { getDataTypeById, findDataType, loadDataTypes, buildFindSelectorHeaders, buildTemplateOptionsHeader } from "./dataType/repository";
+import { splitName, CENIT_TYPE, FILE_TYPE, JSON_TYPE } from "./dataType/utils";
 
-export { isSimpleSchema } from "./dataType/schemaResolver";
-
-const initialDataTypeStore = createDataTypeStore();
+import { isSimpleSchema, injectCommonProperties } from "./dataType/schemaResolver";
+export { isSimpleSchema, injectCommonProperties };
 
 export class DataType {
 
-  static loaded = initialDataTypeStore.loaded;
-  static loading = initialDataTypeStore.loading;
-  static dataTypes = initialDataTypeStore.dataTypes; // TODO Store data types cache using a pair key tenant.id -> dataType.id
-  static criteria = initialDataTypeStore.criteria;
-  static gets = initialDataTypeStore.gets;
+  static get loaded() { return dataTypeCache.loaded; }
+  static set loaded(v) { dataTypeCache.loaded = v; }
+
+  static get loading() { return dataTypeCache.loading; }
+  static set loading(v) { dataTypeCache.loading = v; }
+
+  static get dataTypes() { return dataTypeCache.store.dataTypes; }
+  static get criteria() { return dataTypeCache.store.criteria; }
+  static get gets() { return dataTypeCache.store.gets; }
 
   static load(obs) {
-    if (DataType.loaded === true) {
-      return obs
-    }
-
-    if (!DataType.loading) {
-      DataType.loading = from(appRequest({ url: 'build_in_types' })).pipe(
-        tap(({ data }) => {
-          DataType.initBuildIns(data);
-          DataType.loaded = true;
-          DataType.loading = null;
-        })
-      );
-    }
-
-    return DataType.loading.pipe(
-      switchMap(() => obs)
-    );
+    return loadDataTypes(obs, (data) => DataType.initBuildIns(data));
   }
 
   static initBuildIns(buildIns) {
@@ -87,51 +72,19 @@ export class DataType {
   }
 
   static getById(id) {
-    let dataType = DataType.dataTypes[id];
-    if (dataType) {
-      return of(dataType);
-    }
-    dataType = DataType.gets[id];
-    if (!dataType) {
-      dataType = DataType.load(
-        API.get('setup', 'data_type', id, {
-          headers: buildTemplateOptionsHeader('{_id namespace name title _type schema id_type}')
-        }).pipe(
-          map(dataType => {
-            if (dataType) {
-              return DataType.dataTypes[id] = DataType.from(dataType);
-            }
-            delete DataType.gets[id];
-            return dataType;
-          }),
-          share()
-        )
-      );
-    }
-
-    DataType.gets[id] = dataType;
-    return dataType;
+    return getDataTypeById(id, (data) => DataType.from(data), (data) => DataType.initBuildIns(data));
   }
 
   static splitName(name) {
-    let namespace = '';
-    name = name.split('::');
-    if (name.length > 1) {
-      [name, namespace] = [name.pop(), name];
-      namespace = namespace.join('::');
-    } else {
-      name = name[0];
-    }
-    return [namespace, name];
+    return splitName(name);
   }
 
   static byTypeName(name) {
-    let namespace;
-    [namespace, name] = this.splitName(name);
-    return this.find({ namespace, name }).pipe(
+    let [namespace, simpleName] = this.splitName(name);
+    return this.find({ namespace, name: simpleName }).pipe(
       switchMap(dataType => {
-        if (!dataType && name.startsWith('Dt')) {
-          return DataType.getById(name.substring(2))
+        if (!dataType && simpleName.startsWith('Dt')) {
+          return DataType.getById(simpleName.substring(2))
         }
 
         return of(dataType);
@@ -144,45 +97,7 @@ export class DataType {
   }
 
   static find(criteria) {
-    let key = DataType.criteriaKey(criteria);
-
-    let id = DataType.criteria[key];
-
-    if (id) {
-      return this.getById(id);
-    }
-
-    key = `find_${key}`;
-
-    let get = DataType.gets[key];
-
-    if (!get) {
-      get = DataType.load(
-        API.get('setup', 'data_type', {
-          params: { limit: 1 },
-          headers: buildFindSelectorHeaders(criteria)
-        }).pipe(
-          switchMap(response => {
-
-            delete DataType.gets[key];
-
-            const item = response && response['items'][0];
-
-            if (item) {
-              DataType.criteria[key] = item['id'];
-
-              return this.getById(item['id']);
-            }
-
-            return of(null);
-          }),
-          share()
-        )
-      );
-      DataType.gets[key] = get;
-    }
-
-    return get;
+    return findDataType(criteria, (data) => DataType.from(data), (data) => DataType.initBuildIns(data));
   }
 
   asRef() {
