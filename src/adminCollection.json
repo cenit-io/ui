@@ -383,7 +383,7 @@
       "configuration": {
         "authentication_method": "Application ID",
         "redirect_uris": [
-          "http://127.0.0.1:3001/oauth/callback",
+          "http://127.0.0.1:3002/oauth/callback",
           "http://localhost:3000"
         ],
         "logo": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAaQAAAGkAQMAAABEgsN2AAAABlBMVEXJulTw8PCRXR6CAAAA0ElEQVR4nO3cuw3CMBAGYAgNHSPAJrAZGQ02IRtABwWPJueCyCiKwkv+rrT9Wdf+ucjVfUAdq8mQoiiKoqjCVDN9rti+dHY2X+mQoiiKoiiKoiiKonIqEuv8hVrGR+M6e/sijuxG75CiKIqiKIqiKIoqU6U5bJ09d+ozh43Eeh69Q4qiKIqiKIqiKIrKqT5z2FTrNrreYmEWYfbwvg4piqIoiqIoiqKowtW+ja5p9RphdtVV/iWmKIqiKIqiKIqi/k5t888r/kiHFEVRFPVp9QCsq5YF228REgAAAABJRU5ErkJggg==",

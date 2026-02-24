@@ -1,0 +1,37 @@
+import React, { useEffect, useState } from 'react';
+import { DataType } from "../services/DataTypeService";
+import { InputBase, LinearProgress } from "@mui/material";
+import RefPicker from "./RefPicker";
+
+const RecordSelector = ({ dataTypeId, dataTypeSelector, onSelect, text, inputClasses, inputSx, disabled, readOnly, anchor }) => {
+  const [dataType, setDataType] = useState(null);
+
+  useEffect(() => {
+    let fetchDataType;
+    if (dataTypeId) {
+      fetchDataType = DataType.getById(dataTypeId);
+    } else {
+      fetchDataType = DataType.find(dataTypeSelector);
+    }
+    const subscription = fetchDataType.subscribe(dt => setDataType(dt));
+    return () => subscription.unsubscribe();
+  }, [dataTypeId, dataTypeSelector]);
+
+  if (dataType) {
+    return <RefPicker dataType={dataType}
+                      onPick={onSelect}
+                      text={text}
+                      inputClasses={inputClasses}
+                      inputSx={inputSx}
+                      disabled={disabled}
+                      readOnly={readOnly}
+                      anchor={anchor} />;
+  }
+
+  return <div>
+    <InputBase disabled classes={inputClasses} sx={inputSx} />
+    <LinearProgress />
+  </div>;
+};
+
+export default RecordSelector;

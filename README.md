@@ -1,44 +1,208 @@
+# Cenit UI
 
-![cenit_io](https://user-images.githubusercontent.com/4213488/150586701-53545c9b-b4f9-497f-9782-ef6a19715ecd.svg)
+![Cenit banner](https://user-images.githubusercontent.com/4213488/150586701-53545c9b-b4f9-497f-9782-ef6a19715ecd.svg)
 
-[![codebeat](https://codebeat.co/badges/1b596784-b6c1-4ce7-b739-c91b873e4b5d)](https://codebeat.co/projects/github-com-cenit-io-cenit)
-[![license](https://img.shields.io/packagist/l/doctrine/orm.svg)]()
+[![GHCR Docker Publish](https://github.com/cenit-io/ui/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/cenit-io/ui/actions/workflows/docker-publish.yml)
+[![License](https://img.shields.io/github/license/cenit-io/ui)](LICENSE.md)
 
-# Cenit IO Admin App (UI)
+React-based administration interface for the [Cenit](https://github.com/cenit-io/cenit) platform.
 
-This is a React‐based administration interface for the Cenit IO integration platform (iPaaS).
+## Table of contents
 
-- **cenit-server (GitHub “cenit” repo)**:  
-  https://github.com/cenit-io/cenit
+- [Repositories](#repositories)
+- [Tech Stack](#tech-stack)
+- [Quick start (recommended: backend compose)](#quick-start-recommended-backend-compose)
+- [Local development](#local-development)
+- [Runtime configuration](#runtime-configuration)
+- [E2E checks](#e2e-checks)
+- [Run UI image standalone](#run-ui-image-standalone)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
-- **cenit-ui (GitHub “ui” repo)**:  
-  https://github.com/cenit-io/ui
+## Repositories
 
----
+- Backend: [cenit-io/cenit](https://github.com/cenit-io/cenit)
+- UI (this repo): [cenit-io/ui](https://github.com/cenit-io/ui)
 
-## Installation
+## Tech Stack
 
-For a complete, Docker‐based installation of both the backend (`cenit-server`) and this UI, see the [Docker Installation Guide](Docker-instalation.md).  
-(The guide includes links to the relevant `docker-compose.yml` and Dockerfiles.)
+- React 19
+- Vite 7
+- MUI 7 (`@mui/material`, `@mui/icons-material`, `@mui/x-date-pickers`)
+- Runtime config via `window.appConfig` (`config.js`)
 
----
+## Quick start (recommended: backend compose)
 
-## Configuration
+This UI is usually run by the backend Docker Compose stack.
 
-If you need to customize the Admin App (outside of Docker), set the following environment variables:
+### Prerequisites
 
-- `REACT_APP_USE_ENVIRONMENT_CONFIG=true`
-- `REACT_APP_APP_ID=admin`
-- `REACT_APP_LOCALHOST=http://localhost:3002`
-- `REACT_APP_CENIT_HOST=http://<YOUR_CENIT_SERVER_HOST>:<PORT>`
+- Docker Desktop (or Docker Engine + Compose v2 plugin)
+- `git`
+- Node.js 20.x (for local `npm` workflows)
 
-These values will be injected at runtime into `config.js`.
+### 1) Clone both repos side by side
 
----
+```bash
+git clone https://github.com/cenit-io/cenit.git
+git clone https://github.com/cenit-io/ui.git
+```
 
-## Run with Docker
+Expected layout:
 
-To pull and run the latest UI image:
+```text
+cenit-io/
+  cenit/
+  ui/
+```
+
+### 2) Start from backend repo
+
+```bash
+cd cenit
+docker compose up -d
+docker compose ps
+```
+
+For fast UI iteration (live reload from this repo without rebuilding UI image):
+
+```bash
+cd ../cenit
+docker compose --profile dev up -d mongo_server redis rabbitmq server ui_dev
+```
+
+### 3) Open services
+
+- UI: [http://localhost:3002](http://localhost:3002)
+- Backend: [http://localhost:3000](http://localhost:3000)
+- RabbitMQ: [http://localhost:15672](http://localhost:15672)
+
+If `ui` is not at `../ui`, set:
+
+```bash
+export CENIT_UI_CONTEXT=/absolute/path/to/ui
+docker compose up -d --build
+```
+
+## Local development
+
+Install dependencies and run the Vite dev server:
+
+```bash
+npm ci --legacy-peer-deps
+npm start
+```
+
+Notes:
+
+- UI dev server runs at `http://localhost:3002`.
+- Backend is expected at `http://localhost:3000`.
+- If `3002` is already in use, stop the running UI container/process first.
+
+Other scripts:
+
+```bash
+npm test
+npm run build
+npm run typecheck
+```
+
+## Runtime configuration
+
+Runtime values are injected through `config.js` (`window.appConfig`), especially in Docker runtime.
+
+Resolution order:
+
+1. `window.appConfig` (runtime `config.js`)
+2. `import.meta.env`
+3. UI defaults (`admin`, `http://localhost:3000`, `http://localhost:3002`)
+
+Important variables:
+
+```env
+REACT_APP_USE_ENVIRONMENT_CONFIG=true
+REACT_APP_TIMEOUT_SPAN=300000
+REACT_APP_APP_ID=admin
+REACT_APP_LOCALHOST=http://localhost:3002
+REACT_APP_CENIT_HOST=http://localhost:3000
+```
+
+Related backend values (from backend compose):
+
+```env
+HOMEPAGE=http://localhost:3000
+CENIT_UI=http://localhost:3002
+```
+
+## E2E checks
+
+UI E2E scripts in this repo delegate to backend scripts so both repos share one stable contract.
+
+### Login check
+
+```bash
+scripts/e2e/cenit_ui_login.sh
+# or
+npm run e2e:login
+```
+
+### Contact flow (idempotent contract)
+
+```bash
+scripts/e2e/cenit_ui_contact_flow.sh
+# or
+npm run e2e:contact-flow
+```
+
+Driver note:
+
+- `CENIT_E2E_DRIVER=pwcli` can fail on large inline `run-code` payloads in some environments.
+- The backend delegated runner now auto-falls back to the node-playwright driver for this case.
+
+Default contract:
+
+- Namespace: `E2E_CONTACT_FLOW`
+- Data type: `Contact`
+- Record: `John Contact E2E`
+- Cleanup enabled by default (`CENIT_E2E_CLEANUP=1`)
+- Deterministic DB reset enabled by default (`CENIT_E2E_RESET_STACK=1`, `CENIT_E2E_BUILD_STACK=0`)
+
+Useful overrides:
+
+```bash
+# Reuse running backend stack (skip deterministic reset)
+CENIT_E2E_AUTOSTART=0 scripts/e2e/cenit_ui_contact_flow.sh
+
+# Run headed
+CENIT_E2E_HEADED=1 scripts/e2e/cenit_ui_contact_flow.sh
+
+# Use a unique namespace (helps CI and local validation without cleanup collisions)
+CENIT_E2E_DATATYPE_NAMESPACE="E2E_UI_$(date +%s)" \
+CENIT_E2E_CLEANUP=0 \
+scripts/e2e/cenit_ui_contact_flow.sh
+```
+
+If backend repo is not a sibling at `../cenit`:
+
+```bash
+export CENIT_ROOT=/absolute/path/to/cenit
+```
+
+Artifacts are produced by the backend runner at:
+
+- `../cenit/output/playwright`
+
+## CI checks
+
+This repo includes a `UI CI` workflow for `pull_request` to `develop`/`master` and `push` to `develop`:
+
+1. `npm ci --legacy-peer-deps`
+2. `npm run build`
+3. `npm run typecheck` (temporary non-blocking during JS->TS rollout)
+4. `npm test`
+
+## Run UI image standalone
 
 ```bash
 docker pull ghcr.io/cenit-io/ui:latest
@@ -48,28 +212,28 @@ docker run -dti \
   -e REACT_APP_LOCALHOST=http://127.0.0.1:3002 \
   -e REACT_APP_CENIT_HOST=http://127.0.0.1:3000 \
   -p 3002:80 \
-  --name cenit-ui ghcr.io/cenit-io/ui:latest
+  --name cenit-ui \
+  ghcr.io/cenit-io/ui:latest
 ```
 
-Navigate to [http://localhost:3002](http://localhost:3002) in your browser to access the Admin App.
+Then open [http://localhost:3002](http://localhost:3002).
 
----
+## Troubleshooting
+
+For end-to-end Docker setup details, see:
+
+- [Docker-instalation.md](Docker-instalation.md)
+- [development.md](development.md)
 
 ## Contributing
 
-Cenit IO is an open‐source project and we welcome contributions. Here are some ways to get involved:
+Contributions are welcome.
 
-- Report bugs or request features: [Issues](https://github.com/cenit-io/cenit/issues/new)
-- Improve documentation:
+- Report bugs and request features in the backend issue tracker:
+  [github.com/cenit-io/cenit/issues](https://github.com/cenit-io/cenit/issues)
+- Open UI pull requests here:
+  [github.com/cenit-io/ui/pulls](https://github.com/cenit-io/ui/pulls)
 
-  - Platform docs: [https://github.com/cenit-io/cenit-docs](https://github.com/cenit-io/cenit-docs)
-  - UI docs: [https://github.com/cenit-io/ui](https://github.com/cenit-io/ui)
+## License
 
-- Submit code changes:
-
-  - Feature requests: [https://github.com/cenit-io/cenit/labels/feature_request](https://github.com/cenit-io/cenit/labels/feature_request)
-  - Feedback/bug fixes: [https://github.com/cenit-io/cenit/labels/address_feedback](https://github.com/cenit-io/cenit/labels/address_feedback)
-
-- Review and merge pull requests
-
-
+See [LICENSE.md](LICENSE.md).

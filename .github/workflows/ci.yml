@@ -1,0 +1,36 @@
+name: UI CI
+
+on:
+  pull_request:
+    branches: [develop, master]
+  push:
+    branches: [develop]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout UI repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install UI dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build UI
+        run: npm run build
+
+      - name: Typecheck (temporary non-blocking during TS rollout)
+        continue-on-error: true
+        run: npm run typecheck
+
+      - name: Run unit tests
+        run: npm test
