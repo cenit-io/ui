@@ -10,7 +10,7 @@ import { switchMap, tap } from "rxjs/operators";
 import { of } from "rxjs";
 import ActionPicker from "./ActionPicker";
 import Alert from "./Alert";
-import { DataTypeSubject } from "../services/subjects";
+import { DataTypeSubject, RecordSubject } from "../services/subject";
 import Skeleton from '@mui/material/Skeleton';
 import { useSpreadState } from "../common/hooks";
 import FrezzerLoader from "../components/FrezzerLoader";
@@ -106,11 +106,11 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
 
   useEffect(() => {
     const s1 = subject.title().subscribe(
-      title => setState({ title })
+      action => setState({ title: action.title })
     );
     const dataTypeSubject = subject.dataTypeSubject();
     const s2 = dataTypeSubject.title().subscribe(
-      dataTypeTitle => setState({ dataTypeTitle })
+      action => setState({ dataTypeTitle: action.title })
     );
     dataTypeSubject.computeTitle();
     return () => {
@@ -123,9 +123,9 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
     return (
       <Alert message={error}>
         <Button variant="outlined"
-                color="primary"
-                endIcon={<ReloadIcon component="svg" />}
-                onClick={() => setError(null)}>
+          color="primary"
+          endIcon={<ReloadIcon component="svg" />}
+          onClick={() => setError(null)}>
           Reload
         </Button>
       </Alert>
@@ -145,14 +145,14 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
   let dataLink;
   if (dataTypeTitle) {
     dataLink = <Chip label={pluralize(dataTypeTitle)}
-                     sx={{
-                       color: theme.palette.primary.dark
-                     }}
-                     onClick={() => onSubjectPicked(DataTypeSubject.for(subject.dataTypeId).key)} />;
+      sx={{
+        color: theme.palette.primary.dark
+      }}
+      onClick={() => onSubjectPicked(DataTypeSubject.for(subject.dataTypeId).key)} />;
   } else {
     dataLink = <Skeleton variant="circular"
-                         width={theme.spacing(3)}
-                         height={theme.spacing(3)} />;
+      width={theme.spacing(3)}
+      height={theme.spacing(3)} />;
   }
   const mainSectionTitle = localStorage.get(`${dataType.name}`);
 
@@ -212,17 +212,17 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
   const ActionComponent = ActionRegistry.byKey(actionKey);
 
   const action = ActionComponent && <ActionComponent key={actionComponentKey}
-                                                     docked={docked}
-                                                     subject={subject}
-                                                     dataType={dataType}
-                                                     record={record}
-                                                     onUpdate={handleUpdateItem}
-                                                     height={componentHeight}
-                                                     width={width}
-                                                     onSubjectPicked={onSubjectPicked}
-                                                     onCancel={() => doHandleAction(Show.key)}
-                                                     onDisable={disabled => setState({ disabled })}
-                                                     onClose={onClose} />;
+    docked={docked}
+    subject={subject}
+    dataType={dataType}
+    record={record}
+    onUpdate={handleUpdateItem}
+    height={componentHeight}
+    width={width}
+    onSubjectPicked={onSubjectPicked}
+    onCancel={() => doHandleAction(Show.key)}
+    onDisable={disabled => setState({ disabled })}
+    onClose={onClose} />;
 
   return (
     <>
@@ -236,11 +236,11 @@ function MemberContainerLayout({ docked, subject, height, width, onSubjectPicked
         }}>
         {breadcrumb}
         <ActionPicker kind={ActionKind.member}
-                      arity={1}
-                      onAction={actionKey => doHandleAction(actionKey)}
-                      disabled={disabled}
-                      dataType={dataType}
-                      selectedKey={actionKey} />
+          arity={1}
+          onAction={actionKey => doHandleAction(actionKey)}
+          disabled={disabled}
+          dataType={dataType}
+          selectedKey={actionKey} />
       </Toolbar>
       <Box
         sx={{
@@ -267,8 +267,8 @@ const InitialContextState = {
 export default function MemberContainer(props) {
   return (
     <ContainerContext initialState={InitialContextState}
-                      homeActionKey={Show.key}
-                      kind={ActionKind.member}>
+      homeActionKey={Show.key}
+      kind={ActionKind.member}>
       <MemberContainerLayout {...props} />
     </ContainerContext>
   );

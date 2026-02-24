@@ -60,6 +60,10 @@ export function buildDigestHeaders(
 }
 
 export function getDataTypeById(id: string, transform: (data: any) => any, initBuildIns: (data: any) => void) {
+  if (!id) {
+    console.warn('DEBUG: getDataTypeById called without id; returning null.', new Error().stack);
+    return of(null);
+  }
   let dataType$: any = dataTypeCache.getDataType(id);
   if (dataType$) {
     return of(dataType$);
@@ -110,10 +114,21 @@ export function findDataType(criteria: Record<string, unknown>, transform: (data
     ).pipe(
       switchMap((response: any) => {
         dataTypeCache.deleteInProgress(findKey);
-        const item = response?.items?.[0];
+        let item = null;
+        if (Array.isArray(response)) {
+          item = response[0];
+        } else if (response && Array.isArray(response.items)) {
+          item = response.items[0];
+        } else if (response && response.id) { // In case the API returns an object instead of array for limit=1
+          item = response;
+        }
         if (item) {
-          dataTypeCache.setCriteria(key, item.id);
-          return getDataTypeById(item.id, transform, initBuildIns);
+          const itemId = item.id || item._id;
+          if (!itemId) {
+            return of(null);
+          }
+          dataTypeCache.setCriteria(key, itemId);
+          return getDataTypeById(itemId, transform, initBuildIns);
         }
         return of(null);
       }),

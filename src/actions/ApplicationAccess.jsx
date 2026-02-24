@@ -1,6 +1,6 @@
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import AccessIcon from '@mui/icons-material/VpnKey';
-import { RecordSubject, TabsSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subject";
 import API from "../services/ApiService";
 import { switchMap, map } from "rxjs/operators";
 import { DataType } from "../services/DataTypeService";
@@ -12,11 +12,11 @@ function openAccess(access) {
     name: 'OauthAccessGrant'
   }).pipe(
     map(accessDataType => {
-        TabsSubject.next({
-          key: RecordSubject.for(accessDataType.id, access.id).key
-        });
-        return of(true);
-      }
+      TabsSubject.next({
+        key: RecordSubject.for(accessDataType.id, access.id).key
+      });
+      return of(true);
+    }
     )
   );
 }

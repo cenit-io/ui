@@ -125,7 +125,7 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
 
   useEffect(() => {
     const subscription = subject.title(2).subscribe(
-      title => setState({ title })
+      action => setState({ title: action.title })
     );
     subject.computeTitle();
     return () => subscription.unsubscribe();
@@ -153,9 +153,9 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
     return (
       <Alert message={error}>
         <Button variant="outlined"
-                color="primary"
-                endIcon={<ReloadIcon component="svg" />}
-                onClick={() => setState({ error: null })}>
+          color="primary"
+          endIcon={<ReloadIcon component="svg" />}
+          onClick={() => setState({ error: null })}>
           Reload
         </Button>
       </Alert>
@@ -171,33 +171,33 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
   const ActionComponent = ActionRegistry.byKey(actionKey);
 
   const action = ActionComponent && <ActionComponent key={actionComponentKey}
-                                                     docked={docked}
-                                                     dataType={dataType}
-                                                     subject={subject}
-                                                     selectedItems={selectedItems}
-                                                     height={componentHeight}
-                                                     width={width}
-                                                     onSubjectPicked={onSubjectPicked}
-                                                     onCancel={() => setContainerState({ actionKey: Index.key })} />;
+    docked={docked}
+    dataType={dataType}
+    subject={subject}
+    selectedItems={selectedItems}
+    height={componentHeight}
+    width={width}
+    onSubjectPicked={onSubjectPicked}
+    onCancel={() => setContainerState({ actionKey: Index.key })} />;
 
   let drawerAction;
   if (drawerActionKey) {
     const DrawerActionComponent = ActionRegistry.byKey(drawerActionKey);
     drawerAction = (DrawerActionComponent &&
       <DrawerActionComponent key={actionComponentKey}
-                             docked={docked}
-                             dataType={dataType}
-                             subject={subject}
-                             selectedItems={selectedItems}
-                             height={componentHeight}
-                             width={width}
-                             onSubjectPicked={onSubjectPicked}
-                             onCancel={() => setContainerState({ actionKey: Index.key })} />
+        docked={docked}
+        dataType={dataType}
+        subject={subject}
+        selectedItems={selectedItems}
+        height={componentHeight}
+        width={width}
+        onSubjectPicked={onSubjectPicked}
+        onCancel={() => setContainerState({ actionKey: Index.key })} />
     );
     drawerAction = (
       <MiniDrawer anchor="right"
-                  open={Boolean(drawerActionKey)}
-                  onClose={() => setContainerState({ drawerActionKey: null })}>
+        open={Boolean(drawerActionKey)}
+        onClose={() => setContainerState({ drawerActionKey: null })}>
         {drawerAction}
       </MiniDrawer>
     );
@@ -211,10 +211,10 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
   return (
     <Box sx={{ position: 'relative' }}>
       <CollectionActionsToolbar dataType={dataType}
-                                title={title}
-                                onRefresh={() => setState({ actionComponentKey: Random.string() })}
-                                onSubjectPicked={onSubjectPicked}
-                                selectedKey={actionKey} />
+        title={title}
+        onRefresh={() => setState({ actionComponentKey: Random.string() })}
+        onSubjectPicked={onSubjectPicked}
+        selectedKey={actionKey} />
       <Box
         sx={{
           width: '100%',
@@ -234,8 +234,8 @@ function CollectionContainerLayout({ docked, subject, height, width, onSubjectPi
 export default function CollectionContainer(props) {
   return (
     <ContainerContext initialState={InitialState}
-                      homeActionKey={Index.key}
-                      kind={ActionKind.collection}>
+      homeActionKey={Index.key}
+      kind={ActionKind.collection}>
       <CollectionContainerLayout {...props} />
     </ContainerContext>
   );

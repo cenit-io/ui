@@ -7,7 +7,7 @@ import ErrorMessages from "./ErrorMessages";
 import { LinearProgress } from "@mui/material";
 import React, { useCallback, useEffect, useRef } from "react";
 import { FETCHED, NEW } from "../common/Symbols";
-import { DataTypeSubject } from "../services/subjects";
+import { DataTypeSubject, RecordSubject, TabsSubject } from "../services/subject";
 import Collapsible from "./Collapsible";
 import { useFormContext } from "./FormContext";
 import FrezzerLoader from "./FrezzerLoader";
@@ -121,11 +121,11 @@ export function DefaultPropertiesForm({ controlConfig, dynamicConfigState, prope
 
   groups.forEach(group => controls.push(
     <Collapsible key={`group_${group}`}
-                 title={groupsConfig[group]?.title || group}
-                 variant={groupsConfig[group]?.variant || 'h6'}
-                 children={controlsGroups[group]}
-                 error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}
-                 defaultCollapsed={!groupsConfig[group]?.activeByDefault} />
+      title={groupsConfig[group]?.title || group}
+      variant={groupsConfig[group]?.variant || 'h6'}
+      children={controlsGroups[group]}
+      error={!!groupsProps[group].find(p => errors.hasOwnProperty(p))}
+      defaultCollapsed={!groupsConfig[group]?.activeByDefault} />
   ));
 
   return controls;
@@ -364,14 +364,14 @@ function ObjectControl(props) {
     return <FormGroup error={Object.keys(formErrors).length > 0}>
       <ErrorMessages errors={formErrors.$}>
         <FormControl properties={properties}
-                     dynamicConfigState={dynamicConfigState.current}
-                     controlConfig={controlConfig}
-                     propertyControlProps={propertyControlProps}
-                     errors={formErrors}
-                     value={value}
-                     readOnly={readOnly}
-                     disabled={disabled}
-                     dataType={dataType} />
+          dynamicConfigState={dynamicConfigState.current}
+          controlConfig={controlConfig}
+          propertyControlProps={propertyControlProps}
+          errors={formErrors}
+          value={value}
+          readOnly={readOnly}
+          disabled={disabled}
+          dataType={dataType} />
       </ErrorMessages>
       {fetching && <FrezzerLoader />}
     </FormGroup>;

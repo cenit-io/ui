@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import Loading from "./Loading";
 import { alpha, useTheme } from "@mui/material/styles";
 import clsx from "clsx";
-import { DataTypeSubject, TabsSubject } from "../services/subjects";
+import { DataTypeSubject, TabsSubject } from "../services/subject";
 import { DataType } from "../services/DataTypeService";
 import Box from "@mui/material/Box";
 import ListItem from "@mui/material/ListItem";
@@ -43,7 +43,7 @@ export default function ({ subject, height }) {
     if (item) {
       const subscription = DataType.find(item.$ref).subscribe(
         dt => {
-          if (dt) {
+          if (dt?.id) {
             TabsSubject.next({
               key: DataTypeSubject.for(dt.id).key
             });
@@ -61,9 +61,14 @@ export default function ({ subject, height }) {
 
   const handleSelect = item => () => setState({ item });
 
-  const handleDataTypeSelected = ({ id }) => TabsSubject.next({
-    key: DataTypeSubject.for(id).key
-  });
+  const handleDataTypeSelected = ({ id }) => {
+    if (!id) {
+      return;
+    }
+    TabsSubject.next({
+      key: DataTypeSubject.for(id).key
+    });
+  };
 
   const userConfig = {
     ...config,
@@ -85,14 +90,14 @@ export default function ({ subject, height }) {
       const items = group.items.map(
         (item, iIndex) => (
           <ListItem button
-                    component="li"
-                    key={`g_${gIndex}_${iIndex}`}
-                    sx={{
-                      '& + &': {
-                        borderTop: theme => `solid 1px ${theme.palette.text.disabled}`,
-                      },
-                    }}
-                    onClick={handleSelect(item)}>
+            component="li"
+            key={`g_${gIndex}_${iIndex}`}
+            sx={{
+              '& + &': {
+                borderTop: theme => `solid 1px ${theme.palette.text.disabled}`,
+              },
+            }}
+            onClick={handleSelect(item)}>
             <ListItemIcon>
               {item.icon}
             </ListItemIcon>
@@ -183,9 +188,9 @@ export default function ({ subject, height }) {
         </Typography>
         <div className="grow-1" />
         <Search dataTypeSelector={DataTypeSelector}
-                backColor="#ffffff"
-                backOverColor="#fffffe"
-                onSelect={({ record }) => handleDataTypeSelected(record)} />
+          backColor="#ffffff"
+          backOverColor="#fffffe"
+          onSelect={({ record }) => handleDataTypeSelected(record)} />
       </Box>
       <Box
         sx={{

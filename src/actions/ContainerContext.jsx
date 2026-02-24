@@ -12,7 +12,7 @@ import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined'
 import { catchError, switchMap } from "rxjs/operators";
 import Random from "../util/Random";
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
-import { RecordSubject } from "../services/subjects";
+import { DataTypeSubject, RecordSubject } from "../services/subject";
 import { useTenantContext } from "../layout/TenantContext";
 
 const CC = React.createContext({});
@@ -101,32 +101,32 @@ export default function ContainerContext({ kind, initialState, children, homeAct
           dataType.findByName(_type)
         ).pipe(
           switchMap(recordDataType => {
-              if (recordDataType) {
-                if (action.executable) {
-                  const r = action.call(this, {
-                    dataType: recordDataType,
-                    record: items[0],
-                    tenantContext,
-                    containerContext: value,
-                    selector
-                  });
-                  if (isObservable(r)) {
-                    return r.pipe(
-                      catchError(e => value.confirm({
-                        title: 'Error',
-                        message: `An error occurred: ${extractErrorMessageFrom(e)}`,
-                        justOk: true
-                      }))
-                    );
-                  }
-                } else if (recordDataType.id === dataType.id && kind === ActionKind.member) {
-                  setState({ actionKey });
-                } else {
-                  onSubjectPicked(RecordSubject.for(recordDataType.id, id).key, actionKey);
+            if (recordDataType) {
+              if (action.executable) {
+                const r = action.call(this, {
+                  dataType: recordDataType,
+                  record: items[0],
+                  tenantContext,
+                  containerContext: value,
+                  selector
+                });
+                if (isObservable(r)) {
+                  return r.pipe(
+                    catchError(e => value.confirm({
+                      title: 'Error',
+                      message: `An error occurred: ${extractErrorMessageFrom(e)}`,
+                      justOk: true
+                    }))
+                  );
                 }
-                return of(true);
+              } else if (recordDataType.id === dataType.id && kind === ActionKind.member) {
+                setState({ actionKey });
+              } else {
+                onSubjectPicked(RecordSubject.for(recordDataType.id, id).key, actionKey);
               }
+              return of(true);
             }
+          }
           )
         ).subscribe(() => setState({
           selectedItems: [],
@@ -209,25 +209,25 @@ export default function ContainerContext({ kind, initialState, children, homeAct
     <CC.Provider value={[{ ...state, handleAction: handleAction.current }, setState]}>
       {children}
       <Dialog open={Boolean(confirm)}
-              onClose={closeDialog(false)}
-              maxWidth="xs"
-              fullWidth
-              sx={{
-                backdropFilter: 'blur(6px) saturate(120%)',
-                '& .MuiBackdrop-root': {
-                  backgroundColor: "rgba(0, 0, 0, 0.05)"
-                },
-                '& .MuiTypography-h6': {
-                  textAlign: 'center'
-                },
-                '& p': {
-                  textAlign: 'center'
-                },
-                '& .MuiDialogActions-root': {
-                  justifyContent: 'center',
-                  mb: '1rem'
-                }
-              }}>
+        onClose={closeDialog(false)}
+        maxWidth="xs"
+        fullWidth
+        sx={{
+          backdropFilter: 'blur(6px) saturate(120%)',
+          '& .MuiBackdrop-root': {
+            backgroundColor: "rgba(0, 0, 0, 0.05)"
+          },
+          '& .MuiTypography-h6': {
+            textAlign: 'center'
+          },
+          '& p': {
+            textAlign: 'center'
+          },
+          '& .MuiDialogActions-root': {
+            justifyContent: 'center',
+            mb: '1rem'
+          }
+        }}>
         {dialogContent}
       </Dialog>
     </CC.Provider>

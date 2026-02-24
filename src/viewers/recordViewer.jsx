@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import Chip from "@mui/material/Chip";
-import { RecordSubject, TabsSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subject";
 import { of } from "rxjs";
 import { switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import Chip from "@mui/material/Chip";
-import { RecordSubject, TabsSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subject";
 import { of } from "rxjs";
 import { switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
@@ -36,10 +36,10 @@ export default function RefOneViewer({ prop, value, className, refDataType, vari
   if (value) {
     if (title) {
       return <Chip label={title}
-                   onClick={handleClick}
-                   className={className}
-                   variant={variant}
-                   color={color} />;
+        onClick={handleClick}
+        className={className}
+        variant={variant}
+        color={color} />;
     }
 
     return <Skeleton variant="text" />;

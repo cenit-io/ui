@@ -1,5 +1,5 @@
 import React from 'react'
-import { DataTypeSubject } from "../services/subjects";
+import { MenuSubject, DataTypeSubject } from "../services/subject";
 import DataIcon from "../icons/DataIcon";
 import ConfigurationIcon from "../icons/ConfigurationIcon";
 import FlowsIcon from "../icons/FlowsIcon";

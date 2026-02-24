@@ -112,9 +112,9 @@ export default function CodeMirrorEditor(
 
       const subscription = zzip(
         (theme && from(import(`codemirror/theme/${theme || 'default'}.css`))) || of(true),
-        (cmMode === 'null' && of(true)) || from(import(`codemirror/mode/${cmMode}/${cmMode}`)),
+        (cmMode === 'null' && of(true)) || from(import(`codemirror/mode/${cmMode}/${cmMode}.js`)),
         ...(addons || []).map(
-          addon => from(import(`codemirror/addon/${addon[0]}/${addon[1]}`))
+          addon => from(import(`codemirror/addon/${addon[0]}/${addon[1]}.js`))
         )
       ).subscribe(
         () => {
@@ -211,7 +211,7 @@ export default function CodeMirrorEditor(
       >
         {children}
         <textarea ref={textElRef}
-                  hidden={true} />
+          hidden={true} />
       </Box>
     </React.Fragment>
   );

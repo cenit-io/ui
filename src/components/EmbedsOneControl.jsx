@@ -39,12 +39,12 @@ function PlaceHolder({ value, dataType, label, error, className }) {
 
   return (
     <TextField key={key}
-               label={label}
-               readOnly
-               className={className}
-               value={valueTitle}
-               placeholder={valueTitle || (!value.get() && String(value.cache)) || valueTitle}
-               error={error} />
+      label={label}
+      readOnly
+      className={className}
+      value={valueTitle}
+      placeholder={valueTitle || (!value.get() && String(value.cache)) || valueTitle}
+      error={error} />
   );
 }
 
@@ -77,8 +77,8 @@ function EmbedsOneControl({
   const handleStack = item => onStack({
     ...item,
     title: itemValue => item.title(itemValue).pipe(
-      switchMap(itemTitle => (dataType || property.dataType).titleFor(value.get()).pipe(
-        map(title => `[${property.name}] ${title} ${itemTitle}`)
+      switchMap(action => (dataType || property.dataType).titleFor(value.get()).pipe(
+        map(title => `[${property.name}] ${title} ${action.title}`)
       )))
   });
 
@@ -99,16 +99,16 @@ function EmbedsOneControl({
   if (value.get()) {
     if (open) {
       objectControl = <ObjectControl dataType={dataType}
-                                     property={property}
-                                     value={value}
-                                     errors={errors}
-                                     onChange={onChange}
-                                     width={width}
-                                     disabled={disabled}
-                                     readOnly={readOnly}
-                                     onStack={handleStack}
-                                     fetched={fetched}
-                                     config={config} />;
+        property={property}
+        value={value}
+        errors={errors}
+        onChange={onChange}
+        width={width}
+        disabled={disabled}
+        readOnly={readOnly}
+        onStack={handleStack}
+        fetched={fetched}
+        config={config} />;
       actionButton =
         <IconButton onClick={() => setOpen(false)} disabled={disabled} size="large"><ArrowDropUpIcon /></IconButton>;
     } else {
@@ -126,10 +126,10 @@ function EmbedsOneControl({
     <div className='flex full-width column'>
       <div className='flex full-width'>
         <PlaceHolder value={value}
-                     dataType={dataType || property.dataType}
-                     label={title}
-                     className='grow-1'
-                     error={(errors && Object.keys(errors).length > 0) || false} />
+          dataType={dataType || property.dataType}
+          label={title}
+          className='grow-1'
+          error={(errors && Object.keys(errors).length > 0) || false} />
         {actionButton}
         {deleteButton}
       </div>

@@ -3,7 +3,7 @@ import Random from "../util/Random";
 import { fromEvent, of, Subject } from "rxjs";
 import { switchMap, map, filter, tap, first, catchError } from "rxjs/operators";
 import { getAccess } from "../services/AuthorizationService";
-import { DataTypeSubject, EmbeddedAppSubject, RecordSubject, TabsSubject } from "../services/subjects";
+import { DataTypeSubject, EmbeddedAppSubject, RecordSubject, TabsSubject } from "../services/subject";
 import EmbeddedAppService from "../services/EnbeddedAppService";
 import session from "../util/session";
 import request from "../util/request";
@@ -133,13 +133,13 @@ export default function EmbeddedApp({ url, height, width, autoHeight }) {
 
   return (
     <iframe ref={iframe}
-            style={{
-              height: autoHeight
-                ? 0
-                : (height ? `calc(${height} - ${theme.spacing(0.5)})` : 0),
-              width: width ? `calc(${width})` : 'inherit',
-              border: 'none'
-            }}
-            src={`${url}?token=${token.current}`} />
+      style={{
+        height: autoHeight
+          ? 0
+          : (height ? `calc(${height} - ${theme.spacing(0.5)})` : 0),
+        width: width ? `calc(${width})` : 'inherit',
+        border: 'none'
+      }}
+      src={`${url}?token=${token.current}`} />
   );
 }

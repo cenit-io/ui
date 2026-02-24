@@ -1,5 +1,5 @@
 import API from './ApiService';
-import { firstValueFrom, from, isObservable, of } from "rxjs";
+import { Observable, firstValueFrom, from, isObservable, of, throwError } from "rxjs";
 import { catchError, map, share, switchMap, tap } from "rxjs/operators";
 import zzip from "../util/zzip";
 import FormContext from "./FormContext";
@@ -15,14 +15,94 @@ import FileDataTypeConfig from "../config/FileDataTypeConfig";
 import { dataTypeCache } from "./dataType/cache";
 import { getDataTypeById, findDataType, loadDataTypes, buildFindSelectorHeaders, buildTemplateOptionsHeader } from "./dataType/repository";
 import { splitName, CENIT_TYPE, FILE_TYPE, JSON_TYPE } from "./dataType/utils";
+import { buildCriteriaKey } from "./dataType/cache";
+import { buildDigestHeaders } from "./dataType/repository";
+import { deriveDataTypeTitle, deriveItemTitle } from "./dataType/titleService";
+import { stripDecoratorProps } from "./dataType/schemaResolver";
+import session from "../util/session";
 
 import { isSimpleSchema, injectCommonProperties } from "./dataType/schemaResolver";
-export { isSimpleSchema, injectCommonProperties };
+export { isSimpleSchema, injectCommonProperties, CENIT_TYPE, FILE_TYPE, JSON_TYPE };
+
+const DATA_TYPE_SERVICE_FINGERPRINT = 'ui/src/services/DataTypeService.ts@local-v2';
+const DATA_TYPE_SERVICE_MARKER_KEY = '__CENIT_UI_DATA_TYPE_SERVICE__';
+
+const normalizeConfigPath = (path: string): string => (
+  path
+    .replace(/\\/g, '/')
+    .split('/')
+    .map(segment => segment.trim())
+    .filter(Boolean)
+    .join('/')
+);
+
+const markDataTypeServiceRuntime = (): void => {
+  const globalRef = globalThis as any;
+  if (!globalRef[DATA_TYPE_SERVICE_MARKER_KEY]) {
+    globalRef[DATA_TYPE_SERVICE_MARKER_KEY] = {
+      fingerprint: DATA_TYPE_SERVICE_FINGERPRINT,
+      loadedAt: new Date().toISOString()
+    };
+  }
+  console.log(
+    `DEBUG: DataTypeService runtime marker set ${DATA_TYPE_SERVICE_MARKER_KEY}=${globalRef[DATA_TYPE_SERVICE_MARKER_KEY].fingerprint}`
+  );
+};
+
+markDataTypeServiceRuntime();
+
+export interface MergeOptions {
+  root_schema?: any;
+  silent?: boolean;
+  expand_extends?: boolean;
+  only_overriders?: boolean;
+  extends?: any;
+  keep_ref?: boolean;
+  recursive?: boolean;
+  until_merge?: boolean;
+}
+
+export interface GetOptions {
+  viewport?: string;
+  jsonPath?: string;
+  with_references?: boolean;
+  include_id?: boolean;
+  include_blanks?: boolean;
+}
+
+export interface FindOptions extends GetOptions {
+  limit?: number;
+  page?: number;
+  sort?: any;
+  selector?: any;
+  query?: string;
+  include_id?: boolean;
+}
+
+export interface UploadOptions {
+  id?: string;
+  filename?: string;
+  onUploadProgress?: (progressEvent: any) => void;
+  cancelToken?: any;
+  add_new?: boolean;
+}
 
 export class DataType {
+  id!: string;
+  name!: string;
+  namespace!: string;
+  _type?: string;
+  schema?: any;
+  title?: string;
 
-  static get loaded() { return dataTypeCache.loaded; }
-  static set loaded(v) { dataTypeCache.loaded = v; }
+  private gettingSchema?: any;
+  private propertiesSchemaCache?: any;
+  private propertiesHash?: Record<string, Property>;
+  private nss?: Record<string, Record<string, any>>;
+  private __titleProps?: string[];
+
+  static get loaded(): boolean { return dataTypeCache.loaded; }
+  static set loaded(v: boolean) { dataTypeCache.loaded = v; }
 
   static get loading() { return dataTypeCache.loading; }
   static set loading(v) { dataTypeCache.loading = v; }
@@ -31,11 +111,11 @@ export class DataType {
   static get criteria() { return dataTypeCache.store.criteria; }
   static get gets() { return dataTypeCache.store.gets; }
 
-  static load(obs) {
+  static load(obs: Observable<any>): Observable<any> {
     return loadDataTypes(obs, (data) => DataType.initBuildIns(data));
   }
 
-  static initBuildIns(buildIns) {
+  static initBuildIns(buildIns: any[]): void {
     buildIns.forEach(dataType => {
       const { id, namespace, name } = dataType;
       DataType.dataTypes[id] = DataType.from(dataType);
@@ -43,8 +123,16 @@ export class DataType {
     });
   }
 
-  static from(spec) {
+  static from(spec: any): DataType {
     const data = { ...spec };
+    // API responses can provide Mongo-style `_id` instead of `id`.
+    // Normalize here so all downstream code can rely on `dataType.id`.
+    if (!data.id && data._id) {
+      data.id = data._id;
+    }
+    if (data._id) {
+      delete data._id;
+    }
     if (data._type === JSON_TYPE) {
       delete data.schema;
     } else {
@@ -71,7 +159,7 @@ export class DataType {
     return dt;
   }
 
-  static getById(id) {
+  static getById(id: string): Observable<DataType> {
     return getDataTypeById(id, (data) => DataType.from(data), (data) => DataType.initBuildIns(data));
   }
 
@@ -96,7 +184,7 @@ export class DataType {
     return buildCriteriaKey(criteria);
   }
 
-  static find(criteria) {
+  static find(criteria: any): Observable<DataType> {
     return findDataType(criteria, (data) => DataType.from(data), (data) => DataType.initBuildIns(data));
   }
 
@@ -108,7 +196,32 @@ export class DataType {
     };
   }
 
-  type_name() {
+  configPath(): string | null {
+    const branch = this.namespace && this.name
+      ? 'namespace+name'
+      : this.name
+        ? 'name-only'
+        : 'missing-name';
+
+    console.log(
+      `DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] configPath branch=${branch} namespace=${this.namespace || ''} name=${this.name || ''}`
+    );
+
+    if (this.namespace && this.name) {
+      const path = normalizeConfigPath(`${this.namespace.split('::').join('/')}/${this.name}`);
+      console.log(`DEBUG: DataType configPath normalized=${path}`);
+      return path || null;
+    }
+    if (this.name) {
+      const path = normalizeConfigPath(this.name);
+      console.log(`DEBUG: DataType configPath normalized=${path}`);
+      return path || null;
+    }
+    console.log(`DEBUG: DataType configPath: null (namespace=${this.namespace}, name=${this.name})`);
+    return null;
+  }
+
+  type_name(): string | undefined {
     if (this._type === CENIT_TYPE) {
       if (this.namespace) {
         return `${this.namespace}::${this.name}`;
@@ -118,12 +231,16 @@ export class DataType {
     return this.id && `Dt${this.id}`;
   }
 
-  getSchema() {
+  getSchema(): Observable<any> {
     if (this.schema) {
       return of(this.schema);
     }
 
     if (!this.gettingSchema) {
+      if (!this.id) {
+        console.warn(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] getSchema called for datatype without id; returning empty schema.`);
+        return of({});
+      }
       this.gettingSchema = API.get('setup', 'data_type', this.id, 'digest', 'schema').pipe(
         tap(schema => {
           injectCommonProperties(schema);
@@ -137,13 +254,13 @@ export class DataType {
     return this.gettingSchema;
   }
 
-  withOrigin() {
+  withOrigin(): Observable<boolean> {
     return this.getSchemaEntry('with_origin').pipe(
       map(v => Boolean(v))
     );
   }
 
-  propertiesSchema() {
+  propertiesSchema(): Observable<any> {
     if (this.propertiesSchemaCache) {
       return of(this.propertiesSchemaCache)
     }
@@ -156,26 +273,26 @@ export class DataType {
     );
   }
 
-  properties() {
+  properties(): Observable<Record<string, Property>> {
     if (this.propertiesHash) {
       return of(this.propertiesHash);
     }
     return this.propertiesSchema().pipe(
       switchMap(
-        propertiesSchemas => zzip(
+        propertiesSchemas => (zzip(
           ...Object.keys(propertiesSchemas).map(
             property => this.propertyFrom(property, propertiesSchemas[property])
           )
-        )
+        ) as Observable<Property[]>)
       ),
-      switchMap(props => zzip(
+      switchMap(props => (zzip(
         ...props.map(prop => (
-          prop && zzip(
+          prop && (zzip(
             prop.isReferenced(),
             prop.isMany(),
             prop.getSchema(),
             prop.isModel()
-          ).pipe(map(([isRef, isMany, propSch, isModel]) => {
+          ) as Observable<any[]>).pipe(map(([isRef, isMany, propSch, isModel]) => {
             if (isModel) {
               if (isRef || prop.dataType?._type === FILE_TYPE) { // Referenced
                 if (isMany) { // Many
@@ -195,36 +312,36 @@ export class DataType {
           }
           ))
         ) || of(prop))
-      )),
+      ) as Observable<Property[]>)),
       map(
         properties => this.propertiesHash = properties.reduce((hash, p) => (hash[p.name] = p) && hash, {})
       )
     );
   }
 
-  allProperties() {
+  allProperties(): Observable<Property[]> {
     return this.properties().pipe(map(properties => Object.values(properties)));
   }
 
-  getProperty(name) {
+  getProperty(name: string): Observable<Property | undefined> {
     return this.properties().pipe(map(properties => properties[name]));
   }
 
-  simpleProperties() {
+  simpleProperties(): Observable<Property[]> {
     return this.allProperties().pipe(
-      switchMap(props => zzip(...props.map(p => p.isSimple())).pipe(
+      switchMap((props: Property[]) => (zzip(...props.map(p => p.isSimple())) as Observable<boolean[]>).pipe(
         map(
           simpleFlags => simpleFlags.map(
             (simple, index) => simple ? props[index] : null
-          ).filter(p => p)
+          ).filter((p): p is Property => p !== null)
         )
       ))
     );
   }
 
-  queryProps() {
+  queryProps(): Observable<Property[]> {
     return this.allProperties().pipe(
-      switchMap(props => zzip(...props.map(p => p.getSchema())).pipe(
+      switchMap((props: Property[]) => (zzip(...props.map(p => p.getSchema())) as Observable<any[]>).pipe(
         map(schemas => schemas.map(
           (schema, index) => (
             schema.type === 'string' &&
@@ -234,13 +351,13 @@ export class DataType {
             schema.format !== 'symbol' &&
             props[index].name !== '_type'
           ) ? props[index] : null
-        ).filter(p => p)
+        ).filter((p): p is Property => p !== null)
         )
       ))
     );
   }
 
-  titleProps() {
+  titleProps(): Observable<Property[]> {
     return this.allProperties().pipe(
       switchMap(
         props => this.titlePropNames().pipe(
@@ -249,22 +366,22 @@ export class DataType {
       ));
   }
 
-  visibleProps(...plus) {
+  visibleProps(...plus: string[]): Observable<Property[]> {
     return this.allProperties().pipe(
       switchMap(
-        props => zzip(...props.map(prop => prop.isVisible())).pipe(
+        (props: Property[]) => (zzip(...props.map(prop => prop.isVisible())) as Observable<boolean[]>).pipe(
           map(visible => visible.map(
             (v, index) => (v || plus.indexOf(props[index].name) !== -1) ? props[index] : null
-          ).filter(p => p))
+          ).filter((p): p is Property => p !== null))
         )
       ));
   }
 
-  mergeSchema(schema) {
+  mergeSchema(schema: any): Observable<any> {
     return from(this.async_merge_schema(schema));
   }
 
-  async async_merge_schema(schema, options = {}) {
+  async async_merge_schema(schema: any, options: MergeOptions = {}): Promise<any> {
     if (!schema || typeof schema !== 'object') {
       return schema;
     }
@@ -422,8 +539,8 @@ export class DataType {
 
   find_ref_schema(ref, root_schema = this.schema) {
     let fragment = '';
-    let data_type = this;
-    let sch;
+    let dataTypeObs: Observable<DataType>;
+    let sch: Observable<any>;
     if (typeof ref === 'string' && ref.startsWith('#')) {
       fragment = `${ref}`;
       try {
@@ -431,24 +548,28 @@ export class DataType {
       } catch (_) {
         sch = of(null);
       }
+      dataTypeObs = of(this);
     } else {
-      sch = (data_type = this.find_data_type(ref)).pipe(
-        switchMap(data_type => (data_type && data_type.getSchema()) || of(null))
+      dataTypeObs = this.find_data_type(ref);
+      sch = dataTypeObs.pipe(
+        switchMap(dt => (dt && dt.getSchema()) || of(null))
       );
     }
-    return sch.pipe(
-      tap(sch => {
+    return zzip(sch, dataTypeObs).pipe(
+      map(([sch, dt]) => {
         if (sch) {
-          sch.id = `${session.cenitBackendBaseUrl}/data_type/${data_type.id}${fragment}`;
+          sch.id = `${session.cenitBackendBaseUrl}/data_type/${dt?.id}${fragment}`;
         }
-      }
-      )
+        return sch;
+      })
     );
   }
 
-  findByName(name) {
-    let namespace;
-    [namespace, name] = DataType.splitName(name);
+  findByName(name: string): Observable<DataType | null | undefined> {
+    let namespace: string | undefined;
+    const split = DataType.splitName(name);
+    namespace = split[0];
+    name = split[1];
     return this.find_data_type(name, namespace).pipe(
       switchMap(dataType => {
         if (!dataType && name.startsWith('Dt')) {
@@ -460,10 +581,10 @@ export class DataType {
     );
   }
 
-  find_data_type(ref, ns = this.namespace) {
+  find_data_type(ref: any, ns: string | null = this.namespace): Observable<DataType> {
     if (ref && typeof ref === 'object' && ref.constructor === Object) {
-      ns = `${ref.namespace}`;
-      ref = `${ref.name}`;
+      ns = `${(ref as any).namespace}`;
+      ref = `${(ref as any).name}`;
     }
     if (ref === this.name && (ns === null || ns === undefined || ns === this.namespace)) {
       return of(this);
@@ -482,7 +603,7 @@ export class DataType {
       }
       return of(data_type);
     }
-    let criteria = { name: ref };
+    let criteria: any = { name: ref };
     if (ns !== null && ns !== undefined) {
       criteria.namespace = ns;
     }
@@ -577,19 +698,19 @@ export class DataType {
     );
   }
 
-  descendants() {
+  descendants(): Observable<DataType[]> {
     return this.getSchemaEntry('descendants').pipe(
       switchMap(
-        descendants => zzip(...(descendants || []).map(
-          ({ id }) => DataType.getById(id)
-        )
-        )
+        (descendants: any[]) => (zzip(...(descendants || []).map(
+          ({ id }: any) => DataType.getById(id)
+        )) as Observable<DataType[]>)
       )
     );
   }
 
-  propertyFrom(name, schema) {
-    let ref, dataType = of(null);
+  propertyFrom(name: string, schema: any): Observable<Property> {
+    let ref: any;
+    let dataType: Observable<DataType | null> = of(null);
     // Checking referenced schema
     if (
       schema.constructor === Object && (
@@ -600,7 +721,7 @@ export class DataType {
       }
       const nakedSchema = this.strip(schema);
       const size = Object.keys(nakedSchema).length;
-      let items;
+      let items: any;
       if (
         (ref && (size === 1 || (size === 2 && nakedSchema.hasOwnProperty('referenced')))) ||
         (nakedSchema['type'] === 'array' && (items = this.strip(nakedSchema['items'])) &&
@@ -616,37 +737,37 @@ export class DataType {
     }
 
     return dataType.pipe(
-      switchMap(dataType => {
-        let mergedSchema;
+      switchMap(dt => {
+        let mergedSchema: Observable<any[]>;
         // Not referenced schema
-        if (dataType) {
-          mergedSchema = zzip(of(dataType), dataType.mergeSchema(schema));
+        if (dt) {
+          mergedSchema = zzip(of(dt), dt.mergeSchema(schema)) as Observable<any[]>;
         } else {
           mergedSchema = this.mergeSchema(schema).pipe(
-            map(mergedSchema => {
+            map(ms => {
               let typeSchema;
-              if (mergedSchema['type'] === 'array' && mergedSchema.hasOwnProperty('items')) {
-                typeSchema = mergedSchema['items'];
+              if (ms['type'] === 'array' && ms.hasOwnProperty('items')) {
+                typeSchema = ms['items'];
               } else {
-                typeSchema = mergedSchema;
+                typeSchema = ms;
               }
-              dataType = DataType.from({
+              const dType = DataType.from({
                 name: this.name + '::' + name,
                 schema: typeSchema
               });
 
-              return [dataType, mergedSchema];
+              return [dType, ms];
             })
-          );
+          ) as Observable<any[]>;
         }
 
         return mergedSchema.pipe(
-          map(([dataType, mergedSchema]) => {
+          map(([dType, ms]) => {
             const prop = new Property();
             prop.name = name;
-            prop.jsonKey = (mergedSchema.edi && mergedSchema.edi.segment) || name;
-            prop.dataType = dataType;
-            prop.propertySchema = mergedSchema;
+            prop.jsonKey = (ms.edi && ms.edi.segment) || name;
+            prop.dataType = dType;
+            prop.propertySchema = ms;
 
             return prop;
           })
@@ -668,28 +789,28 @@ export class DataType {
     });
   }
 
-  queryFind(query, opts = null) {
+  queryFind(query: string, opts: FindOptions | null = null): Observable<any> {
     query = query?.toString()?.trim() || '';
     if (!query) {
-      return this.find(opts);
+      return this.find(opts || {});
     }
 
     return this.descendants().pipe(
-      switchMap(dataTypes => zzip(...[this, ...dataTypes].map(dt => dt.isAbstract())).pipe(
-        map(abstractFlags => dataTypes.map((dt, index) => abstractFlags[index] && dt).filter(dt => dt))
+      switchMap(dts => (zzip(...[this, ...dts].map(dt => dt.isAbstract())) as Observable<boolean[]>).pipe(
+        map(abstractFlags => dts.map((dt, index) => abstractFlags[index] && dt).filter(dt => dt))
       )),
-      switchMap(dataTypes => zzip(...dataTypes.map(
-        dataType => dataType.queryProps()
-      )).pipe(
+      switchMap(dts => (zzip(...dts.map(
+        dt => dt.queryProps()
+      )) as Observable<Property[][]>).pipe(
         switchMap(queriesProps => {
-          let dataTypesSelectors = queriesProps.map((queryProps, index) => {
+          let dataTypesSelectors: any = queriesProps.map((queryProps, index) => {
             const $and = [];
             const $or = queryProps.map(
               prop => ({ [prop.name]: { '$regex': `(?i)${query}` } })
             );
             $and.push({ $or });
-            if (dataTypes.length > 1) {
-              $and.push({ _type: dataTypes[index].type_name() })
+            if (dts.length > 1) {
+              $and.push({ _type: dts[index].type_name() })
             }
             return { $and };
           });
@@ -707,33 +828,32 @@ export class DataType {
                 selector,
                 opts.selector
               ]
-            };
+            } as any;
           }
 
-          return this.find({ ...opts, selector });
+          return this.find({ ...(opts || {}), selector });
         })
       ))
     );
-
   }
 
-  find(opts = null) {
-    return ((opts?.viewport && of(opts.viewport)) || this.shallowViewPort()).pipe(
+  find(opts: FindOptions = {}): Observable<any> {
+    return ((opts?.viewport && of(opts.viewport as string)) || (this.shallowViewPort() as Observable<string>)).pipe(
       switchMap(viewport => {
         const limit = opts?.limit || 5;
         const page = opts?.page || 1;
         const sort = opts?.sort || {};
-        const params = { limit, page };
+        const params: any = { limit, page };
 
         const headers = buildDigestHeaders(
           viewport,
           sort,
-          opts.selector || {},
+          (opts as any).selector || {},
           true,
           Boolean(opts.include_id)
         );
 
-        const request = ['setup', 'data_type', this.id, 'digest'];
+        const request: any[] = ['setup', 'data_type', this.id, 'digest'];
 
         const query = opts.query;
 
@@ -750,11 +870,19 @@ export class DataType {
     );
   }
 
-  list(opts = {}) {
+  list(opts: any = {}): Observable<any> {
+    if (!this.id) {
+      console.warn(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] list called for datatype without id; returning empty items.`);
+      return of({ items: [] });
+    }
     return API.get('setup', 'data_type', this.id, 'digest', opts);
   }
 
-  distinct(field, opts = {}) {
+  distinct(field: string, opts: any = {}): Observable<any> {
+    if (!this.id) {
+      console.warn(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] distinct called for datatype without id; returning empty result.`);
+      return of([]);
+    }
     let selector = opts?.selector || {};
     return API.get('setup', 'data_type', this.id, `digest.distinct(${field})`, {
       headers: {
@@ -763,7 +891,7 @@ export class DataType {
     });
   }
 
-  titleViewport(...plus) {
+  titleViewport(...plus: string[]): Observable<string> {
     return this.config().pipe(
       switchMap(config => {
         if (config.titleViewport) {
@@ -776,15 +904,15 @@ export class DataType {
     );
   }
 
-  titlePropNames() {
+  titlePropNames(): Observable<string[]> {
     if (!this.__titleProps) {
       return this.getSchema().pipe(
         switchMap(
           schema => {
             if (schema.label) {
-              this.__titleProps = LiquidEngine.parse(schema.label).map(
-                template => (template.token.content || '').split('|')[0].trim()
-              ).filter(token => token.length);
+              this.__titleProps = (LiquidEngine.parse(schema.label) as any[]).map(
+                (template: any) => (template.token.content || '').split('|')[0].trim()
+              ).filter((token: string) => token.length);
             } else {
               this.__titleProps = ['id', 'name', 'title'];
             }
@@ -823,7 +951,7 @@ export class DataType {
     );
   }
 
-  titlesFor(...items) {
+  titlesFor(...items: any[]): Observable<string[]> {
     items = [...items];
 
     return this.config().pipe(switchMap(
@@ -837,12 +965,12 @@ export class DataType {
     ));
   }
 
-  polymorphicTitlesFor(...items) {
+  polymorphicTitlesFor(...items: any[]): Observable<string[]> {
     if (!this.type_name()) {
       return this.titlesFor(...items);
     }
-    const typeHash = {};
-    const indices = {};
+    const typeHash: Record<string, any[]> = {};
+    const indices: Record<string, number[]> = {};
     items.forEach((item, index) => {
       const type = item._type || this.type_name();
       let typeItems = typeHash[type];
@@ -854,14 +982,14 @@ export class DataType {
       typeItems.push(item);
       typeIndices.push(index);
     });
-    return zzip(...Object.keys(typeHash).map(type => this.findByName(type))).pipe(
-      switchMap(dataTypes => zzip(...dataTypes.map(
-        dataType => dataType.titlesFor(...typeHash[dataType.type_name()])
-      )).pipe(
+    return (zzip(...Object.keys(typeHash).map(type => this.findByName(type))) as Observable<DataType[]>).pipe(
+      switchMap(dataTypes => (zzip(...dataTypes.map(
+        dataType => dataType.titlesFor(...typeHash[(dataType as DataType).type_name()])
+      )) as Observable<any[][]>).pipe(
         map(titlesByType => {
-          const titles = [];
+          const titles: string[] = [];
           titlesByType.forEach((titleGroup, dataTypeIndex) => {
-            const type = dataTypes[dataTypeIndex].type_name();
+            const type = dataTypes[dataTypeIndex]!.type_name();
             titleGroup.forEach((title, index) => {
               const itemIndex = indices[type][index];
               titles[itemIndex] = title;
@@ -873,11 +1001,12 @@ export class DataType {
     );
   }
 
-  computeTitlesFor(...items) {
-    return zzip(this.getSchema(), this.titleProps()).pipe(
+  computeTitlesFor(...items: any[]): Observable<any[]> {
+    return (zzip(this.getSchema(), this.titleProps()) as Observable<any[]>).pipe(
       switchMap(
-        ([schema, titleProps]) => {
-          const missingProps = {};
+        (args: any[]) => {
+          const [schema, titleProps] = args as [any, Property[]];
+          const missingProps: Record<string, number[]> = {};
 
           for (let i = 0; i < items.length; i++) {
             let item = items[i];
@@ -892,7 +1021,7 @@ export class DataType {
           }
 
           const missingIds = Object.keys(missingProps);
-          let completeItems;
+          let completeItems: Observable<any[]>;
           if (missingIds.length > 0) {
             completeItems = this.titleViewport('_id').pipe(
               switchMap(
@@ -919,13 +1048,13 @@ export class DataType {
 
               return this.getTitle().pipe(
                 switchMap(
-                  dtTitle => zzip(...items.map(item => {
+                  dtTitle => (zzip(...items.map(item => {
                     if (schema.label) {
                       return from(LiquidEngine.parseAndRender(schema.label, item));
                     }
                     return of(deriveItemTitle(item, dtTitle, true));
                   })
-                  )
+                  ) as Observable<string[]>)
                 )
               );
             })
@@ -935,10 +1064,13 @@ export class DataType {
     );
   }
 
-  post(data, opts = {}) {
+  post(data: any, opts: any = {}): Observable<any> {
+    if (!this.id) {
+      return API.post('setup', 'data_type', 'digest', data);
+    }
     const { viewport, add_only, add_new, polymorphic } = opts;
     opts = { headers: {} };
-    let templateOptions;
+    let templateOptions: any;
     if (viewport) {
       templateOptions = { viewport };
     }
@@ -961,11 +1093,15 @@ export class DataType {
     return API.post('setup', 'data_type', this.id, 'digest', opts, data);
   }
 
-  get(id, opts = {}) {
+  get(id: string, opts: GetOptions = {}): Observable<any> {
+    if (!this.id) {
+      console.warn(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] get called for datatype without id; returning null.`);
+      return of(null);
+    }
     const { viewport, jsonPath, with_references, include_id } = opts;
     const include_blanks = opts.hasOwnProperty('include_blanks') ? opts.include_blanks : true;
-    const templateOptions = { include_blanks };
-    opts = { headers: { 'X-Record-Id': id } };
+    const templateOptions: any = { include_blanks };
+    const requestOpts: any = { headers: { 'X-Record-Id': id } };
     if (viewport) {
       templateOptions.viewport = viewport;
     }
@@ -975,25 +1111,29 @@ export class DataType {
     if (include_id) {
       templateOptions.include_id = true;
     }
-    opts.headers['X-Template-Options'] = JSON.stringify(templateOptions);
+    requestOpts.headers['X-Template-Options'] = JSON.stringify(templateOptions);
     if (jsonPath) {
-      opts.headers['X-JSON-Path'] = jsonPath;
+      requestOpts.headers['X-JSON-Path'] = jsonPath;
     }
-    return API.get('setup', 'data_type', this.id, 'digest', opts);
+    return API.get('setup', 'data_type', this.id, 'digest', requestOpts);
   }
 
-  delete(_id) {
-    return this.bulkDelete({ _id });
+  delete(id: string): Observable<any> {
+    return this.bulkDelete({ _id: id });
   }
 
   bulkDelete(selector) {
+    if (!this.id) {
+      console.error(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] bulkDelete called for datatype without id; operation aborted.`);
+      return throwError(() => new Error('DataType ID missing'));
+    }
     return API.delete('setup', 'data_type', this.id, 'digest', {
       headers: { 'X-Query-Selector': JSON.stringify(selector) }
     });
   }
 
-  shallowViewPort(...properties) {
-    let viewportProps;
+  shallowViewPort(...properties: string[]): Observable<string> {
+    let viewportProps: Observable<Property[]>;
     if (properties.length) {
       if (properties.indexOf('_id') !== -1) {
         properties = ['_id', ...properties];
@@ -1006,13 +1146,13 @@ export class DataType {
     }
     return viewportProps.pipe(
       switchMap(
-        props => zzip(
+        (props: Property[]) => (zzip(
           ...props.map(
-            p => p.isModel().pipe(
-              switchMap(model => (model && p.dataType.titleViewport('_id')) || of(''))
+            (p: Property) => p.isModel().pipe(
+              switchMap(model => (model && (p.dataType as any).titleViewport('_id')) || of(''))
             )
           )
-        ).pipe(
+        ) as Observable<string[]>).pipe(
           map(
             childViewports => '{' + props.map(
               (prop, index) => `${prop.name} ${childViewports[index]}`
@@ -1029,31 +1169,39 @@ export class DataType {
     );
   }
 
-  config() {
-    let config = this[ConfigSymbol];
+  config(): Observable<any> {
+    let config = (this as any)[ConfigSymbol];
     if (config) {
+      const cacheKind = isObservable(config) ? 'observable' : 'value';
+      console.log(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] config cache hit (${cacheKind}) for ${this.type_name() || this.id}`);
       if (!isObservable(config)) {
         config = of(config);
       }
     } else if (this.id !== undefined) {
-      let path = (this.namespace || '')
-        .split('::')
-        .join('/');
+      const path = this.configPath();
       if (path) {
-        path = `${path}/${this.name}`;
+        console.log(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] importing config for path=${path}`);
+        config = from(
+          import(`../config/dataTypes/${path}.jsx`)
+        ).pipe(
+          tap(m => console.log(`DEBUG: Config imported successfully for ${path}`, m.default)),
+          map(mod => mod.default),
+          catchError(e => {
+            console.error(`DEBUG: Failed importing config for ${path}; falling back to {}.`, e);
+            return of({});
+          }),
+          tap(config => {
+            (this as any)[ConfigSymbol] = config;
+          }),
+          share() // Ensure the observable is shared if multiple subscribers
+        );
+        (this as any)[ConfigSymbol] = config; // Cache the observable
       } else {
-        path = this.name;
+        console.warn(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] configPath unavailable for id=${this.id}; using empty config fallback.`);
+        config = of({});
       }
-      this[ConfigSymbol] = config = from(
-        import(`../config/dataTypes/${path}.jsx`)
-      ).pipe(
-        map(mod => mod.default),
-        catchError(e => of({})),
-        tap(config => {
-          this[ConfigSymbol] = config;
-        })
-      );
     } else {
+      console.warn(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] datatype without id; using empty config fallback.`);
       config = of({});
     }
     return config;
@@ -1062,11 +1210,11 @@ export class DataType {
 
 export class FileDataType extends DataType {
 
-  upload(data, opts = {}) {
+  upload(data: any, opts: UploadOptions = {}): Observable<any> {
     const { id, filename, onUploadProgress, cancelToken, add_new } = opts;
-    opts = { headers: {}, onUploadProgress, cancelToken };
+    const requestOpts: any = { headers: {}, onUploadProgress, cancelToken };
 
-    let digestOpts;
+    let digestOpts: any;
     if (id) {
       digestOpts = { id };
     }
@@ -1077,15 +1225,15 @@ export class FileDataType extends DataType {
       digestOpts = { ...digestOpts, add_new };
     }
     if (digestOpts) {
-      opts.headers['X-Digest-Options'] = JSON.stringify(digestOpts);
+      requestOpts.headers['X-Digest-Options'] = JSON.stringify(digestOpts);
     }
 
     const formData = new FormData();
     formData.append('data', data);
 
-    opts.headers['Content-Type'] = 'multipart/form-data';
+    requestOpts.headers['Content-Type'] = 'multipart/form-data';
 
-    return API.post('setup', 'data_type', this.id, 'digest', 'upload', opts, formData);
+    return API.post('setup', 'data_type', this.id, 'digest', 'upload', requestOpts, formData);
   }
 
   config() {
@@ -1096,12 +1244,17 @@ export class FileDataType extends DataType {
 }
 
 export class Property {
+  name!: string;
+  jsonKey!: string;
+  dataType!: DataType;
+  propertySchema!: any;
+  type!: string;
 
-  constructor(attrs = {}) {
-    Object.keys(attrs).forEach(attr => this[attr] = attrs[attr]);
+  constructor(attrs: any = {}) {
+    Object.keys(attrs).forEach((attr: string) => (this as any)[attr] = attrs[attr]);
   }
 
-  viewportToken() {
+  viewportToken(): Observable<string> {
     return this.isModel().pipe(
       switchMap(model => {
         if (model) {
@@ -1144,22 +1297,22 @@ export class Property {
 
   is = type => this.getSchema().pipe(map(schema => schema['type'] === type));
 
-  isReferenced() {
+  isReferenced(): Observable<boolean> {
     return this.getSchema().pipe(map(schema => schema['referenced']));
   }
 
-  isMany() {
-    return this.getSchema().pipe(map(schema => schema['type'] === 'array'));
+  isMany(): Observable<boolean> {
+    return this.getSchema().pipe(map(schema => schema['referenced'] || schema['type'] === 'array'));
   }
 
-  isTypeMany() {
-    return this.type?.includes('Many')
+  isTypeMany(): boolean {
+    return Boolean(this.type?.includes('Many'));
   }
 
-  getTitle() {
+  getTitle(): Observable<string> {
     return this.getSchema().pipe(
       switchMap(schema => {
-        const title = schema['title'];
+        const title: any = schema['title'];
         if (title) {
           return from(LiquidEngine.parseAndRender(title.toString(), this));
         }
@@ -1198,7 +1351,3 @@ export class Property {
     );
   }
 }
-
-export const JSON_TYPE = 'Setup::JsonDataType';
-export const FILE_TYPE = 'Setup::FileDataType';
-export const CENIT_TYPE = 'Setup::CenitDataType';

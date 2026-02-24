@@ -31,11 +31,11 @@ describe("subjects", () => {
   });
 
   it("propagates title updates through subject title stream", async () => {
-    const { MenuSubject } = await import("./subjects");
+    const { MenuSubject } = await import("./subject");
     const subject = MenuSubject.instance() as any;
 
     const titles: string[] = [];
-    const subscription = subject.title().subscribe((title) => titles.push(title));
+    const subscription = subject.title().subscribe((event: any) => titles.push(event.title));
 
     subject.computeTitle();
     await new Promise((resolve) => setTimeout(resolve, 0));

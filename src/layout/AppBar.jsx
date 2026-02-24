@@ -15,7 +15,7 @@ import { useTheme } from '@mui/material/styles';
 import TenantSelector from "../components/TenantSelector";
 import UserCard from "../components/UserCard";
 import ConfigService from "../services/ConfigService";
-import { DataTypeSubject, MenuSubject, TabsSubject } from "../services/subjects";
+import { DataTypeSubject, MenuSubject, TabsSubject } from "../services/subject";
 import Search from "../components/Search";
 import MenuIcon from "../icons/MenuIcon";
 import { useTenantContext } from "./TenantContext";
@@ -84,21 +84,23 @@ export default function ({ onToggle }) {
     return <CircularProgress />
   }
 
-  const handleDataTypeSelected = ({ id }) => TabsSubject.next({
-    key: DataTypeSubject.for(id).key
-  });
+  const openDataTypeTab = (id) => {
+    if (!id) {
+      return;
+    }
+    const subject = DataTypeSubject.for(id);
+    if (subject) {
+      TabsSubject.next({ key: subject.key });
+    }
+  };
 
-  const handlePickNotifications = () => TabsSubject.next({
-    key: DataTypeSubject.for(notificationDataType.id).key
-  });
+  const handleDataTypeSelected = ({ id }) => openDataTypeTab(id);
 
-  const handlePickTasks = () => TabsSubject.next({
-    key: DataTypeSubject.for(taskDataType.id).key
-  });
+  const handlePickNotifications = () => openDataTypeTab(notificationDataType?.id);
 
-  const handlePickTenants = () => TabsSubject.next({
-    key: DataTypeSubject.for(tenantDataType.id).key
-  });
+  const handlePickTasks = () => openDataTypeTab(taskDataType?.id);
+
+  const handlePickTenants = () => openDataTypeTab(tenantDataType?.id);
 
   const handleTenantSelected = ({ id }) => {
     if (ConfigService.state().tenant_id !== id) {
@@ -153,15 +155,15 @@ export default function ({ onToggle }) {
 
   const dataTypeSearch = smUp && (
     <Search dataTypeSelector={DataTypeSelector}
-            onSelect={({ record }) => handleDataTypeSelected(record)}
-            disabled={loading} />
+      onSelect={({ record }) => handleDataTypeSelected(record)}
+      disabled={loading} />
   );
 
   const tenantSearch = (
     <Search searchIcon={<HomeIcon />}
-            selectorComponent={TenantSelector}
-            onSelect={handleTenantSelected}
-            disabled={loading} />
+      selectorComponent={TenantSelector}
+      onSelect={handleTenantSelected}
+      disabled={loading} />
   );
 
   const brandLogo = !smUp &&
@@ -178,7 +180,7 @@ export default function ({ onToggle }) {
         },
       }}>
       <img src={brandLogoUrl()} width="40px" alt=""
-           style={{ filter: 'invert(1)' }} />
+        style={{ filter: 'invert(1)' }} />
     </Box>
 
   const taskMenu = (

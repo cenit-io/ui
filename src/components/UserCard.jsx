@@ -14,7 +14,7 @@ import { from } from "rxjs";
 import Snackbar from "@mui/material/Snackbar";
 import { Alert } from '@mui/material';
 import ApartmentIcon from "@mui/icons-material/Apartment";
-import { RecordSubject, TabsSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subject";
 import { DataType } from "../services/DataTypeService";
 
 const NOT_SETTING_PASSWORD = 'NOT_SETTING_PASSWORD';
@@ -37,9 +37,9 @@ const UserCard = ({ idToken, onClose }) => {
       const subscription = getAccess().pipe(
         switchMap(access => from(appRequest({ url: 'send_reset_password_instructions' }))),
       ).subscribe(() => {
-          setSettingPassword(SETTING_PASSWORD_OK);
-          setTimeout(onClose, SETTING_PASSWORD_TIMEOUT)
-        },
+        setSettingPassword(SETTING_PASSWORD_OK);
+        setTimeout(onClose, SETTING_PASSWORD_TIMEOUT)
+      },
         () => {
           setSettingPassword(SETTING_PASSWORD_FAIL);
           setTimeout(onClose, SETTING_PASSWORD_TIMEOUT)
@@ -54,12 +54,12 @@ const UserCard = ({ idToken, onClose }) => {
   if (!idToken) return <CircularProgress />;
 
   const avatar = <Avatar alt={idToken.name}
-                         src={idToken.picture}
-                         sx={{
-                           width: theme.spacing(8),
-                           height: theme.spacing(8),
-                         }}
-                         component="div" />;
+    src={idToken.picture}
+    sx={{
+      width: theme.spacing(8),
+      height: theme.spacing(8),
+    }}
+    component="div" />;
 
   const setupPassword = () => setSettingPassword(SETTING_PASSWORD);
 
@@ -85,7 +85,7 @@ const UserCard = ({ idToken, onClose }) => {
   if (isSuperUser) {
     const superEnabled = user.super_admin_enabled;
     const action = superEnabled ? 'Disable' : 'Enable';
-      sudoControl = (
+    sudoControl = (
       <ListItem button onClick={handleSwitchSudo} component="li">
         <ListItemIcon
           sx={{
@@ -128,8 +128,8 @@ const UserCard = ({ idToken, onClose }) => {
     }
     passwordControl = (
       <ListItem button onClick={setupPassword}
-                disabled={settingPassword === SETTING_PASSWORD}
-                component="li">
+        disabled={settingPassword === SETTING_PASSWORD}
+        component="li">
         <ListItemIcon>
           {icon}
         </ListItemIcon>
@@ -185,7 +185,7 @@ const UserCard = ({ idToken, onClose }) => {
         </ListItem>
       </List>
       <Snackbar open={settingPassword === SETTING_PASSWORD_OK}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
         <Alert>
           An email with password reset instructions was sent to <strong>{user.email}</strong>
         </Alert>

@@ -1,6 +1,6 @@
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import DataTypeIcon from '@mui/icons-material/Block';
-import { DataTypeSubject, RecordSubject, TabsSubject } from "../services/subjects";
+import { DataTypeSubject, RecordSubject, TabsSubject } from "../services/subject";
 import { CENIT_TYPE, FILE_TYPE, JSON_TYPE } from "../services/DataTypeService";
 import { DataType as DataTypeService } from '../services/DataTypeService';
 import CenitTypesIcon from "../icons/CenitTypesIcon";

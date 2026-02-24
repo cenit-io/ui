@@ -1,6 +1,6 @@
 import ActionRegistry, { ActionKind } from "./ActionRegistry";
 import ListIcon from '@mui/icons-material/List';
-import { DataTypeSubject, TabsSubject } from "../services/subjects";
+import { DataTypeSubject, RecordSubject, TabsSubject } from "../services/subject";
 
 function Records({ dataType, record }) {
   TabsSubject.next({
