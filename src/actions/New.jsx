@@ -2,17 +2,19 @@ import React, { useEffect, useState } from 'react';
 import ActionRegistry, { ActionKind, CRUD } from "./ActionRegistry";
 import FormEditor from "../components/FormEditor";
 import NewIcon from '@mui/icons-material/Add';
-import { DataTypeSubject } from "../services/subjects";
+import { DataTypeSubject, RecordSubject, TabsSubject } from "../services/subject";
 import Loading from "../components/Loading";
 import { FETCHED } from "../common/Symbols";
 import { switchMap } from "rxjs/operators";
 import { isObservable, of } from "rxjs";
 import { useContainerContext } from './ContainerContext';
+import { DataType } from "../services/DataTypeService";
 
 
 const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
 
   const [seed, setSeed] = useState(null);
+  const [resolvedDataType, setResolvedDataType] = useState(dataType || null);
   const containerContext = useContainerContext();
   const [, setContainerState] = containerContext;
 
@@ -29,11 +31,55 @@ const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
   }, []);
 
   useEffect(() => {
-    const subscription = DataTypeSubject.for(dataType.id).config().pipe(
+    const normalizedDataType = dataType && {
+      ...dataType,
+      id: dataType.id || dataType._id
+    };
+
+    if (normalizedDataType?.id) {
+      setResolvedDataType(normalizedDataType);
+      return;
+    }
+
+    if (!normalizedDataType?.namespace || !normalizedDataType?.name) {
+      setResolvedDataType(null);
+      return;
+    }
+
+    // Prevent indefinite loading if lookup cannot resolve quickly.
+    const unresolvedFallback = setTimeout(() => {
+      setResolvedDataType(normalizedDataType);
+    }, 5000);
+
+    const subscription = DataType.find({
+      namespace: normalizedDataType.namespace,
+      name: normalizedDataType.name
+    }).subscribe((dt) => {
+      if (dt?.id) {
+        clearTimeout(unresolvedFallback);
+        setResolvedDataType(dt);
+      }
+    });
+
+    return () => {
+      clearTimeout(unresolvedFallback);
+      subscription.unsubscribe();
+    };
+  }, [dataType]);
+
+  useEffect(() => {
+    if (!resolvedDataType?.id) {
+      setSeed(null);
+      return;
+    }
+
+    const dataTypeSubject = DataTypeSubject.for(resolvedDataType.id);
+    const configStream = dataTypeSubject ? dataTypeSubject.config() : of({});
+    const subscription = configStream.pipe(
       switchMap(config => {
-        let seed = config.actions?.new?.seed;
+        let seed = config?.actions?.new?.seed;
         if (typeof seed === 'function') {
-          seed = seed(dataType);
+          seed = seed(resolvedDataType);
         }
         if (isObservable(seed)) {
           return seed;
@@ -46,18 +92,18 @@ const New = ({ docked, dataType, rootId, onSubjectPicked, width, height }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, [dataType]);
+  }, [resolvedDataType]);
 
-  if (seed) {
+  if (seed && resolvedDataType?.id) {
     return <FormEditor value={seed}
-                       height={height}
-                       width={width}
-                       docked={docked}
-                       dataType={dataType}
-                       rootId={rootId}
-                       cancelEditor={handleCancel}
-                       onSubjectPicked={onSubjectPicked}
-                       formActionKey={New.key} />;
+      height={height}
+      width={width}
+      docked={docked}
+      dataType={resolvedDataType}
+      rootId={rootId}
+      cancelEditor={handleCancel}
+      onSubjectPicked={onSubjectPicked}
+      formActionKey={New.key} />;
   }
 
   return <Loading />;

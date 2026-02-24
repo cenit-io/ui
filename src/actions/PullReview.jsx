@@ -19,7 +19,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Chip from "@mui/material/Chip";
 import pluralize from "pluralize";
 import SuccessAlert from "./SuccessAlert";
-import { RecordSubject, TabsSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subject";
 import FrezzerLoader from "../components/FrezzerLoader";
 import FormEditor from "../components/FormEditor";
 import { FormRootValue } from "../services/FormValue";
@@ -32,7 +32,7 @@ import { ExecutionMonitor } from "./ExecutionMonitor";
 const ReviewIcon = () => (
   <SvgIcon>
     <path xmlns="http://www.w3.org/2000/svg"
-          d="M4,7h16v2H4V7z M4,13h16v-2H4V13z M4,17h7v-2H4V17z M4,21h7v-2H4V21z M15.41,18.17L14,16.75l-1.41,1.41L15.41,21L20,16.42 L18.58,15L15.41,18.17z M4,3v2h16V3H4z" />
+      d="M4,7h16v2H4V7z M4,13h16v-2H4V13z M4,17h7v-2H4V17z M4,21h7v-2H4V21z M15.41,18.17L14,16.75l-1.41,1.41L15.41,21L20,16.42 L18.58,15L15.41,18.17z M4,3v2h16V3H4z" />
   </SvgIcon>
 );
 
@@ -45,16 +45,16 @@ function RecordsView({ entry, records, collectionDataType }) {
 
   useEffect(() => {
     const subscription = (entry === 'collections'
-        ? of(collectionDataType)
-        : collectionDataType.getProperty(entry).pipe(
-          map(property => property.dataType)
-        )
+      ? of(collectionDataType)
+      : collectionDataType.getProperty(entry).pipe(
+        map(property => property.dataType)
+      )
     ).pipe(
       switchMap(dataType => zzip(
         of(dataType),
         dataType.getTitle(),
         dataType.polymorphicTitlesFor(...records.slice(0, Math.min(MaxRecordsViews, records.length)))
-        )
+      )
       )
     ).subscribe(
       ([dataType, dataTypeTitle, recordsTitles]) => setState({ dataType, dataTypeTitle, recordsTitles })
@@ -73,11 +73,11 @@ function RecordsView({ entry, records, collectionDataType }) {
           dataType.findByName(_type)
         ))
       ).subscribe(recordDataType => {
-          TabsSubject.next({
-            key: RecordSubject.for(recordDataType.id, openingId).key
-          });
-          setState({ openingId: null });
-        }
+        TabsSubject.next({
+          key: RecordSubject.for(recordDataType.id, openingId).key
+        });
+        setState({ openingId: null });
+      }
       );
 
       return () => subscription.unsubscribe();
@@ -91,31 +91,31 @@ function RecordsView({ entry, records, collectionDataType }) {
       const record = records[index];
       if (record.id) {
         return <Chip key={`item_${index}`}
-                     sx={{ m: 1 }}
-                     label={title}
-                     variant="outlined"
-                     color="primary"
-                     onClick={open(record)} />;
+          sx={{ m: 1 }}
+          label={title}
+          variant="outlined"
+          color="primary"
+          onClick={open(record)} />;
       }
 
       return <Chip key={`item_${index}`}
-                   sx={{ m: 1 }}
-                   label={title} />;
+        sx={{ m: 1 }}
+        label={title} />;
     });
 
     if (recordsTitles.length < records.length) {
       recordsChips.push(
         <Chip key="and_more_items"
-              sx={{ m: 1 }}
-              variant="outlined"
-              label={`... and ${records.length - recordsTitles.length} more`} />
+          sx={{ m: 1 }}
+          variant="outlined"
+          label={`... and ${records.length - recordsTitles.length} more`} />
       )
     }
 
     return (
       <div className="relative">
         <Collapsible title={`${pluralize(dataTypeTitle, records.length)} (${records.length})`}
-                     variant="subtitle1">
+          variant="subtitle1">
           {recordsChips}
           {openingId && <FrezzerLoader />}
         </Collapsible>
@@ -212,7 +212,7 @@ function PullCheck(props) {
 
   return (
     <InfoAlert mainIcon={ScheduleIcon}
-               message="Waiting for the pull import to be processed">
+      message="Waiting for the pull import to be processed">
       {refreshAction}
     </InfoAlert>
   );
@@ -229,15 +229,15 @@ function PullState() {
     entry => {
       c += pull_data.new_records[entry].length;
       return <RecordsView key={`new_${entry}`}
-                          collectionDataType={collectionDataType}
-                          entry={entry}
-                          records={pull_data.new_records[entry]} />
+        collectionDataType={collectionDataType}
+        entry={entry}
+        records={pull_data.new_records[entry]} />
     }
   );
   if (newRecords.length) {
     newRecords = (
       <Collapsible title={`${c} records will be created`}
-                   defaultCollapsed={false}>
+        defaultCollapsed={false}>
         {newRecords}
       </Collapsible>
     )
@@ -250,15 +250,15 @@ function PullState() {
       const records = pull_data.updated_records[entry].map(id => ({ id }));
       c += records.length;
       return <RecordsView key={`updated_${entry}`}
-                          collectionDataType={collectionDataType}
-                          entry={entry}
-                          records={records} />
+        collectionDataType={collectionDataType}
+        entry={entry}
+        records={records} />
     }
   );
   if (updatedRecords.length) {
     updatedRecords = (
       <Collapsible title={`${c} records will be updated`}
-                   defaultCollapsed={false}>
+        defaultCollapsed={false}>
         {updatedRecords}
       </Collapsible>
     )
@@ -358,13 +358,13 @@ function PullForm({ docked, dataType, onSubjectPicked, height }) {
   if (Object.keys(pull_data.new_records).length + Object.keys(pull_data.updated_records).length) {
     if (formDataType) {
       return <FormEditor docked={docked}
-                         dataType={formDataType}
-                         height={height}
-                         submitIcon={<ReviewIcon />}
-                         onFormSubmit={handleFormSubmit}
-                         onSubjectPicked={onSubjectPicked}
-                         successControl={ExecutionMonitor}
-                         value={value.current} />;
+        dataType={formDataType}
+        height={height}
+        submitIcon={<ReviewIcon />}
+        onFormSubmit={handleFormSubmit}
+        onSubjectPicked={onSubjectPicked}
+        successControl={ExecutionMonitor}
+        value={value.current} />;
     }
     return <Loading />;
   }
@@ -372,8 +372,8 @@ function PullForm({ docked, dataType, onSubjectPicked, height }) {
   return (
     <ResponsiveContainer>
       <SuccessAlert title="Nothing to pull"
-                    message="No changes detected in this data pull"
-                    mainIcon={ReviewIcon} />
+        message="No changes detected in this data pull"
+        mainIcon={ReviewIcon} />
     </ResponsiveContainer>
   );
 }
@@ -386,8 +386,8 @@ const PullReview = (props) => {
 
   if (record.pulled_request?.url) {
     return <SuccessAlert mainIcon={ReviewIcon}
-                         title="Completed"
-                         message="This pull import is already completed" />;
+      title="Completed"
+      message="This pull import is already completed" />;
     // TODO Retry already completed pull import
   }
 

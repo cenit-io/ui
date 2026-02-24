@@ -12,9 +12,9 @@ import ViewIcon from '@mui/icons-material/OpenInNew';
 import WaitingIcon from '@mui/icons-material/HourglassEmpty';
 import zzip from "../util/zzip";
 import { of, Subject } from "rxjs";
-import { FILE_TYPE } from "../services/DataTypeService";
+import { DataType, FILE_TYPE } from "../services/DataTypeService";
 import FileUploader from "./FileUploader";
-import { RecordSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subject";
 import { FormRootValue, isFormValue } from "../services/FormValue";
 import JsonViewer from "./JsonViewer";
 import FormContext from './FormContext';
@@ -38,17 +38,27 @@ function withForm(item) {
 
 const stackHeaderSpacing = 5;
 
+function asDataTypeInstance(dataType) {
+  if (dataType && typeof dataType.shallowViewPort === 'function') {
+    return dataType;
+  }
+  if (dataType && typeof dataType === 'object') {
+    return DataType.from(dataType);
+  }
+  return dataType;
+}
+
 const defaultFormProcessor = (viewport, rootId, onFormSubmit, onSubmitDone) => (formDataType, value, formSanitizer) => {
   const submitAction = onFormSubmit
     ? onFormSubmit(formDataType, value, formSanitizer)
     : (viewport || formDataType.titleViewport('_id')).pipe(
       switchMap(viewport => formDataType.post(
         (formSanitizer && formSanitizer(value.get())) || value.get(), {
-          viewport,
-          add_only: rootId,
-          add_new: !rootId,
-          polymorphic: true
-        }
+        viewport,
+        add_only: rootId,
+        add_new: !rootId,
+        polymorphic: true
+      }
       )),
       tap(response => {
         if (response[Status] === 200 || response[Status] === 201) {
@@ -74,10 +84,10 @@ function DefaultSuccessControl({ title, rootId, onSubjectPicked, dataType, id, v
     actions = (
       <div style={{ textAlign: 'center' }}>
         <Button variant="outlined"
-                color="primary"
-                startIcon={<ViewIcon />}
-                sx={{ m: 1 }}
-                onClick={() => onSubjectPicked(RecordSubject.for(dataType.id, id).key)}>
+          color="primary"
+          startIcon={<ViewIcon />}
+          sx={{ m: 1 }}
+          onClick={() => onSubjectPicked(RecordSubject.for(dataType.id, id).key)}>
           View
         </Button>
       </div>
@@ -96,8 +106,8 @@ function DefaultSuccessControl({ title, rootId, onSubjectPicked, dataType, id, v
 
   return (
     <Alert title={title}
-           message={message}
-           mainIcon={StorageIcon}>
+      message={message}
+      mainIcon={StorageIcon}>
       {actions}
     </Alert>
   );
@@ -118,20 +128,21 @@ const FormEditor = (
     noSubmitButton, noJSON, jsonProjection, formActionKey
   }
 ) => {
+  const normalizedDataType = asDataTypeInstance(dataType);
 
   const [id, setId] = useState(plainFormValue(value)?.id || null);
   const [submitResponse, setSubmitResponse] = useState(null);
   const initialStack = () => [
     withForm({
       value: new FormRootValue({ ...plainFormValue(value) }),
-      dataType,
+      dataType: normalizedDataType,
       title: () => of('')
     }),
     withForm({
       value: isFormValue(value) ? value : new FormRootValue({ ...value }),
-      dataType,
-      title: value => dataType.titleFor(value),
-      viewport: dataType.shallowViewPort('_id'),
+      dataType: normalizedDataType,
+      title: value => normalizedDataType.titleFor(value),
+      viewport: normalizedDataType.shallowViewPort('_id'),
       callback: (value, dataType) => {
         setId(value.id);
         setSubmitResponse({ value, dataType });
@@ -286,7 +297,7 @@ const FormEditor = (
   useEffect(() => {
     const subscription = zzip(
       ...stack.map(item => item.title(item.value.get()))
-    ).subscribe(titles => setStackTitles(titles));
+    ).subscribe(actions => setStackTitles(actions.map(action => action.title)));
     return () => subscription.unsubscribe();
   }, [stack.length]);
 
@@ -330,10 +341,10 @@ const FormEditor = (
   if (stack.length > 2 && !saving) {
     actions.push(
       <Fab key='back'
-           size='small'
-           aria-label="back"
-           style={styles.fabBack}
-           onClick={handleBack}>
+        size='small'
+        aria-label="back"
+        style={styles.fabBack}
+        onClick={handleBack}>
         <BackIcon />
       </Fab>
     );
@@ -357,18 +368,18 @@ const FormEditor = (
     if (!noSubmitButton && !readOnly) {
       actions.push(
         <LoadingButton key='save'
-                       loading={saving && !done}
-                       onClick={save}
-                       style={{ ...styles.fabSave, ...(cancelEditor ? styles.fabSaveLeft : {}) }}
-                       success={done}
-                       actionIcon={stack.length === 2 && submitIcon} />
+          loading={saving && !done}
+          onClick={save}
+          style={{ ...styles.fabSave, ...(cancelEditor ? styles.fabSaveLeft : {}) }}
+          success={done}
+          actionIcon={stack.length === 2 && submitIcon} />
       );
       if (cancelEditor) {
         actions.push(
           <Fab key='cancel'
-               size="small"
-               style={styles.fabCancel}
-               onClick={cancelEditor}>
+            size="small"
+            style={styles.fabCancel}
+            onClick={cancelEditor}>
             <Close component="svg" />
           </Fab>
         );
@@ -386,10 +397,10 @@ const FormEditor = (
 
       actions.push(
         <Fab key='copy'
-             size='small'
-             aria-label="JSON"
-             style={styles.fabCopy}
-             onClick={() => copy(JSON.stringify(current.value.get(), null, 2))}>
+          size='small'
+          aria-label="JSON"
+          style={styles.fabCopy}
+          onClick={() => copy(JSON.stringify(current.value.get(), null, 2))}>
           <CopyIcon component="svg" />
         </Fab>
       );
@@ -403,29 +414,29 @@ const FormEditor = (
         if (item) {
           const { controlConfig } = item;
           return <Control key={`form_${index}`}
-                          dataType={item.dataType}
-                          value={item.value}
-                          _type={item.value && item.value._type}
-                          disabled={saving}
-                          readOnly={readOnly}
-                          onStack={handleStack}
-                          seed={item.seed}
-                          typesFilter={item.typesFilter}
-                          formViewControlConfig={controlConfig}
-                          rootId={item.rootId}
-                          max={item.max}
-                          height={controlHeight}
-                          submitter={item.submitter}
-                          onSubmitDone={onSubmitDone}
-                          onSubjectPicked={onSubjectPicked}
-                          viewport={item.viewport}
-                          onFormSubmit={defaultFormProcessor(
-                            item.viewport,
-                            item.rootId,
-                            index === 1 && onFormSubmit, // TODO Improve this
-                            onSubmitDone
-                          )}
-                          formActionKey={formActionKey} />
+            dataType={item.dataType}
+            value={item.value}
+            _type={item.value && item.value._type}
+            disabled={saving}
+            readOnly={readOnly}
+            onStack={handleStack}
+            seed={item.seed}
+            typesFilter={item.typesFilter}
+            formViewControlConfig={controlConfig}
+            rootId={item.rootId}
+            max={item.max}
+            height={controlHeight}
+            submitter={item.submitter}
+            onSubmitDone={onSubmitDone}
+            onSubjectPicked={onSubjectPicked}
+            viewport={item.viewport}
+            onFormSubmit={defaultFormProcessor(
+              item.viewport,
+              item.rootId,
+              index === 1 && onFormSubmit, // TODO Improve this
+              onSubmitDone
+            )}
+            formActionKey={formActionKey} />
         }
       }
 
@@ -434,12 +445,12 @@ const FormEditor = (
         const SuccessControl = successControl || DefaultSuccessControl;
 
         return <SuccessControl key='successAlert'
-                               title={stackTitles[1]}
-                               rootId={rootId}
-                               onSubjectPicked={onSubjectPicked}
-                               dataType={submitResponse.dataType}
-                               id={id}
-                               value={submitResponse.value} />;
+          title={stackTitles[1]}
+          rootId={rootId}
+          onSubjectPicked={onSubjectPicked}
+          dataType={submitResponse.dataType}
+          id={id}
+          value={submitResponse.value} />;
       }
 
       return <SuccessAlert key={Random.string()} mainIcon={WaitingIcon} />;
@@ -449,8 +460,8 @@ const FormEditor = (
   if (forms.length) {
     forms = (
       <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                      disabled={true}
-                      index={stackControls.length - 1}>
+        disabled={true}
+        index={stackControls.length - 1}>
         {forms}
       </SwipeableViews>
     );
@@ -466,10 +477,10 @@ const FormEditor = (
     <div style={styles.iconJsonWrapper}>
       <Tooltip title="Json Code" arrow>
         <IconButton aria-label="Json Code"
-                    color='default'
-                    onClick={() => setJsonMode(!jsonMode)}
-                    style={{ ...styles.iconJsonActive, color: jsonMode ? "rgb(68, 119, 151)" : undefined }}
-                    size="small">
+          color='default'
+          onClick={() => setJsonMode(!jsonMode)}
+          style={{ ...styles.iconJsonActive, color: jsonMode ? "rgb(68, 119, 151)" : undefined }}
+          size="small">
           <Code component="svg" />
         </IconButton>
       </Tooltip>
@@ -482,11 +493,11 @@ const FormEditor = (
       {jsonBtn}
       <div style={{ display: 'flex', position: 'relative' }}>
         <div ref={ref}
-             style={{
-               ...styles.formContainer,
-               ...(!xs && !jsonView && (docked || !md) ? styles.smFormContainer : {}),
-               ...(md ? (jsonMode ? styles.jsonBox : styles.mdFormContainer) : {}),
-             }}>
+          style={{
+            ...styles.formContainer,
+            ...(!xs && !jsonView && (docked || !md) ? styles.smFormContainer : {}),
+            ...(md ? (jsonMode ? styles.jsonBox : styles.mdFormContainer) : {}),
+          }}>
           {forms}
           <div style={styles.trailing} />
           {actions}

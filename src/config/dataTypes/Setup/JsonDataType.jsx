@@ -26,7 +26,7 @@ const fields = [
 const viewport = `{id ${arrayDiff(fields, 'code').join(' ')} _type origin}`;
 
 export default {
-  title: 'Document Type',
+  title: 'MY CUSTOM TITLE',
   groups: {
     behavior: {
       fields: behaviorFields

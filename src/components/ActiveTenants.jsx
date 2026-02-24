@@ -7,7 +7,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
-import { RecordSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subject";
 import zzip from "../util/zzip";
 import { DataType } from "../services/DataTypeService";
 import { useSpreadState } from "../common/hooks";
@@ -41,15 +41,15 @@ export default function ActiveTenants({ dataType, onSubjectPicked }) {
     if (items.length) {
       const activeTenants = items.map(({ tenant, tasks }) => (
         <Card key={tenant.id}
-              sx={(theme) => ({
-                pt: theme.spacing(1),
-                cursor: 'pointer',
-                '&:hover': {
-                  background: theme.palette.background.default
-                },
-                my: theme.spacing(1),
-              })}
-              onClick={openTenant(tenant)}>
+          sx={(theme) => ({
+            pt: theme.spacing(1),
+            cursor: 'pointer',
+            '&:hover': {
+              background: theme.palette.background.default
+            },
+            my: theme.spacing(1),
+          })}
+          onClick={openTenant(tenant)}>
           <CardContent className="flex">
             <Typography variant="subtitle1" sx={(theme) => ({ mr: theme.spacing(2) })}>
               {tenant.name}
@@ -67,7 +67,7 @@ export default function ActiveTenants({ dataType, onSubjectPicked }) {
     }
 
     return <InfoAlert mainIcon={ActiveTenantIconFilled}
-                      title="No active tenants" />
+      title="No active tenants" />
   }
 
   return <Loading />;

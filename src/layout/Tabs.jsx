@@ -9,7 +9,7 @@ import Box from '@mui/material/Box';
 import CloseIcon from '@mui/icons-material/Clear';
 import SwipeableViews from "react-swipeable-views";
 import { appBarHeight } from "./AppBar";
-import Subjects, { NavSubject, TabsSubject } from "../services/subjects";
+import Subjects, { NavSubject, TabsSubject } from "../services/subject";
 import ConfigService from "../services/ConfigService";
 import { useSpreadState } from "../common/hooks";
 import useResizeObserver from "@react-hook/resize-observer";
@@ -30,19 +30,19 @@ function ItemTab({ subject, onClick, onClose, onCloseAllTabs, onCloseAllKeepMe, 
 
   useEffect(() => {
     const subscription = subject.navTitle().subscribe(
-      title => setTitle(title || '...')
+      (action) => setTitle(action.title || '...')
     );
     return () => subscription.unsubscribe();
   }, [subject]);
 
   return (
     <Tab component={ClosableComponent}
-         label={title}
-         onClick={onClick}
-         onClose={onClose}
-         onCloseAllTabs={onCloseAllTabs}
-         onCloseAllKeepMe={onCloseAllKeepMe}
-         isDisabledKeepMe={isDisabledKeepMe} />
+      label={title}
+      onClick={onClick}
+      onClose={onClose}
+      onCloseAllTabs={onCloseAllTabs}
+      onCloseAllKeepMe={onCloseAllKeepMe}
+      isDisabledKeepMe={isDisabledKeepMe} />
   );
 }
 
@@ -232,13 +232,13 @@ export default function NavTabs({ docked, width }) {
 
   const itemTabs = tabs.map(
     (key, index) => <ItemTab key={`tab_${key}`}
-                             docked={docked}
-                             subject={Subjects[key]}
-                             onClick={handleSelect(index)}
-                             onClose={handleClose(index)}
-                             onCloseAllTabs={handleCloseAllTabs}
-                             onCloseAllKeepMe={handleCloseAllKeepMe(index)}
-                             isDisabledKeepMe={tabs.length === 1}
+      docked={docked}
+      subject={Subjects[key]}
+      onClick={handleSelect(index)}
+      onClose={handleClose(index)}
+      onCloseAllTabs={handleCloseAllTabs}
+      onCloseAllKeepMe={handleCloseAllKeepMe(index)}
+      isDisabledKeepMe={tabs.length === 1}
     />
   );
 
@@ -249,14 +249,14 @@ export default function NavTabs({ docked, width }) {
       const TabComponent = Subjects[key]?.TabComponent;
       return (
         <div key={`container_${key}`}
-             style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
+          style={{ height: `calc(${containerHeight})`, overflow: 'auto' }}>
           <TabComponent docked={docked}
-                        subject={Subjects[key]}
-                        height={containerHeight}
-                        width={width}
-                        onSubjectPicked={onSubjectPicked}
-                        onClose={handleClose(index)}
-                        activeActionKey={actionsKeys[key]} />
+            subject={Subjects[key]}
+            height={containerHeight}
+            width={width}
+            onSubjectPicked={onSubjectPicked}
+            onClose={handleClose(index)}
+            activeActionKey={actionsKeys[key]} />
         </div>
       );
     }
@@ -301,9 +301,9 @@ export default function NavTabs({ docked, width }) {
         </Tabs>
       </AppBar>
       <SwipeableViews axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-                      index={tabIndex}
-                      disabled={!smUp}
-                      onChangeIndex={tabIndex => setTabIndex(tabIndex)}>
+        index={tabIndex}
+        disabled={!smUp}
+        onChangeIndex={tabIndex => setTabIndex(tabIndex)}>
         {containers}
       </SwipeableViews>
     </Box>

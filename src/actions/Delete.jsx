@@ -117,44 +117,44 @@ const Delete = ({ dataType, onCancel, onClose }) => {
       const confirmation = config.actions?.delete?.confirmation && (
         <>
           <Typography component="div"
-                      variant="subtitle1"
-                      sx={{ color: theme => theme.palette.text.secondary, textAlign: 'center' }}>
+            variant="subtitle1"
+            sx={{ color: theme => theme.palette.text.secondary, textAlign: 'center' }}>
             This is a high risk operation and the associated data may be lost forever.
           </Typography>
           <Typography component="div"
-                      variant="subtitle2"
-                      sx={{ color: theme => theme.palette.text.secondary, textAlign: 'center' }}>
+            variant="subtitle2"
+            sx={{ color: theme => theme.palette.text.secondary, textAlign: 'center' }}>
             To confirm deletion, type <em>{CONFIRMATION_PHRASE}</em> in the text input below.
           </Typography>
           <TextField variant="outlined"
-                     sx={{ my: 1, px: 1 }}
-                     placeholder={CONFIRMATION_PHRASE}
-                     onChange={e => setState({ confirmed: e.target.value === CONFIRMATION_PHRASE })} />
+            sx={{ my: 1, px: 1 }}
+            placeholder={CONFIRMATION_PHRASE}
+            onChange={e => setState({ confirmed: e.target.value === CONFIRMATION_PHRASE })} />
         </>
       );
       actions = (
         <>
           {confirmation || (
             <Typography variant='subtitle1'
-                        className={clsx(classes.successLabel, classes.alignCenter)}
-                        component="div">
+              sx={{ textAlign: 'center' }}
+              component="div">
               Are you sure you want to proceed?
             </Typography>
           )}
           <Box sx={{ textAlign: 'center' }}>
             <Button variant="outlined"
-                    color="secondary"
-                    startIcon={<CancelIcon component="svg" />}
-                    sx={{ m: 1 }}
-                    onClick={onCancel}>
+              color="secondary"
+              startIcon={<CancelIcon component="svg" />}
+              sx={{ m: 1 }}
+              onClick={onCancel}>
               Cancel
             </Button>
             <Button variant="contained"
-                    color="secondary"
-                    startIcon={<CheckIcon component="svg" />}
-                    sx={{ m: 1 }}
-                    onClick={handleDestroy}
-                    disabled={!confirmed}>
+              color="secondary"
+              startIcon={<CheckIcon component="svg" />}
+              sx={{ m: 1 }}
+              onClick={handleDestroy}
+              disabled={!confirmed}>
               {confirmation ? 'Delete' : "Yes, I'm sure!"}
             </Button>
           </Box>

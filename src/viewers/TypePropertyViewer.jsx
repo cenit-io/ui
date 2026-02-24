@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import Chip from "@mui/material/Chip";
-import { DataTypeSubject, TabsSubject } from "../services/subjects";
+import { DataTypeSubject, TabsSubject } from "../services/subject";
 import { of } from "rxjs";
 import { switchMap } from "rxjs/operators";
 import zzip from "../util/zzip";
@@ -31,10 +31,10 @@ export default function TypePropertyViewer({ value }) {
 
   if (dataType) {
     return <Chip label={title}
-                 component="div"
-                 onClick={() => TabsSubject.next({
-                   key: DataTypeSubject.for(dataType.id).key
-                 })} />;
+      component="div"
+      onClick={() => TabsSubject.next({
+        key: DataTypeSubject.for(dataType.id).key
+      })} />;
   }
 
   if (title) {

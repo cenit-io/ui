@@ -7,6 +7,19 @@ function sanitize(config) {
   const { navigation, subjects, tabs } = config;
   const hash = {};
   let i = 0;
+  Object.keys(subjects || {}).forEach(key => {
+    const subject = subjects[key];
+    if (typeof subject === 'function') {
+      return;
+    }
+    if (subject?.type === 'DataType' && !subject?.dataTypeId) {
+      delete subjects[key];
+      return;
+    }
+    if (subject?.type === 'Record' && (!subject?.dataTypeId || !subject?.id)) {
+      delete subjects[key];
+    }
+  });
   [...(tabs || [])].forEach(key => {
     if (subjects && !subjects[key]) {
       tabs.splice(i, 1);
@@ -62,7 +75,17 @@ const ConfigService = {
         (newConfig) => configBLoC.set(sanitize(newConfig))
       )
     } else {
-      configBLoC.update(config);
+      const merged = { ...configBLoC.state, ...config };
+      if (merged.subjects) {
+        merged.subjects = { ...merged.subjects };
+      }
+      if (merged.tabs) {
+        merged.tabs = [...merged.tabs];
+      }
+      if (merged.navigation) {
+        merged.navigation = [...merged.navigation];
+      }
+      configBLoC.set(sanitize(merged));
     }
   }
 };

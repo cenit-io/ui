@@ -1,7 +1,7 @@
 import { isObservable, of, from } from "rxjs";
 import { map } from "rxjs/operators";
 import { appRequest } from "./AuthorizationService";
-import { EmbeddedAppSubject } from "./subjects";
+import { EmbeddedAppSubject } from "./subject";
 import session from "../util/session";
 
 const EmbeddedAppService = {

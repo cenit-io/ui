@@ -38,3 +38,13 @@ yarn-error.log*
 
 .eslintcache
 /.playwright-cli
+
+# Local E2E/debug artifacts
+/output/
+/vite.log
+/tree_output.txt
+/debug_*.html
+/debug_*.js
+/inspect_editor.js
+/parse.js
+/test_eval.js

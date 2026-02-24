@@ -18,7 +18,7 @@ import Subjects, {
   EmbeddedAppSubject,
   MenuSubject,
   TabsSubject,
-} from "../services/subjects";
+} from "../services/subject";
 import Collapse from "@mui/material/Collapse";
 import zzip from "../util/zzip";
 import localStorage from '../util/localStorage'
@@ -73,7 +73,7 @@ function NavSubject({ subject, onClick }) {
   useEffect(() => {
     const subscription = subject
       .navTitle()
-      .subscribe((title) => setState({ title }));
+      .subscribe((action) => setState({ title: action.title }));
     return () => subscription.unsubscribe();
   }, [subject]);
 
@@ -182,7 +182,7 @@ export default function Navigation({ xs, onToggle }) {
         if (xs) {
           setMainContextState({ docked: false });
         }
-        if (dt) {
+        if (dt?.id) {
           TabsSubject.next({
             key: DataTypeSubject.for(dt.id).key,
           });

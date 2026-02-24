@@ -143,7 +143,7 @@ function EmbedsManyControl({
       switchMap(
         selectedTitle => item.title(itemValue).pipe(
           map(
-            itemTitle => `[${property.name} #${selectedIndex}] ${selectedTitle} ${itemTitle}`
+            action => `[${property.name} #${selectedIndex}] ${selectedTitle} ${action.title}`
           )
         )
       )
@@ -183,19 +183,19 @@ function EmbedsManyControl({
         }
 
         return <ItemChip key={`item_${item[Key]}`}
-                         dataType={property.dataType}
-                         item={value.indexValue(index)}
-                         onSelect={selectItem(index)}
-                         onDelete={deleteItem(index)}
-                         selected={selectedIndex === index}
-                         disabled={disabled}
-                         readOnly={readOnly || deleteDisabled} />;
+          dataType={property.dataType}
+          item={value.indexValue(index)}
+          onSelect={selectItem(index)}
+          onDelete={deleteItem(index)}
+          selected={selectedIndex === index}
+          disabled={disabled}
+          readOnly={readOnly || deleteDisabled} />;
       });
 
       if (!readOnly && !disabled && !sortDisabled) {
         itemChips = (
           <ReactSortable list={items.map(item => ({ id: item[Key] }))}
-                         setList={sort}>
+            setList={sort}>
             {itemChips}
           </ReactSortable>
         );
@@ -213,13 +213,13 @@ function EmbedsManyControl({
         controlProperty.jsonKey = controlProperty.name = selectedIndex;
         itemControl = (
           <ObjectControl property={controlProperty}
-                         fetchPath={`${value.jsonPath()}[${items[selectedIndex][INDEX]}]`}
-                         value={value.indexValue(selectedIndex)}
-                         errors={errors && errors[String(selectedIndex)]}
-                         onChange={handleChange}
-                         disabled={disabled}
-                         readOnly={readOnly}
-                         onStack={handleStack} />
+            fetchPath={`${value.jsonPath()}[${items[selectedIndex][INDEX]}]`}
+            value={value.indexValue(selectedIndex)}
+            errors={errors && errors[String(selectedIndex)]}
+            onChange={handleChange}
+            disabled={disabled}
+            readOnly={readOnly}
+            onStack={handleStack} />
         );
       }
 
@@ -256,11 +256,11 @@ function EmbedsManyControl({
     <div className='flex full-width column'>
       <div className='flex full-width'>
         <TextField label={title}
-                   readOnly
-                   style={{ flexGrow: 1 }}
-                   value={itemsCount}
-                   placeholder={placeholder}
-                   error={(errors && Object.keys(errors).length > 0) || false} />
+          readOnly
+          style={{ flexGrow: 1 }}
+          value={itemsCount}
+          placeholder={placeholder}
+          error={(errors && Object.keys(errors).length > 0) || false} />
         {dropButton}
         {addButton}
         {deleteButton}

@@ -13,7 +13,7 @@ import { TaskStatusConfig, TaskStatusViewer } from "../config/dataTypes/Setup/Ta
 import Skeleton from '@mui/material/Skeleton';
 import IconButton from "@mui/material/IconButton";
 import OpenIcon from "@mui/icons-material/OpenInNew";
-import { RecordSubject, TabsSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subject";
 import zzip from "../util/zzip";
 import request from "../util/request";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -152,18 +152,18 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
     let data;
     if (retrievingResult) {
       data = <Skeleton variant="rectangular"
-                       width={theme.spacing(attachment.size)}
-                       height={theme.spacing(3)}
-                       sx={{ my: 1 }} />;
+        width={theme.spacing(attachment.size)}
+        height={theme.spacing(3)}
+        sx={{ my: 1 }} />;
     } else if (resultData) {
       data = (
         <Typography component="pre"
-                    variant="h6"
-                    sx={{
-                      mt: 1,
-                      p: 1,
-                      background: theme => theme.palette.background.paper
-                    }}>
+          variant="h6"
+          sx={{
+            mt: 1,
+            p: 1,
+            background: theme => theme.palette.background.paper
+          }}>
           {resultData}
         </Typography>
       );
@@ -186,20 +186,20 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
       if (notification) {
         notifications = (
           <Typography component="div"
-                      variant="subtitle2"
-                      className="flex column"
-                      sx={{
-                        mt: 1,
-                        p: 1,
-                        background: theme => theme.palette.background.paper,
-                        color: theme => theme.palette[notificationType].main
-                      }}>
+            variant="subtitle2"
+            className="flex column"
+            sx={{
+              mt: 1,
+              p: 1,
+              background: theme => theme.palette.background.paper,
+              color: theme => theme.palette[notificationType].main
+            }}>
             {notification.message}
             <div>
               <IconButton size="small"
-                          onClick={() => TabsSubject.next({
-                            key: RecordSubject.for(notificationDataType.id, notification.id).key
-                          })}>
+                onClick={() => TabsSubject.next({
+                  key: RecordSubject.for(notificationDataType.id, notification.id).key
+                })}>
                 <OpenIcon sx={{ color: theme => theme.palette[notificationType].main }} />
               </IconButton>
             </div>
@@ -239,7 +239,7 @@ export function ExecutionMonitor({ dataType, value, mainIcon }) {
 
   return (
     <Alert {...statusAlert}
-           title={title}>
+      title={title}>
       <div className="flex column align-items-center full-width">
         <TaskStatusViewer value={status} item={task} />
         <Box sx={{ width: '100%', py: 1 }}>

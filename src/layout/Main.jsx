@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
-import { Box, useMediaQuery, StyledEngineProvider } from "@mui/material";
+import { Box, useMediaQuery, StyledEngineProvider, CssBaseline } from "@mui/material";
 import AppBar, { appBarHeight } from './AppBar';
 import Navigation, { navigationWidth } from "./Navigation";
-import { ThemeProvider, adaptV4Theme, createTheme, useTheme } from '@mui/material/styles';
+import { ThemeProvider, useTheme } from '@mui/material/styles';
+import theme from '../theme/theme';
 import Drawer from "../components/Drawer";
 import Tabs from "./Tabs";
 import ConfigService from "../services/ConfigService";
-import Subjects, { NavSubject } from "../services/subjects";
+import Subjects, { NavSubject } from "../services/subject";
 import { delay } from "rxjs/operators";
 import MainContext, { useMainContext } from "./MainContext";
 import TenantContext from "./TenantContext";
@@ -15,8 +16,8 @@ import localStorage from '../util/localStorage';
 function MainLayout() {
   const [mainContextState, setMainContextState] = useMainContext();
 
-  const theme = useTheme();
-  const xs = useMediaQuery(theme.breakpoints.down('sm'));
+  const currentTheme = useTheme();
+  const xs = useMediaQuery(currentTheme.breakpoints.down('sm'));
 
   const { docked } = mainContextState;
   const setDocked = docked => setMainContextState({ docked });
@@ -65,8 +66,8 @@ function MainLayout() {
   };
 
   let navigationUI = <Navigation key={navKey}
-                                 xs={xs}
-                                 onToggle={switchNavigation} />;
+    xs={xs}
+    onToggle={switchNavigation} />;
 
   if (xs) {
     navigationUI = (
@@ -76,7 +77,7 @@ function MainLayout() {
     );
   }
 
-  const navWidth = xs ? 0 : (docked ? navigationWidth(theme) : `calc(${theme.spacing(10)} + 5px)`);
+  const navWidth = xs ? 0 : (docked ? navigationWidth(currentTheme) : `calc(${currentTheme.spacing(10)} + 5px)`);
   const tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
 
   return (
@@ -85,18 +86,18 @@ function MainLayout() {
         sx={{
           position: 'relative',
           display: 'flex',
-          height: `calc(100vh - ${appBarHeight(theme)})`,
-          mt: appBarHeight(theme),
+          height: `calc(100vh - ${appBarHeight(currentTheme)})`,
+          mt: appBarHeight(currentTheme),
         }}>
         <Box
           sx={{
             flexGrow: 1,
             order: 1,
             width: `calc(${tabsWidth})`,
-            ...(xs || docked ? {} : { ml: `calc(${theme.spacing(10)} + 5px)` }),
+            ...(xs || docked ? {} : { ml: `calc(${currentTheme.spacing(10)} + 5px)` }),
           }}>
           <Tabs docked={docked}
-                width={tabsWidth} />
+            width={tabsWidth} />
         </Box>
         {
           navigationUI
@@ -107,22 +108,11 @@ function MainLayout() {
   );
 }
 
-// grey
-const theme = createTheme(adaptV4Theme({
-  palette: {
-    primary: {
-      main: '#212121'
-    },
-    secondary: {
-      main: '#212121'
-    }
-  },
-}));
-
 export default function Main() {
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
+        <CssBaseline />
         <MainContext>
           <TenantContext>
             <MainLayout />

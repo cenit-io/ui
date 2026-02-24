@@ -22,7 +22,7 @@ import BanedIcon from "@mui/icons-material/Block";
 import clsx from "clsx";
 import axios, { CancelToken } from "axios";
 import { DataTypeId } from "../common/Symbols";
-import { RecordSubject } from "../services/subjects";
+import { RecordSubject, TabsSubject } from "../services/subject";
 import { useTheme } from "@mui/material/styles";
 
 const FileStatus = Object.freeze({
@@ -295,9 +295,9 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, styles, id
       progress = <LinearProgress variant="determinate" value={file.progress} className='full-width' />;
       action = (
         <MultiIconButton edge="end"
-                         DefaultIcon={UploadIcon}
-                         OverIcon={CancelIcon}
-                         onClick={cancel(FileStatus.uploading)} />
+          DefaultIcon={UploadIcon}
+          OverIcon={CancelIcon}
+          onClick={cancel(FileStatus.uploading)} />
       );
     }
       break;
@@ -306,9 +306,9 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, styles, id
       if (!file.fake) {
         action = (
           <MultiIconButton edge="end"
-                           DefaultIcon={ScheduleIcon}
-                           OverIcon={rootId ? DeleteIcon : CancelIcon}
-                           onClick={rootId ? handleDelete : cancel(file)} />
+            DefaultIcon={ScheduleIcon}
+            OverIcon={rootId ? DeleteIcon : CancelIcon}
+            onClick={rootId ? handleDelete : cancel(file)} />
         );
       }
     }
@@ -322,10 +322,10 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, styles, id
     case FileStatus.success: {
       action = (
         <MultiIconButton edge="end"
-                         DefaultIcon={SuccessIcon}
-                         OverIcon={DeleteIcon}
-                         onClick={handleDelete}
-                         defaultColor="primary" />
+          DefaultIcon={SuccessIcon}
+          OverIcon={DeleteIcon}
+          onClick={handleDelete}
+          defaultColor="primary" />
       );
     }
       break;
@@ -334,8 +334,8 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, styles, id
       if (!file.fake) {
         action = (
           <MultiIconButton edge="end"
-                           DefaultIcon={DeleteIcon}
-                           onClick={handleDelete} />
+            DefaultIcon={DeleteIcon}
+            onClick={handleDelete} />
         );
       }
     }
@@ -344,57 +344,57 @@ function FileItem({ file, rootId, status, launch, dispatch, disabled, styles, id
   let primary;
   if (file.status === FileStatus.success) {
     primary = <Button style={styles.launchButton}
-                      sx={{
-                        justifyContent: 'flex-start',
-                        wordBreak: 'break-word'
-                      }}
-                      variant="outlined"
-                      color="primary"
-                      startIcon={<LaunchIcon />}
-                      onClick={handleLaunch}>
+      sx={{
+        justifyContent: 'flex-start',
+        wordBreak: 'break-word'
+      }}
+      variant="outlined"
+      color="primary"
+      startIcon={<LaunchIcon />}
+      onClick={handleLaunch}>
       {file.customName || file.name}
     </Button>;
   } else {
     if (id_type === 'string' || id_type === 'integer') {
       id = <TextField label="Id"
-                      variant="filled"
-                      disabled={rootId !== undefined || disabled}
-                      error={FileStatus.isError(file.status)}
-                      value={file.id || ''}
-                      helperText=""
-                      className={clsx((file.fake || file.status === FileStatus.finishing) && 'full-width')}
-                      style={((file.fake || file.status === FileStatus.finishing) ? {} : styles.launchButton)}
-                      sx={styles.mb2}
-                      onChange={handleIdChange}
-                      onClick={e => e.stopPropagation()} />
+        variant="filled"
+        disabled={rootId !== undefined || disabled}
+        error={FileStatus.isError(file.status)}
+        value={file.id || ''}
+        helperText=""
+        className={clsx((file.fake || file.status === FileStatus.finishing) && 'full-width')}
+        style={((file.fake || file.status === FileStatus.finishing) ? {} : styles.launchButton)}
+        sx={styles.mb2}
+        onChange={handleIdChange}
+        onClick={e => e.stopPropagation()} />
     }
     primary = <TextField label="Name"
-                         variant="filled"
-                         multiline
-                         disabled={disabled}
-                         error={FileStatus.isError(file.status)}
-                         value={file.customName || file.name || ''}
-                         helperText={!file.fake && file.status}
-                         className={clsx((file.fake || file.status === FileStatus.finishing) && 'full-width')}
-                         style={((file.fake || file.status === FileStatus.finishing) ? {} : styles.launchButton)}
-                         onChange={handleNameChange}
-                         onClick={e => e.stopPropagation()} />
+      variant="filled"
+      multiline
+      disabled={disabled}
+      error={FileStatus.isError(file.status)}
+      value={file.customName || file.name || ''}
+      helperText={!file.fake && file.status}
+      className={clsx((file.fake || file.status === FileStatus.finishing) && 'full-width')}
+      style={((file.fake || file.status === FileStatus.finishing) ? {} : styles.launchButton)}
+      onChange={handleNameChange}
+      onClick={e => e.stopPropagation()} />
   }
 
   return <ListItem style={{ ...styles.fileItem, ...styles[status] }}>
     <ListItemText primaryTypographyProps={{ component: 'div' }}
-                  primary={(
-                    <>
-                      {id}
-                      {primary}
-                    </>
-                  )}
-                  secondaryTypographyProps={{ component: 'div' }}
-                  secondary={
-                    <React.Fragment>
-                      {progress}
-                    </React.Fragment>
-                  } />
+      primary={(
+        <>
+          {id}
+          {primary}
+        </>
+      )}
+      secondaryTypographyProps={{ component: 'div' }}
+      secondary={
+        <React.Fragment>
+          {progress}
+        </React.Fragment>
+      } />
     <ListItemSecondaryAction>
       {action}
     </ListItemSecondaryAction>
@@ -450,7 +450,7 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
           ({ filename }) => {
             file.filename =
               file.customName =
-                file.name = filename;
+              file.name = filename;
             dispatch(addFakeFile);
           }
         );
@@ -567,14 +567,14 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
 
   const fileList = files.map(
     (file, index) => <FileItem key={`file_${index}`}
-                               status={file.status}
-                               file={file}
-                               styles={styles}
-                               launch={launch}
-                               dispatch={dispatch}
-                               disabled={disabled}
-                               rootId={rootId}
-                               id_type={dataType.id_type} />
+      status={file.status}
+      file={file}
+      styles={styles}
+      launch={launch}
+      dispatch={dispatch}
+      disabled={disabled}
+      rootId={rootId}
+      id_type={dataType.id_type} />
   );
   const remaining = max - files.length;
   let dropIt;
@@ -643,14 +643,14 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
   return (
     <div key='drop'
       className={clsx(
-         'relative', 'flex', 'align-items-center', 'column'
-       )}
-         style={{
-           ...styles.dropArea,
-           ...(files.length === 0 ? styles.emptyDropArea : {}),
-           ...(activeDropStyle || {})
-         }}
-         {...getRootProps()}>
+        'relative', 'flex', 'align-items-center', 'column'
+      )}
+      style={{
+        ...styles.dropArea,
+        ...(files.length === 0 ? styles.emptyDropArea : {}),
+        ...(activeDropStyle || {})
+      }}
+      {...getRootProps()}>
       <input {...getInputProps()} />
       {
         error &&
@@ -659,7 +659,7 @@ function FileUploader({ dataType, multiple, max, disabled, onSubjectPicked, widt
         </Typography>
       }
       <div key='list'
-           style={styles.fileList}>
+        style={styles.fileList}>
         <List>
           {fileList}
           {dropInstructions}
