@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+set -eu
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+cd "$ROOT_DIR"
+
+echo "husky(pre-push): running UI integration journey"
+CENIT_E2E_AUTOSTART="${CENIT_E2E_AUTOSTART:-1}" \
+CENIT_E2E_DRIVER="${CENIT_E2E_DRIVER:-node}" \
+CENIT_E2E_RESET_STACK="${CENIT_E2E_RESET_STACK:-1}" \
+CENIT_E2E_BUILD_STACK="${CENIT_E2E_BUILD_STACK:-0}" \
+CENIT_E2E_CLEANUP="${CENIT_E2E_CLEANUP:-0}" \
+CENIT_E2E_HEADED=0 \
+npm run e2e:integration-journey
