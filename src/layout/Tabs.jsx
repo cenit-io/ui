@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -104,15 +104,41 @@ const ClosableComponent = ({
   const handleCloseBox = () => setShowCLose(false);
 
   return (
-    <div onMouseMove={() => setOver(true)} onMouseLeave={() => setOver(false)}>
-      <Button onClick={onClick} onContextMenu={handleContextMenu}>
+    <Box
+      onMouseMove={() => setOver(true)}
+      onMouseLeave={() => setOver(false)}
+      sx={(theme) => ({
+        display: 'flex',
+        alignItems: 'center',
+        borderRadius: 1.2,
+        transition: 'background-color 150ms ease',
+        '&:hover': {
+          backgroundColor: alpha(theme.palette.secondary.main, 0.08),
+        },
+      })}>
+      <Button
+        onClick={onClick}
+        onContextMenu={handleContextMenu}
+        sx={{
+          minWidth: 0,
+          px: 1.4,
+          py: 0.6,
+        }}>
         {children}
       </Button>
 
       <IconButton
         aria-label="Close"
         size="small"
-        style={{ visibility: over ? "visible" : "hidden" }}
+        sx={(theme) => ({
+          mr: 0.4,
+          color: theme.palette.text.secondary,
+          visibility: over ? "visible" : "hidden",
+          '&:hover': {
+            color: theme.palette.text.primary,
+            backgroundColor: alpha(theme.palette.secondary.main, 0.15),
+          },
+        })}
         onClick={onClose}
       >
         <CloseIcon fontSize="inherit" />
@@ -125,7 +151,7 @@ const ClosableComponent = ({
         showCLose={showCLose}
         isDisabledKeepMe={isDisabledKeepMe}
       />
-    </div>
+    </Box>
   );
 };
 
@@ -287,7 +313,15 @@ export default function NavTabs({ docked, width }) {
         }}>
         {banner}
       </Box>
-      <AppBar position="sticky" color="default">
+      <AppBar
+        position="sticky"
+        color="default"
+        elevation={0}
+        sx={{
+          top: 0,
+          backgroundColor: theme.palette.background.paper,
+          borderBottom: `1px solid ${alpha(theme.palette.primary.dark, 0.1)}`,
+        }}>
         <Tabs
           value={tabIndex}
           component="div"
@@ -295,7 +329,13 @@ export default function NavTabs({ docked, width }) {
           variant="scrollable"
           scrollButtons
           indicatorColor="primary"
-          style={{ minHeight: 'inherit' }}
+          sx={{
+            minHeight: 'inherit',
+            px: 0.6,
+            '& .MuiTabs-scrollButtons': {
+              color: theme.palette.text.secondary,
+            },
+          }}
           allowScrollButtonsMobile>
           {itemTabs}
         </Tabs>
