@@ -1191,6 +1191,28 @@ async function openRecordsForDataTypeId(page, dataTypeId, recordsHeadingRegex) {
 }
 
 async function createDataTypeWithDuplicateRecovery(page) {
+  for (let apiAttempt = 1; apiAttempt <= 2; apiAttempt += 1) {
+    try {
+      return await createDataTypeViaBrowserRuntime(page);
+    } catch (error) {
+      const message = String(error?.message || error);
+      const duplicate =
+        /already been taken/i.test(message) ||
+        /status code\\s*409/i.test(message) ||
+        /status code\\s*422/i.test(message);
+
+      if (duplicate && cleanupEnabled && apiAttempt < 2) {
+        console.warn(`API-first data type create duplicate detected; cleaning and retrying (attempt ${apiAttempt + 1}).`);
+        cleanupCorruptedDataTypesForNamespace(namespaceName, dataTypeName);
+        await recoverUiShellIfNeeded(page, `api-duplicate-cleanup-${apiAttempt}`);
+        continue;
+      }
+
+      console.warn(`API-first data type create failed${apiAttempt < 2 ? '; will retry/fallback' : ''}: ${message}`);
+    }
+  }
+
+  // UI flow remains as fallback for cases where browser-runtime API is unavailable.
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     await openDataTypeNewForm(page);
     await fillEditableTextboxInPanel(page, 'Namespace', namespaceName);

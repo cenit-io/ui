@@ -23,6 +23,8 @@ CENIT_E2E_DATATYPE_NAMESPACE="${CENIT_E2E_DATATYPE_NAMESPACE:-E2E_CONTACT_FLOW}"
 CENIT_E2E_DATATYPE_NAME="${CENIT_E2E_DATATYPE_NAME:-Contact}"
 CENIT_E2E_RECORD_NAME="${CENIT_E2E_RECORD_NAME:-John Contact E2E}"
 CENIT_E2E_RECORD_COLLECTION="${CENIT_E2E_RECORD_COLLECTION:-${CENIT_E2E_DATATYPE_NAME}s}"
+CENIT_E2E_API_PRECHECK="${CENIT_E2E_API_PRECHECK:-1}"
+CENIT_API_CONTACT_FLOW_SCRIPT="${CENIT_API_CONTACT_FLOW_SCRIPT:-$CENIT_ROOT/scripts/e2e/cenit_api_contact_flow.sh}"
 
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 PWCLI="${PWCLI:-$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh}"
@@ -337,6 +339,15 @@ if [[ "$CENIT_E2E_AUTOSTART" == "1" ]]; then
 fi
 
 wait_http "$CENIT_SERVER_URL" "Cenit server" "$CENIT_E2E_SERVER_READY_RETRIES"
+if [[ "$CENIT_E2E_API_PRECHECK" == "1" ]]; then
+  if [[ -x "$CENIT_API_CONTACT_FLOW_SCRIPT" ]]; then
+    echo "Running backend API contact-flow precheck: $CENIT_API_CONTACT_FLOW_SCRIPT"
+    "$CENIT_API_CONTACT_FLOW_SCRIPT"
+  else
+    echo "Backend API contact-flow precheck script is missing or not executable: $CENIT_API_CONTACT_FLOW_SCRIPT" >&2
+    exit 1
+  fi
+fi
 wait_http "$CENIT_UI_URL" "Cenit UI" "$CENIT_E2E_UI_READY_RETRIES"
 
 driver="$CENIT_E2E_DRIVER"
