@@ -432,7 +432,7 @@
       "namespace": "Admin",
       "name": "authorize.rb",
       "type": "ruby",
-      "code": " if (redirect_uri = params[:redirect_uri]) && redirect_uris.include?(redirect_uri)\r\n  app = control.app\r\n  auth = app.create_authorization!(\r\n    namespace: app.namespace,\r\n    scopes: 'openid profile email session_access multi_tenant create read update delete digest',\r\n    metadata: { redirect_uri: redirect_uri, state: params[:state] }\r\n  )\r\n  control.authorize(auth)\r\nelse\r\n  control.render json: { error: \"Invalid redirect_uri param: #{redirect_uri}\" }, status: :bad_request\r\nend"
+      "code": " if (redirect_uri = params[:redirect_uri]) && redirect_uris.include?(redirect_uri)\r\n  app = control.app\r\n  auth = app.create_authorization!(\r\n    namespace: app.namespace,\r\n    scopes: 'openid profile email offline_access session_access multi_tenant read update delete digest openid create {\"namespace\":\"Setup\",\"name\":{\"$in\":[\"DataType\",\"JsonDataType\",\"Snippet\",\"Template\",\"LiquidTemplate\",\"Flow\",\"PlainWebhook\",\"Collection\",\"Application\"]}}',\r\n    metadata: { redirect_uri: redirect_uri, state: params[:state] }\r\n  )\r\n  control.authorize(auth)\r\nelse\r\n  control.render json: { error: \"Invalid redirect_uri param: #{redirect_uri}\" }, status: :bad_request\r\nend"
     },
     {
       "_primary": [
