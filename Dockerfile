@@ -3,7 +3,6 @@ WORKDIR /app
 ENV PATH=/app/node_modules/.bin:$PATH
 COPY package.json .
 COPY package-lock.json .
-RUN npm install -g npm@latest
 RUN npm ci --legacy-peer-deps
 COPY env.sh .
 COPY src src/
