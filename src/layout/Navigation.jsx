@@ -8,7 +8,7 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRightRounde
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeftRounded";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
-import { IconButton, Typography, useTheme } from "@mui/material";
+import { alpha, IconButton, Typography, useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
 import Loading from "../components/Loading";
 import Skeleton from '@mui/material/Skeleton';
@@ -30,9 +30,34 @@ import { isSuperAdmin, useTenantContext } from "./TenantContext";
 import EmbeddedAppService from "../services/EnbeddedAppService";
 import brandLogoUrl from "../util/brandLogoUrl";
 
-function NavItem({ icon, onClick, disabled, text, isRoot, isOpen }) {
+function NavItem({ icon, onClick, disabled, text, isRoot, isOpen, dense }) {
   return (
-    <ListItem button component="div" disabled={disabled} onClick={onClick}>
+    <ListItem
+      button
+      component="div"
+      disabled={disabled}
+      onClick={onClick}
+      sx={(theme) => ({
+        px: 1.2,
+        py: dense ? 0.35 : 0.55,
+        mt: 0.2,
+        borderRadius: 1.2,
+        color: theme.palette.text.secondary,
+        borderLeft: `2px solid ${isOpen ? theme.palette.secondary.main : 'transparent'}`,
+        backgroundColor: isOpen ? alpha(theme.palette.secondary.main, 0.1) : 'transparent',
+        transition: "background-color 150ms ease, color 150ms ease, border-color 150ms ease",
+        '& .MuiListItemIcon-root': {
+          minWidth: 36,
+          color: 'inherit',
+        },
+        '& .MuiListItemText-primary': {
+          fontWeight: isRoot || isOpen ? 600 : 500,
+        },
+        '&:hover': {
+          backgroundColor: alpha(theme.palette.secondary.main, 0.14),
+          color: theme.palette.text.primary,
+        },
+      })}>
       <ListItemIcon>{icon}</ListItemIcon>
       <ListItemText>
         <div
@@ -129,14 +154,19 @@ function NavGroup({ title, IconComponent, items, open, onClick, onSelect }) {
         <List
           component="ul"
           sx={(theme) => ({
-            background: theme.palette.action.selected,
-            p: 0,
+            background: alpha(theme.palette.secondary.main, 0.06),
+            borderRadius: 1.2,
+            ml: 0.6,
+            mr: 0.2,
+            mb: 0.4,
+            p: 0.25,
           })}>
           {items.map((item, index) => (
             <NavItem
               key={`item_${index}`}
               text={item.title}
               icon={item.icon}
+              dense={true}
               onClick={() => onSelect(item, title)}
             />
           ))}
@@ -278,6 +308,17 @@ export default function Navigation({ xs, onToggle }) {
         <ListItem
           button
           component="div"
+          sx={{
+            px: 1.2,
+            py: 0.5,
+            borderRadius: 1.2,
+            color: theme.palette.text.secondary,
+            '& .MuiListItemText-primary': { fontWeight: 600 },
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.secondary.main, 0.14),
+              color: theme.palette.text.primary,
+            },
+          }}
           onClick={() =>
             setState({ openIndex: openIndex === "recent" ? -1 : "recent" })
           }
@@ -290,10 +331,14 @@ export default function Navigation({ xs, onToggle }) {
         <Collapse in={openIndex === "recent"}>
           <List
             component="ul"
-            sx={{
-              background: theme.palette.action.selected,
-              p: 0,
-            }}>
+            sx={(currentTheme) => ({
+              background: alpha(currentTheme.palette.secondary.main, 0.06),
+              borderRadius: 1.2,
+              ml: 0.6,
+              mr: 0.2,
+              mb: 0.4,
+              p: 0.25,
+            })}>
             {nav}
           </List>
         </Collapse>
@@ -310,6 +355,7 @@ export default function Navigation({ xs, onToggle }) {
     <Box
       sx={(currentTheme) => ({
         backgroundColor: currentTheme.palette.background.paper,
+        borderBottom: `1px solid ${alpha(currentTheme.palette.primary.dark, 0.08)}`,
         boxSizing: "border-box",
         position: "sticky",
         top: 0,
@@ -340,10 +386,12 @@ export default function Navigation({ xs, onToggle }) {
           onClick={handleHomeAccess}
           sx={{
             fontWeight: 800,
-            ml: "1.8rem",
+            ml: "1.4rem",
             cursor: "pointer",
             lineHeight: "0.85",
-            fontSize: "1.8rem",
+            fontSize: "1.5rem",
+            color: currentTheme => currentTheme.palette.primary.dark,
+            letterSpacing: "-0.02em",
           }}>
           Cenit IO
         </Typography>
@@ -355,9 +403,10 @@ export default function Navigation({ xs, onToggle }) {
     <Box
       sx={{
         position: "relative",
-        boxShadow: "0 9px 4px rgba(0,0,0,0.30)",
+        boxShadow: theme.shadows[4],
         zIndex: 1100,
         background: theme.palette.background.paper,
+        borderRight: `1px solid ${alpha(theme.palette.primary.dark, 0.08)}`,
         order: 0,
         width: open ? navigationWidth(theme) : theme.spacing(10) + 5,
         boxSizing: "border-box",
@@ -397,23 +446,34 @@ export default function Navigation({ xs, onToggle }) {
               position: "absolute",
               top: "1rem",
               right: "-14px",
-              height: "1.5rem",
-              width: "1.5rem",
-              background: "#fff",
+              height: "2rem",
+              width: "2rem",
+              background: theme.palette.background.paper,
               display: "flex",
               alignItems: "center",
               borderRadius: "50%",
-              boxShadow: "-1px 1px 4px rgba(0,0,0,0.30)",
+              border: `1px solid ${alpha(theme.palette.primary.dark, 0.14)}`,
+              boxShadow: theme.shadows[3],
               zIndex: 1500,
             }}>
             {docked && (
-              <IconButton edge="start" color="inherit" onClick={onToggle} size="large">
+              <IconButton
+                edge="start"
+                color="inherit"
+                onClick={onToggle}
+                size="small"
+                sx={{ color: theme.palette.primary.main }}>
                 <KeyboardArrowLeftIcon />
               </IconButton>
             )}
 
             {!docked && (
-              <IconButton edge="start" color="inherit" onClick={onToggle} size="large">
+              <IconButton
+                edge="start"
+                color="inherit"
+                onClick={onToggle}
+                size="small"
+                sx={{ color: theme.palette.primary.main }}>
                 <KeyboardArrowRightIcon />
               </IconButton>
             )}

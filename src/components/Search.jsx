@@ -25,10 +25,12 @@ export default function ({ disabled, dataTypeSelector, onSelect, searchIcon, sel
       sx={{
         position: 'relative',
         borderRadius: theme.shape.borderRadius,
-        backgroundColor: backColor || alpha(theme.palette.common.white, 0.15),
+        border: `1px solid ${alpha(theme.palette.common.white, 0.25)}`,
+        backgroundColor: backColor || alpha(theme.palette.common.white, 0.08),
         '&:hover': {
-          backgroundColor: backOverColor || alpha(theme.palette.common.white, 0.25),
+          backgroundColor: backOverColor || alpha(theme.palette.common.white, 0.14),
         },
+        transition: 'background-color 150ms ease, border-color 150ms ease',
         mr: theme.spacing(2),
         ml: 0,
         width: '100%',

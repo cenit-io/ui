@@ -36,12 +36,44 @@ const normalizeConfigPath = (path: string): string => (
     .join('/')
 );
 
+const DATA_TYPE_CONFIG_MODULE_LOADERS: Record<string, () => Promise<any>> = import.meta.glob(
+  '../config/dataTypes/**/*.{js,jsx,ts,tsx}'
+);
+
+const resolveDataTypeConfigModuleLoader = (path: string): (() => Promise<any>) | null => {
+  const normalizedPath = normalizeConfigPath(path);
+  if (!normalizedPath) {
+    return null;
+  }
+
+  const candidates = [
+    `../config/dataTypes/${normalizedPath}.jsx`,
+    `../config/dataTypes/${normalizedPath}.js`,
+    `../config/dataTypes/${normalizedPath}.tsx`,
+    `../config/dataTypes/${normalizedPath}.ts`,
+    `../config/dataTypes/${normalizedPath}/index.jsx`,
+    `../config/dataTypes/${normalizedPath}/index.js`,
+    `../config/dataTypes/${normalizedPath}/index.tsx`,
+    `../config/dataTypes/${normalizedPath}/index.ts`
+  ];
+
+  for (const candidate of candidates) {
+    const loader = DATA_TYPE_CONFIG_MODULE_LOADERS[candidate];
+    if (loader) {
+      return loader;
+    }
+  }
+  return null;
+};
+
 const markDataTypeServiceRuntime = (): void => {
   const globalRef = globalThis as any;
   if (!globalRef[DATA_TYPE_SERVICE_MARKER_KEY]) {
     globalRef[DATA_TYPE_SERVICE_MARKER_KEY] = {
       fingerprint: DATA_TYPE_SERVICE_FINGERPRINT,
-      loadedAt: new Date().toISOString()
+      loadedAt: new Date().toISOString(),
+      configCalls: 0,
+      lastConfigFor: null as string | null
     };
   }
   console.log(
@@ -1170,6 +1202,12 @@ export class DataType {
   }
 
   config(): Observable<any> {
+    const runtimeMarker = (globalThis as any)[DATA_TYPE_SERVICE_MARKER_KEY];
+    if (runtimeMarker) {
+      runtimeMarker.configCalls = (runtimeMarker.configCalls || 0) + 1;
+      runtimeMarker.lastConfigFor = this.type_name() || this.id || null;
+    }
+
     let config = (this as any)[ConfigSymbol];
     if (config) {
       const cacheKind = isObservable(config) ? 'observable' : 'value';
@@ -1180,12 +1218,22 @@ export class DataType {
     } else if (this.id !== undefined) {
       const path = this.configPath();
       if (path) {
+        const loader = resolveDataTypeConfigModuleLoader(path);
+        if (!loader) {
+          console.warn(
+            `DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] config module not found for path=${path}; ` +
+            `falling back to {}.`
+          );
+          config = of({});
+          (this as any)[ConfigSymbol] = config;
+          return config;
+        }
         console.log(`DEBUG: [${DATA_TYPE_SERVICE_FINGERPRINT}] importing config for path=${path}`);
         config = from(
-          import(`../config/dataTypes/${path}.jsx`)
+          loader()
         ).pipe(
-          tap(m => console.log(`DEBUG: Config imported successfully for ${path}`, m.default)),
-          map(mod => mod.default),
+          tap(m => console.log(`DEBUG: Config imported successfully for ${path}`, m?.default)),
+          map(mod => mod?.default || {}),
           catchError(e => {
             console.error(`DEBUG: Failed importing config for ${path}; falling back to {}.`, e);
             return of({});

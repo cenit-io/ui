@@ -81,7 +81,7 @@ function MainLayout() {
   const tabsWidth = navWidth ? `100vw - ${navWidth}` : '100vw';
 
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box sx={{ position: 'relative', background: currentTheme.palette.background.default }}>
       <Box
         sx={{
           position: 'relative',

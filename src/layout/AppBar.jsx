@@ -11,7 +11,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import HomeIcon from '@mui/icons-material/Home';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import TenantSelector from "../components/TenantSelector";
 import UserCard from "../components/UserCard";
 import ConfigService from "../services/ConfigService";
@@ -116,14 +116,16 @@ export default function ({ onToggle }) {
 
   if (open) {
     menu = <ClickAwayListener onClickAway={handleClose}>
-      <Paper style={{
+      <Paper sx={(currentTheme) => ({
         position: 'absolute',
-        background: 'white',
-        border: 'gray',
         zIndex: 1101,
         right: 0,
-        width: 'max-content'
-      }}>
+        width: 'max-content',
+        borderRadius: 1.5,
+        background: currentTheme.palette.background.paper,
+        border: `1px solid ${alpha(currentTheme.palette.primary.dark, 0.12)}`,
+        boxShadow: currentTheme.shadows[5],
+      })}>
         <UserCard idToken={idToken} onClose={handleClose} />
       </Paper>
     </ClickAwayListener>;
@@ -136,7 +138,7 @@ export default function ({ onToggle }) {
         fontSize="small"
         sx={{
           color: theme.palette.error.main,
-          background: theme.palette.common.white,
+          background: theme.palette.background.paper,
           borderRadius: "50%",
         }}
       />
@@ -144,9 +146,11 @@ export default function ({ onToggle }) {
     : undefined;
   const avatar = smUp && (
     <Box sx={{ position: 'relative' }}>
-      <IconButton onClick={handleClick} size="large">
+      <IconButton onClick={handleClick} size="large" sx={{ color: theme.palette.common.white }}>
         <Badge badgeContent={userNotification}>
-          <Avatar alt={idToken.name} src={idToken.picture} />
+          <Avatar alt={idToken.name}
+            src={idToken.picture}
+            sx={{ border: `2px solid ${alpha(theme.palette.secondary.light, 0.4)}` }} />
         </Badge>
       </IconButton>
       {menu}
@@ -170,17 +174,18 @@ export default function ({ onToggle }) {
     <Box
       onClick={handleQuickAccess}
       sx={{
-        transition: "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+        transition: "background-color 160ms ease",
         borderRadius: "50px",
         cursor: "pointer",
-        padding: "0 .45rem 0 0",
+        px: 0.6,
+        py: 0.2,
         order: -1,
         "&:hover": {
-          backgroundColor: "rgba(0, 0, 0, 0.05)",
+          backgroundColor: alpha(theme.palette.common.white, 0.12),
         },
       }}>
       <img src={brandLogoUrl()} width="40px" alt=""
-        style={{ filter: 'invert(1)' }} />
+        style={{ display: 'block' }} />
     </Box>
 
   const taskMenu = (
@@ -189,8 +194,10 @@ export default function ({ onToggle }) {
       disabled={loading}
       onClick={handlePickTasks}
       sx={{
-        p: "4px",
+        p: "6px",
         order: smUp ? -1 : 1,
+        color: theme.palette.common.white,
+        '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.12) },
       }}
       size="large">
       <TaskMenuIcon />
@@ -203,8 +210,10 @@ export default function ({ onToggle }) {
       disabled={loading}
       onClick={handlePickNotifications}
       sx={{
-        p: "4px",
+        p: "6px",
         order: smUp ? -1 : 1,
+        color: theme.palette.common.white,
+        '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.12) },
       }}
       size="large">
       <NotificationsIcon />
@@ -212,8 +221,8 @@ export default function ({ onToggle }) {
   );
 
   return (
-    <AppBar position="absolute">
-      <Toolbar>
+    <AppBar position="absolute" sx={{ backdropFilter: "saturate(145%) blur(6px)" }}>
+      <Toolbar sx={{ minHeight: appBarHeight(theme), px: { xs: 1, sm: 2 }, gap: 0.5 }}>
         {brandLogo}
         {!smUp && (
           <IconButton
@@ -222,7 +231,11 @@ export default function ({ onToggle }) {
             aria-label="Menu"
             onClick={onToggle}
             disabled={loading}
-            sx={{ order: 2 }}
+            sx={{
+              order: 2,
+              color: theme.palette.common.white,
+              '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.12) },
+            }}
             size="large">
             <MenuIcon />
           </IconButton>
