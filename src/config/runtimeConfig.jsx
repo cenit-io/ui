@@ -25,9 +25,16 @@ export function runtimeBoolean(key, fallback = false) {
 }
 
 export const runtimeConfig = {
-  appId: runtimeValue("REACT_APP_APP_ID"),
-  cenitHost: runtimeValue("REACT_APP_CENIT_HOST"),
-  localhost: runtimeValue("REACT_APP_LOCALHOST"),
-  useEnvironmentConfig: runtimeBoolean("REACT_APP_USE_ENVIRONMENT_CONFIG", true),
+  get appId() {
+    return runtimeValue("REACT_APP_APP_ID");
+  },
+  get cenitHost() {
+    return runtimeValue("REACT_APP_CENIT_HOST");
+  },
+  get localhost() {
+    return runtimeValue("REACT_APP_LOCALHOST");
+  },
+  get useEnvironmentConfig() {
+    return runtimeBoolean("REACT_APP_USE_ENVIRONMENT_CONFIG", true);
+  },
 };
-
