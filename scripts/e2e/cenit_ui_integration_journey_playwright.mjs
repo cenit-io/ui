@@ -15,6 +15,7 @@ const password = process.env.CENIT_E2E_PASSWORD || 'password';
 const outputDir = process.env.CENIT_E2E_OUTPUT_DIR || path.resolve(process.cwd(), 'output/playwright');
 const stamp = process.env.CENIT_E2E_TIMESTAMP || new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14);
 const authStateFile = process.env.CENIT_E2E_AUTH_STATE_FILE;
+const useAuthState = process.env.CENIT_E2E_USE_AUTH_STATE === '1';
 const cleanup = process.env.CENIT_E2E_CLEANUP !== '0';
 const step1Only = process.env.CENIT_E2E_STEP1_ONLY === '1';
 
@@ -45,6 +46,10 @@ fs.mkdirSync(provenanceDir, { recursive: true });
 
 let failed = false;
 const loadedScriptModules = new Set();
+let authNoAccessCount = 0;
+let lastServerDataType200At = 0;
+const observedSetupDataTypeIds = new Set();
+const observedDigestRouteTypeIds = new Set();
 
 const browser = await chromium.launch({ headless: true });
 const contextOptions = {
@@ -54,7 +59,7 @@ const contextOptions = {
     }
 };
 
-if (authStateFile && fs.existsSync(authStateFile)) {
+if (useAuthState && authStateFile && fs.existsSync(authStateFile)) {
     contextOptions.storageState = authStateFile;
 }
 
@@ -66,6 +71,9 @@ await page.setViewportSize({ width: 1920, height: 1080 });
 // Logs
 page.on('console', msg => {
     if (msg.type() === 'warning') return;
+    if (/Auth with no access shoud not happens/i.test(msg.text())) {
+        authNoAccessCount += 1;
+    }
     console.log(`BROWSER_CONSOLE_LOG: ${msg.text()}`);
 });
 page.on('pageerror', err => console.log(`BROWSER_PAGE_ERROR: ${err.message}`));
@@ -89,9 +97,25 @@ page.on('response', async resp => {
         if (url.includes('setup/data_type')) {
             try {
                 const json = await resp.json();
+                const observedIdCandidates = [
+                    json?.data_type?.id,
+                    json?.items?.[0]?.id,
+                    json?.items?.[0]?._id
+                ].filter(Boolean);
+                observedIdCandidates.forEach((id) => observedSetupDataTypeIds.add(String(id)));
                 console.log(`DATA_TYPE_PAYLOAD: ${JSON.stringify(json).substring(0, 500)}`);
             } catch (e) { }
         }
+    }
+    const digestRouteMatch = url.match(/\/api\/v3\/setup\/data_type\/([^/]+)\/digest(?:\?|$)/);
+    if (digestRouteMatch?.[1]) {
+        observedDigestRouteTypeIds.add(String(digestRouteMatch[1]));
+    }
+    if (
+        status === 200 &&
+        url.startsWith(`${serverUrl.replace(/\/$/, '')}/api/v3/setup/data_type`)
+    ) {
+        lastServerDataType200At = Date.now();
     }
 });
 
@@ -376,6 +400,91 @@ async function performDirectServerLogin(page) {
         return isAppShellVisible(page);
     }
     return false;
+}
+
+async function probeUiApiSession() {
+    const baseUrl = serverUrl.replace(/\/$/, '');
+    const probe = async (url) => {
+        try {
+            const res = await context.request.get(url, {
+                headers: { Accept: 'application/json' }
+            });
+            let body = null;
+            try {
+                body = await res.json();
+            } catch (_) {
+                body = null;
+            }
+            return { ok: res.ok(), status: res.status(), body };
+        } catch (error) {
+            return { ok: false, status: null, error: String(error?.message || error), body: null };
+        }
+    };
+    const me = await probe(`${baseUrl}/api/v3/setup/user/me`);
+    const setupDataType = await probe(`${baseUrl}/api/v3/setup/data_type?limit=1`);
+    return { me, setupDataType };
+}
+
+async function forceFreshAuthSession(page, reason = 'unknown') {
+    console.warn(`Forcing fresh auth session: ${reason}`);
+    await context.clearCookies().catch(() => null);
+    await page.goto('about:blank').catch(() => null);
+    await page.goto(`${serverUrl.replace(/\/$/, '')}/users/sign_in`, { waitUntil: 'domcontentloaded' }).catch(() => null);
+    const loginSubmitted = await performLogin(page);
+    if (loginSubmitted) {
+        await page.waitForURL(
+            (url) =>
+                /\/oauth\/authorize/.test(url.href) ||
+                /\/users\/sign_in/.test(url.href) ||
+                url.href.startsWith(uiUrl) ||
+                url.href.startsWith(serverUrl),
+            { timeout: 20000 }
+        ).catch(() => null);
+    }
+    if (isOAuth(page)) await confirmOAuthConsent(page);
+    await page.goto(uiUrl, { waitUntil: 'domcontentloaded' }).catch(() => null);
+    await page.waitForTimeout(1200);
+    return true;
+}
+
+async function ensureUiSessionStable(page, { forceFreshFirst = false } = {}) {
+    if (forceFreshFirst) {
+        await forceFreshAuthSession(page, 'pre-step fresh auth bootstrap');
+        authNoAccessCount = 0;
+    }
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+        const authNoAccessBefore = authNoAccessCount;
+        await ensureAuthenticated(page);
+        if (hasOauthCallbackCode(page)) {
+            await page.goto(uiUrl, { waitUntil: 'domcontentloaded' }).catch(() => null);
+            await page.waitForTimeout(1200);
+        }
+        const shellVisible = await isAppShellVisible(page);
+        const sawRecentDataType200 =
+            lastServerDataType200At > 0 &&
+            (Date.now() - lastServerDataType200At) <= 10000;
+        const liveDataTypeOk = sawRecentDataType200 || await page.waitForResponse(
+            (resp) =>
+                resp.status() === 200 &&
+                resp.url().startsWith(`${serverUrl.replace(/\/$/, '')}/api/v3/setup/data_type`),
+            { timeout: 5000 }
+        ).then(() => true).catch(() => false);
+        const authNoAccessDelta = authNoAccessCount - authNoAccessBefore;
+        const stable = shellVisible && liveDataTypeOk && authNoAccessDelta === 0;
+        if (stable) {
+            console.log(`Auth/session stable on attempt ${attempt}.`);
+            return;
+        }
+        const detail = {
+            attempt,
+            authNoAccessDelta,
+            shellVisible,
+            liveDataTypeOk
+        };
+        console.warn(`Auth/session stability probe failed: ${JSON.stringify(detail)}`);
+        await forceFreshAuthSession(page, `stability probe failed (attempt ${attempt})`);
+    }
+    throw new Error('Could not establish stable authenticated UI session.');
 }
 
 
@@ -694,6 +803,30 @@ const openMenuItem = async (sectionName, itemName) => {
         throw new Error(`Could not navigate to menu item ${sectionName} > ${itemName}`);
     }
     await page.waitForTimeout(1000);
+};
+
+const discoverDocumentTypesDigestTypeId = async () => {
+    try {
+        const responsePromise = page.waitForResponse(
+            (resp) =>
+                resp.request().method() === 'GET' &&
+                resp.status() === 200 &&
+                /\/api\/v3\/setup\/data_type\/[^/]+\/digest(?:\?|$)/.test(resp.url()),
+            { timeout: 6000 }
+        ).catch(() => null);
+
+        await openMenuItem('Data', 'Document Types');
+        const response = await responsePromise;
+        if (!response) return null;
+
+        const match = response.url().match(/\/api\/v3\/setup\/data_type\/([^/]+)\/digest(?:\?|$)/);
+        if (!match?.[1]) return null;
+        const id = String(match[1]);
+        observedDigestRouteTypeIds.add(id);
+        return id;
+    } catch (_) {
+        return null;
+    }
 };
 
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1475,6 +1608,110 @@ const createDataTypeViaBrowserRuntime = async ({
     };
 };
 
+const createJsonDataTypeViaBrowserRuntime = async ({
+    namespaceName,
+    dataTypeName,
+    schema
+}) => {
+    const payload = {
+        namespace: namespaceName,
+        name: dataTypeName,
+        schema
+    };
+    const uiApiResult = await page.evaluate(async ({ payload }) => {
+        try {
+            const requestModule = await import('/src/util/request.ts');
+            const data = await requestModule.apiRequest({
+                url: 'setup/json_data_type',
+                method: 'POST',
+                data: payload
+            });
+            return { ok: true, data };
+        } catch (error) {
+            const match = String(error?.message || '').match(/status code (\d{3})/i);
+            return {
+                ok: false,
+                status: match ? Number(match[1]) : null,
+                error: String(error?.message || error)
+            };
+        }
+    }, { payload }).catch((error) => ({
+        ok: false,
+        status: null,
+        error: String(error?.message || error)
+    }));
+
+    if (uiApiResult?.ok) {
+        return { ok: true, data: uiApiResult.data };
+    }
+
+    const response = await browserRuntimeApiRequest({
+        endpoint: 'setup/json_data_type',
+        method: 'POST',
+        data: payload
+    });
+    if (response.ok) {
+        return { ok: true, data: response.body };
+    }
+    return {
+        ok: false,
+        status: response.status || uiApiResult?.status,
+        error:
+            response.bodyText ||
+            JSON.stringify(response.body || {}) ||
+            uiApiResult?.error ||
+            'unknown error'
+    };
+};
+
+const createJsonDataTypeViaServerRunner = ({
+    namespaceName,
+    dataTypeName,
+    schema
+}) => {
+    const esc = (value) => String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const schemaJson = esc(JSON.stringify(schema || {}));
+    const ruby = [
+        "require 'json'",
+        `namespace = '${esc(namespaceName)}'`,
+        `name = '${esc(dataTypeName)}'`,
+        `schema = JSON.parse('${schemaJson}')`,
+        "record = Setup::JsonDataType.where(namespace: namespace, name: name).first",
+        "record ||= Setup::JsonDataType.create!(namespace: namespace, name: name, schema: schema)",
+        "puts record.id.to_s"
+    ].join('; ');
+
+    try {
+        const result = spawnSync(
+            'docker',
+            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
+            { encoding: 'utf8' }
+        );
+        if (result.error) {
+            return { ok: false, status: null, error: String(result.error.message || result.error) };
+        }
+        if (result.status !== 0) {
+            const stderr = (result.stderr || '').trim();
+            return {
+                ok: false,
+                status: result.status,
+                error: stderr || 'rails runner failed without stderr output'
+            };
+        }
+        const id = ((result.stdout || '').match(/[0-9a-f]{24}/i) || [])[0] || null;
+        if (!id) {
+            return {
+                ok: false,
+                status: 0,
+                error: `rails runner did not return an id. stdout=${(result.stdout || '').trim().slice(0, 300)}`
+            };
+        }
+        return { ok: true, id };
+    } catch (error) {
+        return { ok: false, status: null, error: String(error?.message || error) };
+    }
+};
+
 const forceCurrentTabAction = async (actionKey) => {
     const result = await page.evaluate(async ({ actionKey }) => {
         try {
@@ -1929,6 +2166,60 @@ const resolveDataTypeIdViaApi = async ({ namespace, name }) => {
         throw new Error(`Could not resolve ${namespace}::${name} data type id via API: empty result.`);
     }
     return id;
+};
+
+const resolveDataTypeIdCandidatesViaRuntime = async ({ namespace, name }) => {
+    return page.evaluate(async ({ namespace, name }) => {
+        const ids = new Set();
+        const addId = (value) => {
+            if (!value) return;
+            ids.add(String(value));
+        };
+
+        try {
+            const dataTypeModule = await import('/src/services/DataTypeService.ts');
+            const result = await new Promise((resolve) => {
+                let done = false;
+                let subscription;
+                const timer = setTimeout(() => {
+                    if (!done) {
+                        done = true;
+                        subscription?.unsubscribe();
+                        resolve(null);
+                    }
+                }, 6000);
+                subscription = dataTypeModule.DataType.find({ namespace, name }).subscribe({
+                    next: (value) => {
+                        if (done) return;
+                        done = true;
+                        clearTimeout(timer);
+                        subscription?.unsubscribe();
+                        resolve(value || null);
+                    },
+                    error: () => {
+                        if (done) return;
+                        done = true;
+                        clearTimeout(timer);
+                        subscription?.unsubscribe();
+                        resolve(null);
+                    }
+                });
+            });
+            addId(result?.id || result?._id);
+        } catch (_) {
+            // ignore; keep candidates from other sources
+        }
+
+        try {
+            const configModule = await import('/src/services/ConfigService.jsx');
+            const state = configModule?.default?.state?.() || {};
+            addId(state?.data_type?.id);
+        } catch (_) {
+            // ignore
+        }
+
+        return [...ids];
+    }, { namespace, name }).catch(() => []);
 };
 
 const resolveDataTypeIdViaMongo = ({ namespace, name }) => {
@@ -2513,8 +2804,7 @@ try {
     console.log(`Starting Integration Journey E2E for namespace: ${namespaceName}`);
     console.log(`Using Data Type name: ${dataTypeName}`);
 
-    await page.goto(uiUrl, { waitUntil: 'domcontentloaded' });
-    await ensureAuthenticated(page);
+    await ensureUiSessionStable(page, { forceFreshFirst: true });
     await page.waitForURL((url) => url.href.startsWith(uiUrl), { timeout: 30000 }).catch(() => null);
 
     // Wait for shell
@@ -2545,6 +2835,10 @@ try {
     console.log('Step 1: Modeling - Creating Data Type...');
     cleanupCorruptedDataTypesForNamespace(namespaceName, null, { purgeGeneratedLeadNames: true });
     await closeBrokenTabs();
+    const discoveredDigestTypeId = await discoverDocumentTypesDigestTypeId();
+    if (discoveredDigestTypeId) {
+        console.log(`Step 1: discovered live digest type id from UI route: ${discoveredDigestTypeId}`);
+    }
     const step1Schema = {
         type: 'object',
         properties: {
@@ -2554,32 +2848,104 @@ try {
     };
 
     const dataTypeTypeId =
-        await resolveDataTypeId({ namespace: 'Setup', name: 'JsonDataType' }) ||
-        await resolveDataTypeIdViaApi({ namespace: 'Setup', name: 'JsonDataType' }).catch(() => null) ||
-        resolveDataTypeIdViaMongo({ namespace: 'Setup', name: 'JsonDataType' });
+        await resolveDataTypeId({ namespace: 'Setup', name: 'JsonDataType' });
+    const apiResolvedTypeId =
+        await resolveDataTypeIdViaApi({ namespace: 'Setup', name: 'JsonDataType' }).catch(() => null);
+    const mongoResolvedTypeId = resolveDataTypeIdViaMongo({ namespace: 'Setup', name: 'JsonDataType' });
+    const runtimeResolvedTypeIds = await resolveDataTypeIdCandidatesViaRuntime({
+        namespace: 'Setup',
+        name: 'JsonDataType'
+    });
 
-    if (dataTypeTypeId) {
-        const dataTypeCreateResult = await createDataTypeViaBrowserRuntime({
-            dataTypeTypeId,
+    const dataTypeTypeIdCandidates = [
+        ...observedDigestRouteTypeIds,
+        dataTypeTypeId,
+        apiResolvedTypeId,
+        mongoResolvedTypeId,
+        ...runtimeResolvedTypeIds,
+        ...observedSetupDataTypeIds
+    ]
+        .filter(Boolean)
+        .map((id) => String(id))
+        .filter((id, idx, arr) => arr.indexOf(id) === idx);
+
+    if (dataTypeTypeIdCandidates.length > 0) {
+        console.log(`Step 1: digest id candidates: ${dataTypeTypeIdCandidates.join(', ')}`);
+        for (const candidateId of dataTypeTypeIdCandidates) {
+            const dataTypeCreateResult = await createDataTypeViaBrowserRuntime({
+                dataTypeTypeId: candidateId,
+                namespaceName,
+                dataTypeName,
+                schema: step1Schema
+            });
+            if (dataTypeCreateResult?.ok) {
+                createdDataTypeId =
+                    dataTypeCreateResult?.data?.id ||
+                    dataTypeCreateResult?.data?.data?.id ||
+                    null;
+                step1CreatedVia = 'api';
+                console.log(
+                    `Step 1: Data Type created via browser-runtime API ` +
+                    `(digestTypeId=${candidateId}, id=${createdDataTypeId || 'unknown'}).`
+                );
+                break;
+            }
+            if (dataTypeCreateResult?.status === 404) {
+                console.warn(`Step 1 digest route not found for type id ${candidateId}; trying next candidate.`);
+                continue;
+            }
+            console.warn(
+                `Step 1 API create failed for type id ${candidateId} ` +
+                `(status ${dataTypeCreateResult?.status || 'unknown'}): ${dataTypeCreateResult?.error || 'unknown error'}`
+            );
+        }
+        if (!createdDataTypeId && step1CreatedVia !== 'api') {
+            console.warn('Step 1 could not create via any digest id candidate. Falling back to UI flow.');
+        }
+    } else {
+        console.warn('Step 1 could not resolve any Setup::JsonDataType digest id candidate. Falling back to UI flow.');
+    }
+
+    if (!createdDataTypeId && step1CreatedVia !== 'api') {
+        const directCreate = await createJsonDataTypeViaBrowserRuntime({
             namespaceName,
             dataTypeName,
             schema: step1Schema
         });
-        if (dataTypeCreateResult?.ok) {
+        if (directCreate?.ok) {
             createdDataTypeId =
-                dataTypeCreateResult?.data?.id ||
-                dataTypeCreateResult?.data?.data?.id ||
+                directCreate?.data?.id ||
+                directCreate?.data?.data?.id ||
                 null;
             step1CreatedVia = 'api';
-            console.log(`Step 1: Data Type created via browser-runtime API (id=${createdDataTypeId || 'unknown'}).`);
+            console.log(
+                `Step 1: Data Type created via browser-runtime canonical endpoint ` +
+                `(setup/json_data_type, id=${createdDataTypeId || 'unknown'}).`
+            );
         } else {
             console.warn(
-                `Step 1 API create failed (status ${dataTypeCreateResult?.status || 'unknown'}): ` +
-                `${dataTypeCreateResult?.error || 'unknown error'}. Falling back to UI flow.`
+                `Step 1 canonical create failed (status ${directCreate?.status || 'unknown'}): ` +
+                `${directCreate?.error || 'unknown error'}. Falling back to UI flow.`
             );
         }
-    } else {
-        console.warn('Step 1 could not resolve Setup::JsonDataType id for API create. Falling back to UI flow.');
+    }
+
+    if (!createdDataTypeId && step1CreatedVia !== 'api') {
+        const serverRunnerCreate = createJsonDataTypeViaServerRunner({
+            namespaceName,
+            dataTypeName,
+            schema: step1Schema
+        });
+        if (serverRunnerCreate?.ok) {
+            createdDataTypeId = serverRunnerCreate.id;
+            step1CreatedVia = 'server-runner';
+            console.log(`Step 1: Data Type created via server runner (id=${createdDataTypeId}).`);
+        } else {
+            console.warn(
+                `Step 1 server-runner create failed (status ${serverRunnerCreate?.status || 'unknown'}): ` +
+                `${serverRunnerCreate?.error || 'unknown error'}. Falling back to UI flow.`
+            );
+        }
     }
 
     if (!createdDataTypeId && step1CreatedVia !== 'api') {
@@ -2972,7 +3338,7 @@ try {
         }
         console.log(`Step 3: Flow created via API (${flowCreateResult.via}).`);
         await page.goto(uiUrl, { waitUntil: 'domcontentloaded' }).catch(() => null);
-        await ensureAuthenticated(page);
+        await ensureUiSessionStable(page);
         await takeStepScreenshot('03-flow-created');
 
         // 4. Execution: Create Record & Check Trace
