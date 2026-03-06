@@ -193,6 +193,25 @@ Artifacts are produced by the backend runner at:
 
 - `../cenit/output/playwright`
 
+## GHCR publish and branch/tag policy
+
+UI Docker image is published to `ghcr.io/cenit-io/ui` by `.github/workflows/docker-publish.yml`:
+
+- `master` branch push publishes `:latest`
+- `develop` branch push publishes `:develop`
+- release tags `v*.*.*` publish semver tags
+- every publish includes immutable `sha-<gitsha>` tags
+
+OCI labels (source/revision/created) are attached by `docker/metadata-action`.
+
+When running backend prod-like compose from `../cenit`, keep UI/backend images on the same channel:
+
+```bash
+CENIT_SERVER_IMAGE=ghcr.io/cenit-io/cenit:develop \
+CENIT_UI_IMAGE=ghcr.io/cenit-io/ui:develop \
+../cenit/scripts/compose-prod.sh up -d
+```
+
 ## CI checks
 
 This repo includes a `UI CI` workflow for `pull_request` to `develop`/`master` and `push` to `develop`:
@@ -214,6 +233,12 @@ docker run -dti \
   -p 3002:80 \
   --name cenit-ui \
   ghcr.io/cenit-io/ui:latest
+```
+
+For develop branch parity:
+
+```bash
+docker pull ghcr.io/cenit-io/ui:develop
 ```
 
 Then open [http://localhost:3002](http://localhost:3002).
