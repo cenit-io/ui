@@ -50,6 +50,7 @@ let authNoAccessCount = 0;
 let lastServerDataType200At = 0;
 const observedSetupDataTypeIds = new Set();
 const observedDigestRouteTypeIds = new Set();
+let activeTenantId = process.env.CENIT_E2E_TENANT_ID || '';
 
 const browser = await chromium.launch({ headless: true });
 const contextOptions = {
@@ -203,58 +204,88 @@ const cleanupCorruptedDataTypesForNamespace = (
     }
 };
 
+const resolveUiTenantId = async () => {
+    try {
+        return await page.evaluate(async () => {
+            try {
+                const configModule = await import('/src/services/ConfigService.jsx');
+                return configModule?.default?.state?.()?.tenant_id || null;
+            } catch (_) {
+                return null;
+            }
+        });
+    } catch (_) {
+        return null;
+    }
+};
+
+const runTenantScopedRailsRunner = (rubyBody, { tenantId = activeTenantId, userEmail = email } = {}) => {
+    const esc = (value) => String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const ruby = [
+        `user_email = '${esc(userEmail || '')}'`,
+        `tenant_id = '${esc(tenantId || '')}'`,
+        "user = User.where(email: user_email).first",
+        "user ||= (User.unscoped.where(email: user_email).first rescue nil)",
+        "raise(\"user not found for #{user_email}\") unless user",
+        "tenant = nil",
+        "if !tenant_id.empty?",
+        "  tenant = (Account.find_where(id: tenant_id).first rescue nil)",
+        "  tenant ||= (Account.unscoped.where(id: tenant_id).first rescue nil)",
+        "end",
+        "tenant ||= user.account || user.accounts.first || user.member_accounts.first",
+        "raise(\"tenant not found for #{user_email}\") unless tenant",
+        "tenant.owner_switch do",
+        rubyBody,
+        "end"
+    ].join('; ');
+
+    return spawnSync(
+        'docker',
+        ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
+        { encoding: 'utf8' }
+    );
+};
+
 const waitForFlowExecution = async ({ flowId, timeoutMs = 30000, pollMs = 2000 }) => {
     if (!flowId) return { found: false, error: 'missing-flow-id' };
 
     const startedAt = Date.now();
     while ((Date.now() - startedAt) < timeoutMs) {
         try {
-            const query = `
-                const collections = db.getCollectionNames().filter(c => c.endsWith('_setup_executions') && !c.startsWith('tmp_'));
-                let hit = null;
-                let hitCol = null;
-                collections.forEach(col => {
-                  if (hit) return;
-                  const doc = db.getCollection(col).find({ agent_id: ObjectId('${flowId}') }).sort({ created_at: -1 }).limit(1).toArray()[0];
-                  if (doc) {
-                    hit = doc;
-                    hitCol = col;
-                  }
-                });
-                if (!hit) {
-                  print('NOT_FOUND');
-                } else {
-                  print(JSON.stringify({
-                    collection: hitCol,
-                    execution_id: String(hit._id),
-                    status: hit.status || null,
-                    created_at: hit.created_at || null
-                  }));
-                }
-            `;
-
-            const result = spawnSync(
-                'docker',
-                ['exec', 'cenit-mongo_server-1', 'mongosh', 'cenit', '--quiet', '--eval', query],
-                { encoding: 'utf8' }
-            );
+            const result = runTenantScopedRailsRunner(`
+                execution = Setup::FlowExecution.where(flow_id: BSON::ObjectId.from_string('${flowId}')).desc(:created_at).first
+                if execution
+                  print({
+                    collection: execution.class.to_s,
+                    execution_id: execution.id.to_s,
+                    status: execution.try(:status),
+                    created_at: execution.try(:created_at)
+                  }.to_json)
+                else
+                  print('NOT_FOUND')
+                end
+            `);
             if (result.error) throw result.error;
             if (result.status !== 0) {
                 const stderr = (result.stderr || '').trim();
-                throw new Error(`mongosh exited with ${result.status}${stderr ? `: ${stderr}` : ''}`);
+                throw new Error(`rails runner exited with ${result.status}${stderr ? `: ${stderr}` : ''}`);
             }
 
             const output = (result.stdout || '').trim();
-            if (!output || output === 'NOT_FOUND') {
+            const normalizedOutput =
+                output === 'NOT_FOUND'
+                    ? output
+                    : ((output.match(/\{[\s\S]*\}$/) || [])[0] || output.split('\n').pop() || '').trim();
+            if (!normalizedOutput || normalizedOutput === 'NOT_FOUND') {
                 await new Promise((resolve) => setTimeout(resolve, pollMs));
                 continue;
             }
 
             try {
-                const parsed = JSON.parse(output);
+                const parsed = JSON.parse(normalizedOutput);
                 return { found: true, ...parsed };
             } catch (_) {
-                return { found: true, raw: output };
+                return { found: true, raw: normalizedOutput };
             }
         } catch (error) {
             return { found: false, error: String(error?.message || error) };
@@ -270,53 +301,40 @@ const waitForExecutionById = async ({ executionId, timeoutMs = 20000, pollMs = 1
     const startedAt = Date.now();
     while ((Date.now() - startedAt) < timeoutMs) {
         try {
-            const query = `
-                const execId = ObjectId('${executionId}');
-                const collections = db.getCollectionNames().filter(c => c.endsWith('_setup_executions') && !c.startsWith('tmp_'));
-                let hit = null;
-                let hitCol = null;
-                collections.forEach(col => {
-                  if (hit) return;
-                  const doc = db.getCollection(col).find({ _id: execId }).limit(1).toArray()[0];
-                  if (doc) {
-                    hit = doc;
-                    hitCol = col;
-                  }
-                });
-                if (!hit) {
-                  print('NOT_FOUND');
-                } else {
-                  print(JSON.stringify({
-                    collection: hitCol,
-                    execution_id: String(hit._id),
-                    status: hit.status || null,
-                    created_at: hit.created_at || null
-                  }));
-                }
-            `;
-
-            const result = spawnSync(
-                'docker',
-                ['exec', 'cenit-mongo_server-1', 'mongosh', 'cenit', '--quiet', '--eval', query],
-                { encoding: 'utf8' }
-            );
+            const result = runTenantScopedRailsRunner(`
+                execution = Setup::FlowExecution.where(id: BSON::ObjectId.from_string('${executionId}')).first
+                if execution
+                  print({
+                    collection: execution.class.to_s,
+                    execution_id: execution.id.to_s,
+                    status: execution.try(:status),
+                    created_at: execution.try(:created_at)
+                  }.to_json)
+                else
+                  print('NOT_FOUND')
+                end
+            `);
             if (result.error) throw result.error;
             if (result.status !== 0) {
                 const stderr = (result.stderr || '').trim();
-                throw new Error(`mongosh exited with ${result.status}${stderr ? `: ${stderr}` : ''}`);
+                throw new Error(`rails runner exited with ${result.status}${stderr ? `: ${stderr}` : ''}`);
             }
 
             const output = (result.stdout || '').trim();
-            if (!output || output === 'NOT_FOUND') {
+            const normalizedOutput =
+                output === 'NOT_FOUND'
+                    ? output
+                    : ((output.match(/\{[\s\S]*\}$/) || [])[0] || output.split('\n').pop() || '').trim();
+            if (!normalizedOutput || normalizedOutput === 'NOT_FOUND') {
                 await new Promise((resolve) => setTimeout(resolve, pollMs));
                 continue;
             }
 
             try {
-                const parsed = JSON.parse(output);
+                const parsed = JSON.parse(normalizedOutput);
                 return { found: true, ...parsed };
             } catch (_) {
-                return { found: true, raw: output };
+                return { found: true, raw: normalizedOutput };
             }
         } catch (error) {
             return { found: false, error: String(error?.message || error) };
@@ -534,6 +552,12 @@ async function ensureUiSessionStable(page, { forceFreshFirst = false } = {}) {
         const authNoAccessDelta = authNoAccessCount - authNoAccessBefore;
         const stable = shellVisible && liveDataTypeOk && authNoAccessDelta === 0;
         if (stable) {
+            const resolvedTenantId = await resolveUiTenantId();
+            if (resolvedTenantId) {
+                activeTenantId = String(resolvedTenantId);
+                process.env.CENIT_E2E_TENANT_ID = activeTenantId;
+                console.log(`Resolved active tenant id from UI session: ${activeTenantId}`);
+            }
             console.log(`Auth/session stable on attempt ${attempt}.`);
             return;
         }
@@ -1744,11 +1768,7 @@ const createJsonDataTypeViaServerRunner = ({
     ].join('; ');
 
     try {
-        const result = spawnSync(
-            'docker',
-            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
-            { encoding: 'utf8' }
-        );
+        const result = runTenantScopedRailsRunner(ruby);
         if (result.error) {
             return { ok: false, status: null, error: String(result.error.message || result.error) };
         }
@@ -1814,11 +1834,7 @@ const createTemplateViaServerRunner = ({
     ].join('; ');
 
     try {
-        const result = spawnSync(
-            'docker',
-            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
-            { encoding: 'utf8' }
-        );
+        const result = runTenantScopedRailsRunner(ruby);
         if (result.error) {
             return { ok: false, status: null, error: String(result.error.message || result.error) };
         }
@@ -1869,11 +1885,7 @@ const createPlainWebhookViaServerRunner = ({
     ].join('; ');
 
     try {
-        const result = spawnSync(
-            'docker',
-            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
-            { encoding: 'utf8' }
-        );
+        const result = runTenantScopedRailsRunner(ruby);
         if (result.error) {
             return { ok: false, status: null, error: String(result.error.message || result.error) };
         }
@@ -1957,11 +1969,7 @@ const createFlowViaServerRunner = ({
     ].join('; ');
 
     try {
-        const result = spawnSync(
-            'docker',
-            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
-            { encoding: 'utf8' }
-        );
+        const result = runTenantScopedRailsRunner(ruby);
         if (result.error) {
             return { ok: false, status: null, error: String(result.error.message || result.error) };
         }
@@ -2760,11 +2768,7 @@ const triggerFlowViaServerRunner = ({
     ].join('; ');
 
     try {
-        const result = spawnSync(
-            'docker',
-            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
-            { encoding: 'utf8' }
-        );
+        const result = runTenantScopedRailsRunner(ruby);
         if (result.error) {
             return { ok: false, status: null, error: String(result.error.message || result.error) };
         }
@@ -2951,21 +2955,14 @@ const createRecordViaServerRunner = ({
         "end",
         "data_type ||= Setup::DataType.where(namespace: namespace, name: name).first",
         "data_type ||= (Setup::DataType.unscoped.where(namespace: namespace, name: name).first rescue nil)",
-        "unless data_type",
-        "  default_schema = { 'type' => 'object', 'properties' => { 'name' => { 'type' => 'string' }, 'email' => { 'type' => 'string' } } }",
-        "  data_type = Setup::JsonDataType.create!(namespace: namespace, name: name, schema: default_schema)",
-        "end",
+        "raise(\"data type not found for #{namespace}::#{name} (id=#{data_type_id})\") unless data_type",
         "record = data_type.create_from_json!(payload)",
         "puts \"DATA_TYPE_ID=#{data_type.id}\"",
         "puts \"RECORD_ID=#{record.id}\""
     ].join('; ');
 
     try {
-        const result = spawnSync(
-            'docker',
-            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
-            { encoding: 'utf8' }
-        );
+        const result = runTenantScopedRailsRunner(ruby);
         if (result.error) {
             return { ok: false, status: null, error: String(result.error.message || result.error) };
         }
@@ -3938,13 +3935,6 @@ try {
                         `${serverRunnerRecord?.error || detail}`
                     );
                 }
-                if (serverRunnerRecord?.dataTypeId && serverRunnerRecord.dataTypeId !== createdDataTypeId) {
-                    console.warn(
-                        `Step 4: server runner resolved different data type id ` +
-                        `${serverRunnerRecord.dataTypeId} (was ${createdDataTypeId}). Continuing with resolved id.`
-                    );
-                    createdDataTypeId = serverRunnerRecord.dataTypeId;
-                }
                 createdRecordId = serverRunnerRecord.id;
                 console.log(`Step 4: record created via server runner (id=${createdRecordId}).`);
             } else {
@@ -4079,7 +4069,7 @@ try {
         // MongoDB Verifications
         console.log('\n--- MongoDB Verification ---');
         const dtInfo = verifyDataType(namespaceName, dataTypeName);
-        if (!dtInfo.found) console.error(`DB_FAILURE: Data Type ${namespaceName}|${dataTypeName} not found!`);
+        if (!dtInfo.found) console.error(`DB_FAILURE: Data Type ${namespaceName}|${dataTypeName} not found${dtInfo.error ? ` (${dtInfo.error})` : '!'}`);
         else {
             console.log(`DB_SUCCESS: Data Type exists in ${dtInfo.collection}.`);
             if (dtInfo.valid) console.log('DB_SUCCESS: Data Type schema is valid.');
@@ -4087,7 +4077,7 @@ try {
         }
 
         const recInfo = verifyRecordDeletion(recordName);
-        if (!recInfo.found) console.error(`DB_FAILURE: Record ${recordName} not found!`);
+        if (!recInfo.found) console.error(`DB_FAILURE: Record ${recordName} not found${recInfo.error ? ` (${recInfo.error})` : '!'}`);
         else console.log(`DB_SUCCESS: Record found in ${recInfo.collection}.`);
     }
 
