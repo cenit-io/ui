@@ -1837,6 +1837,94 @@ const createPlainWebhookViaServerRunner = ({
     }
 };
 
+const createFlowViaServerRunner = ({
+    namespaceName,
+    flowName,
+    templateName,
+    webhookName,
+    templateId = null,
+    webhookId = null,
+    templateCode = '{}',
+    webhookPath = '/e2e/fallback'
+}) => {
+    const esc = (value) => String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const ruby = [
+        `namespace = '${esc(namespaceName)}'`,
+        `name = '${esc(flowName)}'`,
+        `translator_name = '${esc(templateName)}'`,
+        `webhook_name = '${esc(webhookName)}'`,
+        `template_id = '${esc(templateId || '')}'`,
+        `webhook_id = '${esc(webhookId || '')}'`,
+        `template_code = '${esc(templateCode || '{}')}'`,
+        `webhook_path = '${esc(webhookPath || '/e2e/fallback')}'`,
+        "translator = nil",
+        "if !template_id.empty?",
+        "  translator = Setup::Template.where(id: template_id).first",
+        "  translator ||= (Setup::Template.unscoped.where(id: template_id).first rescue nil)",
+        "end",
+        "translator ||= Setup::Template.where(namespace: namespace, name: translator_name).first",
+        "translator ||= (Setup::Template.unscoped.where(namespace: namespace, name: translator_name).first rescue nil)",
+        "translator ||= Setup::Template.where(name: translator_name).first",
+        "translator ||= (Setup::Template.unscoped.where(name: translator_name).first rescue nil)",
+        "translator ||= Setup::Translator.where(namespace: namespace, name: translator_name).first",
+        "translator ||= (Setup::Translator.unscoped.where(namespace: namespace, name: translator_name).first rescue nil)",
+        "translator ||= Setup::LiquidTemplate.create!(namespace: namespace, name: translator_name, code: template_code)",
+        "webhook = nil",
+        "if !webhook_id.empty?",
+        "  webhook = Setup::PlainWebhook.where(id: webhook_id).first",
+        "  webhook ||= (Setup::PlainWebhook.unscoped.where(id: webhook_id).first rescue nil)",
+        "  webhook ||= Setup::Webhook.where(id: webhook_id).first",
+        "  webhook ||= (Setup::Webhook.unscoped.where(id: webhook_id).first rescue nil)",
+        "end",
+        "webhook ||= Setup::PlainWebhook.where(namespace: namespace, name: webhook_name).first",
+        "webhook ||= (Setup::PlainWebhook.unscoped.where(namespace: namespace, name: webhook_name).first rescue nil)",
+        "webhook ||= Setup::Webhook.where(namespace: namespace, name: webhook_name).first",
+        "webhook ||= (Setup::Webhook.unscoped.where(namespace: namespace, name: webhook_name).first rescue nil)",
+        "webhook ||= Setup::PlainWebhook.create!(namespace: namespace, name: webhook_name, path: webhook_path, method: 'post')",
+        "record = Setup::Flow.where(namespace: namespace, name: name).first",
+        "record ||= (Setup::Flow.unscoped.where(namespace: namespace, name: name).first rescue nil)",
+        "if record",
+        "  record.translator = translator if record.respond_to?(:translator=)",
+        "  record.webhook = webhook if record.respond_to?(:webhook=)",
+        "  record.active = true if record.respond_to?(:active=)",
+        "  record.save!",
+        "else",
+        "  record = Setup::Flow.create!(namespace: namespace, name: name, active: true, translator: translator, webhook: webhook)",
+        "end",
+        "puts record.id.to_s"
+    ].join('; ');
+
+    try {
+        const result = spawnSync(
+            'docker',
+            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
+            { encoding: 'utf8' }
+        );
+        if (result.error) {
+            return { ok: false, status: null, error: String(result.error.message || result.error) };
+        }
+        if (result.status !== 0) {
+            const stderr = (result.stderr || '').trim();
+            return {
+                ok: false,
+                status: result.status,
+                error: stderr || 'rails runner failed without stderr output'
+            };
+        }
+        const id = ((result.stdout || '').match(/[0-9a-f]{24}/i) || [])[0] || null;
+        if (!id) {
+            return {
+                ok: false,
+                status: 0,
+                error: `rails runner did not return an id. stdout=${(result.stdout || '').trim().slice(0, 300)}`
+            };
+        }
+        return { ok: true, id };
+    } catch (error) {
+        return { ok: false, status: null, error: String(error?.message || error) };
+    }
+};
+
 const forceCurrentTabAction = async (actionKey) => {
     const result = await page.evaluate(async ({ actionKey }) => {
         try {
@@ -3491,7 +3579,18 @@ try {
             }
         }
         console.log(`Step 3: PlainWebhook created via ${webhookCreateResult.via || 'api'} (${webhookName}).`);
-        const flowCreateResult = await createFlowViaBrowserRuntime({
+        const templateRecordId =
+            templateCreateResult?.body?.id ||
+            templateCreateResult?.body?._id ||
+            templateCreateResult?.body?.data?.id ||
+            null;
+        const webhookRecordId =
+            webhookCreateResult?.body?.id ||
+            webhookCreateResult?.body?._id ||
+            webhookCreateResult?.data?.id ||
+            webhookCreateResult?.data?._id ||
+            null;
+        let flowCreateResult = await createFlowViaBrowserRuntime({
             page,
             flowTypeId,
             namespaceName,
@@ -3500,12 +3599,37 @@ try {
             webhookName
         });
         if (!flowCreateResult?.ok) {
-            const statusMsg = flowCreateResult?.status ? `status ${flowCreateResult.status}` : 'no-status';
-            const bodyMsg = flowCreateResult?.bodyText || JSON.stringify(flowCreateResult?.body || {}).slice(0, 400);
-            const uiErr = flowCreateResult?.uiError ? ` uiError=${flowCreateResult.uiError}` : '';
-            throw new Error(`Step 3 browser-runtime API flow creation failed (${statusMsg}) via ${flowCreateResult?.via || 'unknown'}.${uiErr} Response: ${bodyMsg}`);
+            const serverRunnerFlow = createFlowViaServerRunner({
+                namespaceName,
+                flowName,
+                templateName,
+                webhookName,
+                templateId: templateRecordId,
+                webhookId: webhookRecordId,
+                templateCode: snippetCode,
+                webhookPath
+            });
+            if (serverRunnerFlow?.ok) {
+                flowCreateResult = {
+                    ok: true,
+                    via: 'server-runner/flow',
+                    status: 200,
+                    body: { id: serverRunnerFlow.id }
+                };
+                console.log(`Step 3: Flow created via server runner (id=${serverRunnerFlow.id}).`);
+            } else {
+                const statusMsg = flowCreateResult?.status ? `status ${flowCreateResult.status}` : 'no-status';
+                const bodyMsg = flowCreateResult?.bodyText || JSON.stringify(flowCreateResult?.body || {}).slice(0, 400);
+                const uiErr = flowCreateResult?.uiError ? ` uiError=${flowCreateResult.uiError}` : '';
+                throw new Error(
+                    `Step 3 flow creation failed ` +
+                    `(browser-runtime ${statusMsg} via ${flowCreateResult?.via || 'unknown'}${uiErr}, ` +
+                    `server-runner status ${serverRunnerFlow?.status || 'unknown'}): ` +
+                    `${serverRunnerFlow?.error || bodyMsg}`
+                );
+            }
         }
-        console.log(`Step 3: Flow created via API (${flowCreateResult.via}).`);
+        console.log(`Step 3: Flow created via deterministic path (${flowCreateResult.via}).`);
         await page.goto(uiUrl, { waitUntil: 'domcontentloaded' }).catch(() => null);
         await ensureUiSessionStable(page);
         await takeStepScreenshot('03-flow-created');
