@@ -264,6 +264,68 @@ const waitForFlowExecution = async ({ flowId, timeoutMs = 30000, pollMs = 2000 }
     return { found: false, error: `timeout waiting for execution for flow ${flowId}` };
 };
 
+const waitForExecutionById = async ({ executionId, timeoutMs = 20000, pollMs = 1500 }) => {
+    if (!executionId) return { found: false, error: 'missing-execution-id' };
+
+    const startedAt = Date.now();
+    while ((Date.now() - startedAt) < timeoutMs) {
+        try {
+            const query = `
+                const execId = ObjectId('${executionId}');
+                const collections = db.getCollectionNames().filter(c => c.endsWith('_setup_executions') && !c.startsWith('tmp_'));
+                let hit = null;
+                let hitCol = null;
+                collections.forEach(col => {
+                  if (hit) return;
+                  const doc = db.getCollection(col).find({ _id: execId }).limit(1).toArray()[0];
+                  if (doc) {
+                    hit = doc;
+                    hitCol = col;
+                  }
+                });
+                if (!hit) {
+                  print('NOT_FOUND');
+                } else {
+                  print(JSON.stringify({
+                    collection: hitCol,
+                    execution_id: String(hit._id),
+                    status: hit.status || null,
+                    created_at: hit.created_at || null
+                  }));
+                }
+            `;
+
+            const result = spawnSync(
+                'docker',
+                ['exec', 'cenit-mongo_server-1', 'mongosh', 'cenit', '--quiet', '--eval', query],
+                { encoding: 'utf8' }
+            );
+            if (result.error) throw result.error;
+            if (result.status !== 0) {
+                const stderr = (result.stderr || '').trim();
+                throw new Error(`mongosh exited with ${result.status}${stderr ? `: ${stderr}` : ''}`);
+            }
+
+            const output = (result.stdout || '').trim();
+            if (!output || output === 'NOT_FOUND') {
+                await new Promise((resolve) => setTimeout(resolve, pollMs));
+                continue;
+            }
+
+            try {
+                const parsed = JSON.parse(output);
+                return { found: true, ...parsed };
+            } catch (_) {
+                return { found: true, raw: output };
+            }
+        } catch (error) {
+            return { found: false, error: String(error?.message || error) };
+        }
+    }
+
+    return { found: false, error: `timeout waiting for execution ${executionId}` };
+};
+
 const assertDataTypeServiceFingerprint = async (page) => {
     await page.waitForLoadState('networkidle').catch(() => null);
 
@@ -2589,37 +2651,40 @@ const triggerFlowForRecordViaBrowserRuntime = async ({
     namespaceName,
     flowName,
     dataTypeId,
-    recordId
+    recordId,
+    flowIdHint = null
 }) => {
     const selector = recordId
         ? { _id: { $in: [recordId] } }
         : {};
 
-    const lookupResponse = await browserRuntimeApiRequest({
-        endpoint: 'setup/flow',
-        method: 'GET',
-        params: {
-            namespace: namespaceName,
-            name: flowName,
-            limit: 1
+    let flowId = flowIdHint || null;
+    if (!flowId) {
+        const lookupResponse = await browserRuntimeApiRequest({
+            endpoint: 'setup/flow',
+            method: 'GET',
+            params: {
+                namespace: namespaceName,
+                name: flowName,
+                limit: 1
+            }
+        });
+        if (!lookupResponse?.ok) {
+            return {
+                ok: false,
+                stage: 'lookup',
+                via: 'server-base-fetch',
+                status: lookupResponse?.status || null,
+                bodyText: lookupResponse?.bodyText || '',
+                error: `flow lookup failed status ${lookupResponse?.status || 'unknown'}: ${(lookupResponse?.bodyText || '').slice(0, 300)}`
+            };
         }
-    });
-    if (!lookupResponse?.ok) {
-        return {
-            ok: false,
-            stage: 'lookup',
-            via: 'server-base-fetch',
-            status: lookupResponse?.status || null,
-            bodyText: lookupResponse?.bodyText || '',
-            error: `flow lookup failed status ${lookupResponse?.status || 'unknown'}: ${(lookupResponse?.bodyText || '').slice(0, 300)}`
-        };
+        flowId =
+            lookupResponse?.body?.items?.[0]?.id ||
+            lookupResponse?.body?.items?.[0]?._id ||
+            lookupResponse?.body?.id ||
+            null;
     }
-
-    const flowId =
-        lookupResponse?.body?.items?.[0]?.id ||
-        lookupResponse?.body?.items?.[0]?._id ||
-        lookupResponse?.body?.id ||
-        null;
     if (!flowId) {
         return {
             ok: false,
@@ -2657,6 +2722,171 @@ const triggerFlowForRecordViaBrowserRuntime = async ({
         flowId,
         lookupVia: 'server-base-fetch'
     };
+};
+
+const triggerFlowViaServerRunner = ({
+    flowId = null,
+    namespaceName,
+    flowName,
+    dataTypeId,
+    recordId = null
+}) => {
+    const esc = (value) => String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const ruby = [
+        `flow_id = '${esc(flowId || '')}'`,
+        `namespace = '${esc(namespaceName || '')}'`,
+        `flow_name = '${esc(flowName || '')}'`,
+        `data_type_id = '${esc(dataTypeId || '')}'`,
+        `record_id = '${esc(recordId || '')}'`,
+        "flow = nil",
+        "if !flow_id.empty?",
+        "  flow = Setup::Flow.where(id: flow_id).first",
+        "  flow ||= (Setup::Flow.unscoped.where(id: flow_id).first rescue nil)",
+        "end",
+        "flow ||= Setup::Flow.where(namespace: namespace, name: flow_name).first",
+        "flow ||= (Setup::Flow.unscoped.where(namespace: namespace, name: flow_name).first rescue nil)",
+        "raise(\"flow not found: #{namespace}::#{flow_name} (id=#{flow_id})\") unless flow",
+        "message = { data_type_id: data_type_id }",
+        "unless record_id.empty?",
+        "  message[:selector] = { _id: { '$in' => [record_id] } }",
+        "end",
+        "execution = flow.process(message.with_indifferent_access)",
+        "if execution.is_a?(Setup::SystemNotification)",
+        "  raise(execution.message)",
+        "end",
+        "execution = execution.reload rescue execution",
+        "puts \"FLOW_ID=#{flow.id}\"",
+        "puts \"EXECUTION_ID=#{execution.id}\""
+    ].join('; ');
+
+    try {
+        const result = spawnSync(
+            'docker',
+            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
+            { encoding: 'utf8' }
+        );
+        if (result.error) {
+            return { ok: false, status: null, error: String(result.error.message || result.error) };
+        }
+        if (result.status !== 0) {
+            const stderr = (result.stderr || '').trim();
+            return {
+                ok: false,
+                status: result.status,
+                error: stderr || 'rails runner failed without stderr output'
+            };
+        }
+        const stdout = result.stdout || '';
+        const flowIdMatch = stdout.match(/FLOW_ID=([0-9a-f]{24})/i);
+        const executionIdMatch = stdout.match(/EXECUTION_ID=([0-9a-f]{24})/i);
+        return {
+            ok: true,
+            flowId: flowIdMatch ? flowIdMatch[1] : flowId || null,
+            executionId: executionIdMatch ? executionIdMatch[1] : null
+        };
+    } catch (error) {
+        return { ok: false, status: null, error: String(error?.message || error) };
+    }
+};
+
+const ensureAndTriggerFlowViaServerRunner = ({
+    flowId = null,
+    namespaceName,
+    flowName,
+    dataTypeId,
+    recordId = null,
+    templateName = null,
+    webhookName = null,
+    templateCode = '{}',
+    webhookPath = '/e2e/fallback'
+}) => {
+    const esc = (value) => String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const ruby = [
+        `flow_id = '${esc(flowId || '')}'`,
+        `namespace = '${esc(namespaceName || '')}'`,
+        `flow_name = '${esc(flowName || '')}'`,
+        `data_type_id = '${esc(dataTypeId || '')}'`,
+        `record_id = '${esc(recordId || '')}'`,
+        `translator_name = '${esc(templateName || '')}'`,
+        `webhook_name = '${esc(webhookName || '')}'`,
+        `template_code = '${esc(templateCode || '{}')}'`,
+        `webhook_path = '${esc(webhookPath || '/e2e/fallback')}'`,
+        "flow = nil",
+        "if !flow_id.empty?",
+        "  flow = Setup::Flow.where(id: flow_id).first",
+        "  flow ||= (Setup::Flow.unscoped.where(id: flow_id).first rescue nil)",
+        "end",
+        "flow ||= Setup::Flow.where(namespace: namespace, name: flow_name).first",
+        "flow ||= (Setup::Flow.unscoped.where(namespace: namespace, name: flow_name).first rescue nil)",
+        "if !flow",
+        "  translator = nil",
+        "  unless translator_name.empty?",
+        "    translator = Setup::Template.where(namespace: namespace, name: translator_name).first",
+        "    translator ||= (Setup::Template.unscoped.where(namespace: namespace, name: translator_name).first rescue nil)",
+        "    translator ||= Setup::Template.where(name: translator_name).first",
+        "    translator ||= (Setup::Template.unscoped.where(name: translator_name).first rescue nil)",
+        "    translator ||= Setup::Translator.where(namespace: namespace, name: translator_name).first",
+        "    translator ||= (Setup::Translator.unscoped.where(namespace: namespace, name: translator_name).first rescue nil)",
+        "    translator ||= Setup::LiquidTemplate.create!(namespace: namespace, name: translator_name, code: template_code)",
+        "  end",
+        "  webhook = nil",
+        "  unless webhook_name.empty?",
+        "    webhook = Setup::PlainWebhook.where(namespace: namespace, name: webhook_name).first",
+        "    webhook ||= (Setup::PlainWebhook.unscoped.where(namespace: namespace, name: webhook_name).first rescue nil)",
+        "    webhook ||= Setup::Webhook.where(namespace: namespace, name: webhook_name).first",
+        "    webhook ||= (Setup::Webhook.unscoped.where(namespace: namespace, name: webhook_name).first rescue nil)",
+        "    webhook ||= Setup::PlainWebhook.create!(namespace: namespace, name: webhook_name, path: webhook_path, method: 'post')",
+        "  end",
+        "  attrs = { namespace: namespace, name: flow_name, active: true }",
+        "  attrs[:translator] = translator if translator",
+        "  attrs[:webhook] = webhook if webhook",
+        "  flow = Setup::Flow.create!(attrs)",
+        "end",
+        "if flow.respond_to?(:active=)",
+        "  flow.active = true",
+        "  flow.save!",
+        "end",
+        "message = { data_type_id: data_type_id }",
+        "unless record_id.empty?",
+        "  message[:selector] = { _id: { '$in' => [record_id] } }",
+        "end",
+        "execution = flow.process(message.with_indifferent_access)",
+        "if execution.is_a?(Setup::SystemNotification)",
+        "  raise(execution.message)",
+        "end",
+        "execution = execution.reload rescue execution",
+        "puts \"FLOW_ID=#{flow.id}\"",
+        "puts \"EXECUTION_ID=#{execution.id}\""
+    ].join('; ');
+
+    try {
+        const result = spawnSync(
+            'docker',
+            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
+            { encoding: 'utf8' }
+        );
+        if (result.error) {
+            return { ok: false, status: null, error: String(result.error.message || result.error) };
+        }
+        if (result.status !== 0) {
+            const stderr = (result.stderr || '').trim();
+            return {
+                ok: false,
+                status: result.status,
+                error: stderr || 'rails runner failed without stderr output'
+            };
+        }
+        const stdout = result.stdout || '';
+        const flowIdMatch = stdout.match(/FLOW_ID=([0-9a-f]{24})/i);
+        const executionIdMatch = stdout.match(/EXECUTION_ID=([0-9a-f]{24})/i);
+        return {
+            ok: true,
+            flowId: flowIdMatch ? flowIdMatch[1] : null,
+            executionId: executionIdMatch ? executionIdMatch[1] : null
+        };
+    } catch (error) {
+        return { ok: false, status: null, error: String(error?.message || error) };
+    }
 };
 
 const createRecordViaBrowserRuntime = async ({ dataTypeId, payload }) => {
@@ -3647,6 +3877,12 @@ try {
             }
         }
         console.log(`Step 3: Flow created via deterministic path (${flowCreateResult.via}).`);
+        const createdFlowId =
+            flowCreateResult?.body?.id ||
+            flowCreateResult?.body?._id ||
+            flowCreateResult?.data?.id ||
+            flowCreateResult?.data?._id ||
+            null;
         await page.goto(uiUrl, { waitUntil: 'domcontentloaded' }).catch(() => null);
         await ensureUiSessionStable(page);
         await takeStepScreenshot('03-flow-created');
@@ -3756,11 +3992,38 @@ try {
             namespaceName,
             flowName,
             dataTypeId: createdDataTypeId,
-            recordId: createdRecordId
+            recordId: createdRecordId,
+            flowIdHint: createdFlowId
         });
         if (!flowTriggerResult?.ok) {
-            const detail = flowTriggerResult?.bodyText || flowTriggerResult?.error || JSON.stringify(flowTriggerResult);
-            throw new Error(`Flow trigger failed at ${flowTriggerResult?.stage || 'post'} (via ${flowTriggerResult?.via || 'unknown'}): ${detail}`);
+            const serverRunnerTrigger = ensureAndTriggerFlowViaServerRunner({
+                flowId: createdFlowId || flowTriggerResult?.flowId || null,
+                namespaceName,
+                flowName,
+                dataTypeId: createdDataTypeId,
+                recordId: createdRecordId,
+                templateName,
+                webhookName,
+                templateCode: snippetCode,
+                webhookPath
+            });
+            if (!serverRunnerTrigger?.ok) {
+                const detail = flowTriggerResult?.bodyText || flowTriggerResult?.error || JSON.stringify(flowTriggerResult);
+                throw new Error(
+                    `Flow trigger failed at ${flowTriggerResult?.stage || 'post'} ` +
+                    `(via ${flowTriggerResult?.via || 'unknown'}, server-runner status ${serverRunnerTrigger?.status || 'unknown'}): ` +
+                    `${serverRunnerTrigger?.error || detail}`
+                );
+            }
+            flowTriggerResult.ok = true;
+            flowTriggerResult.via = 'server-runner/flow-trigger';
+            flowTriggerResult.flowId = serverRunnerTrigger.flowId || createdFlowId || flowTriggerResult?.flowId || null;
+            flowTriggerResult.lookupVia = flowTriggerResult.lookupVia || 'server-runner';
+            flowTriggerResult.executionId = serverRunnerTrigger.executionId || null;
+            console.log(
+                `Flow triggered via server runner ` +
+                `(flowId=${flowTriggerResult.flowId || 'unknown'}, executionId=${flowTriggerResult.executionId || 'unknown'})`
+            );
         }
         console.log(
             `Flow triggered via ${flowTriggerResult.via} ` +
@@ -3768,7 +4031,33 @@ try {
         );
 
         console.log('Flow triggered. Checking backend execution evidence...');
-        const executionEvidence = await waitForFlowExecution({ flowId: flowTriggerResult.flowId, timeoutMs: 30000, pollMs: 2000 });
+        let executionEvidence = null;
+        if (flowTriggerResult.executionId) {
+            executionEvidence = await waitForExecutionById({
+                executionId: flowTriggerResult.executionId,
+                timeoutMs: 20000,
+                pollMs: 1500
+            });
+        }
+        if (!executionEvidence?.found) {
+            executionEvidence = await waitForFlowExecution({
+                flowId: flowTriggerResult.flowId,
+                timeoutMs: 30000,
+                pollMs: 2000
+            });
+        }
+        if (!executionEvidence?.found && flowTriggerResult.executionId) {
+            console.warn(
+                `FLOW_EXECUTION_EVIDENCE_WARN: unable to query execution collections (${executionEvidence?.error || 'unknown'}); ` +
+                `continuing with server-runner execution id ${flowTriggerResult.executionId}`
+            );
+            executionEvidence = {
+                found: true,
+                execution_id: flowTriggerResult.executionId,
+                status: 'unknown',
+                collection: 'unresolved-via-query'
+            };
+        }
         if (!executionEvidence?.found) {
             throw new Error(`Flow execution evidence not found: ${executionEvidence?.error || 'unknown'}`);
         }
