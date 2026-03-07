@@ -2591,120 +2591,72 @@ const triggerFlowForRecordViaBrowserRuntime = async ({
     dataTypeId,
     recordId
 }) => {
-    return page.evaluate(async ({ namespaceName, flowName, dataTypeId, recordId }) => {
-        const selector = recordId
-            ? { _id: { $in: [recordId] } }
-            : {};
+    const selector = recordId
+        ? { _id: { $in: [recordId] } }
+        : {};
 
-        const resolveFlowIdViaUiRequest = async () => {
-            const requestModule = await import('/src/util/request.ts');
-            const list = await requestModule.apiRequest({
-                url: 'setup/flow',
-                method: 'GET',
-                params: {
-                    namespace: namespaceName,
-                    name: flowName,
-                    limit: 1
-                }
-            });
-            return list?.items?.[0]?.id || list?.id || null;
-        };
-
-        const resolveFlowIdViaFetch = async () => {
-            const q = new URLSearchParams({
-                namespace: namespaceName,
-                name: flowName,
-                limit: '1'
-            });
-            const response = await fetch(`/api/v3/setup/flow?${q.toString()}`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: { Accept: 'application/json' }
-            });
-            const bodyText = await response.text().catch(() => '');
-            let body = null;
-            try { body = bodyText ? JSON.parse(bodyText) : null; } catch (_) { }
-            if (!response.ok) {
-                throw new Error(`flow lookup failed status ${response.status}: ${bodyText.slice(0, 300)}`);
-            }
-            return body?.items?.[0]?.id || body?.id || null;
-        };
-
-        const postViaUiRequest = async (flowId) => {
-            const requestModule = await import('/src/util/request.ts');
-            const data = await requestModule.apiRequest({
-                url: `setup/flow/${flowId}/digest`,
-                method: 'POST',
-                data: {
-                    data_type_id: dataTypeId,
-                    selector
-                }
-            });
-            return { ok: true, via: 'ui-apiRequest', data };
-        };
-
-        const postViaFetch = async (flowId) => {
-            const response = await fetch(`/api/v3/setup/flow/${flowId}/digest`, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    data_type_id: dataTypeId,
-                    selector
-                })
-            });
-            const bodyText = await response.text().catch(() => '');
-            let body = null;
-            try { body = bodyText ? JSON.parse(bodyText) : null; } catch (_) { }
-            if (!response.ok) {
-                return {
-                    ok: false,
-                    via: 'fetch',
-                    status: response.status,
-                    bodyText: bodyText.slice(0, 500),
-                    body
-                };
-            }
-            return { ok: true, via: 'fetch', data: body || bodyText };
-        };
-
-        let flowId = null;
-        let lookupVia = null;
-        try {
-            flowId = await resolveFlowIdViaUiRequest();
-            lookupVia = 'ui-apiRequest';
-        } catch (_) { }
-        if (!flowId) {
-            try {
-                flowId = await resolveFlowIdViaFetch();
-                lookupVia = 'fetch';
-            } catch (error) {
-                return {
-                    ok: false,
-                    stage: 'lookup',
-                    error: String(error?.message || error)
-                };
-            }
+    const lookupResponse = await browserRuntimeApiRequest({
+        endpoint: 'setup/flow',
+        method: 'GET',
+        params: {
+            namespace: namespaceName,
+            name: flowName,
+            limit: 1
         }
-        if (!flowId) {
-            return {
-                ok: false,
-                stage: 'lookup',
-                error: `Flow not found for ${namespaceName}::${flowName}`
-            };
-        }
+    });
+    if (!lookupResponse?.ok) {
+        return {
+            ok: false,
+            stage: 'lookup',
+            via: 'server-base-fetch',
+            status: lookupResponse?.status || null,
+            bodyText: lookupResponse?.bodyText || '',
+            error: `flow lookup failed status ${lookupResponse?.status || 'unknown'}: ${(lookupResponse?.bodyText || '').slice(0, 300)}`
+        };
+    }
 
-        try {
-            const posted = await postViaUiRequest(flowId);
-            return { ...posted, flowId, lookupVia };
-        } catch (_) {
-            const posted = await postViaFetch(flowId);
-            return { ...posted, flowId, lookupVia };
+    const flowId =
+        lookupResponse?.body?.items?.[0]?.id ||
+        lookupResponse?.body?.items?.[0]?._id ||
+        lookupResponse?.body?.id ||
+        null;
+    if (!flowId) {
+        return {
+            ok: false,
+            stage: 'lookup',
+            via: 'server-base-fetch',
+            error: `Flow not found for ${namespaceName}::${flowName}`
+        };
+    }
+
+    const postResponse = await browserRuntimeApiRequest({
+        endpoint: `setup/flow/${flowId}/digest`,
+        method: 'POST',
+        data: {
+            data_type_id: dataTypeId,
+            selector
         }
-    }, { namespaceName, flowName, dataTypeId, recordId });
+    });
+    if (!postResponse?.ok) {
+        return {
+            ok: false,
+            stage: 'post',
+            via: 'server-base-fetch',
+            status: postResponse?.status || null,
+            bodyText: postResponse?.bodyText || '',
+            body: postResponse?.body || null,
+            flowId,
+            lookupVia: 'server-base-fetch'
+        };
+    }
+
+    return {
+        ok: true,
+        via: 'server-base-fetch',
+        data: postResponse?.body || null,
+        flowId,
+        lookupVia: 'server-base-fetch'
+    };
 };
 
 const createRecordViaBrowserRuntime = async ({ dataTypeId, payload }) => {
