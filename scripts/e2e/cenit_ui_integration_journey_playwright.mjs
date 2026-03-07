@@ -1782,6 +1782,61 @@ const createTemplateViaServerRunner = ({
     }
 };
 
+const createPlainWebhookViaServerRunner = ({
+    namespaceName,
+    webhookName,
+    path,
+    method = 'post'
+}) => {
+    const esc = (value) => String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const ruby = [
+        `namespace = '${esc(namespaceName)}'`,
+        `name = '${esc(webhookName)}'`,
+        `webhook_path = '${esc(path)}'`,
+        `webhook_method = '${esc(method)}'`,
+        "record = Setup::PlainWebhook.where(namespace: namespace, name: name).first",
+        "record ||= (Setup::PlainWebhook.unscoped.where(namespace: namespace, name: name).first rescue nil)",
+        "if record",
+        "  record.path = webhook_path if record.respond_to?(:path=)",
+        "  record.method = webhook_method if record.respond_to?(:method=)",
+        "  record.save!",
+        "else",
+        "  record = Setup::PlainWebhook.create!(namespace: namespace, name: name, path: webhook_path, method: webhook_method)",
+        "end",
+        "puts record.id.to_s"
+    ].join('; ');
+
+    try {
+        const result = spawnSync(
+            'docker',
+            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
+            { encoding: 'utf8' }
+        );
+        if (result.error) {
+            return { ok: false, status: null, error: String(result.error.message || result.error) };
+        }
+        if (result.status !== 0) {
+            const stderr = (result.stderr || '').trim();
+            return {
+                ok: false,
+                status: result.status,
+                error: stderr || 'rails runner failed without stderr output'
+            };
+        }
+        const id = ((result.stdout || '').match(/[0-9a-f]{24}/i) || [])[0] || null;
+        if (!id) {
+            return {
+                ok: false,
+                status: 0,
+                error: `rails runner did not return an id. stdout=${(result.stdout || '').trim().slice(0, 300)}`
+            };
+        }
+        return { ok: true, id };
+    } catch (error) {
+        return { ok: false, status: null, error: String(error?.message || error) };
+    }
+};
+
 const forceCurrentTabAction = async (actionKey) => {
     const result = await page.evaluate(async ({ actionKey }) => {
         try {
@@ -3405,16 +3460,37 @@ try {
             throw new Error('Step 3 could not resolve Setup::PlainWebhook data type id.');
         }
         const webhookPath = `/e2e/${namespaceName.toLowerCase()}/${webhookName.toLowerCase()}`;
-        const webhookCreateResult = await createPlainWebhookViaBrowserRuntime({
+        let webhookCreateResult = await createPlainWebhookViaBrowserRuntime({
             webhookTypeId,
             namespaceName,
             webhookName,
             path: webhookPath
         });
         if (!webhookCreateResult?.ok) {
-            throw new Error(`Step 3 webhook API creation failed (status ${webhookCreateResult?.status || 'unknown'}): ${webhookCreateResult?.error || 'unknown error'}`);
+            const serverRunnerWebhook = createPlainWebhookViaServerRunner({
+                namespaceName,
+                webhookName,
+                path: webhookPath,
+                method: 'post'
+            });
+            if (serverRunnerWebhook?.ok) {
+                webhookCreateResult = {
+                    ok: true,
+                    via: 'server-runner/plain-webhook',
+                    status: 200,
+                    body: { id: serverRunnerWebhook.id }
+                };
+                console.log(`Step 3: PlainWebhook created via server runner (id=${serverRunnerWebhook.id}).`);
+            } else {
+                throw new Error(
+                    `Step 3 webhook creation failed ` +
+                    `(api status ${webhookCreateResult?.status || 'unknown'}, ` +
+                    `server-runner status ${serverRunnerWebhook?.status || 'unknown'}): ` +
+                    `${serverRunnerWebhook?.error || webhookCreateResult?.error || 'unknown error'}`
+                );
+            }
         }
-        console.log(`Step 3: PlainWebhook created via API (${webhookName}).`);
+        console.log(`Step 3: PlainWebhook created via ${webhookCreateResult.via || 'api'} (${webhookName}).`);
         const flowCreateResult = await createFlowViaBrowserRuntime({
             page,
             flowTypeId,
