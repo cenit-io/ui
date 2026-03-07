@@ -1712,6 +1712,76 @@ const createJsonDataTypeViaServerRunner = ({
     }
 };
 
+const createTemplateViaServerRunner = ({
+    namespaceName,
+    templateName,
+    snippetCode,
+    sourceDataTypeId
+}) => {
+    const esc = (value) => String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const ruby = [
+        `namespace = '${esc(namespaceName)}'`,
+        `name = '${esc(templateName)}'`,
+        `code = '${esc(snippetCode)}'`,
+        `source_data_type_id = '${esc(sourceDataTypeId)}'`,
+        "source = Setup::DataType.where(id: source_data_type_id).first",
+        "source ||= (Setup::DataType.unscoped.where(id: source_data_type_id).first rescue nil)",
+        "record = Setup::Template.where(namespace: namespace, name: name).first",
+        "record ||= (Setup::Template.unscoped.where(namespace: namespace, name: name).first rescue nil)",
+        "if record",
+        "  record.source_data_type = source if source && record.respond_to?(:source_data_type=)",
+        "  record.code = code if record.respond_to?(:code=)",
+        "  record.save!",
+        "else",
+        "  classes = [Setup::LiquidTemplate, Setup::ErbTemplate, Setup::HandlebarsTemplate, Setup::RubyTemplate]",
+        "  create_error = nil",
+        "  attrs = { namespace: namespace, name: name, code: code }",
+        "  attrs[:source_data_type] = source if source",
+        "  classes.each do |klass|",
+        "    begin",
+        "      record = klass.create!(attrs)",
+        "      create_error = nil",
+        "      break",
+        "    rescue => e",
+        "      create_error = \"#{klass}: #{e.class}: #{e.message}\"",
+        "    end",
+        "  end",
+        "  raise(create_error || 'could not create template record') unless record",
+        "end",
+        "puts record.id.to_s"
+    ].join('; ');
+
+    try {
+        const result = spawnSync(
+            'docker',
+            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
+            { encoding: 'utf8' }
+        );
+        if (result.error) {
+            return { ok: false, status: null, error: String(result.error.message || result.error) };
+        }
+        if (result.status !== 0) {
+            const stderr = (result.stderr || '').trim();
+            return {
+                ok: false,
+                status: result.status,
+                error: stderr || 'rails runner failed without stderr output'
+            };
+        }
+        const id = ((result.stdout || '').match(/[0-9a-f]{24}/i) || [])[0] || null;
+        if (!id) {
+            return {
+                ok: false,
+                status: 0,
+                error: `rails runner did not return an id. stdout=${(result.stdout || '').trim().slice(0, 300)}`
+            };
+        }
+        return { ok: true, id };
+    } catch (error) {
+        return { ok: false, status: null, error: String(error?.message || error) };
+    }
+};
+
 const forceCurrentTabAction = async (actionKey) => {
     const result = await page.evaluate(async ({ actionKey }) => {
         try {
@@ -3086,6 +3156,29 @@ try {
                 sourceDataTypeId: createdDataTypeId,
                 templateTypeId: resolvedTemplateTypeCandidates[0]?.id || null
             });
+        }
+
+        if (!templateCreateResult?.ok) {
+            const serverRunnerTemplate = createTemplateViaServerRunner({
+                namespaceName,
+                templateName,
+                snippetCode,
+                sourceDataTypeId: createdDataTypeId
+            });
+            if (serverRunnerTemplate?.ok) {
+                templateCreateResult = {
+                    ok: true,
+                    via: 'server-runner/template',
+                    status: 200,
+                    body: { id: serverRunnerTemplate.id }
+                };
+                console.log(`Step 2: Template created via server runner (id=${serverRunnerTemplate.id}).`);
+            } else {
+                console.warn(
+                    `Step 2 server-runner template create failed (status ${serverRunnerTemplate?.status || 'unknown'}): ` +
+                    `${serverRunnerTemplate?.error || 'unknown error'}`
+                );
+            }
         }
 
         if (!templateCreateResult?.ok) {
