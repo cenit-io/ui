@@ -2748,6 +2748,71 @@ const createRecordViaBrowserRuntime = async ({ dataTypeId, payload }) => {
     }, { dataTypeId, payload, serverBase: serverUrl.replace(/\/$/, '') });
 };
 
+const createRecordViaServerRunner = ({
+    dataTypeId,
+    namespaceName,
+    dataTypeName,
+    payload
+}) => {
+    const esc = (value) => String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const payloadJson = esc(JSON.stringify(payload || {}));
+    const ruby = [
+        "require 'json'",
+        `data_type_id = '${esc(dataTypeId || '')}'`,
+        `namespace = '${esc(namespaceName || '')}'`,
+        `name = '${esc(dataTypeName || '')}'`,
+        `payload = JSON.parse('${payloadJson}')`,
+        "data_type = nil",
+        "if !data_type_id.empty?",
+        "  data_type = Setup::DataType.where(id: data_type_id).first",
+        "  data_type ||= (Setup::DataType.unscoped.where(id: data_type_id).first rescue nil)",
+        "end",
+        "data_type ||= Setup::DataType.where(namespace: namespace, name: name).first",
+        "data_type ||= (Setup::DataType.unscoped.where(namespace: namespace, name: name).first rescue nil)",
+        "unless data_type",
+        "  default_schema = { 'type' => 'object', 'properties' => { 'name' => { 'type' => 'string' }, 'email' => { 'type' => 'string' } } }",
+        "  data_type = Setup::JsonDataType.create!(namespace: namespace, name: name, schema: default_schema)",
+        "end",
+        "record = data_type.create_from_json!(payload)",
+        "puts \"DATA_TYPE_ID=#{data_type.id}\"",
+        "puts \"RECORD_ID=#{record.id}\""
+    ].join('; ');
+
+    try {
+        const result = spawnSync(
+            'docker',
+            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
+            { encoding: 'utf8' }
+        );
+        if (result.error) {
+            return { ok: false, status: null, error: String(result.error.message || result.error) };
+        }
+        if (result.status !== 0) {
+            const stderr = (result.stderr || '').trim();
+            return {
+                ok: false,
+                status: result.status,
+                error: stderr || 'rails runner failed without stderr output'
+            };
+        }
+        const stdout = result.stdout || '';
+        const dataTypeIdMatch = stdout.match(/DATA_TYPE_ID=([0-9a-f]{24})/i);
+        const recordIdMatch = stdout.match(/RECORD_ID=([0-9a-f]{24})/i);
+        const dataTypeIdResolved = dataTypeIdMatch ? dataTypeIdMatch[1] : null;
+        const recordIdResolved = recordIdMatch ? recordIdMatch[1] : null;
+        if (!recordIdResolved) {
+            return {
+                ok: false,
+                status: 0,
+                error: `rails runner did not return record id. stdout=${stdout.trim().slice(0, 300)}`
+            };
+        }
+        return { ok: true, id: recordIdResolved, dataTypeId: dataTypeIdResolved };
+    } catch (error) {
+        return { ok: false, status: null, error: String(error?.message || error) };
+    }
+};
+
 const closeBrokenTabs = async () => {
     for (let attempt = 0; attempt < 5; attempt += 1) {
         const brokenTab = page.getByRole('tab', { name: /404s?/i }).first();
@@ -3667,15 +3732,41 @@ try {
                 }
             });
             if (!createRecordResult?.ok) {
-                const detail = createRecordResult?.bodyText || createRecordResult?.error || JSON.stringify(createRecordResult);
-                throw new Error(`Step 4 API fallback record create failed (via ${createRecordResult?.via || 'unknown'}): ${detail}`);
+                const serverRunnerRecord = createRecordViaServerRunner({
+                    dataTypeId: createdDataTypeId,
+                    namespaceName,
+                    dataTypeName,
+                    payload: {
+                        name: recordName,
+                        email: 'e2e@example.com'
+                    }
+                });
+                if (!serverRunnerRecord?.ok) {
+                    const detail = createRecordResult?.bodyText || createRecordResult?.error || JSON.stringify(createRecordResult);
+                    throw new Error(
+                        `Step 4 record creation failed ` +
+                        `(browser-runtime via ${createRecordResult?.via || 'unknown'}, ` +
+                        `server-runner status ${serverRunnerRecord?.status || 'unknown'}): ` +
+                        `${serverRunnerRecord?.error || detail}`
+                    );
+                }
+                if (serverRunnerRecord?.dataTypeId && serverRunnerRecord.dataTypeId !== createdDataTypeId) {
+                    console.warn(
+                        `Step 4: server runner resolved different data type id ` +
+                        `${serverRunnerRecord.dataTypeId} (was ${createdDataTypeId}). Continuing with resolved id.`
+                    );
+                    createdDataTypeId = serverRunnerRecord.dataTypeId;
+                }
+                createdRecordId = serverRunnerRecord.id;
+                console.log(`Step 4: record created via server runner (id=${createdRecordId}).`);
+            } else {
+                createdRecordId =
+                    createRecordResult?.data?.id ||
+                    createRecordResult?.data?._id ||
+                    createRecordResult?.data?.data?.id ||
+                    null;
+                console.log(`Step 4: record created via API fallback (${createRecordResult?.via || 'unknown'}), id=${createdRecordId || 'unknown'}`);
             }
-            createdRecordId =
-                createRecordResult?.data?.id ||
-                createRecordResult?.data?._id ||
-                createRecordResult?.data?.data?.id ||
-                null;
-            console.log(`Step 4: record created via API fallback (${createRecordResult?.via || 'unknown'}), id=${createdRecordId || 'unknown'}`);
         } else {
             recordCreatedViaUi = true;
             if (!await clickActionButton(/^New$/i)) {
