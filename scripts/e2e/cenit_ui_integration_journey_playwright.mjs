@@ -51,6 +51,8 @@ let lastServerDataType200At = 0;
 const observedSetupDataTypeIds = new Set();
 const observedDigestRouteTypeIds = new Set();
 let activeTenantId = process.env.CENIT_E2E_TENANT_ID || '';
+const degradedSignals = [];
+const requireNativePath = process.env.CENIT_E2E_REQUIRE_NATIVE_PATH === '1';
 
 const browser = await chromium.launch({ headless: true });
 const contextOptions = {
@@ -246,6 +248,25 @@ const runTenantScopedRailsRunner = (rubyBody, { tenantId = activeTenantId, userE
     );
 };
 
+const markDegraded = (kind, detail = {}) => {
+    const event = { kind, detail, at: new Date().toISOString() };
+    degradedSignals.push(event);
+    console.warn(`DEGRADED_MODE_SIGNAL: ${JSON.stringify(event)}`);
+};
+
+const extractMarkedJson = (stdout, marker) => {
+    const output = String(stdout || '').trim();
+    if (!output) return null;
+    const escapedMarker = marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = output.match(new RegExp(`${escapedMarker}=(\\{[\\s\\S]*\\})`));
+    if (!match) return null;
+    try {
+        return JSON.parse(match[1]);
+    } catch (_) {
+        return { raw: match[1] };
+    }
+};
+
 const waitForFlowExecution = async ({ flowId, timeoutMs = 30000, pollMs = 2000 }) => {
     if (!flowId) return { found: false, error: 'missing-flow-id' };
 
@@ -253,13 +274,15 @@ const waitForFlowExecution = async ({ flowId, timeoutMs = 30000, pollMs = 2000 }
     while ((Date.now() - startedAt) < timeoutMs) {
         try {
             const result = runTenantScopedRailsRunner(`
-                execution = Setup::FlowExecution.where(flow_id: BSON::ObjectId.from_string('${flowId}')).desc(:created_at).first
+                task = Setup::FlowExecution.where(flow_id: BSON::ObjectId.from_string('${flowId}')).desc(:created_at).first
+                execution = task&.current_execution || task&.executions&.desc(:created_at)&.first
                 if execution
-                  print({
-                    collection: execution.class.to_s,
+                  print('EXECUTION_EVIDENCE=' + {
+                    collection: task.class.to_s,
                     execution_id: execution.id.to_s,
                     status: execution.try(:status),
-                    created_at: execution.try(:created_at)
+                    created_at: execution.try(:created_at),
+                    task_id: task.id.to_s
                   }.to_json)
                 else
                   print('NOT_FOUND')
@@ -272,20 +295,21 @@ const waitForFlowExecution = async ({ flowId, timeoutMs = 30000, pollMs = 2000 }
             }
 
             const output = (result.stdout || '').trim();
-            const normalizedOutput =
-                output === 'NOT_FOUND'
-                    ? output
-                    : ((output.match(/\{[\s\S]*\}$/) || [])[0] || output.split('\n').pop() || '').trim();
-            if (!normalizedOutput || normalizedOutput === 'NOT_FOUND') {
+            if (!output || output === 'NOT_FOUND') {
+                await new Promise((resolve) => setTimeout(resolve, pollMs));
+                continue;
+            }
+
+            const parsed = extractMarkedJson(output, 'EXECUTION_EVIDENCE');
+            if (!parsed) {
                 await new Promise((resolve) => setTimeout(resolve, pollMs));
                 continue;
             }
 
             try {
-                const parsed = JSON.parse(normalizedOutput);
                 return { found: true, ...parsed };
             } catch (_) {
-                return { found: true, raw: normalizedOutput };
+                return { found: true, raw: output };
             }
         } catch (error) {
             return { found: false, error: String(error?.message || error) };
@@ -302,13 +326,15 @@ const waitForExecutionById = async ({ executionId, timeoutMs = 20000, pollMs = 1
     while ((Date.now() - startedAt) < timeoutMs) {
         try {
             const result = runTenantScopedRailsRunner(`
-                execution = Setup::FlowExecution.where(id: BSON::ObjectId.from_string('${executionId}')).first
+                execution = Setup::Execution.where(id: BSON::ObjectId.from_string('${executionId}')).first
+                task = execution&.task
                 if execution
-                  print({
-                    collection: execution.class.to_s,
+                  print('EXECUTION_EVIDENCE=' + {
+                    collection: task&.class&.to_s || execution.class.to_s,
                     execution_id: execution.id.to_s,
                     status: execution.try(:status),
-                    created_at: execution.try(:created_at)
+                    created_at: execution.try(:created_at),
+                    task_id: task&.id&.to_s
                   }.to_json)
                 else
                   print('NOT_FOUND')
@@ -321,20 +347,21 @@ const waitForExecutionById = async ({ executionId, timeoutMs = 20000, pollMs = 1
             }
 
             const output = (result.stdout || '').trim();
-            const normalizedOutput =
-                output === 'NOT_FOUND'
-                    ? output
-                    : ((output.match(/\{[\s\S]*\}$/) || [])[0] || output.split('\n').pop() || '').trim();
-            if (!normalizedOutput || normalizedOutput === 'NOT_FOUND') {
+            if (!output || output === 'NOT_FOUND') {
+                await new Promise((resolve) => setTimeout(resolve, pollMs));
+                continue;
+            }
+
+            const parsed = extractMarkedJson(output, 'EXECUTION_EVIDENCE');
+            if (!parsed) {
                 await new Promise((resolve) => setTimeout(resolve, pollMs));
                 continue;
             }
 
             try {
-                const parsed = JSON.parse(normalizedOutput);
                 return { found: true, ...parsed };
             } catch (_) {
-                return { found: true, raw: normalizedOutput };
+                return { found: true, raw: output };
             }
         } catch (error) {
             return { found: false, error: String(error?.message || error) };
@@ -1328,6 +1355,8 @@ const browserRuntimeApiRequest = async ({
     const base = serverUrl.replace(/\/$/, '');
     return page.evaluate(
         async ({ endpoint, method, data, params, base }) => {
+            const configModule = await import('/src/services/ConfigService.jsx').catch(() => null);
+            const sessionModule = await import('/src/util/session.ts').catch(() => null);
             const storages = [window.sessionStorage, window.localStorage].filter(Boolean);
 
             const safeJsonParse = (value) => {
@@ -1353,6 +1382,10 @@ const browserRuntimeApiRequest = async ({
             };
 
             const findAccessToken = () => {
+                const sessionToken = sessionModule?.default?.get?.('accessToken');
+                if (typeof sessionToken?.access_token === 'string' && sessionToken.access_token) {
+                    return sessionToken.access_token;
+                }
                 for (const storage of storages) {
                     for (let i = 0; i < storage.length; i += 1) {
                         const key = storage.key(i);
@@ -1381,9 +1414,11 @@ const browserRuntimeApiRequest = async ({
             }
 
             const token = findAccessToken();
+            const tenantId = configModule?.default?.state?.()?.tenant_id || null;
             const headers = { Accept: 'application/json' };
             if (data !== null && data !== undefined) headers['Content-Type'] = 'application/json';
             if (token) headers.Authorization = `Bearer ${token}`;
+            if (tenantId) headers['X-Tenant-Id'] = tenantId;
 
             try {
                 const response = await fetch(url.toString(), {
@@ -1405,7 +1440,8 @@ const browserRuntimeApiRequest = async ({
                     status: response.status,
                     body,
                     bodyText: bodyText.slice(0, 1200),
-                    hasToken: !!token
+                    hasToken: !!token,
+                    tenantId
                 };
             } catch (error) {
                 return {
@@ -1413,7 +1449,8 @@ const browserRuntimeApiRequest = async ({
                     status: null,
                     body: null,
                     bodyText: String(error?.message || error),
-                    hasToken: !!token
+                    hasToken: !!token,
+                    tenantId
                 };
             }
         },
@@ -1743,9 +1780,10 @@ const createJsonDataTypeViaBrowserRuntime = async ({
         ok: false,
         status: response.status || uiApiResult?.status,
         error:
+            (response.status ? (response.bodyText || JSON.stringify(response.body || {})) : null) ||
+            uiApiResult?.error ||
             response.bodyText ||
             JSON.stringify(response.body || {}) ||
-            uiApiResult?.error ||
             'unknown error'
     };
 };
@@ -2864,11 +2902,7 @@ const ensureAndTriggerFlowViaServerRunner = ({
     ].join('; ');
 
     try {
-        const result = spawnSync(
-            'docker',
-            ['exec', 'cenit-server-1', 'bundle', 'exec', 'rails', 'runner', ruby],
-            { encoding: 'utf8' }
-        );
+        const result = runTenantScopedRailsRunner(ruby);
         if (result.error) {
             return { ok: false, status: null, error: String(result.error.message || result.error) };
         }
@@ -3396,6 +3430,7 @@ try {
         if (serverRunnerCreate?.ok) {
             createdDataTypeId = serverRunnerCreate.id;
             step1CreatedVia = 'server-runner';
+            markDegraded('step1_server_runner_data_type_create', { dataTypeName });
             console.log(`Step 1: Data Type created via server runner (id=${createdDataTypeId}).`);
         } else {
             console.warn(
@@ -3559,6 +3594,7 @@ try {
                     status: 200,
                     body: { id: serverRunnerTemplate.id }
                 };
+                markDegraded('step2_server_runner_template_create', { templateName });
                 console.log(`Step 2: Template created via server runner (id=${serverRunnerTemplate.id}).`);
             } else {
                 console.warn(
@@ -3686,6 +3722,7 @@ try {
                 });
                 if (strictContractResult?.ok) {
                     templateCreateResult = strictContractResult;
+                    markDegraded('step2_strict_contract_template_create', { templateName });
                     console.log(`Step 2 strict contract fallback succeeded (${strictContractResult.via}).`);
                 } else {
                     throw new Error(
@@ -3715,6 +3752,7 @@ try {
                     });
                     if (strictContractResult?.ok) {
                         templateCreateResult = strictContractResult;
+                        markDegraded('step2_strict_contract_template_create', { templateName });
                     } else {
                         throw new Error(
                             `Step 2 fallback: template form input not materialized and strict contract fallback failed ` +
@@ -3766,6 +3804,7 @@ try {
                             status: saveResponse.status(),
                             body: saveBody
                         };
+                        markDegraded('step2_ui_form_fallback_template_create', { templateName });
                     }
                 }
             }
@@ -3812,6 +3851,7 @@ try {
                     status: 200,
                     body: { id: serverRunnerWebhook.id }
                 };
+                markDegraded('step3_server_runner_webhook_create', { webhookName });
                 console.log(`Step 3: PlainWebhook created via server runner (id=${serverRunnerWebhook.id}).`);
             } else {
                 throw new Error(
@@ -3860,6 +3900,7 @@ try {
                     status: 200,
                     body: { id: serverRunnerFlow.id }
                 };
+                markDegraded('step3_server_runner_flow_create', { flowName });
                 console.log(`Step 3: Flow created via server runner (id=${serverRunnerFlow.id}).`);
             } else {
                 const statusMsg = flowCreateResult?.status ? `status ${flowCreateResult.status}` : 'no-status';
@@ -3936,6 +3977,7 @@ try {
                     );
                 }
                 createdRecordId = serverRunnerRecord.id;
+                markDegraded('step4_server_runner_record_create', { dataTypeName, recordName });
                 console.log(`Step 4: record created via server runner (id=${createdRecordId}).`);
             } else {
                 createdRecordId =
@@ -4010,6 +4052,10 @@ try {
             flowTriggerResult.flowId = serverRunnerTrigger.flowId || createdFlowId || flowTriggerResult?.flowId || null;
             flowTriggerResult.lookupVia = flowTriggerResult.lookupVia || 'server-runner';
             flowTriggerResult.executionId = serverRunnerTrigger.executionId || null;
+            markDegraded('step4_server_runner_flow_trigger', {
+                flowName,
+                flowId: flowTriggerResult.flowId || null
+            });
             console.log(
                 `Flow triggered via server runner ` +
                 `(flowId=${flowTriggerResult.flowId || 'unknown'}, executionId=${flowTriggerResult.executionId || 'unknown'})`
@@ -4037,6 +4083,10 @@ try {
             });
         }
         if (!executionEvidence?.found && flowTriggerResult.executionId) {
+            markDegraded('execution_evidence_fallback_to_returned_execution_id', {
+                flowId: flowTriggerResult.flowId || null,
+                executionId: flowTriggerResult.executionId
+            });
             console.warn(
                 `FLOW_EXECUTION_EVIDENCE_WARN: unable to query execution collections (${executionEvidence?.error || 'unknown'}); ` +
                 `continuing with server-runner execution id ${flowTriggerResult.executionId}`
@@ -4065,6 +4115,16 @@ try {
         await takeStepScreenshot('05-flow-execution-evidence');
 
         console.log('Integration Journey completed successfully!');
+        console.log(
+            `DEGRADED_MODE_SUMMARY: ${JSON.stringify({
+                degraded: degradedSignals.length > 0,
+                count: degradedSignals.length,
+                signals: degradedSignals
+            })}`
+        );
+        if (requireNativePath && degradedSignals.length > 0) {
+            throw new Error(`Native-path requirement failed: ${degradedSignals.length} degraded signal(s) detected.`);
+        }
 
         // MongoDB Verifications
         console.log('\n--- MongoDB Verification ---');
