@@ -4,7 +4,7 @@ import { authorize, clearSession, authWithAuthCode, getAccess } from "./services
 import { CircularProgress } from "@mui/material";
 import Main from "./layout/Main";
 import API from "./services/ApiService";
-import { tap } from "rxjs/operators";
+import { firstValueFrom } from "rxjs";
 import './common/FlexBox.css';
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -56,23 +56,48 @@ function App() {
         session.cenitBackendBaseUrl = Array.isArray(params.cenitHost) ? params.cenitHost[0] : params.cenitHost;
       }
 
-      let authorize;
-      if (params.code) {
-        authorize = authWithAuthCode(Array.isArray(params.code) ? params.code[0] : params.code);
-      } else {
-        authorize = getAccess();
-      }
+      let cancelled = false;
 
-      const subscription = authorize.pipe(
-        tap(access => {
-          if (!access) throw new Error('Auth with no access shoud not happens');
-        })
-      ).subscribe(
-        () => setAuthorizing(false),
-        e => console.error(e)
-      );
+      const runAuth = async () => {
+        try {
+          const authError = params.error ? (Array.isArray(params.error) ? params.error[0] : params.error) : null;
+          if (authError) {
+            console.error(`OAuth callback error: ${authError}`);
+            if (!cancelled) authorize();
+            return;
+          }
 
-      return () => subscription.unsubscribe();
+          const authCode = params.code ? (Array.isArray(params.code) ? params.code[0] : params.code) : null;
+          let access = authCode
+            ? await firstValueFrom(authWithAuthCode(authCode))
+            : await firstValueFrom(getAccess());
+
+          // OAuth callback occasionally resolves before SDK session is fully persisted.
+          if (!access && authCode) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+            access = await firstValueFrom(getAccess());
+          }
+
+          if (cancelled) return;
+
+          if (access) {
+            setAuthorizing(false);
+            return;
+          }
+
+          console.warn('Auth callback returned without access; restarting authorization flow');
+          authorize();
+        } catch (e) {
+          console.error(e);
+          if (!cancelled) authorize();
+        }
+      };
+
+      runAuth();
+
+      return () => {
+        cancelled = true;
+      };
     }
   }, [authorizing, clientId]);
 
