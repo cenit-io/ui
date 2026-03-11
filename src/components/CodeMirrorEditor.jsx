@@ -133,7 +133,6 @@ export default function CodeMirrorEditor(
           Object.keys(opts).forEach(
             opt => editor.setOption(opt, opts[opt])
           );
-          CodeMirror.autoLoadMode(editor, cmMode);
         }
       );
 

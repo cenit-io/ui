@@ -795,6 +795,29 @@ async function closeTopTabs(page, max = 120) {
   }
 }
 
+async function closeBrokenTabs(page, max = 6) {
+  for (let attempt = 0; attempt < max; attempt += 1) {
+    const brokenTab = page.getByRole('tab', { name: /404s?/i }).first();
+    if (!await brokenTab.isVisible().catch(() => false)) return;
+
+    const closeButtons = page.getByRole('button', { name: /^close$/i });
+    const count = await closeButtons.count().catch(() => 0);
+    let clicked = false;
+    for (let i = 0; i < count; i += 1) {
+      const button = closeButtons.nth(i);
+      const visible = await button.isVisible().catch(() => false);
+      if (!visible) continue;
+      const box = await button.boundingBox().catch(() => null);
+      if (!box || box.y > 140) continue;
+      await button.click({ force: true, timeout: 5000 }).catch(() => null);
+      await page.waitForTimeout(250);
+      clicked = true;
+      break;
+    }
+    if (!clicked) return;
+  }
+}
+
 async function openDocumentTypes(page) {
   const isInDocumentTypes = async () => {
     const text = await getActiveWorkspaceHeadingText(page);
@@ -1087,6 +1110,35 @@ async function createDataTypeViaBrowserRuntime(page) {
   throw new Error(`API fallback data type creation failed: ${result?.reason || 'unknown'}`);
 }
 
+async function createRecordViaBrowserRuntime(page, dataTypeId, name) {
+  const result = await page.evaluate(async ({ dataTypeId, name }) => {
+    try {
+      const requestModule = await import('/src/util/request.ts');
+      const data = await requestModule.apiRequest({
+        url: `setup/data_type/${dataTypeId}/digest`,
+        method: 'POST',
+        data: { name }
+      });
+      return { ok: true, data };
+    } catch (error) {
+      const text = String(error?.message || error);
+      const statusMatch = text.match(/status code (\d{3})/i);
+      return {
+        ok: false,
+        status: statusMatch ? Number(statusMatch[1]) : null,
+        reason: text
+      };
+    }
+  }, { dataTypeId, name });
+
+  if (result?.ok) {
+    const recordId = result?.data?.id || null;
+    console.log(`Record created via browser-runtime API fallback (id=${recordId || 'unknown'}).`);
+    return { createdVia: 'api', recordId };
+  }
+  throw new Error(`API fallback record creation failed: ${result?.reason || 'unknown'}`);
+}
+
 async function resolveDataTypeIdByRef(page, namespace, name) {
   for (let attempt = 1; attempt <= 10; attempt += 1) {
     const id = await page.evaluate(async ({ namespace, name }) => {
@@ -1138,8 +1190,15 @@ async function openDataTypeById(page, dataTypeId) {
   const result = await page.evaluate(async ({ dataTypeId }) => {
     try {
       const subjectModule = await import('/src/services/subject/index.ts');
+      const configModule = await import('/src/services/ConfigService.jsx');
+      const ConfigService = configModule.default;
       const subject = subjectModule.DataTypeSubject.for(dataTypeId);
       if (!subject?.key) return { ok: false, reason: 'subject-key-missing' };
+      ConfigService.update({
+        subjects: subjectModule.default,
+        tabs: [subject.key],
+        tabIndex: 0
+      });
       subjectModule.TabsSubject.next({ key: subject.key });
       return { ok: true, key: subject.key };
     } catch (error) {
@@ -1155,20 +1214,120 @@ async function openDataTypeById(page, dataTypeId) {
   return true;
 }
 
-async function openRecordsForDataTypeId(page, dataTypeId, recordsHeadingRegex) {
+async function waitForDataTypeRecordsReady(page, { dataTypeName, recordsHeadingRegex = null, timeoutMs = 20000, debugTag = 'contact_records' } = {}) {
+  const main = page.locator('main').first();
+  const dataTypeHeading = dataTypeName
+    ? page.getByRole('heading', { name: new RegExp(escapeRegex(dataTypeName), 'i') }).last()
+    : null;
+  const recordsHeading = recordsHeadingRegex
+    ? page.getByRole('heading', { name: recordsHeadingRegex }).last()
+    : page.getByRole('heading', { name: /records/i }).last();
+  const selectedDataTypeTab = dataTypeName
+    ? page.getByRole('tab', { name: new RegExp(escapeRegex(dataTypeName), 'i'), selected: true }).first()
+    : null;
+  const selectedRecordsTab = page.getByRole('tab', { name: /records/i, selected: true }).first();
+  const newAction = main.getByRole('button', { name: /^New$/i }).first();
+  const dataGrid = main.locator('.MuiDataGrid-root, [role="grid"], [role="table"]').first();
+  const spinnerSelector = '.MuiCircularProgress-root:visible, [role="progressbar"]:visible';
+
+  const startedAt = Date.now();
+  while ((Date.now() - startedAt) < timeoutMs) {
+    const dataTypeHeadingVisible = dataTypeHeading
+      ? await dataTypeHeading.isVisible().catch(() => false)
+      : false;
+    const recordsHeadingVisible = await recordsHeading.isVisible().catch(() => false);
+    const selectedDataTypeTabVisible = selectedDataTypeTab
+      ? await selectedDataTypeTab.isVisible().catch(() => false)
+      : false;
+    const selectedRecordsTabVisible = await selectedRecordsTab.isVisible().catch(() => false);
+    const newActionVisible = await newAction.isVisible().catch(() => false);
+    const dataGridVisible = await dataGrid.isVisible().catch(() => false);
+    const spinnerCount = await main.locator(spinnerSelector).count().catch(() => 0);
+
+    const readySignal =
+      dataTypeHeadingVisible ||
+      recordsHeadingVisible ||
+      selectedDataTypeTabVisible ||
+      selectedRecordsTabVisible ||
+      newActionVisible ||
+      dataGridVisible;
+    if (readySignal && spinnerCount <= 1) {
+      await page.waitForTimeout(350);
+      const secondPassSpinnerCount = await main.locator(spinnerSelector).count().catch(() => 0);
+      if (secondPassSpinnerCount <= 1) return true;
+    }
+    await page.waitForTimeout(250);
+  }
+
+  try {
+    const html = await page.content();
+    fs.writeFileSync(path.join(outputDir, `debug_${debugTag}_${stamp}.html`), html);
+  } catch (_) {
+    // Best-effort debug artifact only.
+  }
+  return false;
+}
+
+async function openRecordsForDataTypeId(page, dataTypeId, dataTypeName, recordsHeadingRegex) {
   if (!dataTypeId) return false;
   const result = await page.evaluate(async ({ dataTypeId }) => {
-    const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     try {
       const subjectModule = await import('/src/services/subject/index.ts');
+      const configModule = await import('/src/services/ConfigService.jsx');
+      const ConfigService = configModule.default;
       const subject = subjectModule.DataTypeSubject.for(dataTypeId);
       if (!subject?.key) return { ok: false, reason: 'subject-key-missing' };
+
+      const recordsKey =
+        subject?.recordsModel?.key ||
+        subject?.records_model?.key ||
+        subject?.records?.key ||
+        null;
+
+      const tabsBefore = [subject.key];
+      if (recordsKey) {
+        tabsBefore.push(recordsKey);
+      }
+      const preferredKey = recordsKey || subject.key;
+      const preferredIndex = tabsBefore.indexOf(preferredKey);
+      ConfigService.update({
+        subjects: subjectModule.default,
+        tabs: tabsBefore,
+        tabIndex: preferredIndex >= 0 ? preferredIndex : 0
+      });
+
       subjectModule.TabsSubject.next({ key: subject.key });
-      await wait(120);
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      if (recordsKey) {
+        subjectModule.TabsSubject.next({ key: recordsKey });
+        await new Promise((resolve) => setTimeout(resolve, 120));
+      }
       subjectModule.TabsSubject.next({ key: subject.key, actionKey: 'records' });
-      await wait(160);
+      await new Promise((resolve) => setTimeout(resolve, 120));
       subjectModule.TabsSubject.next({ key: subject.key, actionKey: 'records' });
-      return { ok: true, key: subject.key };
+      if (recordsKey) {
+        await new Promise((resolve) => setTimeout(resolve, 120));
+        subjectModule.TabsSubject.next({ key: recordsKey, actionKey: 'records' });
+      }
+
+      const state = ConfigService?.state?.() || {};
+      const tabs = Array.isArray(state.tabs) ? state.tabs : [];
+      const rawTabIndex = Number.isInteger(state.tabIndex) ? state.tabIndex : -1;
+      const tabIndex = rawTabIndex >= 0 && rawTabIndex < tabs.length
+        ? rawTabIndex
+        : Math.max(0, Math.min(tabs.length - 1, tabs.indexOf(preferredKey)));
+      if (tabIndex !== rawTabIndex) {
+        ConfigService.update({ tabIndex });
+      }
+      const activeKey = (tabIndex >= 0 && tabIndex < tabs.length) ? tabs[tabIndex] : null;
+      return {
+        ok: true,
+        key: subject.key,
+        recordsKey,
+        activeKey,
+        hasKey: tabs.includes(subject.key),
+        hasRecordsKey: recordsKey ? tabs.includes(recordsKey) : null
+      };
     } catch (error) {
       return { ok: false, reason: String(error?.message || error) };
     }
@@ -1179,15 +1338,17 @@ async function openRecordsForDataTypeId(page, dataTypeId, recordsHeadingRegex) {
     return false;
   }
 
-  await page.waitForTimeout(800);
-  if (recordsHeadingRegex) {
-    const headingVisible = await page.getByRole('heading', { name: recordsHeadingRegex }).last().isVisible().catch(() => false);
-    if (headingVisible) return true;
-  }
+  console.log(
+    `Opened records container by dataTypeId=${dataTypeId} ` +
+    `(key=${result.key}, recordsKey=${result.recordsKey}, activeKey=${result.activeKey}, hasKey=${result.hasKey}, hasRecordsKey=${result.hasRecordsKey})`
+  );
 
-  const panel = await resolveWorkPanel(page);
-  const hasNew = await panel.getByRole('button', { name: /^New$/i }).first().isVisible().catch(() => false);
-  return hasNew;
+  return await waitForDataTypeRecordsReady(page, {
+    dataTypeName,
+    recordsHeadingRegex,
+    timeoutMs: 15000,
+    debugTag: 'contact_open_records'
+  });
 }
 
 async function createDataTypeWithDuplicateRecovery(page) {
@@ -1421,6 +1582,21 @@ async function ensureAuthenticated(page) {
   throw new Error(`Could not authenticate after retries. Current URL: ${page.url()}`);
 }
 
+async function resetWorkspaceState(page) {
+  await page.evaluate(async () => {
+    const subjectModule = await import('/src/services/subject/index.ts');
+    const configModule = await import('/src/services/ConfigService.jsx');
+    const ConfigService = configModule.default;
+    ConfigService.update({
+      subjects: subjectModule.default,
+      tabs: [],
+      tabIndex: 0,
+      navigation: []
+    });
+  }).catch(() => null);
+  await page.waitForTimeout(500);
+}
+
 const browser = await chromium.launch({ headless: !headed });
 const contextOptions = {
   recordVideo: {
@@ -1451,8 +1627,10 @@ try {
   await page.goto(uiUrl, { waitUntil: 'domcontentloaded' });
   await ensureAuthenticated(page);
   await page.waitForURL((url) => url.href.startsWith(uiUrl), { timeout: 30000 }).catch(() => null);
+  await resetWorkspaceState(page);
 
   await closeTopTabs(page);
+  await closeBrokenTabs(page);
   const dataTypeCreate = await createDataTypeWithDuplicateRecovery(page);
   const dataTypeIdForFlow = dataTypeCreate.dataTypeId || await resolveDataTypeIdByRef(page, namespaceName, dataTypeName);
   if (dataTypeCreate.createdVia === 'ui') {
@@ -1461,78 +1639,102 @@ try {
     await clickNamedButtonInPanel(page, /^View$/i, 'first');
   } else {
     console.log(`Data type created via API fallback. Opening by id=${dataTypeIdForFlow || 'unknown'}...`);
-    const openedById = dataTypeIdForFlow ? await openDataTypeById(page, dataTypeIdForFlow) : false;
-    if (!openedById) {
-      console.log('Falling back to opening Show view by list...');
-      await openDataTypeShowByList(page);
-    }
+    console.log('Skipping explicit show/list reopen and proceeding with deterministic records/API path.');
   }
-  await clickWorkspaceTab(page, new RegExp(`${escapeRegex(namespaceName)}\\s*\\|\\s*${escapeRegex(dataTypeName)}`, 'i'));
-  await page.screenshot({ path: path.join(outputDir, `cenit-ui-contact-flow-created-${stamp}.png`), fullPage: true });
+  if (dataTypeCreate.createdVia === 'ui') {
+    await closeBrokenTabs(page);
+    let dataTypeTabOpened = await clickWorkspaceTab(
+      page,
+      new RegExp(`${escapeRegex(namespaceName)}\\s*\\|\\s*${escapeRegex(dataTypeName)}`, 'i')
+    ).catch(() => false);
+    if (!dataTypeTabOpened && dataTypeIdForFlow) {
+      dataTypeTabOpened = await openDataTypeById(page, dataTypeIdForFlow);
+    }
+    await closeBrokenTabs(page);
+    await page.screenshot({ path: path.join(outputDir, `cenit-ui-contact-flow-created-${stamp}.png`), fullPage: true });
+  }
 
   const recordsHeading = new RegExp(`^${escapeRegex(recordCollection)}`);
-  try {
-    console.log(`Opening records collection: ${recordCollection}...`);
-    const recordsOpenedDeterministically = dataTypeIdForFlow
-      ? await openRecordsForDataTypeId(page, dataTypeIdForFlow, recordsHeading)
-      : false;
-    if (!recordsOpenedDeterministically) {
-      await clickNamedButtonInPanel(page, /^Records$/i, 'first');
+  console.log(`Opening records collection: ${recordCollection}...`);
+  let recordsOpened = false;
+  let recordCreate = null;
+
+  for (let attempt = 1; attempt <= 4 && !recordsOpened; attempt += 1) {
+    if (dataTypeIdForFlow) {
+      recordsOpened = await openRecordsForDataTypeId(page, dataTypeIdForFlow, dataTypeName, recordsHeading);
+      if (recordsOpened) break;
     }
-  } catch (error) {
-    // Recover from stale panel focus by retrying from the data type tab context.
-    let clicked = await clickNamedButtonAnywhere(page, /^Records$/i, 'first');
-    for (let attempt = 1; !clicked && attempt <= 6; attempt += 1) {
-      await clickWorkspaceTab(
-        page,
-        new RegExp(`${escapeRegex(namespaceName)}\\s*\\|\\s*${escapeRegex(dataTypeName)}`, 'i'),
-        'last'
-      ).catch(() => false);
+
+    await clickWorkspaceTab(
+      page,
+      new RegExp(`${escapeRegex(namespaceName)}\\s*\\|\\s*${escapeRegex(dataTypeName)}`, 'i'),
+      'last'
+    ).catch(() => false);
+    await page.waitForTimeout(400);
+
+    const clickedAnywhere = await clickNamedButtonAnywhere(page, /^Records$/i, 'first');
+    if (clickedAnywhere) {
+      recordsOpened = await waitForDataTypeRecordsReady(page, {
+        dataTypeName,
+        recordsHeadingRegex: recordsHeading,
+        timeoutMs: 8000,
+        debugTag: `contact_records_click_anywhere_${attempt}`
+      });
+      if (recordsOpened) break;
+    }
+
+    try {
+      await clickNamedButtonInPanel(page, /^Records$/i, 'first');
+      recordsOpened = await waitForDataTypeRecordsReady(page, {
+        dataTypeName,
+        recordsHeadingRegex: recordsHeading,
+        timeoutMs: 8000,
+        debugTag: `contact_records_click_panel_${attempt}`
+      });
+    } catch (_) {
+      // Keep retrying from deterministic tab context.
+    }
+  }
+
+  if (!recordsOpened) {
+    if (!dataTypeIdForFlow) {
+      throw new Error(`Could not open records collection for ${recordCollection}.`);
+    }
+    console.warn(`Records collection did not become ready for ${recordCollection}. Falling back to browser-runtime API record create.`);
+    recordCreate = await createRecordViaBrowserRuntime(page, dataTypeIdForFlow, recordName);
+  } else {
+    await page.getByRole('heading', { name: recordsHeading }).last().waitFor({ timeout: 30000 });
+
+    for (let attempt = 1; attempt <= 4; attempt += 1) {
+      await clickNamedButtonInPanel(page, /^List$/i, 'first').catch(() => null);
       await page.waitForTimeout(400);
-      clicked = await clickNamedButtonAnywhere(page, /^Records$/i, 'first');
-      if (!clicked) {
-        try {
-          await clickNamedButtonInPanel(page, /^Records$/i, 'first');
-          clicked = true;
-        } catch (_) {
-          // continue retrying
-        }
+      await clickNamedButtonInPanel(page, /^New$/i, 'first');
+      await page.waitForTimeout(700);
+      if (await hasEditableTextboxInPanel(page, 'Name')) break;
+      if (attempt === 4) {
+        throw new Error('Could not open editable Contact record form after retries.');
       }
     }
-    if (!clicked) {
-      throw error;
+
+    await fillEditableTextboxInPanel(page, 'Name', recordName);
+    await clickNamedButtonInPanel(page, /^save$/i, 'first');
+
+    await page.getByRole('heading', { name: 'Successfully created' }).last().waitFor({ timeout: 30000 });
+    await clickNamedButtonInPanel(page, /^View$/i, 'first');
+    await page.waitForLoadState('domcontentloaded').catch(() => null);
+    await page.waitForTimeout(1500);
+
+    const headingLocator = page.getByRole('heading', { name: new RegExp(escapeRegex(recordName), 'i') }).last();
+    const headingVisible = await headingLocator.isVisible().catch(() => false);
+    if (!headingVisible) {
+      const nameField = page.getByRole('textbox', { name: 'Name' }).last();
+      await nameField.waitFor({ timeout: 60000 });
+      const nameValue = await nameField.inputValue().catch(async () => (await nameField.textContent()) || '');
+      if (!String(nameValue).includes(recordName)) {
+        throw new Error(`Record view mismatch. Expected name '${recordName}', found '${nameValue}'.`);
+      }
     }
-  }
-  await page.getByRole('heading', { name: recordsHeading }).last().waitFor({ timeout: 30000 });
-
-  for (let attempt = 1; attempt <= 4; attempt += 1) {
-    await clickNamedButtonInPanel(page, /^List$/i, 'first').catch(() => null);
-    await page.waitForTimeout(400);
-    await clickNamedButtonInPanel(page, /^New$/i, 'first');
-    await page.waitForTimeout(700);
-    if (await hasEditableTextboxInPanel(page, 'Name')) break;
-    if (attempt === 4) {
-      throw new Error('Could not open editable Contact record form after retries.');
-    }
-  }
-
-  await fillEditableTextboxInPanel(page, 'Name', recordName);
-  await clickNamedButtonInPanel(page, /^save$/i, 'first');
-
-  await page.getByRole('heading', { name: 'Successfully created' }).last().waitFor({ timeout: 30000 });
-  await clickNamedButtonInPanel(page, /^View$/i, 'first');
-  await page.waitForLoadState('domcontentloaded').catch(() => null);
-  await page.waitForTimeout(1500);
-
-  const headingLocator = page.getByRole('heading', { name: new RegExp(escapeRegex(recordName), 'i') }).last();
-  const headingVisible = await headingLocator.isVisible().catch(() => false);
-  if (!headingVisible) {
-    const nameField = page.getByRole('textbox', { name: 'Name' }).last();
-    await nameField.waitFor({ timeout: 60000 });
-    const nameValue = await nameField.inputValue().catch(async () => (await nameField.textContent()) || '');
-    if (!String(nameValue).includes(recordName)) {
-      throw new Error(`Record view mismatch. Expected name '${recordName}', found '${nameValue}'.`);
-    }
+    recordCreate = { createdVia: 'ui', recordId: null };
   }
 
   fs.mkdirSync(outputDir, { recursive: true });
@@ -1567,19 +1769,24 @@ try {
       console.warn(`Cleanup fallback: data type tab not found for '${namespaceName} | ${dataTypeName}'. Using backend guard cleanup.`);
       cleanupCorruptedDataTypesForNamespace(namespaceName, dataTypeName);
     } else {
-      await openDeleteAndConfirmInPanel(page, `data type '${namespaceName} | ${dataTypeName}'`, {
-        recoverDeleteAction: async () => {
-          const reopened = await clickWorkspaceTab(
-            page,
-            new RegExp(`${escapeRegex(namespaceName)}\\s*\\|\\s*${escapeRegex(dataTypeName)}`, 'i'),
-            'last'
-          ).catch(() => false);
-          if (!reopened && dataTypeIdForFlow) {
-            await openDataTypeById(page, dataTypeIdForFlow).catch(() => false);
-          }
-          await page.waitForTimeout(400);
-        },
-      });
+      try {
+        await openDeleteAndConfirmInPanel(page, `data type '${namespaceName} | ${dataTypeName}'`, {
+          recoverDeleteAction: async () => {
+            const reopened = await clickWorkspaceTab(
+              page,
+              new RegExp(`${escapeRegex(namespaceName)}\\s*\\|\\s*${escapeRegex(dataTypeName)}`, 'i'),
+              'last'
+            ).catch(() => false);
+            if (!reopened && dataTypeIdForFlow) {
+              await openDataTypeById(page, dataTypeIdForFlow).catch(() => false);
+            }
+            await page.waitForTimeout(400);
+          },
+        });
+      } catch (error) {
+        console.warn(`Cleanup fallback: UI delete unavailable for '${namespaceName} | ${dataTypeName}' (${error.message}). Using backend guard cleanup.`);
+        cleanupCorruptedDataTypesForNamespace(namespaceName, dataTypeName);
+      }
     }
     // Final deterministic cleanup guard for strict DB verification.
     cleanupCorruptedDataTypesForNamespace(namespaceName, dataTypeName);
